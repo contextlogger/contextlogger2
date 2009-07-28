@@ -1,0 +1,93 @@
+cxx-cl2-cli-lib/
+
+	A Symbian C++ client library for locally controlling the logger process.
+
+	This component is entirely Symbian-specific, and presently only Symbian builds of the logger program have a local control interface, implemented based on the Symbian client-server framework.
+
+daemon/
+
+	The logger program.
+
+	Can be built both for Symbian and Linux, but the Linux variant has somewhat less functionality. At present support for Linux builds really only exists to allow for some of the functionality to be tested on the PC rather than on mobile.
+
+	Symbian builds can be either "headless" or with a primitive GUI. For the latter, define __IS_APPLICATION__. Having the GUI makes it convenient to launch and exit the logger, and to see when it is running, but it can be intrusive in trials.
+
+	The "profile" sensor requires an SDK plugin for building, and this is available from Forum Nokia at least for the 3rd Ed MR SDK (the same plugin also appears to work with at least the 3rd Ed FP1 SDK).
+
+	There are two variant implementations of the "keypress" sensor. You can choose which one to use with the __HAVE_ANIM__ preprocessor definition. The non-anim variant may cause problems, as there may be other processes running on the phone that compete for the same key events; the situation varies between different phone models, and possibly different locales with different input methods. The non-anim variant is known to cause problems with the N95 slider events, for instance, if attempting to observe for the relevant "key" events; as a result, the non-anim variant has been configured to observe only some of the most common keys (such as the number keys). The anim variant should be more robust, and should capture just about all key events, but for building and running, it requires the "keyevents" component.
+
+	At present, the log upload configuration must be set at compile time, by setting the __IAP_ID__ and KPostUri values. The former is the numeric ID of the access point to use (a trivial Python script can list all the alternatives), and the latter is the URL to post to. To specify how frequently the updates are to be done, set __UPLOAD_TIME_EXPR__; see the file test_moment_parser.c in the time-spec component for examples of the language you can use.
+
+	If you wish to enable the "cellid" and "gps" sensors, you must grant the Location capability to the executable. The anim-variant of the "keypress" sensor requires the ProtServ capability, although I guess this requirement could be lifted by editing the keyevents component code.
+
+	Note that the "gps" and "btprox" sensors consume a lot of battery, and for this reason you may want to carefully consider whether you want to enable these sensors or not.
+
+	The build tools required for this component include fastdep, GOB v2, and Doxygen.
+
+	The Symbian builds depend on a number of libraries; SDK plugins for these are required, and the libraries must also be installed to the target device. These dependencies include at least EUserHL, and at least PIPS and GLib, but really, you're best off installing all of Open C/C++. Note that some phones have Open C built in. Note also that the latest "stable" version of Open C (namely 1.3) is quite buggy, so preferably choose a more recent "beta" version. That said, the current version of the logger should work fine with 1.3.
+
+keyevents/
+
+	The keyevents libraries (client side and server side), from Jaiku.
+
+	You must build this component first if you want to enable the anim-variant of the "keypress" sensor when building the logger program.
+
+	This component is entirely Symbian-specific.
+
+launcher/
+
+	This serves as a launcher and "control panel" for the logger and watchdog programs.
+
+	With this you can start and stop both the logger and the watchdog, or even forcefully kill them if necessary. You can also find out whether the logger and the watchdog are running. You can also enable/disable the launching of watchdog at device boot time.
+
+	This program is primarily intended for developers and advanced users, and is generally not intended to be installed in trials.
+
+	This component is entirely Symbian-specific, and implemented in Python for S60. The Miso library is required. For process killing to work, you must grant the PowerMgmt capability to the application.
+
+lua/
+
+	A Symbian port of Lua.
+
+	Some of the extras in this component come from the "alua" project, but primarily this code comes from a recent mainline Lua release, tweaked slightly for Symbian. This code is built in statically to the logger program.
+
+py-cl2-cli-lib/
+
+	A Python for S60 wrapper for the cxx-cl2-cli-lib library.
+
+shared/
+
+	Somewhat general purpose C and C++ code.
+
+	Code from here is intended to be built in directly to programs that need it. There are no makefiles for turning this code into a DLL or anything, and some of the code even refers to project defined preprocessor variables.
+
+sqlite3h/
+
+	A Symbian port of SQLite 3.
+
+	This code comes from a recent mainline SQLite release, and considerable changes have been made to get the code to work on Symbian. This code is built in statically to Symbian builds of the logger program. Recent versions of the Symbian Platform have SQLite built in, and on such devices one presumably could and should dynamically link against the built-in database code, instead of building in this custom port.
+
+time-spec/
+
+	Code for parsing time moment and interval expressions.
+
+	Implements a little language for specifying points in time, and time intervals. Presently the former kind of language is used in the logger to specify when to do uploads. The code is built in statically to the logger program. It is likely that the time expressions will eventually be given in Lua, for more code reuse and more expressiveness, but this component is used for now.
+
+	Building this component from source requires the Ragel state machine generator.
+
+tools/
+
+	Some build-related tools.
+
+	These are generally invoked directly by makefiles as required.
+
+watchdog/
+
+	The logger process watchdog.
+
+        This a watchdog program that the system automatically starts up at system boot time. The watchdog program has the sole purpose of starting up the logging client and trying to ensure that it keeps running. The watchdog does this by observing the logger process, and recreating it (after some delay) if it should die. This component should be kept simple to reduce the risk of errors in the watchdog, as there is no one watching the watchdog.
+
+	For the on-boot start up to work the executable must have a protected UID and sufficient capabilities.
+
+	This component is entirely Symbian-specific.
+
+
