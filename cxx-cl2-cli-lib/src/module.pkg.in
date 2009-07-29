@@ -1,0 +1,22 @@
+;; Be careful when changing package names, as this can cause "Update error" installation failures.
+#{"<%= build.name %>"}, (<%= build.uid.chex_string %>), <%= build.major_version %>, <%= build.minor_version %>, 0
+
+<% if build.v9? %>
+;; In S60 3rd ed SDKs, vendor name(s) are required.
+;; Apparently both unique and localized versions.
+
+;Localised Vendor name
+%{"<%= build.vendor %>"}
+
+;Unique Vendor name
+:"<%= build.vendor %>"
+<% end %>
+
+;; Platform dependency.
+<%= build.target.pkg_dependency_string %>
+
+<% if build.v9? %>
+"cl2cli.dll" - "!:\sys\bin\cl2cli.dll"
+<% else %>
+"cl2cli.dll" - "!:\system\libs\cl2cli.dll"
+<% end %>

@@ -1,0 +1,23 @@
+#{"<%= build.name %>"}, (<%= build.uid.chex_string %>), <%= build.major_version %>, <%= build.minor_version %>, 0
+
+<% if build.v9? %>
+;; In S60 3rd ed SDKs, vendor name(s) are required.
+;; Apparently both unique and localized versions.
+
+;Localised Vendor name
+%{"<%= build.vendor %>"}
+
+;Unique Vendor name
+:"<%= build.vendor %>"
+<% end %>
+
+;; Platform dependency.
+<%= build.target.pkg_dependency_string %>
+
+<% binname = $exeb[build].binary_file.basename %>
+
+<% if build.v9? %>
+"<%= binname %>"-"!:\sys\bin\<%= binname %>"
+<% else %>
+  <% raise "not supported" %>
+<% end %>

@@ -1,0 +1,427 @@
+targettype     <%= build.mmp_target_type %>
+target         <%= build.binary_file.basename %>
+
+uid             <%= build.uid2.chex_string %> <%= build.uid3.chex_string %>
+
+<% unless build.v9? %>
+targetpath     "\\system\\apps\\" + cl2app
+<% end %>
+
+// Stack size of 0x5000 is recommended for any but the most trivial Symbian apps
+// (and in this application increasing the default would seem essential);
+// running out of stack is likely to cause a KERN-EXEC 3...
+// not very informative, is it.
+// For Open C++ apps, the recommendation is 0x10000.
+epocstacksize 0x10000
+
+systeminclude \epoc32\include
+systeminclude \epoc32\include\stdapis
+systeminclude \epoc32\include\stdapis\glib-2.0
+
+<% if $with_curl
+   curl_dir = ($pamp_curl ? "libcurl-pamp" : "libcurl-std") %>
+  <% if $pamp_curl and not $curl_as_source %>
+systeminclude     \epoc32\include\curl-7.16
+  <% else %>
+systeminclude ..\..\..\<%= curl_dir %>\include
+  <% end %>
+<% end %>
+
+userinclude .
+userinclude ..\..\inc
+userinclude ..\..\src
+userinclude ..\..\..\shared
+userinclude ..\..\..\lua\src
+<% if $sqlite == :static %>
+userinclude ..\..\..\sqlite3h\src\sqlite3
+<% end %>
+
+<% if $with_curl %>
+  <% if $pamp_curl %>
+    <% if $curl_as_source %>
+userinclude ..\..\..\<%= curl_dir %>\include\curl
+    <% end %>
+  <% else %>
+userinclude ..\..\..\<%= curl_dir %>\include\curl // weird that this is required even when not building from source
+  <% end %>
+<% end %>
+
+<% if $feature_uploader %>
+userinclude ..\..\..\time-spec
+<% end %>
+
+<% if $have_anim %>
+userinclude ..\..\..\keyevents\inc
+<% end %>
+
+// Any STATICLIBRARY declarations should come before other
+// stuff that is linked.
+<% if $with_curl %>
+  <% unless $curl_as_source %>
+    <% if $pamp_curl %>
+staticlibrary abiv2_libcurl-7_16.lib
+    <% else %>
+staticlibrary libcurl.lib    // built by us
+    <% end %>
+  <% end %>
+<% end %>
+
+library apgrfx.lib
+library apparc.lib
+library avkon.lib
+library bafl.lib
+library bluetooth.lib
+library btmanclient.lib
+library charconv.lib
+library commdb.lib
+library commonui.lib // CErrorUI
+library cone.lib
+library efsrv.lib
+library eikcoctl.lib
+library eikcore.lib
+library esock.lib
+//library estor.lib // RReadStream
+library etel3rdparty.lib
+library euser.lib
+library http.lib
+library inetprotutil.lib // URI parsers
+library lbs.lib
+library ws32.lib
+
+<% if build.trait_map[:do_logging] %>
+library flogger.lib
+<% end %>
+
+library profileeng.lib // SDK Plugins
+
+<% if build.trait_map[:have_euserhl] %>
+library euserhl.lib    // High-Level APIs
+<% end %>
+
+library libc.lib       // PIPS
+library libm.lib       // required for Lua
+library libglib.lib    // Open C
+library libgobject.lib // Open C
+library libpthread.lib // Open C
+library libstdcpp.lib  // Open C++
+
+<% if $with_curl %>
+library libz.lib       // Open C, for Curl (be careful, there are two zlib.h files in the Symbian SDK, and both on the include path in our case)
+library libssl.lib     // Open C, for Curl (maybe needed later)
+library libcrypto.lib  // Open C, for Curl (maybe needed later)
+<% end %>
+
+// Only static linking is supported for now, not tested with Symbian version.
+<% if $sqlite != :static %>
+library sqlite3.lib
+<% end %>
+
+<% if $have_anim %>
+library keyevents_client_2000af44.lib
+<% end %>
+
+sourcepath ..\..\src
+<% if $is_application %>
+source cl2appapp.cpp
+source cl2appappui.cpp
+source cl2appcontainer.cpp
+source cl2appdocument.cpp
+<% end %>
+source client-cl2.c
+source client-run.c
+source epoc-ao-gerror.cpp
+source epoc-appfocus.cpp
+source epoc-btprox.cpp
+source epoc-cellid.cpp
+source epoc-cliapi-server.cpp
+source epoc-flightmode.cpp
+source epoc-gps.cpp
+//source epoc-iap.cpp
+<% if $have_anim %>
+source epoc-keypress-anim.cpp
+<% else %>
+source epoc-keypress.cpp
+<% end %>
+<% unless $is_application %>
+source epoc-main.cpp
+<% end %>
+source epoc-profile.cpp
+source epoc-s60-version.cpp
+source er_errors.c
+source er_errors_cxx.cpp
+source libluasqlite3.c
+source local_server.cpp
+source lua_bindings.cpp
+source lua_cl2.cpp
+source lua_linit_cl2.c
+source log-db.c
+source log-db-create.c
+source log-db-logging.c
+source sa_array.cpp 
+source sa_sensor_list_log_db.c
+source timer_generic_epoc.cpp
+source utils_cl2.c
+source utils_cl2_cxx.cpp
+
+<% if $feature_uploader %>
+<% if $with_curl %>
+source up_uploader_curl.c
+<% else %>
+source up_uploader_epoc.cpp
+source up_poster_epoc.cpp
+<% end %>
+source up_shared.c
+<% end %>
+
+sourcepath ..\..\..\shared\common
+source assertions_cxx.cpp
+source epoc-time.cpp
+source error_list.c
+source logging.cpp
+source logging-time.c
+source platform_error.c
+source utilities.c
+source utilities_cxx.cpp
+
+<% if $feature_uploader %>
+sourcepath ..\..\..\time-spec
+source moment_parser.c
+source time_utils.c
+<% end %>
+
+sourcepath ..\..\..\lua\src
+source			lapi.c
+source			lauxlib.c
+source			lbaselib.c
+source			lcode.c
+source			ldblib.c
+source			ldebug.c
+//source			ldo.c
+source			ldo.cpp
+source			ldump.c
+source			lfunc.c
+source			lgc.c
+//source			linit.c   // have a custom version
+source			liolib.c
+source			llex.c
+source			lmathlib.c
+source			lmem.c
+source			loadlib.cpp
+source			lobject.c
+source			lopcodes.c
+source			loslib.c
+source			lparser.c
+source			lstate.c
+source			lstring.c
+source			lstrlib.c
+source			ltable.c
+source			ltablib.c
+source			ltm.c
+source			lundump.c
+source			lvm.c
+source 			lzio.c
+source			print.c
+
+<% if $sqlite == :static %>
+sourcepath ..\..\..\sqlite3h\src\sqlite3
+source alter.c
+source analyze.c
+source attach.c
+source auth.c
+source bitvec.c
+source btmutex.c
+source btree.c
+source build.c
+source callback.c
+source complete.c
+source date.c
+source delete.c
+source expr.c
+source fault.c
+source func.c
+source global.c
+source hash.c
+source insert.c
+source journal.c
+source legacy.c
+source loadext.c
+source main.c
+source malloc.c
+source mem0.c
+source mem1.c
+source mem2.c
+source mem3.c
+source mem5.c
+source memjournal.c
+source mutex.c
+source mutex_noop.c
+//source mutex_os2.c
+source mutex_unix.c
+//source mutex_w32.c
+source os.c
+source os_symbian.c
+//source os_win.c
+//source os_os2.c
+source pager.c
+source pcache.c
+source pragma.c
+source prepare.c
+source printf.c
+source random.c
+source resolve.c
+source select.c
+source status.c
+source table.c
+source tokenize.c
+source trigger.c
+source utf.c
+source update.c
+source util.c
+source vacuum.c
+source vdbe.c
+source vdbeapi.c
+source vdbeaux.c
+source vdbeblob.c
+source vdbefifo.c
+source vdbemem.c
+source vtab.c
+source walker.c
+source where.c
+source opcodes.c
+source parse.c
+<% end %>
+
+<% if $with_curl %>
+  <% if $curl_as_source %>
+// It seems that abld does not like source filename clashes (even for .c files in different directories), so we better make sure that we despite having all these files name each one uniquely.
+sourcepath ..\..\..\<%= curl_dir %>\lib
+SOURCE base64.c
+SOURCE connect.c
+SOURCE content_encoding.c
+SOURCE cookie.c
+<% unless $pamp_curl %>
+SOURCE curl_addrinfo.c
+SOURCE curl_sspi.c
+<% end %>
+SOURCE dict.c
+SOURCE easy.c
+SOURCE escape.c
+//SOURCE file.c
+SOURCE formdata.c
+SOURCE ftp.c
+SOURCE getenv.c
+SOURCE getinfo.c
+//SOURCE gtls.c
+SOURCE hash_curl.c
+//SOURCE hostares.c
+SOURCE hostasyn.c
+SOURCE hostip.c
+SOURCE hostip4.c
+SOURCE hostip6.c
+SOURCE hostsyn.c
+SOURCE hostthre.c
+SOURCE http.c
+SOURCE http_chunks.c
+SOURCE http_digest.c
+SOURCE http_negotiate.c
+SOURCE http_ntlm.c
+SOURCE if2ip.c
+SOURCE inet_ntop.c
+SOURCE inet_pton.c
+//SOURCE krb4.c
+//SOURCE krb5.c
+SOURCE ldap.c
+SOURCE llist.c
+SOURCE md5.c
+//SOURCE memdebug.c
+SOURCE mprintf.c
+SOURCE multi.c
+SOURCE netrc.c
+//SOURCE nss.c
+SOURCE parsedate.c
+SOURCE progress.c
+//SOURCE qssl.c
+<% unless $pamp_curl %>
+SOURCE rawstr.c
+<% end %>
+SOURCE security.c
+SOURCE select_curl.c
+SOURCE sendf.c
+SOURCE share.c
+<% unless $pamp_curl %>
+SOURCE slist.c
+<% end %>
+SOURCE socks.c
+<% unless $pamp_curl %>
+SOURCE socks_gssapi.c
+SOURCE socks_sspi.c
+<% end %>
+SOURCE speedcheck.c
+SOURCE splay.c
+//SOURCE ssh.c
+SOURCE sslgen.c
+//SOURCE ssluse.c
+SOURCE strdup.c
+SOURCE strequal.c
+SOURCE strerror.c
+SOURCE strtok.c
+SOURCE strtoofft.c
+SOURCE telnet.c
+SOURCE tftp.c
+SOURCE timeval.c
+SOURCE transfer.c
+SOURCE url.c
+SOURCE version.c
+
+#define ENABLE_ZLIB
+
+MACRO       BUILDING_LIBCURL
+
+#ifdef ENABLE_ZLIB
+MACRO       HAVE_LIBZ
+#endif
+  <% end %>
+<% end %>
+
+// This sourcepath also applies to the resource files.
+sourcepath ..\..\src
+
+LANG sc
+
+<% if $is_application %>
+
+<% if build.v9? %>
+start resource    cl2app.rss
+header
+targetpath resource\apps
+end //resource
+
+start resource    cl2app_reg.rss
+targetpath 	  \private\10003a3f\import\apps
+end //resource
+<% else %>
+RESOURCE cl2app.rss
+RESOURCE cl2app_caption.rss
+<% end %>
+
+<% unless build.v9? %>
+AIF cl2app.aif ..\..\src cl2appaif.rss c8 context_pane_icon.bmp context_pane_icon_mask.bmp list_icon.bmp list_icon_mask.bmp
+<% end %>
+
+<% end %>
+
+<% if build.v9? %>
+VENDORID 0
+CAPABILITY <%= build.caps_string %>
+<% end %>
+
+// No using the old client-server API.
+macro __HIDE_IPC_V1__
+
+macro __HAVE_APPLICATION_CONFIG__
+
+<% if false and build.target.edition >= 3 and build.target.fp >= 1 %>
+// Required for Open C++, say the Qt guys, but our code will not compile with these. Not with either S60 3.0 MR SDK or S60 3.1 SDK. Presumably the Qt guys are using the S60 3.1 SDK. And possibly it is just the Qt codebase that requires these, and not necessarily ours.
+OPTION CW -wchar_t on 
+MACRO _WCHAR_T_DECLARED
+<% end %>

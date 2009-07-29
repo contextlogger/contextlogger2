@@ -1,0 +1,200 @@
+#include <aknnotedialog.h>
+#include <aknnotewrappers.h>
+#include <avkon.hrh>
+#include "cl2app.hrh"
+#include <cl2app.rsg>
+#include "cl2appappui.h"
+#include "cl2appcontainer.h"
+
+#include "client-run.h"
+#include "utils_cl2.h"
+
+#include "common/assertions.h"
+#include "er_errors.h"
+#include "common/logging.h"
+
+//#include "lua_cl2.h"
+
+#define KEnableSkinFlag 0x1000
+#define KLayoutAwareFlag 0x08
+
+extern "C" void ExitApplication()
+{
+  logt("ExitApplication");
+#if 0
+  // Yes, a leave from an Exit() actually is possible, and we
+  // typically get KErrNoSuitable core. This makes little sense unless
+  // one knows that the app UI exit is actually implemented with a
+  // leave as a non-local return. More info here:
+  // http://developer.symbian.com/forum/thread.jspa?messageID=76366&#76366
+  TRAPD(errCode,
+	((CCl2appAppUi*)(CEikonEnv::Static()->EikAppUi()))->Exit());
+  logf("ExitApplication (%d)", errCode);
+#else
+  // Exiting an application from a RunL is tricky, but luckily in S60
+  // there is a facility that takes care of this difficulty. We can
+  // just invoke RunAppShutter.
+  ((CAknAppUi*)(CEikonEnv::Static()->EikAppUi()))->RunAppShutter();
+#endif
+}
+
+extern "C" void KillLogger()
+{
+  logt("KillLogger");
+  ((CCl2appAppUi*)(CEikonEnv::Static()->EikAppUi()))->KillLogger();
+}
+
+void CCl2appAppUi::KillLogger()
+{
+  if (iClient) {
+    XDECREF(iClient);
+    logt("logger killed");
+  }
+}
+
+void CCl2appAppUi::ConstructL()
+{
+  // This renaming code would not appear to be effective, according to
+  // Y-Tasks. As a workaround, the CL2 watchdog supports both this
+  // name and the default name. Possibly the name can be set for
+  // programs that are not applications (in the application framework
+  // sense).
+  COMPONENT_NAME_LIT(KProcessName); //_LIT(KProcessName, "cl2app");
+  // Return value undocumented, assuming error code.
+  User::LeaveIfError(RProcess().RenameMe(KProcessName));
+
+#ifdef __SERIES60_3X__
+  BaseConstructL(EAknEnableSkin);
+#else
+  BaseConstructL(KEnableSkinFlag | KLayoutAwareFlag);
+#endif
+
+  cl2GlobalInit(); // initializes logging, too
+  logt("global init complete");
+
+  //cl_lua_eval_string("do x = \"hello world\"; return x end");
+
+  {
+    GError* localError = NULL;
+    iClient = client_cl2_new(&localError);
+    logf("client init %s", iClient ? "ok" : "failed");
+    if (!iClient) {
+      gx_error_log_free(localError);
+      User::Leave(KErrGeneral);
+    }
+  }
+
+  iAppContainer = new (ELeave) CCl2appContainer;
+  iAppContainer->SetMopParent( this );
+  iAppContainer->ConstructL( ClientRect() );
+  AddToStackL( iAppContainer );
+
+#if 0
+  CCoeEnv* coeEnv = CCoeEnv::Static();
+  assert(coeEnv && "CCoeEnv not set yet");
+#endif
+
+  logf("scheduler running %d", (CEikonEnv::Static()->IsSchedulerRunning()) ? 1 : 0);
+
+  Start();
+}
+
+CCl2appAppUi::~CCl2appAppUi()
+{
+  logt("clean application exit in progress");
+
+  if (iAppContainer)
+    {
+      RemoveFromStack(iAppContainer);
+      delete iAppContainer;
+    }
+
+  XDECREF(iClient);
+
+  cl2GlobalCleanup();
+}
+
+void CCl2appAppUi::DynInitMenuPaneL(TInt /*aResourceId*/, 
+					 CEikMenuPane* /*aMenuPane*/)
+{
+}
+
+TKeyResponse CCl2appAppUi::HandleKeyEventL
+(const TKeyEvent& /*aKeyEvent*/, TEventCode /*aType*/)
+{
+  return EKeyWasNotConsumed;
+}
+
+// This sort of thing is often required...
+static void DisplayText(TDesC const &aText)
+{
+  CAknInformationNote *informationNote;
+  (informationNote = new (ELeave) CAknInformationNote());
+  informationNote->ExecuteLD(aText);
+}
+
+void CCl2appAppUi::Start()
+{
+  if (!iClient) return;
+
+  GError* localError = NULL;
+  if (!client_cl2_start(iClient, &localError)) {
+    gx_error_log_free(localError);
+    _LIT(msg, "failed to start");
+    DisplayText(msg);
+  } else {
+    /*
+    _LIT(msg, "started");
+    DisplayText(msg);
+    */
+  }
+}
+
+void CCl2appAppUi::Stop()
+{
+  if (!iClient) return;
+
+  GError* localError = NULL;
+  if (!client_cl2_stop(iClient, &localError)) {
+    gx_error_log_free(localError);
+    _LIT(msg, "failure during stopping");
+    DisplayText(msg);
+  } else {
+    /*
+    _LIT(msg, "stopped");
+    DisplayText(msg);
+    */
+  }
+}
+
+void CCl2appAppUi::HandleCommandL(TInt aCommand)
+{
+  switch (aCommand)
+    {
+    case EAknSoftkeyBack:
+    case EAknSoftkeyExit:
+    case EEikCmdExit:
+      {
+	Exit();
+	break;
+      }
+    case ECl2appCmdOneMenuCommand:
+      {
+	/*
+	TBuf<50> buf;
+	_LIT(fmt, "value is %d");
+	buf.Format(fmt, 555);
+	DisplayText(buf);
+	*/
+	//Start();
+	break;
+      }
+    case ECl2appCmdAnotherMenuCommand:
+      {
+	//Stop();
+	break;
+      }
+    default:
+      break;
+    }
+}

@@ -1,0 +1,11 @@
+PRJ_PLATFORMS
+<% if build.v9? %>
+winscw gcce
+<% else %>
+wins thumb armi
+<% end %>
+
+PRJ_MMPFILES
+<% for cb in build.comp_builds %>
+<%= build.to_build_rel(cb.mmp_file) %>
+<% end %>

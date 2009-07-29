@@ -1,0 +1,98 @@
+Wed Jul 15 22:49:18 EEST 2009  tero.hasu@hut.fi
+  * polish and comment updates
+
+Wed Jul 15 22:11:07 EEST 2009  tero.hasu@hut.fi
+  * building again
+
+Fri Jul 10 14:03:58 EEST 2009  tero.hasu@hut.fi
+  * building again
+
+Fri Jul 10 13:59:47 EEST 2009  tero.hasu@hut.fi
+  * launcher moved elsewhere
+
+Fri May  8 16:25:35 EEST 2009  tero.hasu@hut.fi
+  * assert fix
+
+Wed Mar 18 15:28:29 EET 2009  tero.hasu@hut.fi
+  * watchdog now autostarting, and launcher does a lot more now, even controls cl2app directly if need be
+
+Wed Feb 25 22:59:05 EET 2009  tero.hasu@hut.fi
+  * working reasonably well now
+
+Wed Feb 25 22:23:21 EET 2009  tero.hasu@hut.fi
+  * watchdog somehow running now
+
+Wed Feb 25 14:03:25 EET 2009  tero.hasu@hut.fi
+  * tidier code with help of our libraries
+
+Tue Feb 24 23:14:26 EET 2009  tero.hasu@hut.fi
+  * switch to shared panic.cpp
+
+Tue Feb 24 23:07:33 EET 2009  tero.hasu@hut.fi
+  * adding panic bit not previously recorded
+
+Tue Feb 24 20:28:20 EET 2009  tero.hasu@hut.fi
+  * Start method
+
+Tue Feb 24 19:55:55 EET 2009  tero.hasu@hut.fi
+  * launcher program implemented
+
+Thu Feb 19 15:29:45 EET 2009  tero.hasu@hut.fi
+  * makefiles
+
+Thu Feb 19 15:26:34 EET 2009  tero.hasu@hut.fi
+  * now compiling
+
+Mon Feb 16 17:27:28 EET 2009  tero.hasu@hut.fi
+  * adding state diagram
+
+Mon Feb 16 15:55:10 EET 2009  tero.hasu@hut.fi
+  * progress
+
+Tue Feb 10 04:48:39 EET 2009  tero.hasu@hut.fi
+  * lotsa progress
+
+Mon Jan 26 14:37:39 EET 2009  tero.hasu@hut.fi
+  * less repetition with new abstraction
+
+Mon Jan 26 14:03:58 EET 2009  tero.hasu@hut.fi
+  * new simpler version started
+
+Thu Jan 22 22:15:33 EET 2009  tero.hasu@hut.fi
+  * renames and things
+
+Wed Jan 21 22:29:06 EET 2009  tero.hasu@hut.fi
+  * startup reason stuff removed
+
+Wed Jan 21 22:27:04 EET 2009  tero.hasu@hut.fi
+  * no longer creating RChunk
+
+Wed Jan 21 22:24:06 EET 2009  tero.hasu@hut.fi
+  * not using the app_context api any longer
+
+Wed Jan 21 22:12:37 EET 2009  tero.hasu@hut.fi
+  * bool naming
+
+Wed Jan 21 22:09:47 EET 2009  tero.hasu@hut.fi
+  * not doing any phone restarting
+
+Wed Jan 21 21:59:22 EET 2009  tero.hasu@hut.fi
+  * logging code removed from main loop
+
+Wed Jan 21 20:41:12 EET 2009  tero.hasu@hut.fi
+  * RSystemAgent use removed as no longer required
+
+Wed Jan 21 20:13:54 EET 2009  tero.hasu@hut.fi
+  * console and rdebug stripped
+
+Wed Jan 21 20:12:23 EET 2009  tero.hasu@hut.fi
+  * more stripping
+
+Wed Jan 21 17:04:16 EET 2009  tero.hasu@hut.fi
+  * n70 specifics removed
+
+Wed Jan 21 17:01:01 EET 2009  tero.hasu@hut.fi
+  * logging time now; wins code removed
+
+Wed Jan 21 16:58:24 EET 2009  tero.hasu@hut.fi
+  * got starting point from contextphone

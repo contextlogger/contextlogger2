@@ -1,0 +1,304 @@
+#include "sa_array_private.h"
+
+#include "log-db-logging.h" // for error handling routines
+
+#include "common/assertions.h"
+#include "common/error_list.h"
+#include "common/logging.h"
+#include "common/platform_error.h"
+#include "common/utilities.h"
+
+#ifdef __EPOC32__
+#include <e32std.h>
+#endif
+
+#include <string.h>
+
+/* Sensor implementation includes.
+   There may be variant implementations for different builds.
+ */
+#if __APPFOCUS_ENABLED__
+#include "epoc-appfocus.hpp"
+#endif
+#if __BTPROX_ENABLED__
+#include "epoc-btprox.hpp"
+#endif
+#if __CELLID_ENABLED__
+#include "epoc-cellid.hpp"
+#endif
+#if __FLIGHTMODE_ENABLED__
+#include "epoc-flightmode.hpp"
+#endif
+#if __GPS_ENABLED__
+#include "epoc-gps.hpp"
+#endif
+#if __KEYPRESS_ENABLED__
+#if __HAVE_ANIM__
+#include "epoc-keypress-anim.hpp"
+#else
+#include "epoc-keypress.hpp"
+#endif
+#endif
+#if __PROFILE_ENABLED__
+#include "epoc-profile.hpp"
+#endif
+#if __TIMER_ENABLED__
+#include "sa_sensor_timer_posix.h"
+#endif
+
+#define __NEED_TELEPHONY__ 0
+
+// This file is generated, and included only once here. Code for
+// creating, destroying, starting, and stopping sensors comes from
+// here. The code is designed to mesh well with this file.
+#include "sa_sensor_list_integration.cpp"
+
+extern "C" struct _sa_Array
+{
+  EventQueue* evQueue; // not owned
+  LogDb* logDb; // not owned
+
+#if __NEED_TELEPHONY__
+  CTelephony *iTelephony;
+#endif
+
+#if __APPFOCUS_ENABLED__
+  CSensor_appfocus *iSensor_appfocus;
+#endif
+#if __BTPROX_ENABLED__
+  CSensor_btprox *iSensor_btprox;
+#endif
+#if __CELLID_ENABLED__
+  CSensor_cellid *iSensor_cellid;
+#endif
+#if __FLIGHTMODE_ENABLED__
+  CSensor_flightmode *iSensor_flightmode;
+#endif
+#if __GPS_ENABLED__
+  CSensor_gps *iSensor_gps;
+#endif
+#if __KEYPRESS_ENABLED__
+  CSensor_keypress *iSensor_keypress;
+#endif
+#if __PROFILE_ENABLED__
+  CSensor_profile *iSensor_profile;
+#endif
+#if __TIMER_ENABLED__
+  sa_Sensor_timer* iSensor_timer;
+#endif
+};
+
+#define set_symbian_error(errCode,msg) \
+    if (error) \
+      *error = g_error_new(domain_symbian, errCode, msg ": %s (%d)", plat_error_strerror(errCode), errCode);
+
+#define check_symbian_error(errCode,msg,rval) \
+  if (errCode) { \
+    set_symbian_error(errCode,msg); \
+    return (rval); \
+  }
+
+#define typical_symbian_sensor_start(object,msg) { \
+  success = TRUE; \
+  TRAPD(_errCode, success = (object)->StartL(error));		       \
+  if (_errCode) { set_symbian_error(_errCode, msg); success = FALSE; } \
+}
+
+#define typical_symbian_sensor_create(expr,msg) { \
+  TRAPD(_errCode, expr); \
+  if (_errCode) { set_symbian_error(_errCode, msg); success = FALSE; } \
+  else { success = TRUE; }					      \
+}
+
+/* Sensor starting. (Statement.)
+   Must set "success" (gboolean) and "error" (GError**) to indicate what happened.
+ */
+#define SENSOR_APPFOCUS_START typical_symbian_sensor_start(self->iSensor_appfocus, "failed to start appfocus scanning")
+#define SENSOR_BTPROX_START typical_symbian_sensor_start(self->iSensor_btprox, "failed to start btprox scanning")
+#define SENSOR_CELLID_START typical_symbian_sensor_start(self->iSensor_cellid, "failed to start cellid scanning")
+#define SENSOR_FLIGHTMODE_START typical_symbian_sensor_start(self->iSensor_flightmode, "failed to start flightmode scanning")
+#define SENSOR_GPS_START typical_symbian_sensor_start(self->iSensor_gps, "failed to start gps scanning")
+#define SENSOR_KEYPRESS_START typical_symbian_sensor_start(self->iSensor_keypress, "failed to start keypress scanning")
+#define SENSOR_PROFILE_START typical_symbian_sensor_start(self->iSensor_profile, "failed to start profile scanning")
+#define SENSOR_TIMER_START { success = sa_Sensor_timer_start(self->iSensor_timer, error); }
+
+/* Sensor stopping. (Statement.) */
+#define SENSOR_APPFOCUS_STOP { self->iSensor_appfocus->Stop(); }
+#define SENSOR_BTPROX_STOP { self->iSensor_btprox->Stop(); }
+#define SENSOR_CELLID_STOP { self->iSensor_cellid->Stop(); }
+#define SENSOR_FLIGHTMODE_STOP { self->iSensor_flightmode->Stop(); }
+#define SENSOR_GPS_STOP { self->iSensor_gps->Stop(); }
+#define SENSOR_KEYPRESS_STOP { self->iSensor_keypress->Stop(); }
+#define SENSOR_PROFILE_STOP { self->iSensor_profile->Stop(); }
+#define SENSOR_TIMER_STOP { sa_Sensor_timer_stop(self->iSensor_timer); }
+
+/* Sensor running querying. (Boolean expression.) */
+#define SENSOR_APPFOCUS_IS_RUNNING (self->iSensor_appfocus->IsActive())
+#define SENSOR_BTPROX_IS_RUNNING (self->iSensor_btprox->IsActive())
+#define SENSOR_CELLID_IS_RUNNING (self->iSensor_cellid->IsActive())
+#define SENSOR_FLIGHTMODE_IS_RUNNING (self->iSensor_flightmode->IsActive())
+#define SENSOR_GPS_IS_RUNNING (self->iSensor_gps->IsActive())
+#define SENSOR_KEYPRESS_IS_RUNNING (self->iSensor_keypress->IsActive())
+#define SENSOR_PROFILE_IS_RUNNING (self->iSensor_profile->IsActive())
+#define SENSOR_TIMER_IS_RUNNING (sa_Sensor_timer_is_active(self->iSensor_timer))
+
+/* Sensor destruction. (Statement.) */
+#define SENSOR_APPFOCUS_DESTROY { delete self->iSensor_appfocus; self->iSensor_appfocus = NULL; }
+#define SENSOR_BTPROX_DESTROY { delete self->iSensor_btprox; self->iSensor_btprox = NULL; }
+#define SENSOR_CELLID_DESTROY { delete self->iSensor_cellid; self->iSensor_cellid = NULL; }
+#define SENSOR_FLIGHTMODE_DESTROY { delete self->iSensor_flightmode; self->iSensor_flightmode = NULL; }
+#define SENSOR_GPS_DESTROY { delete self->iSensor_gps; self->iSensor_gps = NULL; }
+#define SENSOR_KEYPRESS_DESTROY { delete self->iSensor_keypress; self->iSensor_keypress = NULL; }
+#define SENSOR_PROFILE_DESTROY { delete self->iSensor_profile; self->iSensor_profile = NULL; }
+#define SENSOR_TIMER_DESTROY { sa_Sensor_timer_destroy(self->iSensor_timer); }
+
+/* Sensor creation. (Statement.) 
+   Must set "success" (gboolean) and "error" (GError**) to indicate what happened.
+*/
+#define SENSOR_FLIGHTMODE_CREATE typical_symbian_sensor_create(self->iSensor_flightmode = CSensor_flightmode::NewL(self->logDb), "flightmode sensor initialization")
+#define SENSOR_PROFILE_CREATE typical_symbian_sensor_create(self->iSensor_profile = CSensor_profile::NewL(self->logDb), "profile sensor initialization")
+#define SENSOR_CELLID_CREATE typical_symbian_sensor_create(self->iSensor_cellid = CSensor_cellid::NewL(self->logDb), "cellid sensor initialization")
+#define SENSOR_BTPROX_CREATE typical_symbian_sensor_create(self->iSensor_btprox = CSensor_btprox::NewL(self->logDb), "btprox sensor initialization")
+#define SENSOR_GPS_CREATE typical_symbian_sensor_create(self->iSensor_gps = CSensor_gps::NewL(self->logDb), "gps sensor initialization")
+#define SENSOR_APPFOCUS_CREATE typical_symbian_sensor_create(self->iSensor_appfocus = CSensor_appfocus::NewL(self->logDb), "appfocus sensor initialization")
+#define SENSOR_KEYPRESS_CREATE typical_symbian_sensor_create(self->iSensor_keypress = CSensor_keypress::NewL(self->logDb), "keypress sensor initialization")
+#define SENSOR_TIMER_CREATE { self->iSensor_timer = sa_Sensor_timer_new(self->evQueue, self->logDb, error); success = (self->iSensor_timer != NULL); }
+
+#define reconfigure_not_supported_by_component(key) { \
+    if (error) \
+      *error = g_error_new(domain_cl2app, code_not_supported, "configuration key '%s' not supported by concerned component", key); \
+    success = FALSE; \
+  }
+
+/* Sensor reconfiguring. (Statement.) */
+#define SENSOR_APPFOCUS_RECONFIGURE(key,value) reconfigure_not_supported_by_component(key)
+#define SENSOR_BTPROX_RECONFIGURE(key,value) reconfigure_not_supported_by_component(key)
+#define SENSOR_CELLID_RECONFIGURE(key,value) reconfigure_not_supported_by_component(key)
+#define SENSOR_FLIGHTMODE_RECONFIGURE(key,value) reconfigure_not_supported_by_component(key)
+#define SENSOR_GPS_RECONFIGURE(key,value) reconfigure_not_supported_by_component(key)
+#define SENSOR_KEYPRESS_RECONFIGURE(key,value) reconfigure_not_supported_by_component(key)
+#define SENSOR_PROFILE_RECONFIGURE(key,value) reconfigure_not_supported_by_component(key)
+#define SENSOR_TIMER_RECONFIGURE(key,value) reconfigure_not_supported_by_component(key)
+
+#define gerror_try_log_and_clear { \
+    if (!success) {				     \
+      log_db_log_exception(self->logDb, *error, NULL);	\
+      g_clear_error(error);				\
+    }							\
+  }
+
+/** Instantiates a sensor array consisting of all supported sensors. */
+extern "C" sa_Array *sa_Array_new(EventQueue* evQueue,
+				  LogDb* logDb,
+				  GError** error)
+{
+  sa_Array* self = g_try_new0(sa_Array, 1);
+  if (!self) {
+    if (error) *error = NULL; // out of memory
+    return NULL;
+  }
+
+  self->evQueue = evQueue;
+  self->logDb = logDb;
+
+#if __NEED_TELEPHONY__
+  logt("initializing telephony");
+  TRAPD(errCode, self->iTelephony = CTelephony::NewL());
+  check_symbian_error(errCode, "telephony init failure", NULL);
+#endif
+
+  gboolean success; // for the macro
+  CREATE_ALL_SENSORS_OR_FAIL;
+
+  return self;
+
+ fail:
+  logt("some sensor failed to initialize");
+  sa_Array_destroy(self);
+  return NULL;
+}
+  
+/** Starts all supported sensors. */
+extern "C" void sa_Array_start(sa_Array* self)
+{
+  gboolean success = TRUE;
+  GError* localError = NULL;
+  GError** error = &localError;
+
+  // Errors will be logged and cleared.
+  TRY_START_ALL_SUPPORTED_SENSORS;
+}
+  
+/** Stops all supported sensors. */
+extern "C" void sa_Array_stop(sa_Array* self)
+{
+  STOP_ALL_SUPPORTED_SENSORS;
+}
+  
+/** Destroys a sensor array. Naturally all the sensors in it are stopped. */
+extern "C" void sa_Array_destroy(sa_Array* self)
+{
+  if (self) {
+    // We assume that destroying a sensor also stops it, as we are not
+    // requesting stopping separately. In fact here we cannot even
+    // assume all of the sensors objects have been created.
+    DESTROY_ALL_SENSORS;
+    logt("all sensors destroyed");
+#if __NEED_TELEPHONY__
+    delete self->iTelephony;
+    logt("telephony killed");
+#endif
+    g_free(self);
+    logt("sensor array object freed");
+  }
+}
+  
+/** Returns FALSE for unknown names. */
+extern "C" gboolean sa_sensor_is_supported(const gchar* name)
+{
+  RETURN_WHETHER_NAMED_SENSOR_IS_SUPPORTED(name);
+  return FALSE;
+}
+
+extern "C" gboolean sa_Array_sensor_is_running(sa_Array* self, const gchar* name)
+{
+  // This macro requires that you implement the macro
+  // SENSOR_<NAME>_IS_RUNNING for each supported sensor.
+  // SENSOR_<NAME>_IS_RUNNING need not check whether the sensor is
+  // supported; non-supported sensors are not running.
+  RETURN_WHETHER_NAMED_SENSOR_IS_RUNNING(name);
+  return FALSE;
+}
+
+extern "C" void sa_Array_sensor_stop(sa_Array* self, const gchar* name)
+{
+  // This macro requires that you implement the macro
+  // SENSOR_<NAME>_STOP for each supported sensor. SENSOR_<NAME>_STOP
+  // need not check whether the sensor is supported or running.
+  STOP_NAMED_SENSOR(name);
+}
+
+// We try to have decent error reporting here, with interactive starting attempts in mind.
+extern "C" gboolean sa_Array_sensor_start(sa_Array* self, const gchar* name, GError** error)
+{
+  // This macro requires that you implement the macro
+  // SENSOR_<NAME>_START for each supported sensor. SENSOR_<NAME>_START
+  // need not check whether the sensor is supported or running.
+  gboolean success;
+  START_NAMED_SENSOR_OR_FAIL(name);
+
+  if (error)
+    *error = g_error_new(domain_cl2app, code_not_supported, "sensor '%s' not supported", name);
+  return FALSE;
+}
+
+extern "C" gboolean sa_Array_reconfigure(sa_Array* self, const gchar* key, const gchar* value, GError** error)
+{
+  // This macro returns if it finds a match.
+  gboolean success;
+  RECONFIGURE_MATCHING_SENSOR(key, value);
+
+  if (error)
+    *error = g_error_new(domain_cl2app, code_not_supported, "configuration key '%s' does not concern any supported component", key);
+  return FALSE;
+}

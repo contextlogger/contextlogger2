@@ -1,0 +1,23 @@
+
+target 			active.dll
+targettype		dll
+uid				0
+
+capability		All -TCB
+
+userinclude		../src
+userinclude 	../active/inc
+
+systeminclude	/epoc32/include
+systeminclude	/epoc32/include/libc
+
+sourcepath		../active/src
+source			active.cpp
+source			activefunction.cpp
+
+library			euser.lib
+library			estlib.lib
+library			lua.lib
+
+SOURCEPATH ..\logger\src
+SOURCE out.cpp fileout.cpp

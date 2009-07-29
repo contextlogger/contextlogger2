@@ -1,0 +1,51 @@
+targettype     <%= build.mmp_target_type %>
+target         <%= build.binary_file.basename %>
+
+<% unless build.v9? %>
+targetpath      \system\libs\
+<% end %>
+
+uid             <%= build.uid2.chex_string %> <%= build.uid3.chex_string %>
+
+systeminclude \epoc32\include
+
+userinclude .
+userinclude ..\..\src
+userinclude ..\..\..\shared
+
+library apgrfx.lib
+library apparc.lib
+library bafl.lib
+library efsrv.lib // RFs
+library euser.lib
+library sysutil.lib
+library ws32.lib
+<% if build.trait_map[:do_logging] %>
+library flogger.lib
+<% end %>
+
+sourcepath ..\..\src
+source epoc-time.cpp
+source main.cpp
+source process_handle_observer.cpp
+source timer_observer.cpp
+source watchdog.cpp
+
+sourcepath ..\..\..\shared\common
+source assertions_cxx.cpp
+source logging.cpp
+source panic.cpp
+
+// For application resource files.
+sourcepath ..\..\src
+LANG sc
+START RESOURCE autostart_<%= "%08x" % $uid_v9 %>.rss
+END
+
+<% if build.v9? %>
+VENDORID 0
+CAPABILITY <%= build.caps_string %>
+<% end %>
+
+// No using the old client-server API.
+macro __HIDE_IPC_V1__

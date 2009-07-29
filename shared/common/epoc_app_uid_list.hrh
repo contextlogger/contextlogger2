@@ -1,0 +1,19 @@
+// -*- c -*-
+
+// Similarly to ContextPhone (see "context_uids.h"), we have a header
+// file listing the application UIDs of some of the applications and
+// libraries that we have. These should be in numerical order to make
+// it easier to spot conflicts. "application_config.h" may want to
+// include this file when defining some UID macro for the application.
+
+#ifndef __epoc_app_uid_list_hrh__
+#define __epoc_app_uid_list_hrh__
+
+#define APP_UID_CL2_LOGGER_DAEMON 0xe8460002 // devrange
+#define APP_UID_CL2_LOGGER_WATCHDOG 0x08460006 // protected devrange
+#define APP_UID_CL2_LOGGER_LAUNCHER 0xe8460007 // devrange
+#define APP_UID_CL2_CXX_CLIENT_LIB 0xe8460009 // devrange
+#define APP_UID_CL2_PYTHON_CLIENT_LIB 0xe846000a // devrange
+#define APP_UID_LIBGXLIB 0xe846000c // devrange
+
+#endif /* __epoc_app_uid_list_hrh__ */

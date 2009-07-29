@@ -1,0 +1,65 @@
+NAME CL2A // max 4 letter resource ID
+
+#include <eikon.rh>
+#include "sconfig.hrh"
+#include "cl2app.hrh"
+#include "cl2app.loc"
+#include <avkon.rsg>
+#include <avkon.rh>
+#include <avkon.mbg>
+#ifdef EKA2
+#include <appinfo.rh> // 3rd ed
+#endif
+
+RESOURCE RSS_SIGNATURE { }
+
+RESOURCE TBUF { buf = "cl2app"; }
+
+RESOURCE EIK_APP_INFO
+    {
+    hotkeys = r_cl2app_hotkeys;
+    menubar = r_cl2app_menubar;
+    cba = R_AVKON_SOFTKEYS_OPTIONS_EXIT;
+    }
+
+RESOURCE HOTKEYS r_cl2app_hotkeys
+    {
+    control =
+        {
+        HOTKEY { command = EAknCmdExit; key='e'; }
+        };
+    }
+
+RESOURCE MENU_BAR r_cl2app_menubar
+    {
+    titles =
+        {
+        MENU_TITLE { menu_pane = r_cl2app_menu; txt = "File"; }
+        };
+    }
+
+RESOURCE MENU_PANE r_cl2app_menu
+    {
+    items =
+        {
+        MENU_ITEM { command = ECl2appCmdOneMenuCommand; txt = qtn_appl_one_menu_command; },
+        MENU_ITEM { command = ECl2appCmdAnotherMenuCommand; txt = qtn_appl_another_menu_command; },
+        MENU_ITEM { command = EAknCmdExit; txt = qtn_appl_exit; }
+        };
+    }
+
+#ifdef EKA2
+// 3rd ed...
+RESOURCE LOCALISABLE_APP_INFO r_cl2app_localisable_app_info
+    {
+    short_caption = qtn_app_short_caption_string;
+    caption_and_icon = 
+    CAPTION_AND_ICON_INFO
+        {
+        caption = qtn_app_caption_string;
+
+        number_of_icons = 1;
+	icon_file = "\\resource\\apps\\cl2app_aif.mif";
+	};
+    }
+#endif

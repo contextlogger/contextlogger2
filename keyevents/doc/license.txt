@@ -1,0 +1,8 @@
+This component comes from JaikuEngine Mobile Client, and
+is used and provided under the same (dual) license.
+
+Some modifications to the component have been made,
+particularly build related ones.
+
+JaikuEngine Mobile Client is dual-licensed MIT and GPLv2.
+

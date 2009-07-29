@@ -1,0 +1,36 @@
+digraph WatchdogStates {
+
+//fontsize = 8;
+
+size = "16,10";
+ratio = fill;
+
+//rankdir = LR;
+//size = 8;
+
+//node [shape=circle]; 
+node [shape=box];
+
+edge [minlen=3];
+
+Start -> WaitWhile;
+
+WaitWhile -> FindApp [ label = "ok" ];
+WaitWhile -> Exit [ label = "fail" ];
+
+FindApp -> ObserveProcess [ label = "found" ];
+FindApp -> StartApp [ label = "nxist" ];
+FindApp -> WaitWhile [ label = "fail" ];
+
+StartApp -> WaitWhile [ label = "fail" ];
+StartApp -> ObserveProcess [ label = "ok (record time)" ];
+
+ObserveProcess -> WaitWhile [ label = "died (ok) = normal wait\ndied quick = longer wait\nfail = longer wait\n(adjust failure count)" ];
+
+/*
+*/
+
+overlap = false;
+label = "Watchdog states";
+}
+

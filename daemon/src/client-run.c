@@ -1,0 +1,144 @@
+#include "client-run.h"
+
+#include "client-cl2.h"
+#include "er_errors.h"
+#include "up_uploader.h"
+#include "utils_cl2.h"
+
+#include "common/assertions.h"
+#include "er_errors.h"
+#include "common/logging-stack.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#ifndef __EPOC32__
+#include <signal.h>
+#endif
+
+#if __IS_DAEMON__
+
+// Note that these "Run" methods are not required in a typical Symbian
+// application, since Symbian applications have a built in event loop,
+// and a blocking call to "run" the client to the finish in the main
+// thread makes little sense. More likely you will run it on the
+// background in the main thread.
+
+gboolean cl2RunOnce(GError** error)
+{
+  assert_error_unset(error);
+
+  gboolean res = TRUE;
+
+  ClientCl2* client = client_cl2_new(error);
+  if (!client) {
+    logt("error in client creation");
+    return FALSE;
+  }
+
+  if (!client_cl2_start(client, error)) {
+    logt("error starting client");
+    res = FALSE;
+    goto cleanup;
+  }
+
+  if (!client_cl2_run(client, error)) {
+    logt("error running client");
+    res = FALSE;
+  }
+  logt("event loop exited");
+
+  if (!client_cl2_stop(client, res ? error : NULL)) {
+    logt("error stopping client");
+    res = FALSE;
+  }
+  logt("client stopped");
+    
+cleanup:
+  g_object_unref(client);
+  logt("client destroyed");
+  return res;
+}
+
+// public interface
+int cl2RunOnceGetExitCode()
+{
+  GError* localError = NULL;
+  GError** error = &localError;
+  int exitCode = 0;
+
+  if (!cl2RunOnce(error)) {
+    gx_error_log_clear(error);
+    exitCode = 1;
+  }
+
+  logt("exiting");
+  return exitCode;
+}
+
+#endif // __IS_DAEMON__
+
+// public interface
+void cl2GlobalInit()
+{
+  log_clear(PRIMARY_LOG_FILENAME);
+  log_text(PRIMARY_LOG_FILENAME, "initializing");
+  logf("value is %d", 555);
+  log_ctx(PRIMARY_LOG_FILENAME, "context test");
+#if __DO_LOGGING__
+  gchar* eData = g_strescape("hello", NULL);
+  logf("'hello' is '%s'", eData);
+  g_free(eData);
+#endif
+  logst;
+
+#ifndef __EPOC32__
+  // Do not want any console popping up if STDIOSERVER is installed.
+  printf("console test\n");
+#endif
+
+#if __DO_LOGGING__
+  double td = 6.38000011;
+  logf("printf %%f %f", td);
+  logf("printf %%g %g", td);
+  logf("printf %%.6f %.6f", td);
+  char tdb[50];
+  snprintf(tdb, 50, "snprintf %%f %f", td); logt(tdb);
+  snprintf(tdb, 50, "snprintf %%g %g", td); logt(tdb);
+  snprintf(tdb, 50, "snprintf %%.6f %.6f", td); logt(tdb);
+  g_snprintf_fix(tdb, 50, "g_snprintf_fix %%f %f", td); logt(tdb);
+  g_snprintf_fix(tdb, 50, "g_snprintf_fix %%g %g", td); logt(tdb);
+  g_snprintf_fix(tdb, 50, "g_snprintf_fix %%.6f %.6f", td); logt(tdb);
+#endif
+
+#ifndef __EPOC32__
+  signal(SIGPIPE, SIG_IGN); // return EPIPE instead
+#endif
+
+  srand(time(NULL));
+
+  // Required when using the GObject object system.
+  g_type_init(); // xxx check whether always succeeds, even on symbian
+
+  er_global_init();
+
+#if __FEATURE_UPLOADER__
+  if (!up_global_init(NULL)) {
+    logf("Uploader global init failure");
+    abort();
+  }
+#endif
+}
+
+void cl2GlobalCleanup()
+{
+  logt("doing global cleanup");
+
+#if __FEATURE_UPLOADER__
+  up_global_cleanup();
+#endif
+
+  er_global_cleanup();
+
+  logt("global cleanup complete");
+}

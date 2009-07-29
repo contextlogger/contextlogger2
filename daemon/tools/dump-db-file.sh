@@ -1,0 +1,30 @@
+echo APPLICATION FOCUS
+sqlite3 log.db "select datetime(unixtime, 'unixepoch'), uid, caption from appfocus_scan;"
+
+echo BLUETOOTH PROXIMITY DEVICES
+sqlite3 log.db "select datetime(unixtime, 'unixepoch'), address, name from btprox_item, btprox_scan where btprox_item.scan_id = btprox_scan.scan_id order by unixtime, address;"
+echo BLUETOOTH PROXIMITY SCAN TIMES
+sqlite3 log.db "select datetime(unixtime, 'unixepoch'), scan_id from btprox_scan order by unixtime;"
+
+echo GSM CELL ID
+sqlite3 log.db "select datetime(unixtime, 'unixepoch'), country_code, network_code, area_code, cell_id from cellid_scan;"
+
+echo FLIGHT MODE
+sqlite3 log.db "select datetime(unixtime, 'unixepoch'), value from flightmode_scan;"
+
+echo GPS
+sqlite3 log.db "select datetime(unixtime, 'unixepoch'), latitude, longitude, altitude, vertical_accuracy, horizontal_accuracy, course, satellites from gps_scan;"
+
+echo PROFILE CHANGE
+sqlite3 log.db "select datetime(unixtime, 'unixepoch'), value, name from profile_scan;"
+
+echo KEYPRESS
+sqlite3 log.db "select datetime(unixtime, 'unixepoch'), presstimes from keypress_scan;" 
+
+echo STATUS MESSAGES
+sqlite3 log.db "select datetime(unixtime, 'unixepoch'), message from status_log;"
+
+echo Notes:
+echo Text is encoded as UTF-8.
+echo Application UIDs are hexadecimal.
+echo Some non-primary, variable data is in JSON format.

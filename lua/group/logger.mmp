@@ -1,0 +1,19 @@
+
+target			logger.dll
+targettype		dll
+uid				0
+
+capability		All -TCB
+
+userinclude		../src
+userinclude		../logger/inc
+
+systeminclude	/epoc32/include
+systeminclude	/epoc32/include/libc
+
+sourcepath		../logger/src
+source			out.cpp
+source			fileout.cpp
+
+library			euser.lib
+library			lua.lib

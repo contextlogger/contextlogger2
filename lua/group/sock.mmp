@@ -1,0 +1,23 @@
+
+target 			active_sock.dll
+targettype		dll
+uid				0
+
+capability		All -TCB
+
+userinclude		../src
+userinclude 	../sock/inc
+userinclude 	../active/inc
+
+systeminclude	/epoc32/include
+systeminclude	/epoc32/include/libc
+
+sourcepath		../sock/src
+source			active_sock.cpp activesocket.cpp
+
+library			euser.lib
+library			esock.lib
+library			insock.lib
+library			libc.lib
+library			lua.lib
+

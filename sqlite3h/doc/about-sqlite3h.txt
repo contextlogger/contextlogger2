@@ -1,0 +1,30 @@
+This is a modified version of SQLite 3.6.5. It has been tweaked to
+compile for both Symbian and Linux, and makefiles for Symbian have
+been added.
+
+We are using a separate name to avoid conflicts with mainline versions
+of SQLite and Symbian's own SQLite port. The "h" stands for HIIT. The
+modifications made to SQLite are provided under the same license as
+SQLite 3.6.5 itself. See http://www.sqlite.org/ for more information.
+
+The Symbian port supports S60 v3.0-up, and requires the P.I.P.S.
+library. The Symbian builds supports neither file locking nor thread
+safety.
+
+Symbian v9.4-up has the SQLite3-based Symbian SQL engine built-in, and
+using that instead when available is recommended for decreased
+application size and memory consumption.
+
+The Symbian port is presently intended for linking as a static
+library. Building as a DLL is problematic, since the library contains
+static writable data, and building a DLL with the GCCE version
+currently included in Symbian SDKs produces a broken binary, which
+cannot be installed and/or linked. The workaround is to use the
+expensive, commercial ARM compiler, or to use a more recent version of
+GCCE and to modify Symbian header files enough to fix the
+header/compiler incompatibilities. Note, however, that this port is
+missing many of the required IMPORT_C and EXPORT_C directives.
+
+A more practical workaround for most is to link this library
+statically to the program binary. See the STATICLIBRARY directive for
+MMP files.

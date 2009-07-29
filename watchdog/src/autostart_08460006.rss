@@ -1,0 +1,8 @@
+#include <startupitem.rh>
+ 
+RESOURCE STARTUP_ITEM_INFO startexe
+{
+  // Yes, the "!" is required.
+    executable_name = "!:\\sys\\bin\\cl2watchdog.exe";
+    recovery = EStartupItemExPolicyNone;
+}

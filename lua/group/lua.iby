@@ -1,0 +1,8 @@
+#ifndef LUA_IBY
+#define LUA_IBY
+
+file=ABI_DIR/BUILD_DIR/lua.dll		sys\bin\lua.dll
+file=ABI_DIR/BUILD_DIR/lua.exe		sys\bin\lua.exe
+
+#endif // LUA_IBY
+

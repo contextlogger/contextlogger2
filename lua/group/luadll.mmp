@@ -1,0 +1,49 @@
+target			lua.dll
+capability		All -TCB
+targettype		dll
+uid				0x0
+
+vendorid		0x70000001
+
+systeminclude 	/epoc32/include
+systeminclude 	/epoc32/include/libc
+
+userinclude 	../src
+sourcepath 		../src
+
+source			lapi.c
+source			lauxlib.c
+source			lbaselib.c
+source			lcode.c
+source			ldblib.c
+source			ldebug.c
+source			ldo.c
+source			ldump.c
+source			lfunc.c
+source			lgc.c
+source			linit.c
+source			liolib.c
+source			llex.c
+source			lmathlib.c
+source			lmem.c
+source			loadlib.c
+source			lobject.c
+source			lopcodes.c
+source			loslib.c
+source			lparser.c
+source			lstate.c
+source			lstring.c
+source			lstrlib.c
+source			ltable.c
+source			ltablib.c
+source			ltm.c
+source			lundump.c
+source			lvm.c
+source 			lzio.c
+source			print.c
+
+library			euser.lib
+library			estlib.lib
+
+macro  LUA_BUILD_AS_DLL
+

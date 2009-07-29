@@ -1,0 +1,39 @@
+#{"<%= build.name %>"}, (<%= build.uid.chex_string %>), <%= build.major_version %>, <%= build.minor_version %>, 0
+
+<% if build.v9? %>
+;; In S60 3rd ed SDKs, vendor name(s) are required.
+;; Apparently both unique and localized versions.
+
+;Localised Vendor name
+%{"<%= build.vendor %>"}
+
+;Unique Vendor name
+:"<%= build.vendor %>"
+<% end %>
+
+;; Platform dependency.
+<%= build.target.pkg_dependency_string %>
+
+<% if build.v9? %>
+"cl2app.exe"                 -"!:\sys\bin\cl2app.exe"
+
+<% if $is_application %>
+"epoc32/data/z/resource/apps/cl2app.rsc"              -"!:\resource\apps\cl2app.rsc"
+"epoc32/data/z/private/10003a3f/import/apps/cl2app_reg.rsc"  -"!:\private\10003a3f\import\apps\cl2app_reg.rsc"
+"epoc32/data/z/resource/apps/cl2app_aif.mif"		-"!:\resource\apps\cl2app_aif.mif"
+<% end %>
+
+"../../src/backup_registration.xml"						-"!:\private\<%= build.uid.hex_string %>\backup_registration.xml"
+<% elsif build.v6? %>
+;; xxx note that these paths are urel build dependent
+"epoc32/release/armi/urel/cl2app.aif" - "!:\system\apps\cl2app\cl2app.aif"
+"epoc32/release/armi/urel/cl2app.app" - "!:\system\apps\cl2app\cl2app.app"
+"epoc32/release/armi/urel/cl2app.rsc" - "!:\system\apps\cl2app\cl2app.rsc"
+"epoc32/release/armi/urel/cl2app_caption.rsc" - "!:\system\apps\cl2app\cl2app_caption.rsc"
+<% else %>
+;; xxx note that these paths are urel build dependent
+"epoc32/data/z/system/apps/cl2app/cl2app.aif" - "!:\system\apps\cl2app\cl2app.aif"
+"epoc32/release/armi/urel/cl2app.app" - "!:\system\apps\cl2app\cl2app.app"
+"epoc32/data/z/system/apps/cl2app/cl2app.rsc" - "!:\system\apps\cl2app\cl2app.rsc"
+"epoc32/data/z/system/apps/cl2app/cl2app_caption.rsc" - "!:\system\apps\cl2app\cl2app_caption.rsc"
+<% end %>

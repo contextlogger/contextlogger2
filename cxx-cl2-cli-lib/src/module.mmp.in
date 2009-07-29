@@ -1,0 +1,43 @@
+targettype     <%= build.mmp_target_type %>
+target         <%= build.binary_file.basename %>
+
+uid            <%= build.uid2.chex_string %> <%= build.uid3.chex_string %>
+
+<% if build.v9? %>
+// Not supported by the Symbian-header-compatible GCCE.
+//EPOCALLOWDLLDATA
+<% end %>
+
+EXPORTUNFROZEN
+
+<% unless build.v9? %>
+targetpath     "\\system\\libs"
+<% end %>
+
+systeminclude \epoc32\include
+
+userinclude .
+userinclude ..\..\inc
+userinclude ..\..\src
+userinclude ..\..\..\daemon\inc
+
+library euser.lib
+
+<% if build.trait_map[:do_logging] %>
+library flogger.lib
+<% end %>
+
+<% if build.v9? %>
+library euserhl.lib
+<% end %>
+
+sourcepath ..\..\src
+source cl2cli.cpp
+
+<% if build.v9? %>
+VENDORID 0
+CAPABILITY <%= build.caps_string %>
+
+// No using the old client-server API.
+macro __HIDE_IPC_V1__
+<% end %>

@@ -1,0 +1,28 @@
+#{"<%= build.name %>"}, (<%= build.uid.chex_string %>), <%= build.major_version %>, <%= build.minor_version %>, 0
+
+<% if build.v9? %>
+;Localised Vendor name
+%{"<%= build.vendor %>"}
+
+;Unique Vendor name
+:"<%= build.vendor %>"
+<% end %>
+
+;; Platform dependency. Supports <%= build.target.handle %>.
+<%= build.target.pkg_dependency_string %>
+
+<% exename = $exeb[build].binary_file.basename %>
+<% dllname = $exeb[build].bin_basename + ".dll" %>
+
+<% if build.v9? %>
+"<%= exename %>"-"!:\sys\bin\<%= exename %>"
+;"cl2watchdogcli.dll"-"!:\sys\bin\cl2watchdogcli.dll"
+
+"..\..\src\backup_registration.xml"-"!:\private\<%= build.uid.hex_string %>\backup_registration.xml"
+<% else %>
+"<%= exename %>"-"!:\system\programs\<%= exename %>"
+;"cl2watchdogcli.dll"-"!:\system\libs\cl2watchdogcli.dll"
+<% end %>
+
+;; For autostart to work, the UID must be of protected development range.
+"epoc32\data\autostart_08460006.rsc" - "c:\private\101f875a\import\[08460006].rsc"

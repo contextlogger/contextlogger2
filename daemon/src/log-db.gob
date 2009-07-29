@@ -1,0 +1,261 @@
+// -*- c -*-
+
+requires 2.0.0
+
+%h{
+#include <pthread.h> // for pthread_mutex_t
+#include "sqlite_cl2.h"
+%}
+
+%privateheader{
+#include "sa_sensor_list_log_db.h"
+%}
+
+%{
+#include <errno.h>
+#include <time.h>
+#include <stdarg.h> // va_list
+#include <stdlib.h>
+#include <glib/gprintf.h>
+#include "common/platform_config.h"
+#include "application_config.h"
+#include "log-db-create.h"
+#include "common/logging.h"
+#include "common/assertions.h"
+#include "common/error_list.h"
+#include "common/threading.h"
+
+  // text:: A zero-terminated string, in UTF-8. Ownership is not
+  //        taken, and the string need not persist after the call.
+  static gboolean log_text_to_db(LogDb* self, 
+				 const char* text,
+				 sqlite3_stmt* stmt,
+				 const char* errorFmt,
+				 GError** error)
+  {
+    logt(text);
+
+    mutex_lock(&self->mutex);
+
+    gboolean rval = TRUE;
+    
+    // strftime('%s', 'now') evaluates to Unix time in SQL so we could
+    // possibly evaluate that, but this might only happen during
+    // preparation, which is not okay in the general case.
+
+    time_t now = time(NULL);
+    if (now == -1) {
+      goto fail;
+    }
+    if (sqlite3_bind_int(stmt, 1, now)) {
+      goto fail;
+    }
+    // Using SQLITE_TRANSIENT here is not the most efficient solution,
+    // but anything else will complicate error handling.
+    if (sqlite3_bind_text(stmt, 2, text, strlen(text), SQLITE_TRANSIENT)) {
+      goto fail;
+    }
+
+    if (sqlite3_step(stmt) != SQLITE_DONE)
+      goto fail;
+
+    if (sqlite3_reset(stmt))
+      goto fail;
+
+    goto done;
+
+  fail:
+    rval = FALSE;
+    if (error)
+      *error = g_error_new(domain_cl2app, code_database_command, errorFmt, sqlite3_errmsg(self->db), sqlite3_errcode(self->db));
+    
+  done:
+    mutex_unlock(&self->mutex);
+    return rval;
+  }
+
+%}
+
+class Log:Db from G:Object {
+  // External components accessing "db" directly will want to be sure
+  // to acquire "mutex" for the duration of the access.
+  public sqlite3* db = NULL;
+
+  // Not yet quite sure if we require the mutex and threading
+  // business, but it may be too much of a burden to require that all
+  // logging goes via the main thread, especially as on might want to
+  // do error and status logging from worker threads. So we are
+  // keeping in the mutex in here, at least for now.
+  public pthread_mutex_t mutex;
+
+  private PreparedStmts stmts;
+
+  // Can add any initialization code here.
+  init (self) {
+    mutex_init(&self->mutex); // always returns 0
+  }
+
+  public LogDb* new(GError** error)
+  {
+    assert_error_unset(error);
+
+    if (!ensure_log_db_created(error))
+      return NULL;
+
+    // Note that the instance data is automatically zeroed by
+    // g_object_new, so we need not be setting everything to NULL
+    // here.
+    LogDb* self = GET_NEW;
+
+    if (!log_db_open_session(self, error)) {
+      g_object_unref(self);
+      return NULL;
+    }
+
+    return self;
+  }
+
+  // The "finalize" method does any final, one-off cleanup associated
+  // with an instance. For objects with a more complicated structure,
+  // we might also have to override "dispose" to ensure that GC will
+  // succeed fully.
+  // 
+  // More recent versions of GOB2 support a special "finalize"
+  // declaration that is equivalent to overriding the finalize method
+  // in this manner.
+  override (G:Object) void
+    finalize (GObject *object)
+    {
+      Self *self = SELF(object);
+
+      log_db_close_session(self);
+
+      mutex_destroy(&self->mutex);
+
+      PARENT_HANDLER(object);
+    } 
+
+  private gboolean open_session(self, GError** error)
+  {
+    // This still allocates a handle, except for those cases in which
+    // the memory for the handle cannot be allocated. We can hence get
+    // an error message if "db" is non-NULL.
+    int errCode = sqlite3_open(LOGDB_FILE, &self->db);
+    if (errCode) {
+      if (error)
+	*error = g_error_new(domain_cl2app, code_database_open, "error opening database '%s': %s (%d)", LOGDB_FILE, sqlite_get_error_string(self->db), errCode);
+      if (self->db) {
+	log_db_close_session(self);
+      }
+      return FALSE;
+    }
+
+    if (!prepare_sql_statements(self, error)) {
+      log_db_close_session(self);
+      return FALSE;
+    }
+
+    return TRUE;
+  }
+
+  private void close_session(self)
+  {
+    if (self->db) {
+      destroy_sql_statements(self);
+
+      // Note that prepared statements and BLOB handles must be
+      // freed separately.
+      int errCode = sqlite3_close(self->db);
+#if __DO_LOGGING__
+      if (errCode) {
+	// A close failure is probably a programming error, so we
+	// shall log it.
+	logf("sqlite3_close failure %d", errCode);
+      }
+#endif
+      self->db = NULL;
+    }
+  }
+
+  // -----------------------------------------------------------
+  // We assume that all of the initialization above is done by one
+  // thread, but all of the following operations must be safe to do
+  // from any of multiple worker threads. They must acquire a mutex
+  // before any database access.
+
+  // The pathname should be such that a mere rename is possible. The
+  // snapshot ready flag will indicate if the rename was done okay,
+  // even in the event of an error return. This can be useful to avoid
+  // losing data.
+  public gboolean take_snapshot(self, gchar* pathname, 
+				gboolean* renamed, GError** error)
+  {
+    *renamed = FALSE;
+
+    mutex_lock(&self->mutex);
+
+    log_db_close_session(self);
+
+    if (rename(LOGDB_FILE, pathname)) {
+      mutex_unlock(&self->mutex);
+      if (error)
+	*error = g_error_new(domain_posix, errno, "failed to rename '%s' as '%s': %s (%d)", LOGDB_FILE, pathname, strerror(errno), errno);
+      return FALSE;
+    }
+    *renamed = TRUE;
+
+    if (g_file_test(LOGDB_FILE, G_FILE_TEST_EXISTS)) {
+      logf("Oops, file '%s' still exists!", LOGDB_FILE);
+    }
+
+    if (!create_log_db(error)) {
+      mutex_unlock(&self->mutex);
+      return FALSE;
+    }
+
+    if (!log_db_open_session(self, error)) {
+      mutex_unlock(&self->mutex);
+      return FALSE;
+    }
+
+    mutex_unlock(&self->mutex);
+    return TRUE;
+  }
+
+  // Note that this method does not free the logged error, so do a
+  // g_error_free(errorToLog) or g_clear_error(errorToLog) as required.
+  public gboolean log_exception(self, GError* errorToLog, GError** error)
+  {
+    assert_error_unset(error);
+    if (errorToLog) {
+      GString* text = g_string_sized_new(128);
+      g_string_printf(text, "EXCEPTION: %s (%s: %d)",
+		      errorToLog->message, 
+		      g_quark_to_string(errorToLog->domain), 
+		      errorToLog->code);
+      gboolean r = log_db_log_status(self, error, text->str);
+      g_string_free(text, TRUE);
+      return r;
+    } else {
+      return log_db_log_status(self, error, "EXCEPTION: out of memory");
+    }
+    return TRUE;
+  }
+
+  // fmt:: A zero-terminated string, in UTF-8.
+  public gboolean log_status(self, GError** error, const char* fmt, ...)
+  {
+    gchar* buf;
+    va_list argp;
+    va_start(argp, fmt);
+    g_vasprintf(&buf, fmt, argp);
+    va_end(argp); // any cleanup
+    gboolean res = log_text_to_db(self, 
+			     buf,
+			     self->_priv->stmts.statusStmt,
+			     "failed to log status: %s (%d)",
+			     error);
+    g_free(buf);
+    return res;
+  }
+}

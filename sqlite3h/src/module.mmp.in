@@ -1,0 +1,113 @@
+targettype      <%= build.mmp_target_type %>
+
+target          <%= build.binary_file.basename %>
+
+<% # p [build.uid2, build.uid3] 
+%>
+uid             <%= build.uid2.chex_string %> <%= build.uid3.chex_string %>
+
+<% unless build.target_type == :staticlibrary %>
+exportunfrozen
+epocallowdlldata
+<% end %>
+
+systeminclude \epoc32\include
+systeminclude \epoc32\include\stdapis
+
+userinclude .
+userinclude ..\..\src
+userinclude ..\..\src\sqlite3
+userinclude ..\..\..\shared
+
+library apparc.lib
+library avkon.lib
+library cone.lib
+library efsrv.lib
+library eikcoctl.lib
+library eikcore.lib
+library euser.lib
+<% if build.trait_map[:do_logging] %>
+library flogger.lib
+<% end %>
+library libc.lib
+//library libpthread.lib
+//library libdl.lib
+
+sourcepath ..\..\..\shared\common
+source logging.cpp
+
+sourcepath ..\..\src\sqlite3
+source alter.c
+source analyze.c
+source attach.c
+source auth.c
+source bitvec.c
+source btmutex.c
+source btree.c
+source build.c
+source callback.c
+source complete.c
+source date.c
+source delete.c
+source expr.c
+source fault.c
+source func.c
+source global.c
+source hash.c
+source insert.c
+source journal.c
+source legacy.c
+source loadext.c
+source main.c
+source malloc.c
+source mem0.c
+source mem1.c
+source mem2.c
+source mem3.c
+source mem5.c
+source memjournal.c
+source mutex.c
+source mutex_noop.c
+source mutex_os2.c
+source mutex_unix.c
+source mutex_w32.c
+source os.c
+source os_symbian.c
+source os_win.c
+source os_os2.c
+source pager.c
+source pcache.c
+source pragma.c
+source prepare.c
+source printf.c
+source random.c
+source resolve.c
+source select.c
+source status.c
+source table.c
+source tokenize.c
+source trigger.c
+source utf.c
+source update.c
+source util.c
+source vacuum.c
+source vdbe.c
+source vdbeapi.c
+source vdbeaux.c
+source vdbeblob.c
+source vdbefifo.c
+source vdbemem.c
+source vtab.c
+source walker.c
+source where.c
+source opcodes.c
+source parse.c
+
+LANG sc
+
+sourcepath ..\..\src
+
+<% if build.v9? %>
+VENDORID 0
+CAPABILITY <%= build.caps_string %>
+<% end %>

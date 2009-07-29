@@ -1,0 +1,16 @@
+
+target			luac.exe
+targettype		stdexe
+uid				0
+
+capability		none
+
+userinclude		../src
+systeminclude 	/epoc32/include
+
+sourcepath		../src
+source			luac.c
+source			print.c
+
+library			lua.lib
+

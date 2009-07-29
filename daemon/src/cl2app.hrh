@@ -1,0 +1,10 @@
+#ifndef CL2APP_HRH
+#define CL2APP_HRH
+
+enum TCl2appCommandIds
+  {
+    ECl2appCmdOneMenuCommand = 1,
+    ECl2appCmdAnotherMenuCommand
+  };
+
+#endif // CL2APP_HRH

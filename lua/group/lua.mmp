@@ -1,0 +1,20 @@
+
+
+target			lua.exe
+targettype		exe
+uid				0
+
+capability		NetworkServices LocalServices ReadUserData WriteUserData
+
+userinclude		../src
+systeminclude 	/epoc32/include
+systeminclude	/epoc32/include/libc
+
+sourcepath		../src
+source			lua.c
+
+library			euser.lib
+library			ecrt0.lib
+library			estlib.lib
+library			lua.lib
+library			logger.lib
