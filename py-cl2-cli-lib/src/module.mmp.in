@@ -1,0 +1,41 @@
+// xxx pys60 v2 to be supported
+
+targettype 	dll
+target	       	<%= build.binary_file.basename.to_s %>
+
+<% unless build.v9? %>
+TARGETPATH      \system\libs\
+<% end %>
+
+UID             <%= build.uid2.chex_string %> <%= build.uid3.chex_string %>
+
+NOSTRICTDEF
+EXPORTUNFROZEN
+
+SYSTEMINCLUDE 	\epoc32\include
+SYSTEMINCLUDE 	\epoc32\include\libc
+SYSTEMINCLUDE 	\epoc32\include\python
+
+library 	python222.lib
+library 	euser.lib
+library		cl2cli.lib
+
+<% if build.trait_map[:do_logging] %>
+LIBRARY         flogger.lib
+<% end %>
+
+userinclude 	.
+userinclude 	..\..\src
+userinclude 	..\..\..\cxx-cl2-cli-lib\inc
+
+sourcepath 	..\..\src
+source 		local_epoc_py_utils.cpp
+source 		module.cpp
+
+source 		py_session.cpp
+
+<% if build.v9? %>
+// Better use all DevCert caps to allow processes with higher caps to load the library.
+CAPABILITY 	<%= build.caps_string %>
+<% end %>
+
