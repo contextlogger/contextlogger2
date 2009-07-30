@@ -142,6 +142,7 @@ _LIT8(KPostUri, __UPLOAD_URL__); // xxx to come from ConfigDb
 void CUploader::ConstructL()
 {
   //logt("doing uploader init");
+  logf("uploader using IAP %d, username %s, and URL %s", __IAP_ID__, __USERNAME__, __UPLOAD_URL__);
 
   // Ensure that uploads directory exists.
   GError* mdError = NULL;

@@ -180,7 +180,7 @@ for build in $builds
 
   map[:upload_time_expr] = ($sake_op[:upload_time_expr] || $default_upload_time_expr || :undef)
   map[:upload_url] = ($sake_op[:upload_url] || $default_upload_url || :undef)
-  map[:iap_id] = ($sake_op[:iap_id] || $default_iap_id.to_i || :undef)
+  map[:iap_id] = (($sake_op[:iap_id] && $sake_op[:iap_id].to_i) || $default_iap_id.to_i || :undef)
   map[:username] = ($sake_op[:username] || $default_username || :undef)
 
   map[:have_anim] = ($have_anim ? 1 : 0)
