@@ -16,8 +16,7 @@
 
 extern "C" void ex_show_error(int errCode)
 {
-  // xxx some ignoring trap macro exists right?
-  TRAPD(ignore,
+  TRAP_IGNORE(
 	CErrorUI* ui = CErrorUI::NewLC();
 	ui->ShowGlobalErrorNoteL(errCode);
 	CleanupStack::PopAndDestroy();

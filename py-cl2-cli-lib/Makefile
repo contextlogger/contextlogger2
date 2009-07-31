@@ -1,13 +1,14 @@
 BASENAME := py_cl2_client
 VERSION := 1.01
 CERT := dev
+SAKE := ../tools/bin/sake
 
 default : symbian
 
 -include local/custom.mk
 
 symbian :
-	sake cert=$(CERT) logging=true udeb=true kits=s60_30
+	$(SAKE) cert=$(CERT) logging=true udeb=true kits=s60_30
 
 clean :
 	-rm src/*.pyc doxyfile-int
@@ -16,12 +17,12 @@ cleaner : clean
 	-rm -r build private-cxx-api python-api
 
 release :
-	sake all release kits=s60_30 cert=self
-	sake all release kits=s60_30 cert=dev
-	sake web
+	$(SAKE) all release kits=s60_30 cert=self
+	$(SAKE) all release kits=s60_30 cert=dev
+	$(SAKE) web
 
 upload_dry :
-	sake upload dry=true
+	$(SAKE) upload dry=true
 
 upload :
-	sake upload
+	$(SAKE) upload

@@ -13,6 +13,7 @@
 SDKHOME := $(GNUPOCDEVENV)/kits/s60_30
 
 PLT_ENV := PLTCOLLECTS=`pwd`/../tools/schemelib:
+SAKE := ../tools/bin/sake
 
 default : codegen symbian
 
@@ -40,8 +41,8 @@ changelog :
 	darcs changes > doc/changelog.txt
 
 upload_dry :
-	sake upload dry=true
+	$(SAKE) upload dry=true
 
 upload :
-	sake upload
+	$(SAKE) upload
 

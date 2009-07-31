@@ -1,0 +1,2 @@
+#!/usr/bin/env ruby
+load(File.join(File.dirname(File.dirname(File.expand_path(__FILE__))), "sake", "lib", "sake", 'sake.bin.rb'))

@@ -110,6 +110,10 @@ NONSHARABLE_CLASS(CUploader) :
   void StateChanged();
   void StateChangedL();
   void NextOldFileL();
+  TInt CreatePosterAo();
+  void DestroyPosterAo();
+  TBool PosterAoIsActive() { return (iPosterAo && iPosterAo->IsActive()); }
+  void HandleCommsError(TInt errCode);
   void PostNowL();
   void SetPostTimer();
   void SetSnapshotTimerL();
@@ -151,23 +155,29 @@ void CUploader::ConstructL()
     User::Leave(KErrGeneral);
   }
 
-  iPosterAo = CPosterAo::NewL(*this, __IAP_ID__); // xxx IAP ID to come from ConfigDb
-  //logt("uploader poster init done");
+  CreatePosterAo();
+
 #if 0
   // Test code with a single part post. Just to see if can actually connect somewhere.
-  _LIT8(KRequestBody, "Hello World!");
-  iPosterAo->PostBufferL(KPostUri, KRequestBody);
+  if (iPosterAo) {
+    _LIT8(KRequestBody, "Hello World!");
+    iPosterAo->PostBufferL(KPostUri, KRequestBody);
+  }
 #endif
 #if 0
   // Test code with a manually constructed multi part post.
-  _LIT8(boundary, "-----AaB03xeql7dsxeql7ds");
-  _LIT8(KRequestBody, "-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"metadata\"; filename=\"metadata.json\"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n{\"log filename\": \"test_log.db\", \"time\": {\"timezone\": -7200, \"daylight\": true, \"altzone\": -10800, \"time\": 1247093454.8903401}}\r\n-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"logdata\"; filename=\"test_log.db\"\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: binary\r\n\r\nHello World!\r\n-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"logdata_submit\"\r\n\r\nUpload\r\n-------AaB03xeql7dsxeql7ds--\r\n");
-  iPosterAo->PostMultiPartBufferL(KPostUri, boundary, KRequestBody);
+  if (iPosterAo) {
+    _LIT8(boundary, "-----AaB03xeql7dsxeql7ds");
+    _LIT8(KRequestBody, "-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"metadata\"; filename=\"metadata.json\"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n{\"log filename\": \"test_log.db\", \"time\": {\"timezone\": -7200, \"daylight\": true, \"altzone\": -10800, \"time\": 1247093454.8903401}}\r\n-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"logdata\"; filename=\"test_log.db\"\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: binary\r\n\r\nHello World!\r\n-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"logdata_submit\"\r\n\r\nUpload\r\n-------AaB03xeql7dsxeql7ds--\r\n");
+    iPosterAo->PostMultiPartBufferL(KPostUri, boundary, KRequestBody);
+  }
 #endif
 #if 0
   // Test code with a file based post.
-  _LIT(KFileName, "e:\\data\\atwink.png");
-  iPosterAo->PostFileL(KPostUri, KFileName);
+  if (iPosterAo) {
+    _LIT(KFileName, "e:\\data\\atwink.png");
+    iPosterAo->PostFileL(KPostUri, KFileName);
+  }
 #endif
   iPostTimerAo = CTimerAo::NewL(*this, CActive::EPriorityStandard);
   iSnapshotTimerAo = CTimerAo::NewL(*this, CActive::EPriorityStandard);
@@ -183,7 +193,7 @@ CUploader::~CUploader()
 {
   delete iPostTimerAo;
   delete iSnapshotTimerAo;
-  delete iPosterAo;
+  DestroyPosterAo();
   g_free(iFileToPost); // safe when NULL
   g_free(iSnapshotTimeExpr); // safe when NULL
 }
@@ -371,47 +381,66 @@ void CUploader::PosterEvent(TInt anError)
     default: // Symbian error
       {
         assert(anError < 0);
-
-	// Some errors are more severe than others.
-	switch (anError)
-	  {
-	  case KErrCouldNotConnect:
-	  case KErrDisconnected:
-	  case KErrCommsLineFail:
-	  case KErrCommsFrame:
-	  case KErrCommsOverrun:
-	  case KErrCommsParity:
-	  case KErrTimedOut:
-	  case KErrServerBusy: // local daemon, such as socket or file server
-	  case KErrInUse: // file in use maybe
-	  case KErrNotReady: // -18 ("A device required by an I/O operation is not ready to start operations.") We have actually gotten this error. Let us have it here to see if it is something transient.
-	    {
-	      // Retry later.
-	      iNumPostFailures++;
-	      SetPostTimer();
-	      break;
-	    }
-	  case KErrNoMemory: // bad, resume this program later
-	  case KErrPathNotFound: // our state may be messed up
-	    {
-	      FatalError(anError);
-	      break;
-	    }
-	  case KErrNotSupported: // perhaps uploader cannot function on this device
-	  case KErrNotFound: // some required resource missing perhaps
-	  default:
-	    {
-              // We do not yet have logic for handling this kind of
-              // error, so inactivate. Future versions may implement
-              // this better.
-	      logf("inactivating uploader due to Symbian error %d", anError);
-	      Inactivate();
-	      break;
-	    }
-	  }
+	HandleCommsError(anError);
         break;
       }
     }
+}
+
+// Called to handle poster creation and poster request errors.
+void CUploader::HandleCommsError(TInt anError)
+{
+  // Some errors are more severe than others.
+  switch (anError)
+    {   
+      // Some errors warrant the recreation of iPosterAo (if we even
+      // have one).
+    case KErrCouldNotConnect:
+    case KErrDisconnected:
+    case KErrCommsLineFail:
+    case KErrCommsFrame:
+    case KErrCommsOverrun:
+    case KErrCommsParity:
+    case KErrInUse: // file in use maybe
+    case KErrNotReady: // -18 ("A device required by an I/O operation is not ready to start operations.") We have actually gotten this error. Let us have it here to see if it is something transient.
+    case KErrServerBusy: // local daemon, such as socket or file server
+    case -8268: // not documented, but getting this in flight mode
+      {
+	DestroyPosterAo();
+      } // fall through...
+
+      // For many errors, a retry later is a suitable action.
+    case KErrTimedOut:
+      {
+	// Retry later.
+	iNumPostFailures++;
+	SetPostTimer();
+	break;
+      }
+
+      // Some errors are considered fatal.
+    case KErrNoMemory: // bad, resume this program later
+    case KErrPathNotFound: // our state may be messed up
+      {
+	FatalError(anError);
+	break;
+      }
+
+      // Some errors are considered permanently fatal. In such cases
+      // the situation likely will not improve by restarting the
+      // process.
+    case KErrNotSupported: // perhaps uploader cannot function on this device
+    case KErrNotFound: // some required resource missing perhaps
+    default:
+      {
+	// We do not yet have logic for handling this kind of
+	// error, so inactivate. Future versions may implement
+	// this better.
+	logf("inactivating uploader due to Symbian error %d", anError);
+	Inactivate();
+	break;
+      }
+    } // end switch
 }
 
 // Better by careful not to run out of stack calling this recursively.
@@ -425,7 +454,7 @@ void CUploader::StateChangedL()
   }
 
   if (iFileToPost) {
-    if (iPosterAo->IsActive() ||
+    if (PosterAoIsActive() ||
 	iPostTimerAo->IsActive())
       return;
     PostNowL();
@@ -437,20 +466,51 @@ void CUploader::StateChangedL()
   }
 }
 
+TInt CUploader::CreatePosterAo()
+{
+  assert(!iPosterAo);
+
+  // xxx IAP ID to come from ConfigDb
+  TRAPD(errCode, iPosterAo = CPosterAo::NewL(*this, __IAP_ID__));
+  if (errCode) {
+    logf("poster creation failed with %d", errCode);
+  }
+
+  return errCode;
+}
+
+void CUploader::DestroyPosterAo()
+{
+  if (iPosterAo) {
+    delete iPosterAo;
+    iPosterAo = NULL;
+    logt("poster destroyed");
+  }
+}
+
 void CUploader::PostNowL()
 {
-  logt("posting file now");
-
   // For error handling testing.
 #if 0
   logt("horrible test error");
   User::Leave(KErrTotalLossOfPrecision);
 #endif
 
+  logt("trying to post file now");
+
+  if (!iPosterAo) {
+    TInt errCode = CreatePosterAo();
+    if (errCode) {
+      HandleCommsError(errCode);
+      return;
+    }
+  }
+
   TPtrC8 fileName((TUint8*)iFileToPost);
   TFileName fileNameDes;
   // Our names should all be ASCII, so this may be overkill.
   User::LeaveIfError(CnvUtfConverter::ConvertToUnicodeFromUtf8(fileNameDes, fileName));
+  logf("asking poster to post '%s'", iFileToPost);
   iPosterAo->PostFileL(KPostUri, fileNameDes);
 }
 
