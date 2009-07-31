@@ -1,0 +1,32 @@
+ABOUT
+
+This is Miso Build Tool, aka Sake. It builds on Rake (Ruby Make) for
+Rake-like functionality, and provides libraries for managing PyS60
+native extension projects.
+
+PREREQUISITES
+
+This tool has been tested with Ruby 1.8.2 only, on Linux and
+Windows/Cygwin. It has dependencies to certain command line tools
+commonly found in Unix-like environments. For building PyS60
+extensions, a compatible Symbian SDK setup is required. The tool
+probably still makes too many assumptions about the Symbian build
+environment used, but hopefully these will eventually get removed, or
+at least documented.
+
+Any required third-party Ruby libraries are included in the "lib"
+directory, for convenience. Libraries modified from the original have
+been given a different name.
+
+INSTALLATION
+
+If you have Sake installed already, type
+
+  sake install
+
+Otherwise type
+
+  ruby bootstrap.rb
+
+The installation is only for the user, and assumes that a directory
+called ~/bin exists, and is on the executable search PATH.

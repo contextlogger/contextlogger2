@@ -1,0 +1,4 @@
+The efileutils* library contains code directly taken or derived from
+fileutils.rb, which was taken from a Ruby distribution. The code is
+used under the Ruby license, which should be compatible with our
+MIT-style license.

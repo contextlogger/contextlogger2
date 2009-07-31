@@ -1,0 +1,4 @@
+The traits-* library or libraries were downloaded from
+http://rubyforge.org/projects/codeforpeople/,
+and are used under the Ruby license.
+

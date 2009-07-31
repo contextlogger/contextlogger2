@@ -1,0 +1,755 @@
+URLS
+
+  http://rubyforge.org/projects/codeforpeople/
+  http://codeforpeople.com/lib/ruby/traits
+
+INSTALL
+
+  yes|sudo gem install traits
+
+ABOUT
+
+  traits.rb is set of attr_* like methods on steroids, caffeine, and botox.
+  it encourages better living through meta-programming and uniform access
+  priciples. traits.rb supports smart inheritence of class attributes and a
+  fistful of hooks for veryifying and munging attr values.
+
+VERSION
+
+  0.10.0
+
+HISTORY
+
+  0.10.0
+    - removed use of additional instance var to denote whether a value had
+      been set.  now the test is only 'defined? @#{ name }'.
+
+  0.9.2
+    - fixed a bug where list traits, for example
+
+        trait 'letters' => %w[ a b c ]
+
+      were flattened in a way that exploded trait initialization
+
+    - streamlined TraitInit module
+
+    - added OpenTraits class and otraits method
+
+        conf = otraits{
+          port 42
+          host 'forty-two'
+        }
+        p conf.port            #=> 42
+        p conf.host            #=> 'forty-two' 
+        conf.username 'zaphod'
+        p conf                 #=> {"username"=>"zaphod", "port"=>42, "host"=>"forty-two"} 
+
+  0.9.0
+    - luke kaines made quite a few suggestions and bug reports that enabled this
+      release including making a few methods indifferent about string/symbol
+      args/keys and the introduction of a simple method 'trait_init' that can be
+      used to create keyword based initializers, eg:
+
+        require 'traits'
+
+        class C
+          include TraitInit
+
+          trait :a, :type => Integer
+          trait :b, :type => Integer
+
+          def initialize opts = {}
+            trait_init opts
+          end
+        end
+
+        C::new :a => 4, :b => 2
+
+  0.8.0
+    - traits now supports a whole slew of hooks that can be registered to fire
+      pre or post setting an attribute, to cast a value to another type, to
+      munge a value destructively, to require only certain types, to require a
+      certain ducktype signature, and to validate arguments passed.  check out
+      sample/m.rb, sample/n.rb, or sample.o.rb to see it in action.  the
+      mechanism is quite flexible allowing method names, lambdas of varying
+      arity, and lists of either/or to be passed to any hook.
+
+    - you can find a gem for trais on codeforpeople - but i've still not coded
+      up automated updating from codeforpeople to rubyforge so it won't show up
+      as a remote gem yet.
+
+  0.7.0
+   - patched in the support i had written eariler for 'hooks' to be called
+     pre/post setting a trait. plus shortcut to 'validate' traits which simply
+     sets up a 'pre' hook which is used as a predicate.  eg:
+
+        class C; trait 'number', 'validate' => proc{|n| Numeric === n}
+
+     pre and post hooks are used in the same way, eg:
+
+        class C
+          trait 'a', 
+            'pre' => proc{|val| p "#{ val } to set with"},
+            'post' => proc{|val| p "#{ val } set"},
+        end
+
+     but the really cool thing is that all of these blocks are both passed the
+     value in question but also evaluate with 'self' set appropriately.  eg
+
+        class Car
+          positive_int = lambda{|n| Fixnum === n and n > 0}
+          legal = proc{|s| s < speed_limit}
+
+          trait 'speed_limit', 'validate' => positive_int, 'default' => 42
+          trait 'speed', 'validate' => legal
+        end
+
+        c = Car::new
+        c.speed = 115
+
+      works as you'd expect:
+
+        (eval):14:in `speed=': validation of speed=(115) failed! (ArgumentError)
+                from a.rb:13
+
+  0.6.0
+    - fixed bug in where a default trait given as an empty array, eg:
+
+        class C;  has 'a' => [];  end
+
+      was exploded into the empty list when passed to the setter to initialize
+      the default value.
+
+  0.5.0
+    - general code cleanup
+
+  0.4.0
+    - tweaked writer code so multiple values can be passed to setters
+    - tweaked method of running blocks to use instance_eval so explicit 'this'
+      arg is no longer needed (though it can still be used)
+
+  0.3.0
+    added ability of default values to be specified with block for deferred
+    context sensitive initialization (see sample/c.rb)
+
+  0.1.0
+
+    completely reworked impl so NO parsing of inspect strings is required -
+    it's all straight methods (albeit quite confusing ones) now.  the
+    interface is unchanged.
+
+  0.0.0
+
+    initial version
+
+
+AUTHOR
+
+  ara [dot] t [dot] howard [at] noaa [dot] gov
+
+SAMPLES
+
+  <========< sample/a.rb >========>
+
+  ~ > cat sample/a.rb
+
+    require 'traits'
+    #
+    # defining a trait is like attr_accessor in the simple case 
+    #
+    class C
+      trait :t
+    end
+    
+    o = C::new
+    o.t = 42
+    p o.t
+    
+    #
+    # and can be made even shorter
+    # 
+    
+    class B; has :x; end
+    
+    o = B::new
+    o.x = 42
+    p o.x 
+    
+
+  ~ > ruby sample/a.rb
+
+    42
+    42
+
+
+  <========< sample/b.rb >========>
+
+  ~ > cat sample/b.rb
+
+    require 'traits'
+    #
+    # multiple traits can be defined at once using a list/array of string/sybmol
+    # arguments
+    #
+    class C
+      has :t0, :t1
+      has %w( t2 t3 ) 
+    end
+    
+    obj = C::new
+    obj.t0 = 4 
+    obj.t3 = 2 
+    print obj.t0, obj.t3, "\n"
+
+  ~ > ruby sample/b.rb
+
+    42
+
+
+  <========< sample/c.rb >========>
+
+  ~ > cat sample/c.rb
+
+    require 'traits'
+    #
+    # a hash argument can be used to specify default values
+    #
+    class C
+      has 'a' => 4, :b => 2 
+    end
+    
+    o = C::new
+    print o.a, o.b, "\n"
+    
+    #
+    # and these traits are smartly inherited
+    #
+    class K < C; end
+    
+    o = K::new
+    o.a = 40
+    p( o.a + o.b ) # note that we pick up a default b from C class here since it
+                   # has not been set
+    
+    o.a = 42
+    o.b = nil
+    p( o.b || o.a ) # but not here since we've explicitly set it to nil
+    
+    #
+    # if a block is specifed as the default the initialization of the default value
+    # is deferred until needed which makes for quite natural trait definitions.  the
+    # block is passed 'self' so references to the current object can be made. (if
+    # this were not done 'self' in the block would be bound to the class!)
+    #
+    
+    class C
+      class << self
+        has('classname'){ name.upcase }
+      end
+    
+      has('classname'){ self.class.classname.downcase }
+    end
+    
+    class B < C; end
+    
+    o = C::new
+    p C::classname
+    p o.classname
+    
+    o = B::new
+    p B::classname
+    p o.classname
+
+  ~ > ruby sample/c.rb
+
+    42
+    42
+    42
+    "C"
+    "c"
+    "B"
+    "b"
+
+
+  <========< sample/d.rb >========>
+
+  ~ > cat sample/d.rb
+
+    require 'traits'
+    #
+    # all behaviours work within class scope (metal/singleton-class) to define
+    # class methods
+    #
+    class C
+      class << self
+        traits 'a' => 4, 'b' => 2
+      end
+    end
+    
+    print C::a, C::b, "\n"
+    
+    #
+    # singleton methods can even be defined on objects
+    #
+    
+    class << (a = %w[dog cat ostrich])
+      has 'category' => 'pets' 
+    end
+    p a.category
+    
+    #
+    # and modules
+    #
+    module Mmmm
+      class << self; trait 'good' => 'bacon'; end 
+    end
+    
+    p Mmmm.good
+
+  ~ > ruby sample/d.rb
+
+    42
+    "pets"
+    "bacon"
+
+
+  <========< sample/e.rb >========>
+
+  ~ > cat sample/e.rb
+
+    require 'traits'
+    #
+    # shorhands exit to enter 'class << self' in order to define class traits
+    #
+    class C
+      class_trait 'a' => 4
+      c_has :b => 2 
+    end
+    
+    print C::a, C::b, "\n"
+
+  ~ > ruby sample/e.rb
+
+    42
+
+
+  <========< sample/f.rb >========>
+
+  ~ > cat sample/f.rb
+
+    require 'traits'
+    #
+    # as traits are defined they are remembered and can be accessed 
+    #
+    class C
+      class_trait :first_class_method
+      trait :first_instance_method
+    end
+    
+    class C
+      class_trait :second_class_method
+      trait :second_instance_method
+    end
+    
+    #
+    # readers and writers are remembered separatedly
+    #
+    p C::class_reader_traits 
+    p C::instance_writer_traits 
+    
+    #
+    # and can be gotten together at class or instance level
+    #
+    p C::class_traits
+    p C::traits
+
+  ~ > ruby sample/f.rb
+
+    ["first_class_method", "second_class_method"]
+    ["first_instance_method=", "second_instance_method="]
+    [["first_class_method", "first_class_method="], ["second_class_method", "second_class_method="]]
+    [["first_instance_method", "first_instance_method="], ["second_instance_method", "second_instance_method="]]
+
+
+  <========< sample/g.rb >========>
+
+  ~ > cat sample/g.rb
+
+    require 'traits'
+    #
+    # another neat feature is that they are remembered per hierarchy 
+    #
+    class C
+      class_traits :base_class_method
+      trait :base_instance_method
+    end
+    
+    class K < C
+      class_traits :derived_class_method
+      trait :derived_instance_method
+    end
+    
+    p C::class_traits 
+    p K::class_traits 
+
+  ~ > ruby sample/g.rb
+
+    [["base_class_method", "base_class_method="]]
+    [["derived_class_method", "derived_class_method="], ["base_class_method", "base_class_method="]]
+
+
+  <========< sample/h.rb >========>
+
+  ~ > cat sample/h.rb
+
+    require 'traits'
+    #
+    # a depth first search path is used to find defaults 
+    #
+    class C
+      has 'a' => 42 
+    end
+    class K < C; end
+    
+    k = K::new
+    p k.a 
+    
+    #
+    # once assigned this is short-circuited
+    #
+    k.a = 'forty-two'
+    p k.a 
+
+  ~ > ruby sample/h.rb
+
+    42
+    "forty-two"
+
+
+  <========< sample/i.rb >========>
+
+  ~ > cat sample/i.rb
+
+    require 'traits'
+    #
+    # getters and setters can be defined separately 
+    #
+    class C
+      has_r :r
+    end
+    class D
+      has_w :w
+    end
+    
+    #
+    # defining a reader trait still defines __public__ query and __private__ writer
+    # methods
+    #
+    class C
+      def using_private_writer_and_query
+        p r?
+        self.r = 42
+        p r
+        p r?
+      end
+    end
+    C::new.using_private_writer_and_query
+    
+    #
+    # defining a writer trait still defines __private__ query and __private__ reader
+    # methods
+    #
+    class D
+      def using_private_reader
+        p w?
+        self.w = 'forty-two' 
+        p w
+        p w?
+      end
+    end
+    D::new.using_private_reader
+
+  ~ > ruby sample/i.rb
+
+    false
+    42
+    true
+    false
+    "forty-two"
+    true
+
+
+  <========< sample/j.rb >========>
+
+  ~ > cat sample/j.rb
+
+    require 'traits'
+    #
+    # getters delegate to setters iff called with arguments 
+    #
+    class AbstractWidget
+      class_trait 'color' => 'pinky-green'
+      class_trait 'size' => 42
+      class_trait 'shape' => 'square'
+    
+      # we define instance traits which get their default from the class
+      %w( color size shape ).each{|t| trait(t){self.class.send t}}
+    
+      def inspect
+        "color <#{ color }> size <#{ size }> shape <#{ shape }>"
+      end
+    end
+    
+    class BlueWidget < AbstractWidget
+      color 'blue'
+      size 420
+    end
+    
+    p BlueWidget::new
+
+  ~ > ruby sample/j.rb
+
+    color <blue> size <420> shape <square>
+
+
+  <========< sample/k.rb >========>
+
+  ~ > cat sample/k.rb
+
+    require 'traits'
+    #
+    # the rememberance of traits can make generic intializers pretty slick 
+    #
+    class C 
+      #
+      # define class traits with defaults
+      #
+      class_traits(
+        'a' => 40,
+        'b' => 1,
+        'c' => 0
+      ) 
+    
+      #
+      # define instance traits whose defaults come from readable class ones
+      #
+      class_rtraits.each{|ct| instance_trait ct => send(ct)}
+    
+      #
+      # any option we respond_to? clobbers defaults
+      #
+      def initialize opts = {}
+        opts.each{|k,v| send(k,v) if respond_to? k}
+      end
+    
+      #
+      # show anything we can read
+      #
+      def inspect
+        self.class.rtraits.inject(0){|n,t| n += send(t)}
+      end
+    end
+    
+    c = C::new 'c' => 1
+    p c
+
+  ~ > ruby sample/k.rb
+
+    42
+
+
+  <========< sample/l.rb >========>
+
+  ~ > cat sample/l.rb
+
+    require 'traits'
+    #
+    # even defining single methods on object behaves
+    #
+    a = [] 
+    
+    class << a
+      trait 'singleton_class' => class << self;self;end
+    
+      class << self 
+        class_trait 'x' => 42
+      end
+    end
+    
+    p a.singleton_class.x
+
+  ~ > ruby sample/l.rb
+
+    42
+
+
+  <========< sample/m.rb >========>
+
+  ~ > cat sample/m.rb
+
+    require 'traits'
+    #
+    # pre and post hooks can be passed a proc or the name of a method, the arity is
+    # detected and the proc/method sent either the value, or the name/value pair
+    #
+    
+    class C
+      HOOK_A = lambda{|value| puts "HOOK_A : #{ value }"}
+      HOOK_B = lambda{|name, value| puts "HOOK_B : #{ name } = #{ value }"}
+    
+      def hook_a value
+        puts "hook_a : #{ value }"
+      end
+      def hook_b name, value
+        puts "hook_b : #{ name } = #{ value }"
+      end
+    
+      trait 'x', 'pre' => HOOK_A, 'post' => 'hook_b'
+      trait 'y', 'pre' => HOOK_B, 'post' => 'hook_a'
+    end
+    
+    c = C::new
+    c.x = 42
+    c.y = 'forty-two'
+
+  ~ > ruby sample/m.rb
+
+    HOOK_A : 42
+    hook_b : x = 42
+    HOOK_B : y = forty-two
+    hook_a : forty-two
+
+
+  <========< sample/n.rb >========>
+
+  ~ > cat sample/n.rb
+
+    require 'traits'
+    #
+    # two kinds of in-place modifications are supported : casting and munging. 
+    # casting is a hook that requires either a proc or the name of a method that
+    # will be used to convert the objects type.  munging is similar execpt the
+    # method is called on the object itself.  like all hooks, lists may be provided
+    # instead of a single argument
+    #
+    # you'll notice that the hooks and methods defined here are not strictly needed,
+    # but are for illustration purposes only.  note that all hooks operate in the
+    # context of self - they have access to instance vars, etc., like instance_eval
+    #
+    
+    class C
+      INT = lambda{|i| int i}
+      def int i
+        Integer i
+      end
+      trait 'a', 'cast' => 'int'
+      trait 'b', 'cast' => INT 
+      trait 'c', 'munge' => 'to_i' 
+      trait 'd', 'cast' => 'Integer' 
+      trait 'e', 'munge' => %w( to_i abs )
+    end
+    
+    c = C::new
+    
+    c.a = '42'
+    p c.a
+    c.b = '42'
+    p c.b
+    c.c = '42'
+    p c.c
+    c.d = '42'
+    p c.d
+    c.e = '-42'
+    p c.e
+
+  ~ > ruby sample/n.rb
+
+    42
+    42
+    42
+    42
+    42
+
+
+  <========< sample/p.rb >========>
+
+  ~ > cat sample/p.rb
+
+    require 'traits'
+    #
+    # the TraitInit module provide a simple method for initializing an object's
+    # traits from an options hash
+    #
+    
+    class C
+      include TraitInit
+    
+      LIST_OF_INTS = lambda{|a| Array === a and a.map{|i| Integer === i}.all?}
+      LIST_OF_STRINGS = lambda{|a| Array === a and a.map{|s| String === s}.all?}
+    
+      trait :li, :validate => LIST_OF_INTS
+      trait :ls, :validate => LIST_OF_STRINGS
+    
+      def initialize opts = {}
+        trait_init opts
+      end
+    end
+    
+    c = C::new "li" => [4, 2], "ls" => %w[4 2]
+    p c.li
+    p c.ls
+
+  ~ > ruby sample/p.rb
+
+    [4, 2]
+    ["4", "2"]
+
+
+  <========< sample/q.rb >========>
+
+  ~ > cat sample/q.rb
+
+    require 'traits'
+    #
+    # the OpenTraits class is similar to an OpenStruct but, imho, easier to use.
+    # the otraits shorthand can be used to contruct one
+    #
+    
+    #
+    # options passed as args dynamically create and init traits
+    #
+      config = otraits :port => 42 
+      p config.port
+    
+    #
+    # any passed block does the same but, via a method missing hood and traits
+    # getter/setters, the syntax is very clean
+    #
+      config = otraits{
+        port 42
+        host 'forty-two'
+      }
+      p config.port
+      p config.host
+      config.username 'zaphod'
+      p config
+
+  ~ > ruby sample/q.rb
+
+    42
+    42
+    "forty-two"
+    {"username"=>"zaphod", "port"=>42, "host"=>"forty-two"}
+
+
+CAVEATS
+
+  this library is experimental and subject to change - though it has not for
+  several versions and much of my code hinges is on it now so you can expect the
+  interface to be stable in the near future - the only changes planned are those
+  that fix bugs or add features.
+
+LICENSE
+
+  same as ruby's
+
