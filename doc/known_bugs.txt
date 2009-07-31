@@ -2,8 +2,6 @@ ContextLogger2 Known Defects
 
 %%mtime(%c)
 
-- The **logger fails to start up** at all when the uploader cannot begin to initialize, say when flightmode is on. Generally not good, since could usefully do logging even without upload capability.
-
 - The **Symbian client/server** interface is not fully implemented, making it presently impossible to receive the result when evaluating a Lua expression that produces a long (textual) result. This is not difficult to implement, but as of yet we have not had the need to implement the full interface.
 
 - One problem with our use of GLib is that the **GError** API is incompatible with reporting **out-of-memory** errors, as reporting an error always involves GError object allocation. This issue only concerns Symbian, where GLib does not abort on out-of-memory errors. We have only started to change our code to consider the NULL GError value as indicating an OOM error. We must also implement our own alternatives for some of the GLib functions, since Nokia's port does not gracefully deal with OOM errors, say g_error_new will likely internally cause a KERN-EXEC 3 in the event it fails to allocate a GError.
