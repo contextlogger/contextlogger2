@@ -6,12 +6,18 @@ requires 2.0.0
 %}
 
 %privateheader{
+#include "cf_rcfile.h"
 #include "local_server.h"
 #include "log-db.h"
 #include "sa_array.h"
 #include "up_uploader.h"
 
 #include "common/evq_event.h"
+
+  ClientCl2* getGlobalClient();
+
+#define cf_STATIC_GET(key) \
+  (cf_RcFile_get_##key(getGlobalClient()->_priv->rcFile))
 %}
 
 %{
@@ -25,10 +31,16 @@ requires 2.0.0
 #include "common/utilities.h"
 
 static ClientCl2* globalClient = NULL;
+
+ ClientCl2* getGlobalClient() {
+   return globalClient;
+ }
 %}
 
 class Client:Cl2 from G:Object {
   private LogDb* log = NULL; // owned
+
+  private cf_RcFile* rcFile = NULL; // owned
 
   private sa_Array* scanner = NULL; // owned
 
@@ -71,24 +83,29 @@ class Client:Cl2 from G:Object {
   {
     assert_error_unset(error);
 
-    LogDb* log = log_db_new(error);
-    if (!log) {
-      assert_error_set(error);
+    ClientCl2* self = GET_NEW;
+    globalClient = self;
+
+    self->_priv->rcFile = cf_RcFile_new(error);
+    if (!(self->_priv->rcFile)) {
+      g_object_unref(self);
       return NULL;
     }
 
-    ClientCl2* self = GET_NEW;
+    LogDb* log = log_db_new(error);
+    if (!log) {
+      g_object_unref(self);
+      return NULL;
+    }
     self->_priv->log = log;
 
     if (!client_cl2_start_uploader(self, error)) {
-      assert_error_set(error);
       g_object_unref(self);
       return NULL;
     }
 
     sa_Array* scanner = sa_Array_new(&(self->_priv->eventQueue), log, error);
     if (!scanner) {
-      assert_error_set(error);
       g_object_unref(self);
       return NULL;
     }
@@ -96,13 +113,10 @@ class Client:Cl2 from G:Object {
 
     LocalServer* localServer = LocalServer_new(error);
     if (!localServer) {
-      assert_error_set(error);
       g_object_unref(self);
       return NULL;
     }
     self->_priv->localServer = localServer;
-
-    globalClient = self;
 
     return self;
   }
@@ -134,6 +148,9 @@ class Client:Cl2 from G:Object {
 
       XDECREF(self->_priv->log);
       logt("LogDb session destroyed");
+
+      cf_RcFile_destroy(self->_priv->rcFile);
+      self->_priv->rcFile = NULL;
 
       PARENT_HANDLER(object);
       logt("logger controller destroyed");

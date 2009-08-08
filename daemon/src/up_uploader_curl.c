@@ -151,7 +151,7 @@ void up_global_cleanup()
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
 
 typedef struct {
-  int numRead;
+  size_t numRead;
   int complete;
   int gotOk;
 } PostStatus;

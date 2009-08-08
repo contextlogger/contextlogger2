@@ -9,6 +9,9 @@ extern "C" {
 #include "lua.h"
 #include "lauxlib.h"
 
+  void *l_alloc (void *ud, void *ptr, size_t osize, size_t nsize); // as in lauxlib.c
+  int atpanic_print(lua_State* L); // as in lauxlib.c
+
   lua_State *cl_lua_newstate(gboolean privileged, lua_CFunction panic_f);
 
   void cl_lua_close(lua_State *state);
@@ -22,7 +25,6 @@ extern "C" {
 
   int atpanic_leave(lua_State* L);
 #endif
-  int atpanic_print(lua_State* L); // defined in lauxlib.c
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -12,6 +12,8 @@ gboolean mkdir_p(const gchar* pathname, GError** error);
 
 gboolean rm_file(const gchar* pathname, GError** error);
 
+gboolean is_ascii_ident(const gchar* s);
+
 #define DECREF(x) { g_object_unref(x); x = NULL; }
 #define XDECREF(x) { if (x) DECREF(x) }
 

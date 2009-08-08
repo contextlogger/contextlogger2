@@ -11,16 +11,19 @@
 #define __FLIGHTMODE_ENABLED__ defined(__SYMBIAN32__)
 #define __PROFILE_ENABLED__ defined(__SYMBIAN32__)
 #define __CELLID_ENABLED__ defined(__SYMBIAN32__)
-#define __BTPROX_ENABLED__ 0 // defined(__SYMBIAN32__)
-#define __GPS_ENABLED__ 0
+#define __BTPROX_ENABLED__ defined(__SYMBIAN32__)
+#define __GPS_ENABLED__ defined(__SYMBIAN32__)
 #define __APPFOCUS_ENABLED__ defined(__SYMBIAN32__)
 #define __KEYPRESS_ENABLED__ defined(__SYMBIAN32__)
+
+#define __FEATURE_RCFILE__ 1
 
 #if __FEATURE_UPLOADER__ && !__UPLOAD_WITH_CURL__
 #if !defined(__UPLOAD_TIME_EXPR__)
 #define __UPLOAD_TIME_EXPR__ "every day at 02:00"
 #endif
 #if !defined(__USERNAME__)
+// This must be printable ASCII.
 #define __USERNAME__ "guest"
 #endif
 #if !defined(__UPLOAD_URL__)

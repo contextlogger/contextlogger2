@@ -121,6 +121,7 @@ library keyevents_client_2000af44.lib
 <% end %>
 
 sourcepath ..\..\src
+source cf_rcfile.cpp
 <% if $is_application %>
 source cl2appapp.cpp
 source cl2appappui.cpp

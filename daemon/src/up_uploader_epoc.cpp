@@ -4,6 +4,7 @@
 
 #include "up_poster_epoc.hpp"
 
+#include "client-cl2-private.h" // cf_STATIC_GET
 #include "er_errors.h"
 #include "log-db.h"
 #include "timer_generic_epoc.h"
@@ -122,6 +123,8 @@ NONSHARABLE_CLASS(CUploader) :
 
  private: // property
 
+  TPtrC8 iUploadUrl; // data not owned
+
   LogDb* iLogDb; // not owned
 
   //// posting state
@@ -141,12 +144,14 @@ NONSHARABLE_CLASS(CUploader) :
 
 CTOR_IMPL_CUploader;
 
-_LIT8(KPostUri, __UPLOAD_URL__); // xxx to come from ConfigDb
-
 void CUploader::ConstructL()
 {
-  //logt("doing uploader init");
-  logf("uploader using IAP %d, username %s, and URL %s", __IAP_ID__, __USERNAME__, __UPLOAD_URL__);
+  gchar* upload_url = cf_STATIC_GET(upload_url);
+  if (!upload_url) 
+    upload_url = __UPLOAD_URL__; // default value
+  iUploadUrl.Set((TUint8*)upload_url, strlen(upload_url)); 
+
+  logf("uploader using IAP %d, and URL %s", __IAP_ID__, upload_url);
 
   // Ensure that uploads directory exists.
   GError* mdError = NULL;
@@ -161,7 +166,7 @@ void CUploader::ConstructL()
   // Test code with a single part post. Just to see if can actually connect somewhere.
   if (iPosterAo) {
     _LIT8(KRequestBody, "Hello World!");
-    iPosterAo->PostBufferL(KPostUri, KRequestBody);
+    iPosterAo->PostBufferL(iUploadUrl, KRequestBody);
   }
 #endif
 #if 0
@@ -169,14 +174,14 @@ void CUploader::ConstructL()
   if (iPosterAo) {
     _LIT8(boundary, "-----AaB03xeql7dsxeql7ds");
     _LIT8(KRequestBody, "-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"metadata\"; filename=\"metadata.json\"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n{\"log filename\": \"test_log.db\", \"time\": {\"timezone\": -7200, \"daylight\": true, \"altzone\": -10800, \"time\": 1247093454.8903401}}\r\n-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"logdata\"; filename=\"test_log.db\"\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: binary\r\n\r\nHello World!\r\n-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"logdata_submit\"\r\n\r\nUpload\r\n-------AaB03xeql7dsxeql7ds--\r\n");
-    iPosterAo->PostMultiPartBufferL(KPostUri, boundary, KRequestBody);
+    iPosterAo->PostMultiPartBufferL(iUploadUrl, boundary, KRequestBody);
   }
 #endif
 #if 0
   // Test code with a file based post.
   if (iPosterAo) {
     _LIT(KFileName, "e:\\data\\atwink.png");
-    iPosterAo->PostFileL(KPostUri, KFileName);
+    iPosterAo->PostFileL(iUploadUrl, KFileName);
   }
 #endif
   iPostTimerAo = CTimerAo::NewL(*this, CActive::EPriorityStandard);
@@ -511,7 +516,7 @@ void CUploader::PostNowL()
   // Our names should all be ASCII, so this may be overkill.
   User::LeaveIfError(CnvUtfConverter::ConvertToUnicodeFromUtf8(fileNameDes, fileName));
   logf("asking poster to post '%s'", iFileToPost);
-  iPosterAo->PostFileL(KPostUri, fileNameDes);
+  iPosterAo->PostFileL(iUploadUrl, fileNameDes);
 }
 
 void CUploader::TakeSnapshotNowL()

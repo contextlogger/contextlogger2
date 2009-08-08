@@ -2,7 +2,7 @@ CC := gcc
 
 SRC_PATH := src
 APP_C_FILES := client-run.c er_errors.c log-db-create.c log-db-logging.c posix-main.c sa_sensor_list_log_db.c sa_sensor_timer_posix.c up_shared.c up_uploader_curl.c utils_cl2.c
-APP_CXX_FILES := local_server.cpp sa_array.cpp
+APP_CXX_FILES := cf_rcfile.cpp local_server.cpp lua_cl2.cpp sa_array.cpp
 
 SHARED_PATH := ../shared
 SHARED_C_FILES := error_list.c evq_event.c logging-time.c platform_error.c evq_queue.c evq_timer.c utilities.c
@@ -42,9 +42,10 @@ DEP_FLAGS := -I$(SRC_PATH) -I$(SHARED_PATH) -I$(TIMESPEC_PATH) $(CURL_CFLAGS)
 COMMON_FLAGS := $(DEP_FLAGS) -D__DO_LOGGING__=1
 GNOME_FLAGS := `pkg-config --cflags gobject-2.0` -DG_DISABLE_DEPRECATED=1
 FEATURES := -D__FEATURE_UPLOADER__ -D__UPLOAD_WITH_CURL__
-CFLAGS := -Wall $(COMMON_FLAGS) $(GNOME_FLAGS) $(FEATURES)
+WARNINGS := -Wall -Wmissing-declarations -Wsign-compare -Werror
+CFLAGS := $(WARNINGS) $(COMMON_FLAGS) $(GNOME_FLAGS) $(FEATURES)
 CXXFLAGS := $(CFLAGS)
-LDFLAGS := $(CURL_LSFLAGS) -lpthread `pkg-config --libs gobject-2.0` -lsqlite3
+LDFLAGS := $(CURL_LSFLAGS) -lpthread `pkg-config --libs gobject-2.0` -lsqlite3 -llua5.1
 
 PLT_ENV := PLTCOLLECTS=`pwd`/../tools/schemelib:
 
@@ -92,6 +93,4 @@ apidoc :
 
 # Some of the Ubuntu packages required for building.
 ubuntu-dev :
-	sudo aptitude install gob2
-	sudo aptitude install libglib2.0-dev
-	sudo aptitude install libsqlite3-dev
+	sudo aptitude install gob2 libglib2.0-dev libsqlite3-dev liblua5.1-dev

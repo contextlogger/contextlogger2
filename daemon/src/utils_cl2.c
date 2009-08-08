@@ -1,11 +1,15 @@
 #include "utils_cl2.h"
+
 #include "common/assertions.h"
 #include "common/error_list.h"
 #include "common/platform_error.h"
-#include <errno.h>
-#include <string.h>
+
 #include <glib/gprintf.h>
 #include <glib/gstdio.h>
+
+#include <ctype.h>
+#include <errno.h>
+#include <string.h>
 
 // See <asm-generic/errno-base.h> for some related "errno" values.
 
@@ -44,3 +48,15 @@ void g_string_vprintf(GString *string,
   g_free(buf);
 }
 #endif
+
+gboolean is_ascii_ident(const gchar* s)
+{
+  if (!*s) return FALSE;
+  if (!isalpha(*s)) return FALSE;
+  s++;
+  while (*s) {
+    if (!isalnum(*s)) return FALSE;
+    s++;
+  }
+  return TRUE;
+}
