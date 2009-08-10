@@ -5,16 +5,18 @@
 
 require 'sake3/component'
 
+require 'src/current_config'
+
 $uid_v8 = 0x08460002
-$basename = "cl2app"
-$version = [0, 1]
+$basename = $APP_BASENAME
+$version = [$MAJOR_VERSION, $MINOR_VERSION]
 
 $is_application = true
-$feature_uploader = true
-$with_curl = false
+$feature_uploader = $FEATURE_UPLOADER
+$with_curl = $UPLOAD_WITH_CURL
 $curl_as_source = true
 $pamp_curl = true
-$have_anim = true
+$have_anim = $HAVE_ANIM
 
 $proj = Sake::Project.new(:basename => $basename,
                           :name => "CL2 App",
@@ -153,14 +155,10 @@ for build in $builds
     map[:uid] = HexNum.new(build.uid.number)
   end
 
-  map[($basename + "_version").to_sym] = ($version[0] * 100 + $version[1])
-
   # This define will allow us to pick the correct header.
   if $sqlite == :static
     map[:use_sqlite3h] = :define
   end
-
-  map[:have_euserhl] = 1 # or 0
 
   # NDEBUG controls whether asserts are to be compiled in (NDEBUG is
   # defined in UDEB builds). Normally an assert results in something
@@ -172,18 +170,10 @@ for build in $builds
   # if your SDK does not have the required API.
   map[:do_logging] = (($sake_op[:logging] and map[:has_flogger]) ? 1 : 0)
 
-  map[:is_application] = ($is_application ? 1 : 0)
-
-  map[:feature_uploader] = ($feature_uploader ? 1 : 0)
-
-  map[:upload_with_curl] = (($feature_uploader && $with_curl) ? 1 : 0)
-
   map[:upload_time_expr] = ($sake_op[:upload_time_expr] || $default_upload_time_expr || :undef)
   map[:upload_url] = ($sake_op[:upload_url] || $default_upload_url || :undef)
   map[:iap_id] = (($sake_op[:iap_id] && $sake_op[:iap_id].to_i) || $default_iap_id.to_i || :undef)
   map[:username] = ($sake_op[:username] || $default_username || :undef)
-
-  map[:have_anim] = ($have_anim ? 1 : 0)
 
   # Each build variant shall have all of the components.
   build.comp_builds = $comp_list.map do |comp|

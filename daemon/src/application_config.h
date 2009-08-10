@@ -2,21 +2,7 @@
 #define __application_config_h__
 
 #include "common/platform_config.h"
-
-/* Enabled sensors.
- */
-#define __TRANSACTION_ENABLED__ 1
-#define __STATUS_ENABLED__ 1
-#define __TIMER_ENABLED__ !defined(__SYMBIAN32__)
-#define __FLIGHTMODE_ENABLED__ defined(__SYMBIAN32__)
-#define __PROFILE_ENABLED__ defined(__SYMBIAN32__)
-#define __CELLID_ENABLED__ defined(__SYMBIAN32__)
-#define __BTPROX_ENABLED__ defined(__SYMBIAN32__)
-#define __GPS_ENABLED__ defined(__SYMBIAN32__)
-#define __APPFOCUS_ENABLED__ defined(__SYMBIAN32__)
-#define __KEYPRESS_ENABLED__ defined(__SYMBIAN32__)
-
-#define __FEATURE_RCFILE__ 1
+#include "current_config.hrh"
 
 #if __FEATURE_UPLOADER__ && !__UPLOAD_WITH_CURL__
 #if !defined(__UPLOAD_TIME_EXPR__)
@@ -39,12 +25,6 @@
 #endif /* __SYMBIAN32__ */
 
 #define NO_THREAD_SAFETY defined(__EPOC32__)
-
-#if !defined(__EPOC32__)
-#define __IS_APPLICATION__ 0
-#endif
-
-#define __IS_DAEMON__ (!__IS_APPLICATION__)
 
 // Adapted from _LIT macro. For this one "s" must be a wide (i.e., L"") string.
 #define _LIT_W(name,s) const static TLitC<sizeof(s)/2> name={sizeof(s)/2-1,s}

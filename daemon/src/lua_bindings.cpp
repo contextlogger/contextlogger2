@@ -30,7 +30,7 @@ static const luaL_Reg function_table[] = {
 
 LUALIB_API int luaopen_cl2 (lua_State *L) {
   luaL_register(L, LUA_CL2LIBNAME, function_table);
-  lua_pushnumber(L, __CL2APP_VERSION__);
+  lua_pushnumber(L, __VERSION100__);
   lua_setfield(L, -2, "version");
   return 1;
 }

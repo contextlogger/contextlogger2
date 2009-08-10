@@ -94,7 +94,7 @@ library flogger.lib
 
 library profileeng.lib // SDK Plugins
 
-<% if build.trait_map[:have_euserhl] %>
+<% if $HAVE_EUSERHL %>
 library euserhl.lib    // High-Level APIs
 <% end %>
 

@@ -1,3 +1,5 @@
+include src/current_config.mk
+
 CC := gcc
 
 SRC_PATH := src
@@ -39,9 +41,9 @@ ALL_CXX_FILES := $(CXX_FILES)
 ALL_OBJ_FILES := $(patsubst %.c, %.o, $(ALL_C_FILES)) $(patsubst %.cpp, %.o, $(ALL_CXX_FILES))
 
 DEP_FLAGS := -I$(SRC_PATH) -I$(SHARED_PATH) -I$(TIMESPEC_PATH) $(CURL_CFLAGS)
-COMMON_FLAGS := $(DEP_FLAGS) -D__DO_LOGGING__=1
+COMMON_FLAGS := $(DEP_FLAGS)
 GNOME_FLAGS := `pkg-config --cflags gobject-2.0` -DG_DISABLE_DEPRECATED=1
-FEATURES := -D__FEATURE_UPLOADER__ -D__UPLOAD_WITH_CURL__
+FEATURES := -D__DO_LOGGING__=1
 WARNINGS := -Wall -Wmissing-declarations -Wsign-compare -Werror
 CFLAGS := $(WARNINGS) $(COMMON_FLAGS) $(GNOME_FLAGS) $(FEATURES)
 CXXFLAGS := $(CFLAGS)
@@ -49,7 +51,10 @@ LDFLAGS := $(CURL_LSFLAGS) -lpthread `pkg-config --libs gobject-2.0` -lsqlite3 -
 
 PLT_ENV := PLTCOLLECTS=`pwd`/../tools/schemelib:
 
-default : epoc_codegen posix_test
+default : epoc_codegen $(if $(IS_SYMBIAN), symbian, posix_test)
+
+config :
+	$(PLT_ENV) ./configure.scm $(VARIANT_NAME)
 
 # Unfortunately the file produced by this rule contains some absolute paths, which means that the end result is platform specific. But then, some of the binaries might be as well. You may just want to do a "make clean" when moving over to another host.
 .depend : Makefile $(GEN_FILES)
