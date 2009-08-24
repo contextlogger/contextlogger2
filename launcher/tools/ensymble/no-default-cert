@@ -1,0 +1,35 @@
+diff -rN -u old-ensymble-0.27-custom/cmd_py2sis.py new-ensymble-0.27-custom/cmd_py2sis.py
+--- old-ensymble-0.27-custom/cmd_py2sis.py	2009-08-19 22:18:21.000000000 +0300
++++ new-ensymble-0.27-custom/cmd_py2sis.py	2009-08-19 22:18:21.000000000 +0300
+@@ -376,12 +376,15 @@
+         # No certificate given, use the Ensymble default certificate.
+         # defaultcert.py is not imported when not needed. This speeds
+         # up program start-up a little.
+-        import defaultcert
+-        certdata = defaultcert.cert
+-        privkeydata = defaultcert.privkey
+ 
+-        print ("%s: warning: no certificate given, using "
+-               "insecure built-in one" % pgmname)
++        #import defaultcert
++        #certdata = defaultcert.cert
++        #privkeydata = defaultcert.privkey
++        certdata = None
++        privkeydata = None
++
++        #print ("%s: warning: no certificate given, using "
++        #       "insecure built-in one" % pgmname)
+ 
+         # Warn if the UID is in the protected range.
+         # Resulting SIS file will probably not install.
+@@ -655,7 +658,8 @@
+                      ["Python for S60"] * numlang)
+ 
+     # Add certificate.
+-    sw.addcertificate(privkeydata, certdata, passphrase)
++    if certdata is not None:
++        sw.addcertificate(privkeydata, certdata, passphrase)
+ 
+     # Generate an EXE stub and add it to the SIS object.
+     string = execstubdata.decode("base-64")
+

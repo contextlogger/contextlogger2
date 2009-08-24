@@ -87,7 +87,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
      (local-include "timer_observer.h")
      (local-include "process_handle_observer.h")
      (local-include "common/assertions.h")
-     (local-include "common/epoc_app_uid_list.hrh") ;; for APP_UID_CL2APP
+     ;;(local-include "common/epoc_app_uid_list.hrh")
      (local-include "common/logging.h")
      (local-include "common/panic.h")
      )

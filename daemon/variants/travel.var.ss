@@ -14,7 +14,7 @@ To help save battery, it has a GUI for easy ON/OFF.
 
 (define* (info)
   (new-symbian-variant #:class (variant-class
-                                symbian-variant%
+                                slist-variant%
                                 (super-new)
                                 (define/override (feature-uploader.attr)
                                   #f))

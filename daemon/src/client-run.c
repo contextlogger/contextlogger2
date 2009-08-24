@@ -1,6 +1,6 @@
 #include "client-run.h"
 
-#include "client-cl2.h"
+#include "kr_controller.h"
 #include "er_errors.h"
 #include "up_uploader.h"
 #include "utils_cl2.h"
@@ -30,32 +30,29 @@ gboolean cl2RunOnce(GError** error)
 
   gboolean res = TRUE;
 
-  ClientCl2* client = client_cl2_new(error);
+  kr_Controller* client = kr_Controller_new(error);
   if (!client) {
     logt("error in client creation");
     return FALSE;
   }
 
-  if (!client_cl2_start(client, error)) {
+  if (!kr_Controller_start(client, error)) {
     logt("error starting client");
     res = FALSE;
     goto cleanup;
   }
 
-  if (!client_cl2_run(client, error)) {
+  if (!kr_Controller_run(client, error)) {
     logt("error running client");
     res = FALSE;
   }
   logt("event loop exited");
 
-  if (!client_cl2_stop(client, res ? error : NULL)) {
-    logt("error stopping client");
-    res = FALSE;
-  }
+  kr_Controller_stop(client);
   logt("client stopped");
     
 cleanup:
-  g_object_unref(client);
+  kr_Controller_destroy(client);
   logt("client destroyed");
   return res;
 }

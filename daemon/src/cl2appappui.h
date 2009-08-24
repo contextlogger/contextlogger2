@@ -3,6 +3,8 @@
 #ifndef CL2APPAPPUI_H
 #define CL2APPAPPUI_H
 
+#include "kr_controller.h"
+
 #include <aknappui.h>
 #include <coeccntx.h>
 #include <e32std.h>
@@ -10,7 +12,6 @@
 #include <eikdoc.h>
 
 #include <glib.h>
-#include "client-cl2.h"
 
 class CCl2appContainer;
 
@@ -20,7 +21,7 @@ public:
   void ConstructL();
   ~CCl2appAppUi();
 
-  void KillLogger();
+  void DestroyLogger();
 
   // Just making this public rather than protected.
   void Exit() { CAknAppUi::Exit(); }
@@ -39,9 +40,7 @@ private: // CEikAppUi
 
 private:
   CCl2appContainer* iAppContainer;
-  //GError* iError;
-  //CActiveScheduler* iDefaultAs;
-  ClientCl2* iClient;
+  kr_Controller* iClient;
 };
 
 #endif // CL2APPAPPUI_H

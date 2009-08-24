@@ -27,6 +27,8 @@ NONSHARABLE_CLASS(CSensor_btprox) : public CActiveRunG
 
   void Stop();
 
+  void Reconfigure(const gchar* name, const gchar* value);
+
  private:
  
   CSensor_btprox(LogDb* aLogDb);
@@ -38,6 +40,8 @@ NONSHARABLE_CLASS(CSensor_btprox) : public CActiveRunG
   void BtClose();
   void TryStartScanning();
   gboolean HandleScanEvent(TInt errCode, GError** error);
+
+  void RefreshBaseScanIntervalSecs();
 
   // Three different ways internally to make an asynch. request.
   void SetTimer();
@@ -69,6 +73,8 @@ NONSHARABLE_CLASS(CSensor_btprox) : public CActiveRunG
   TNameEntry iNameEntry;
 
   TInt iNumScanFailures;
+
+  TInt iBaseScanIntervalSecs;
   
   GPtrArray* iResult;
   GPtrArray* iOldResult;

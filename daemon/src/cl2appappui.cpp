@@ -13,8 +13,6 @@
 #include "er_errors.h"
 #include "common/logging.h"
 
-//#include "lua_cl2.h"
-
 #define KEnableSkinFlag 0x1000
 #define KLayoutAwareFlag 0x08
 
@@ -41,13 +39,14 @@ extern "C" void ExitApplication()
 extern "C" void KillLogger()
 {
   logt("KillLogger");
-  ((CCl2appAppUi*)(CEikonEnv::Static()->EikAppUi()))->KillLogger();
+  ((CCl2appAppUi*)(CEikonEnv::Static()->EikAppUi()))->DestroyLogger();
 }
 
-void CCl2appAppUi::KillLogger()
+void CCl2appAppUi::DestroyLogger()
 {
   if (iClient) {
-    XDECREF(iClient);
+    kr_Controller_destroy(iClient);
+    iClient = NULL;
     logt("logger killed");
   }
 }
@@ -76,7 +75,7 @@ void CCl2appAppUi::ConstructL()
 
   {
     GError* localError = NULL;
-    iClient = client_cl2_new(&localError);
+    iClient = kr_Controller_new(&localError);
     logf("client init %s", iClient ? "ok" : "failed");
     if (!iClient) {
       gx_error_log_free(localError);
@@ -109,7 +108,7 @@ CCl2appAppUi::~CCl2appAppUi()
       delete iAppContainer;
     }
 
-  XDECREF(iClient);
+  DestroyLogger();
 
   cl2GlobalCleanup();
 }
@@ -138,7 +137,7 @@ void CCl2appAppUi::Start()
   if (!iClient) return;
 
   GError* localError = NULL;
-  if (!client_cl2_start(iClient, &localError)) {
+  if (!kr_Controller_start(iClient, &localError)) {
     gx_error_log_free(localError);
     _LIT(msg, "failed to start");
     DisplayText(msg);
@@ -153,18 +152,11 @@ void CCl2appAppUi::Start()
 void CCl2appAppUi::Stop()
 {
   if (!iClient) return;
-
-  GError* localError = NULL;
-  if (!client_cl2_stop(iClient, &localError)) {
-    gx_error_log_free(localError);
-    _LIT(msg, "failure during stopping");
-    DisplayText(msg);
-  } else {
-    /*
+  kr_Controller_stop(iClient);
+  /*
     _LIT(msg, "stopped");
     DisplayText(msg);
-    */
-  }
+  */
 }
 
 void CCl2appAppUi::HandleCommandL(TInt aCommand)

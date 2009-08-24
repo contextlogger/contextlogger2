@@ -5,19 +5,18 @@
 extern "C" {
 #endif
 
-#include <glib.h>
 #include "lua.h"
 #include "lauxlib.h"
+
+#include <glib.h>
 
   void *l_alloc (void *ud, void *ptr, size_t osize, size_t nsize); // as in lauxlib.c
   int atpanic_print(lua_State* L); // as in lauxlib.c
 
-  lua_State *cl_lua_newstate(gboolean privileged, lua_CFunction panic_f);
+  lua_State* cl_lua_new();
+  lua_State* cl_lua_new_libs();
 
-  void cl_lua_close(lua_State *state);
-
-  //xxx signature will change
-  void cl_lua_eval_string(const char *str);
+  gboolean validate_lua_syntax(const gchar* value, GError** error);
 
 #ifdef __EPOC32__
   // A Lua error string gives the description for errors like these.
@@ -25,6 +24,10 @@ extern "C" {
 
   int atpanic_leave(lua_State* L);
 #endif
+
+  // Frees 'error' before a non-local return.
+  // Returns whatever lua_error does.
+  int lua_raise_gerror(lua_State* L, GError* error);
 
 #ifdef __cplusplus
 } /* extern "C" */
@@ -38,13 +41,13 @@ extern "C" {
 
 (require codegen/cxx)
 (def-auto-ptr "lua_State"
-  (lambda (x) (printf "cl_lua_close(~a);" x)))
+  (lambda (x) (printf "lua_close(~a);" x)))
 ***/
 class lua_State_auto_ptr
 {
  public:
   lua_State_auto_ptr(lua_State* aPtr) : iPtr(aPtr) {}
-  ~lua_State_auto_ptr() { cl_lua_close(iPtr); }
+  ~lua_State_auto_ptr() { lua_close(iPtr); }
  private:
   lua_State* iPtr;
 };

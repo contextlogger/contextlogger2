@@ -2,6 +2,8 @@
 
 #if __BTPROX_ENABLED__
 
+#include "cf_query.h"
+#include "kr_controller_private.h"
 #include "log-db-logging.h"
 #include "utils_cl2.h"
 
@@ -12,9 +14,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-
-// xxx needs to come from ConfigDb
-#define SCAN_INTERVAL_SECS (10 * 60) // 10 minutes
 
 // might be related -- http://code.google.com/p/bt-proximity/
 
@@ -179,6 +178,8 @@ CSensor_btprox::CSensor_btprox(LogDb* aLogDb) :
 
 void CSensor_btprox::ConstructL()
 {
+  RefreshBaseScanIntervalSecs();
+
   iResult = g_ptr_array_sized_new(15); 
   User::LeaveIfNull(iResult);
   iOldResult = g_ptr_array_sized_new(15);
@@ -220,10 +221,28 @@ void CSensor_btprox::TryBtInitL()
   LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iHostResolver, iHostResolver.Open(iSocketServ, protocolDesc.iAddrFamily, protocolDesc.iProtocol));
 }
 
+void CSensor_btprox::Reconfigure(const gchar* name, const gchar* value)
+{
+  if (strcmp(name, "sensor.btprox.interval") == 0)
+    RefreshBaseScanIntervalSecs();
+}
+
+#define SCAN_INTERVAL_SECS (10 * 60) // 10 minutes
+
+// This only takes effect the next time the timer is set.
+void CSensor_btprox::RefreshBaseScanIntervalSecs()
+{
+  iBaseScanIntervalSecs = SCAN_INTERVAL_SECS;
+  try_get_ConfigDb_int("sensor.btprox.interval",
+		       &iBaseScanIntervalSecs,
+		       NULL, NULL);
+  logf("btprox scan interval set to %d secs", iBaseScanIntervalSecs);
+}
+
 void CSensor_btprox::SetTimer() 
 {
   assert(iState == EScanWaiting || iState == ERetryWaiting);
-  int secs = SCAN_INTERVAL_SECS * (1 + iNumScanFailures) + (rand() % 10);
+  int secs = iBaseScanIntervalSecs * (1 + iNumScanFailures) + (rand() % 10);
   TTimeIntervalMicroSeconds32 interval = SecsToUsecs(secs);
   logf("btprox timer set to %d secs / %d usecs", secs, interval.Int());
   iTimer.After(iStatus, interval);

@@ -2,7 +2,7 @@
 
 #if __FEATURE_UPLOADER__
 
-#include "client-cl2-private.h" // cf_STATIC_GET
+#include "kr_controller_private.h" // cf_STATIC_GET
 
 #include "common/assertions.h"
 #include "common/epoc-time.h"

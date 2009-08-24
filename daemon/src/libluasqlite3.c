@@ -4,16 +4,31 @@ lua-sqlite3 does not directly work for us. For one thing, we do not
 want the user to be able to choose what database to open. The database
 to access is our LogDb, and access to anything else is not to be
 allowed. (ConfigDb database is not to be accessed directly at all.)
-Furthermore, this access is also to be controlled quite carefully, and
-also, any requirements for mutex access are to be implemented.
 
 lua-sqlite3 ought to nonetheless be as good a starting point as any
 for implementing the access we require.
+
+LogDb access is also to be controlled quite carefully, and also, any
+requirements for mutex access are to be implemented. Unfortunately, to
+allow for interactive sessions, we cannot just go and lock the
+database for the duration of any user session. Luckily, on Symbian we
+presently have no need for MT, and Symbian's SQL Engine presumably
+supports locking at the database level. And a proper SQLite library on
+Linux should support locking. So there may be little that we have to
+do when it comes to protection against concurrent modification, but
+better keep this in mind.
+
+Note that most of the lua-sqlite3 functions like to just return an
+error code, and are meant to be used with a Lua wrapper, I suppose. We
+do not intend to use any wrapper, and hence shall be changing this for
+any functions that we are planning to use. We shall be creating Lua
+VMs left and right, and we want that to stay fast.
 
  */
 
 // This file is derived from lua-sqlite3-0.4.1, used under the following
 // license.
+//
 /*
  *  Author: Michael Roth <mroth@nessie.de>
  *
@@ -42,23 +57,17 @@ for implementing the access we require.
 
 
 
-#include <stdio.h>
-#include "sqlite3.h"
+#include "libluasqlite3.h"
+
+#include "kr_controller_private.h"
+#include "log-db.h"
+#include "sqlite_cl2.h"
+
 #include "lua.h"
 #include "lauxlib.h"
 
+#include <stdio.h>
 
-/*
- * Not exported to Lua:
- *
- * sqlite3_get_table		Really doesn't make sense, doesn't it?
- *
- * sqlite3_mprintf		Won't work because I don't know now how to pass a variable
- *				numbers of arguments from lua to a C vararg function.
- *
- * sqlite3_user_data		Makes no sense to export, only for internal usage.
- *
- */
 
 
 
@@ -99,7 +108,7 @@ for implementing the access we require.
 
 typedef struct
 {
-  sqlite3 * 	sqlite3; // xxx we require one shared handle to the database, one which may be closed at any time, and if there is any access attempt after the db has been closed we should raise a Lua exception
+  sqlite3 * 	kr_db;
   lua_State * 	L;
   int		key2value_pos;	/* Used by callback wrappers to find the key2value array on the lua stack */
 } DB;
@@ -335,8 +344,15 @@ static sqlite3_stmt * checkstmt_stmt(lua_State * L, int narg)
 
 static sqlite3 * checkdb_sqlite3(lua_State * L, int narg)
 {
-  return checkdb(L, narg)->sqlite3;
+  return checkdb(L, narg)->kr_db;
 }
+
+/*
+static pthread_mutex_t* checkdb_mutex(lua_State * L, int narg)
+{
+  return &(checkdb(L, narg)->mutex);
+}
+*/
 
 static int checknilornoneorfunc(lua_State * L, int narg)
 {
@@ -481,7 +497,7 @@ FUNC( l_sqlite3_busy_timeout )
   
   delete_private_value(L, KEY_BUSY_DATA(db));
   
-  lua_pushnumber(L, sqlite3_busy_timeout(db->sqlite3, timeout) );
+  lua_pushnumber(L, sqlite3_busy_timeout(db->kr_db, timeout) );
   return 1;
 }
 
@@ -495,7 +511,7 @@ FUNC( l_sqlite3_changes )
 
 FUNC( l_sqlite3_close )
 {
-  DB * db = checkdb(L, 1);
+  DB * db = checkdb(L, 1); // xxx the arg need not be popped, apparently
   
   delete_private_value(L, KEY_KEY2VALUE_TABLE(db));
   delete_private_value(L, KEY_FUNCTION_TABLE(db));
@@ -506,9 +522,9 @@ FUNC( l_sqlite3_close )
   delete_private_value(L, KEY_TRACE_DATA(db));
   delete_private_value(L, KEY_BUSY_DATA(db));
   delete_private_value(L, KEY_COMMIT_DATA(db));
-  
-  lua_pushnumber(L, sqlite3_close(db->sqlite3) );
-  return 1;
+
+  // I suppose Lua will GC the actual DB struct.
+  return 0;
 }
 
 
@@ -581,7 +597,7 @@ static void push_column(lua_State * L, sqlite3_stmt * stmt, int column)
       break;
     
     case SQLITE_TEXT:
-      lua_pushlstring(L, sqlite3_column_text(stmt, column), sqlite3_column_bytes(stmt, column));
+      lua_pushlstring(L, (const char*)sqlite3_column_text(stmt, column), sqlite3_column_bytes(stmt, column));
       break;
     
     case SQLITE_BLOB:
@@ -755,20 +771,10 @@ FUNC( l_sqlite3_last_insert_rowid )
 
 FUNC( l_sqlite3_open )
 {
-  sqlite3 * sqlite3 	= 0;
-  int error 		= sqlite3_open(checkstr(L, 1), &sqlite3);
-  
-  lua_pushnumber(L, error);
-  
-  if (sqlite3)
-  {
-    DB * db = (DB *) lua_newuserdata(L, sizeof(DB));
-    db->sqlite3 = sqlite3;
-  }
-  else
-    lua_pushnil(L);
-  
-  return 2;	/* error code, database */
+  sqlite3 * sqlite3 	= getGlobalClient()->log->db;
+  DB * db = (DB *) lua_newuserdata(L, sizeof(DB));
+  db->kr_db = sqlite3;
+  return 1;	/* database */
 }
 
 
@@ -786,7 +792,7 @@ FUNC( l_sqlite3_prepare )
   
   init_callback_usage(L, db); 	/* Needed by trace handler... FIXME: maybe to be removed... */
   
-  error = sqlite3_prepare(db->sqlite3, sql, sql_size, &sqlite3_stmt, &leftover);
+  error = sqlite3_prepare(db->kr_db, sql, sql_size, &sqlite3_stmt, &leftover);
   
   leftover_size = leftover ? sql + sql_size - leftover : 0;
   
@@ -875,7 +881,7 @@ FUNC( l_sqlite3_exec )
   
   init_callback_usage(L, db);
   
-  lua_pushnumber(L, sqlite3_exec(db->sqlite3, checkstr(L, 2), cb, cb_data, 0) );
+  lua_pushnumber(L, sqlite3_exec(db->kr_db, checkstr(L, 2), cb, cb_data, 0) );
   return 1;
 }
 
@@ -962,7 +968,7 @@ FUNC( l_sqlite3_create_function )
   
   lua_pushnumber(L,
     sqlite3_create_function (
-      db->sqlite3,
+      db->kr_db,
       checkstr(L, 2),
       checkint(L, 3),
       SQLITE_UTF8,
@@ -975,7 +981,7 @@ FUNC( l_sqlite3_create_function )
 }
 
 
-int xcompare_callback_wrapper(void * cb_data, int len_a, const void * str_a, int len_b, const void * str_b)
+static int xcompare_callback_wrapper(void * cb_data, int len_a, const void * str_a, int len_b, const void * str_b)
 {
   DB *		db = CB_DATA(cb_data)->db;
   lua_State *	L  = db->L;
@@ -1009,12 +1015,12 @@ FUNC( l_sqlite3_create_collation )
   register_callback(L, db, KEY_XCOMPARE(cb_data), 3);
   
   lua_pushnumber(L, sqlite3_create_collation(
-                db->sqlite3, checkstr(L, 2), SQLITE_UTF8, cb_data, xcompare) );
+                db->kr_db, checkstr(L, 2), SQLITE_UTF8, cb_data, xcompare) );
   return 1;
 }
 
 
-void xneeded_callback_wrapper(void * cb_data, sqlite3 * sqlite3, int eTextRep, const char * collation_name)
+static void xneeded_callback_wrapper(void * cb_data, sqlite3 * sqlite3, int eTextRep, const char * collation_name)
 {
   DB * 		db = CB_DATA(cb_data)->db;
   lua_State * 	L  = db->L;
@@ -1040,7 +1046,7 @@ FUNC( l_sqlite3_collation_needed )
   
   register_callback(L, db, KEY_XNEEDED(cb_data), 2);
   
-  lua_pushnumber(L, sqlite3_collation_needed(db->sqlite3, cb_data, xneeded) );
+  lua_pushnumber(L, sqlite3_collation_needed(db->kr_db, cb_data, xneeded) );
   return 1;
 }
 
@@ -1073,7 +1079,7 @@ FUNC( l_sqlite3_trace )
   
   register_callback(L, db, KEY_XTRACE(cb_data), 2);
   
-  sqlite3_trace(db->sqlite3, xtrace, cb_data);
+  sqlite3_trace(db->kr_db, xtrace, cb_data);
   
   lua_pushnumber(L, SQLITE_OK);
   return 1;
@@ -1244,7 +1250,7 @@ FUNC( l_sqlite3_value_text )
 {
   sqlite3_value ** values = checkvalues(L, 1);
   int index = checkint(L, 2);
-  lua_pushlstring(L, sqlite3_value_text(values[index]), sqlite3_value_bytes(values[index]) );
+  lua_pushlstring(L, (const char*)sqlite3_value_text(values[index]), sqlite3_value_bytes(values[index]) );
   return 1;
 }
 
@@ -1266,7 +1272,7 @@ FUNC( l_sqlite3_value )
       break;
     
     case SQLITE_TEXT:
-      lua_pushlstring(L, sqlite3_value_text(value), sqlite3_value_bytes(value) );
+      lua_pushlstring(L, (const char*)sqlite3_value_text(value), sqlite3_value_bytes(value) );
       break;
     
     case SQLITE_BLOB:
@@ -1300,7 +1306,7 @@ FUNC( l_sqlite3_libversion )
 }
 
 
-int xcommit_callback_wrapper(void * cb_data)
+static int xcommit_callback_wrapper(void * cb_data)
 {
   DB *		db = CB_DATA(cb_data)->db;
   lua_State *	L  = db->L;
@@ -1329,14 +1335,14 @@ FUNC( l_sqlite3_commit_hook )
     xcommit = 0;
   
   register_callback(L, db, KEY_XCOMMIT(cb_data), 2);
-  sqlite3_commit_hook(db->sqlite3, xcommit, cb_data);
+  sqlite3_commit_hook(db->kr_db, xcommit, cb_data);
   
-  lua_pushnumber(L, sqlite3_errcode(db->sqlite3) );
+  lua_pushnumber(L, sqlite3_errcode(db->kr_db) );
   return 1;
 }
 
 
-int xprogress_callback_wrapper(void * cb_data)
+static int xprogress_callback_wrapper(void * cb_data)
 {
   DB *		db = CB_DATA(cb_data)->db;
   lua_State *	L  = db->L;
@@ -1366,14 +1372,14 @@ FUNC( l_sqlite3_progress_handler )
     xprogress = 0;
   
   register_callback(L, db, KEY_XPROGRESS(cb_data), 3);
-  sqlite3_progress_handler(db->sqlite3, checkint(L, 2), xprogress, cb_data);
+  sqlite3_progress_handler(db->kr_db, checkint(L, 2), xprogress, cb_data);
   
-  lua_pushnumber(L, sqlite3_errcode(db->sqlite3) );
+  lua_pushnumber(L, sqlite3_errcode(db->kr_db) );
   return 1;
 }
 
 
-int xbusy_callback_wrapper(void * cb_data, int num_called)
+static int xbusy_callback_wrapper(void * cb_data, int num_called)
 {
   DB *		db = CB_DATA(cb_data)->db;
   lua_State *	L  = db->L;
@@ -1404,13 +1410,13 @@ FUNC( l_sqlite3_busy_handler )
   
   register_callback(L, db, KEY_XBUSY(cb_data), 2);
   
-  lua_pushnumber(L, sqlite3_busy_handler(db->sqlite3, xbusy, cb_data) );
+  lua_pushnumber(L, sqlite3_busy_handler(db->kr_db, xbusy, cb_data) );
   return 1;
 }
 
 
 
-int xauth_callback_wrapper(void * cb_data, int auth_request, const char * name1, const char * name2, const char * db_name, const char * trigger_name)
+static int xauth_callback_wrapper(void * cb_data, int auth_request, const char * name1, const char * name2, const char * db_name, const char * trigger_name)
 {
   DB *		db = CB_DATA(cb_data)->db;
   lua_State *	L  = db->L;
@@ -1451,8 +1457,8 @@ FUNC( l_sqlite3_set_authorizer )
     xauth = 0;
   
   register_callback(L, db, KEY_XAUTH(cb_data), 2);
-  
-  lua_pushnumber(L, sqlite3_set_authorizer(db->sqlite3, xauth, cb_data) );
+
+  lua_pushnumber(L, sqlite3_set_authorizer(db->kr_db, xauth, cb_data) );
   return 1;
 }
 

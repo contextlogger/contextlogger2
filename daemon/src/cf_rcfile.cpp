@@ -97,6 +97,8 @@ extern "C" cf_RcFile* cf_RcFile_new(GError** error)
     return NULL;
   }
 
+  // No, we are not providing access to _any_ libraries, either the
+  // standard ones or the application specific ones.
   lua_State *L = lua_newstate(l_alloc, NULL);
   if (!L) {
     g_free(self);

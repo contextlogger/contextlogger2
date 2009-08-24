@@ -4,8 +4,10 @@
 
 #include "up_poster_epoc.hpp"
 
-#include "client-cl2-private.h" // cf_STATIC_GET
+#include "cf_query.h"
+#include "epoc-iap.h"
 #include "er_errors.h"
+#include "kr_controller_private.h" // cf_STATIC_GET
 #include "log-db.h"
 #include "timer_generic_epoc.h"
 #include "utils_cl2.h"
@@ -96,7 +98,8 @@ NONSHARABLE_CLASS(CUploader) :
  public:
   ~CUploader();
 
-  ///xxx reconfigure api
+  void RefreshIap(TBool aNotInitial);
+  void RefreshSnapshotTimeExpr(TBool aNotInitial);
 
   void RequestSnapshot();
 
@@ -125,6 +128,8 @@ NONSHARABLE_CLASS(CUploader) :
 
   TPtrC8 iUploadUrl; // data not owned
 
+  TUint32 iIapId;
+
   LogDb* iLogDb; // not owned
 
   //// posting state
@@ -144,6 +149,62 @@ NONSHARABLE_CLASS(CUploader) :
 
 CTOR_IMPL_CUploader;
 
+// The effect is not immediate. Will only take effect when the next
+// poster is created.
+// 
+// We do logging here to make it possible to find out if the setting
+// change succeeded.
+void CUploader::RefreshIap(TBool aNotInitial)
+{
+  GError* localError = NULL;
+  gboolean found = FALSE;
+  int newId = 0;
+  if (!try_get_ConfigDb_int("iap", &newId, &found, &localError)) {
+    if (aNotInitial)
+      gx_db_log_free_error(iLogDb, localError, NULL);
+    else
+      gx_error_free(localError);
+  } else {
+    // TUint32 coercion hopefully okay.
+    iIapId = (found ? (TUint32)newId : __IAP_ID__);
+    if (aNotInitial)
+      log_db_log_status(iLogDb, NULL, "Uploader IAP changed to %d", iIapId);
+  }
+}
+
+void CUploader::RefreshSnapshotTimeExpr(TBool aNotInitial)
+{
+  GError* localError = NULL;
+  gchar* newOne = NULL;
+  if (!get_ConfigDb_str("uploader.time_expr", 
+			&newOne, __UPLOAD_TIME_EXPR__, 
+			&localError)) {
+    if (aNotInitial)
+      gx_db_log_free_error(iLogDb, localError, NULL);
+    else
+      gx_error_free(localError);
+  } else {
+    g_free(iSnapshotTimeExpr);
+    iSnapshotTimeExpr = newOne;
+    logt("got time expression");
+    logt(iSnapshotTimeExpr);
+    if (aNotInitial) {
+      log_db_log_status(iLogDb, NULL, "Upload time expression set to '%s'",
+			newOne);
+
+      // We may need to recompute the next snapshot time based on the
+      // new expression. But if a previosly set time has already
+      // passed, then that is not affected by the expression change.
+      // What is past is past.
+      {
+	iSnapshotTimerAo->Cancel();
+	iNoNextSnapshotTime = ETrue;
+	StateChanged();
+      }
+    }
+  }
+}
+
 void CUploader::ConstructL()
 {
   gchar* upload_url = cf_STATIC_GET(upload_url);
@@ -151,7 +212,9 @@ void CUploader::ConstructL()
     upload_url = __UPLOAD_URL__; // default value
   iUploadUrl.Set((TUint8*)upload_url, strlen(upload_url)); 
 
-  logf("uploader using IAP %d, and URL %s", __IAP_ID__, upload_url);
+  RefreshIap(EFalse);
+
+  logf("uploader using IAP %d, and URL %s", iIapId, upload_url);
 
   // Ensure that uploads directory exists.
   GError* mdError = NULL;
@@ -186,11 +249,11 @@ void CUploader::ConstructL()
 #endif
   iPostTimerAo = CTimerAo::NewL(*this, CActive::EPriorityStandard);
   iSnapshotTimerAo = CTimerAo::NewL(*this, CActive::EPriorityStandard);
-  iSnapshotTimeExpr = strdup(__UPLOAD_TIME_EXPR__); //xxx needs to come from ConfigDb
-  if (!iSnapshotTimeExpr) User::Leave(KErrNoMemory);
-  //logt("uploader timer inits done");
-  iSnapshotTimeCtx = time(NULL); //xxx needs to come from ConfigDb
+  RefreshSnapshotTimeExpr(EFalse);
+  iSnapshotTimeCtx = time(NULL); //xxx needs to come from ConfigDb -- but actually ones the next time is computed by a Lua expression, that expression can contain any required fixpoint as a constant
   if (iSnapshotTimeCtx == -1) User::Leave(KErrGeneral);
+  //logf("using snapshot time '%s'", iSnapshotTimeExpr);
+
   StateChangedL();
 }
 
@@ -410,6 +473,7 @@ void CUploader::HandleCommsError(TInt anError)
     case KErrNotReady: // -18 ("A device required by an I/O operation is not ready to start operations.") We have actually gotten this error. Let us have it here to see if it is something transient.
     case KErrServerBusy: // local daemon, such as socket or file server
     case -8268: // not documented, but getting this in flight mode
+    case -30180: // not documented, getting this when WLAN specified in IAP is not within range
       {
 	DestroyPosterAo();
       } // fall through...
@@ -475,8 +539,7 @@ TInt CUploader::CreatePosterAo()
 {
   assert(!iPosterAo);
 
-  // xxx IAP ID to come from ConfigDb
-  TRAPD(errCode, iPosterAo = CPosterAo::NewL(*this, __IAP_ID__));
+  TRAPD(errCode, iPosterAo = CPosterAo::NewL(*this, iIapId));
   if (errCode) {
     logf("poster creation failed with %d", errCode);
   }
@@ -572,11 +635,16 @@ EXTERN_C gboolean up_Uploader_upload_now(up_Uploader* object, GError** error)
 }
 
 EXTERN_C gboolean up_Uploader_reconfigure(up_Uploader* object,
-					  const char* key,
-					  const void* value, 
+					  const gchar* key,
+					  const gchar* value, 
 					  GError** error)
 {
-  return TRUE; //xxx we shall convert the values here and invoke appropriate uploader methods
+  if (strcmp(key, "iap") == 0) {
+    ((CUploader*)object)->RefreshIap(ETrue);
+  } else if (strcmp(key, "uploader.time_expr") == 0) {
+    ((CUploader*)object)->RefreshSnapshotTimeExpr(ETrue);
+  }
+  return TRUE;
 }
 
 EXTERN_C up_Uploader* up_Uploader_new(LogDb* logDb, GError** error)

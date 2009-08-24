@@ -103,7 +103,7 @@ be deleted.
 
 #include "watchdog.h"
 
-#include "common/epoc_app_uid_list.hrh" // for APP_UID_CL2APP
+#include "common/epoc_app_uid_list.hrh"
 #include "common/epoc-utilities.hpp"
 #include "common/logging.h"
 #include "common/panic.h"
@@ -138,7 +138,7 @@ static TBool IsAppInstalledL()
   User::LeaveIfError(ls.Connect());
   CleanupClosePushL(ls);
   TApaAppInfo appInfo;
-  TInt errCode = ls.GetAppInfo(appInfo, TUid::Uid(APP_UID_CL2APP));
+  TInt errCode = ls.GetAppInfo(appInfo, TUid::Uid(APP_UID_CL2_LOGGER_DAEMON));
   if (errCode == KErrNotFound)
     result = EFalse;
   else if (errCode)

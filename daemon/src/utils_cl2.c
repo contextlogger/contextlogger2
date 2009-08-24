@@ -52,10 +52,10 @@ void g_string_vprintf(GString *string,
 gboolean is_ascii_ident(const gchar* s)
 {
   if (!*s) return FALSE;
-  if (!isalpha(*s)) return FALSE;
+  if (!isalpha(*s) && (*s != '_')) return FALSE;
   s++;
   while (*s) {
-    if (!isalnum(*s)) return FALSE;
+    if (!isalnum(*s) && (*s != '_')) return FALSE;
     s++;
   }
   return TRUE;

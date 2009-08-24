@@ -9,6 +9,26 @@ project must implement.
 
 (require (lib "usual-4.ss" "common"))
 (require konffaile/variant)
+(require "../src/sa_sensor_list_spec.ss")
+(require (lib "ast-util.scm" "wg"))
+
+;; --------------------------------------------------
+;; sensors
+;; --------------------------------------------------
+
+(define sensor-list (cdr all-sensors))
+
+(define (get-sensor-name sensor)
+  (fget-reqd-nlist-elem-1 sensor 'name))
+
+(define (sensor-essential? sensor)
+  (true? (fget-opt-nlist-elem-1 sensor 'inactive)))
+
+(define (enabled-symbol name)
+  (string->symbol (format "~a-enabled" name)))
+
+(define (symbol-sjoin lst)
+  (string-join (map symbol->string lst) " "))
 
 (define-variant* project-variant% variant%
   (super-new)
@@ -34,10 +54,6 @@ project must implement.
     (real->decimal-string
      (+ (major-version.attr) (/ (minor-version.attr) 100)) 2))
 
-  ;; Only relevant for Symbian, of course.
-  (define/public (uid-v9.attr)
-    (make-hexnum #xe8460002))
-  
   (define/public (binary-type)
     'daemon) ;; 'application or 'daemon or 'static-lib
   
@@ -64,36 +80,52 @@ project must implement.
   ;; sensors
   ;; --------------------------------------------------
   
-  (define/public (transaction_enabled.attr)
-    #t)
-  
-  (define/public (status_enabled.attr)
-    #t)
-  
-  (define/public (timer_enabled.attr)
-    (eq? (platform) 'linux))
+  (define/override (get-attrs)
+    (for/hasheq
+     ((sensor sensor-list))
+     (alet name (get-sensor-name sensor)
+           (values (enabled-symbol name)
+                   (sensor-essential? sensor)))))
+    
+  )
 
-  (define/public (flightmode_enabled.attr)
-    #f)
+(define-variant* linux-variant% project-variant%
+    (super-new)
   
-  (define/public (profile_enabled.attr)
-    #f)
-  
-  (define/public (cellid_enabled.attr)
-    #f)
-  
-  (define/public (btprox_enabled.attr)
-    #f)
-  
-  (define/public (gps_enabled.attr)
-    #f)
-  
-  (define/public (appfocus_enabled.attr)
-    #f)
-  
-  (define/public (keypress_enabled.attr)
-    #f)
+    (define/override (platform) 'linux)
 
+    ;; No finished Linux implementation.
+    (define/override (feature-uploader.attr) #f)
+
+    (define/public (timer-enabled.attr) #t)
+
+    )
+
+(define (symbol<? s1 s2)
+  (string<? (symbol->string s1) (symbol->string s2)))
+
+(define (symbol-sort lst)
+  (sort lst symbol<?))
+
+(define* SELF-CAPS-30 '(LocalServices NetworkServices ReadUserData UserEnvironment WriteUserData))
+(define* SELF-CAPS-32 (symbol-sort (cons 'Location SELF-CAPS-30)))
+(define* DEV-CAPS (symbol-sort (append SELF-CAPS-32 '(PowerMgmt ProtServ ReadDeviceData SurroundingsDD SwEvent TrustedUI WriteDeviceData))))
+(define* PUBLID-CAPS (symbol-sort (append DEV-CAPS '(CommDD DiskAdmin NetworkControl MultimediaDD))))
+
+(define-variant* symbian-variant% project-variant%
+  (super-new)
+  
+  (define/override (platform) 'symbian)
+    
+  (define/public (uid-v9.attr)
+    (make-hexnum #xe8460002))
+  
+  (define/public (capabilities)
+    '())
+
+  (define/public (capabilities.attr)
+    (symbol-sjoin (capabilities)))
+  
   ;; --------------------------------------------------
   ;; available libs
   ;; --------------------------------------------------
@@ -106,18 +138,11 @@ project must implement.
   
   )
 
-(define-variant* linux-variant% project-variant%
-    (super-new)
-  
-    (define/override (platform) 'linux)
-
-    ;; No finished Linux implementation.
-    (define/override (feature-uploader.attr) #f)
-
-    )
-
-(define-variant* symbian-variant% project-variant%
-  (field (btype 'application) (slist '()))
+(define-variant* slist-variant% symbian-variant%
+  (field
+   (btype 'application)
+   (slist '())
+   (caps DEV-CAPS))
   
   (super-new)
 
@@ -125,41 +150,28 @@ project must implement.
   
   (define/public (set-sensor-list x) (set! slist x))
   
-  (define/override (platform) 'symbian)
-
   (define/override (binary-type) btype)
+  
+  (define/override (capabilities) caps)
   
   (define/public (have-sensor? name)
     (true? (memq name slist)))
   
-  (define/override (flightmode_enabled.attr)
-    (have-sensor? 'flightmode))
-  
-  (define/override (profile_enabled.attr)
-    (have-sensor? 'profile))
-  
-  (define/override (cellid_enabled.attr)
-    (have-sensor? 'cellid))
-  
-  (define/override (btprox_enabled.attr)
-    (have-sensor? 'btprox))
-  
-  (define/override (gps_enabled.attr)
-    (have-sensor? 'gps))
-  
-  (define/override (appfocus_enabled.attr)
-    (have-sensor? 'appfocus))
-  
-  (define/override (keypress_enabled.attr)
-    (have-sensor? 'keypress))
-
+  (define/override (get-attrs)
+    (for/hasheq
+     ((sensor sensor-list))
+     (alet name (get-sensor-name sensor)
+           (values (enabled-symbol name)
+                   (or (sensor-essential? sensor)
+                       (have-sensor? name))))))
+    
   )
 
 (define (all-symbian-sensors)
   '(flightmode profile cellid btprox gps appfocus keypress))
 
 (define* (new-symbian-variant
-          #:class (class symbian-variant%)
+          #:class (class slist-variant%)
           #:btype (btype 'application)
           #:include (ilist #f)
           #:exclude (elist #f)
@@ -178,3 +190,64 @@ project must implement.
           (when slist
             (send obj set-sensor-list slist))
           obj)))
+
+(define (sublist? s lst)
+  (true? (andmap (lambda (x) (memq x lst)) s)))
+
+(define (include? e lst)
+  (true? (memq e lst)))
+
+(define-variant* release-variant% symbian-variant%
+  (init-field caps cert-name
+              (signed? #t)
+              (dist-variant-name #f))
+
+  (super-new)
+
+  (define/public (dist-variant-name.attr)
+    (aif n dist-variant-name
+         (symbol->string n)
+         (send this variant-name.attr)))
+         
+  (define/override (binary-type) 'daemon)
+
+  (define/override (capabilities) caps)
+
+  (define/public (keypress-enabled.attr)
+    (sublist? '(ReadDeviceData WriteDeviceData PowerMgmt ProtServ SwEvent)
+              (capabilities)))
+  
+  (define/public (gps-enabled.attr)
+    (sublist? '(Location)
+              (capabilities)))
+  
+  (define/public (cellid-enabled.attr)
+    (sublist? '(Location)
+              (capabilities)))
+
+  (define/public (signed.attr)
+    signed?)
+  
+  (define/public (devcert-caps.attr)
+    (true? (memq cert-name '(dev))))
+    
+  (define/public (watchdog-supported.attr)
+    ;; Due to the requirement to use a protected development UID (or
+    ;; the do proper Symbian signing), in practice we will only be
+    ;; able to do this if we have a DevCert.
+    (devcert-caps.attr))
+
+  (define/public (cert-name.attr)
+    (symbol->string cert-name))
+  
+  (define/override (get-attrs)
+    (for/hasheq
+     ((sensor sensor-list))
+     (alet name (get-sensor-name sensor)
+           (values (enabled-symbol name)
+                   (or (sensor-essential? sensor)
+                       (include? name (all-symbian-sensors)))))))
+    
+  )
+
+  

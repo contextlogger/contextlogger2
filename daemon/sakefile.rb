@@ -11,7 +11,7 @@ $uid_v8 = 0x08460002
 $basename = $APP_BASENAME
 $version = [$MAJOR_VERSION, $MINOR_VERSION]
 
-$is_application = true
+$is_application = $IS_APPLICATION
 $feature_uploader = $FEATURE_UPLOADER
 $with_curl = $UPLOAD_WITH_CURL
 $curl_as_source = true
@@ -85,10 +85,10 @@ end
 
 # This option will eventually move from here to cl2embed.
 case ($sqlite = $sake_op[:sqlite])
-when nil, "static"
+when nil, "source"
   # This option causes SQLite to be built from source and linked in
   # statically into the application.
-  $sqlite = :static
+  $sqlite = :source
 when "symbian"
   # Symbian provides an SQLite port, but it is not available for all
   # S60 3rd edition devices. This option indicates whether to use
@@ -141,10 +141,18 @@ class HexNum
   end
 end
 
-$sqlite = :static # always this setting for now, anything else needs some headers/libs
+$sqlite = :source # safer option (if relevant headers should change)
+$sqlite = :static # faster option (relevant headers rarely change in a relevant way)
+
+if $sqlite == :static or $sqlite == :source
+  $use_sqlite3h = true
+end
 
 # Defines site-specific $default_ values.
-try_load('local/default_options.rb')
+# Which we do not want into any released binaries.
+if $sake_op[:site]
+  try_load('local/default_options.rb')
+end
 
 $exeb = Hash.new
 for build in $builds
@@ -156,7 +164,7 @@ for build in $builds
   end
 
   # This define will allow us to pick the correct header.
-  if $sqlite == :static
+  if $use_sqlite3h
     map[:use_sqlite3h] = :define
   end
 

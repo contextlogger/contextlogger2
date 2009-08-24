@@ -31,6 +31,7 @@ import e32
 import sys
 import os
 import urllib
+import socket
 
 try:
     import miso
@@ -47,7 +48,9 @@ except ImportError:
 wd_pattern = u"*[08460006]*"
 cl2_pattern = u"*[e8460002]*"
 magic_file = u"c:\\data\\cl2\\disable_autostart.txt"
-db_file = "e:\\log.db"
+log_db_file = "e:\\data\\cl2\\log.db"
+config_db_file = "e:\\data\\cl2\\config.db"
+config_file = "e:\\data\\cl2\\config.txt"
 
 def makedirs(path):
     try:
@@ -89,15 +92,35 @@ class GUI:
             (u"Disable WD autostart", self.disable_wd),
             (u"Enable WD autostart", self.enable_wd),
 
-            (u"Delete database", self.delete_db),
-            (u"Reboot device", self.reboot_device),
+            (u"Select sensor", self.select_sensor),
+            (u"Sensor supported?", self.sensor_is_supported),
+            (u"Sensor running?", self.sensor_is_running),
+            (u"Start sensor", self.sensor_start),
+            (u"Stop sensor", self.sensor_stop),
+            (u"Allow sensor", lambda: self.sensor_allow(True)),
+	    (u"Forbid sensor", lambda: self.sensor_allow(False)),
+	    
+            (u"Select IAP", self.select_iap),
+            (u"Set IAP name", self.set_iap_name),
+            (u"Set upload frequency", self.select_upload_time),
+	    (u"Set BT scan interval", self.set_btprox_interval),
+	    (u"Set GPS scan interval", self.set_gps_interval),
+
+            (u"Delete log database", self.delete_log_db),
+            (u"Delete config database", self.delete_config_db),
+            (u"View config file", self.show_config),
             (u"View log file", self.show_log),
+            (u"Reboot device", self.reboot_device),
 
             (u"Exit", self.abort)
             ]
 
         appuifw.app.menu = main_menu
         appuifw.app.exit_key_handler = self.abort
+
+	self.current_sensor = None
+
+	print "Welcome."
 
     def show_is_wd_running(self):
         if have_miso:
@@ -177,19 +200,141 @@ class GUI:
         else:
             appuifw.note(u"Miso not installed", "error")
 
-    def stop_cl2_daemon(self):
-        """
-        Asks the daemon to stop by sending it a request.
-        """
+    def with_daemon_session(self, f):
         if not have_cl2:
             appuifw.note(u"CL2 client lib not installed", "error")
             return
         try:
             session = cl2_client.Session()
         except:
-            appuifw.note(u"failed to connect to CL2", "error")
+            appuifw.note(u"Failed to connect to CL2", "error")
             return
         try:
+            return f(session)
+        finally:
+            session.close()
+
+    def daemon_exec_ok(self, lua_s, ok_s, fail_s):
+        def f(session):
+            try:
+                res = session.eval(lua_s)
+                if res == u"ok":
+                    appuifw.note(unicode(ok_s), "info")
+                else:
+                    appuifw.note(unicode(fail_s), "error")
+            except:
+                appuifw.note(unicode(fail_s), "error")
+        self.with_daemon_session(f)
+
+    def daemon_query(self, lua_s):
+        def f(session):
+            try:
+                res = session.eval(lua_s)
+		return res
+            except:
+		pass
+        return self.with_daemon_session(f)
+
+    def select_sensor(self):
+	choices = [
+	    u"appfocus",
+	    u"btprox",
+	    u"cellid",
+	    u"flightmode",
+	    u"gps",
+	    u"keypress",
+	    u"profile"
+	    ]
+        index = appuifw.popup_menu(choices, u'Select sensor')
+        if index is None:
+            return
+	self.current_sensor = str(choices[index])
+
+    def sensor_is_supported(self):
+	if self.current_sensor is None:
+	    appuifw.note(u"No sensor selected", "error")
+	    return
+	res = self.daemon_query(""" if cl2.is_sensor_supported("%s") then return "yes" else return "no" end """ % self.current_sensor)
+	if res == "yes" or res == "no":
+	    appuifw.note(u"Sensor %s is %ssupported" % (self.current_sensor, res == "no" and "not " or ""), "info")
+	else:
+	    appuifw.note(u"Query failure", "error")
+
+    def sensor_is_running(self):
+	if self.current_sensor is None:
+	    appuifw.note(u"No sensor selected", "error")
+	    return
+	res = self.daemon_query(""" if cl2.is_sensor_running("%s") then return "yes" else return "no" end """ % self.current_sensor)
+	#print res
+	if res == "yes" or res == "no":
+	    appuifw.note(u"Sensor %s is %srunning" % (self.current_sensor, res == "no" and "not " or ""), "info")
+	else:
+	    appuifw.note(u"Query failure", "error")
+	
+    def sensor_start(self):
+	if self.current_sensor is None:
+	    appuifw.note(u"No sensor selected", "error")
+	    return
+        self.daemon_exec_ok(""" cl2.sensor_start("%s"); return "ok" """ % (self.current_sensor), u"Sensor %s started" % (self.current_sensor), u"Failed to start sensor %s" % (self.current_sensor))
+	
+    def sensor_stop(self):
+	if self.current_sensor is None:
+	    appuifw.note(u"No sensor selected", "error")
+	    return
+        self.daemon_exec_ok(""" cl2.sensor_stop("%s"); return "ok" """ % (self.current_sensor), u"Sensor %s stopped" % (self.current_sensor), u"Failed to stop sensor %s" % (self.current_sensor))
+	
+    def sensor_allow(self, flag):
+	if self.current_sensor is None:
+	    appuifw.note(u"No sensor selected", "error")
+	    return
+        self.daemon_exec_ok(""" cl2.config_set("sensor.%s.autostart", "return %s"); return "ok" """ % (self.current_sensor, flag and "true" or "false"), u"Sensor %s %s" % (self.current_sensor, flag and "allowed" or "disallowed"), u"Failed to change configuration")
+	    
+    def select_upload_time(self):
+        def esc(s):
+            return "return \\\"%s\\\"" % s
+        choices = [
+            (u"Never", "never"),
+            (u"Every night", "every day at 02:00"),
+            (u"Every hour", "0 minutes past every hour"),
+            (u"Every 10 mins", "0 minutes past every hour and 10 minutes past every hour and 20 minutes past every hour and 30 minutes past every hour and 40 minutes past every hour and 50 minutes past every hour"),
+            ]
+        strings = [ x[0] for x in choices ]
+        index = appuifw.popup_menu(strings, u'Select action')
+        if index is None:
+            return
+        value = esc(choices[index][1])
+        self.daemon_exec_ok(""" cl2.config_set("uploader.time_expr", "%s"); return "ok" """ % value, "Upload time set OK", "Failed to set upload time")
+    
+    def select_iap(self):
+        apid = socket.select_access_point()
+        if apid is None:
+            return
+        self.daemon_exec_ok(""" cl2.config_set("iap", "return %d"); return "ok" """ % apid,
+                            "IAP ID set to %d" % apid, "Failed to set IAP")
+
+    def set_iap_name(self):
+        new_value = appuifw.query(u"IAP name:", "text", u"Elisa Internet")
+        if new_value is None:
+            return
+        self.daemon_exec_ok(""" cl2.config_set("iap", "return cl2.iap_id_by_name(\\"%s\\")"); return "ok" """ % new_value, "IAP set", "Failed to set IAP")
+        
+    def set_btprox_interval(self):
+        new_value = appuifw.query(u"Interval (secs):", "number", 5 * 60)
+        if new_value is None:
+            return
+        self.daemon_exec_ok(""" cl2.config_set("sensor.btprox.interval", "return %d"); return "ok" """ % int(new_value), "BT scan interval set", "Failed to set interval")
+        
+    def set_gps_interval(self):
+        new_value = appuifw.query(u"Interval (secs):", "number", 5 * 60)
+        if new_value is None:
+            return
+        self.daemon_exec_ok(""" cl2.config_set("sensor.gps.interval", "return %d"); return "ok" """ % int(new_value), "GPS scan interval set", "Failed to set interval")
+        
+    def stop_cl2_daemon(self):
+        """
+        Asks the daemon to stop by sending it a request.
+        """
+        def f(session):
             try:
                 res = session.eval("do cl2.shutdown(); return 'ok' end")
                 if res == u"ok":
@@ -197,9 +342,8 @@ class GUI:
                 else:
                     appuifw.note(u"unexpected response from CL2", "error")
             except:
-                appuifw.note(u"failed to request shutdown", "error")
-        finally:
-            session.close()
+                appuifw.note(u"Failed to request shutdown", "error")
+        self.with_daemon_session(f)
 
     def is_wd_enabled(self):
         if os.path.exists(magic_file):
@@ -215,8 +359,12 @@ class GUI:
         os.unlink(magic_file)
         appuifw.note(u"Autostart enabled", "info")
 
-    def delete_db(self):
-        os.unlink(db_file)
+    def delete_log_db(self):
+        os.unlink(log_db_file)
+        appuifw.note(u"Database deleted", "info")
+
+    def delete_config_db(self):
+        os.unlink(config_db_file)
         appuifw.note(u"Database deleted", "info")
 
     def reboot_device(self):
@@ -225,6 +373,12 @@ class GUI:
         though.
         """
         appuifw.e32.start_exe(u'z:\\sys\\bin\\starter.exe', '')
+
+    def show_config(self):
+        doc_lock = e32.Ao_lock()
+        ch = appuifw.Content_handler(doc_lock.signal)
+        ch.open(unicode(config_file))
+        doc_lock.wait()
 
     def show_log(self):
         logdir = u'c:\\logs\\cl2\\'

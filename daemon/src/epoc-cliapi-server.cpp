@@ -7,12 +7,12 @@
 
 #include "epoc-cliapi-server.hpp"
 #include "epoc-cl2app-clientserver.hpp"
+#include "lua_cl2.h"
+#include "utils_cl2.h" // for string conversions
 
 #include "common/logging.h"
-#include "lua_cl2.h"
 #include "common/platform_error.h"
 #include "common/sh_utils.h"
-#include "utils_cl2.h" // for string conversions
 
 #include <glib.h>
 
@@ -288,7 +288,7 @@ void CCliapiSession::ServiceL(const RMessage2& aMessage)
         // so we can use UTF-8, and Unicode can hence appear in string
         // literals, but Unicode in variable names is likely to cause
         // a parse error.
-	lua_State *L = cl_lua_newstate(FALSE, &atpanic_leave);
+	lua_State *L = cl_lua_new_libs();
 	if (!L)
 	  User::Leave(KErrNoMemory);
 	lua_State_auto_ptr cleanupLuaState(L);

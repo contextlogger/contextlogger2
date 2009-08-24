@@ -10,12 +10,32 @@
 #
 # Building has been tested to work with the S60 3rd Edition MR SDK.
 
-SDKHOME := $(GNUPOCDEVENV)/kits/s60_30
+BASENAME := cl2watchdog
+KIT := s60_30
+SDKHOME := $(GNUPOCDEVENV)/kits/$(KIT)
+CERT := dev
+VERSION := 0.51
 
 PLT_ENV := PLTCOLLECTS=`pwd`/../tools/schemelib:
 SAKE := ../tools/bin/sake
 
-default : codegen symbian
+DIST_HOME := ../download
+
+ifeq ($(CERT),dev)
+DIST_EXT := sis
+else
+DIST_EXT := sisx
+endif
+
+BUILT_SIS := build/$(KIT)_udeb_$(CERT)/$(BASENAME).$(DIST_EXT)
+DIST_COPY := cp $(BUILT_SIS) $(DIST_HOME)/$(BASENAME)-$(VERSION)-$(KIT)_$(CERT).$(DIST_EXT)
+
+default : symbian
+
+symbian : codegen
+	sake kits=s60_30 udeb=true logging=true cert=$(CERT)
+
+symbian_all : autostart.rsc symbian
 
 autostart.rsc : autostart.rss
 	in-gnupoc-env s60_30 perl -S epocrc.pl -m045,046,047 -I $(SDKHOME)/epoc32/include -I $(SDKHOME)/epoc32/include/variant -DLANGUAGE_SC -u autostart.rss -o
@@ -30,6 +50,13 @@ codegen : src/process_handle_observer.h src/timer_observer.h src/watchdog.h
 
 .PRECIOUS : %.h
 .PRECIOUS : %.cpp
+
+dist : symbian
+	mkdir -p $(DIST_HOME)
+	$(DIST_COPY)
+
+release :
+	$(MAKE) dist CERT=dev
 
 clean :
 	-rm .sake_op *~

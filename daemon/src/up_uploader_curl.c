@@ -491,8 +491,8 @@ static gboolean doMulti(up_Uploader* object, GError** error)
 #define up_NUDGE_CONFIG 'c' // reconfigure request, config info in queue
 
 typedef struct {
-  const char* key;
-  const void* value;
+  const gchar* key;
+  const gchar* value;
 } up_ConfigItem;
 
 // This processes all the config items in the queue.
@@ -813,8 +813,8 @@ gboolean up_Uploader_upload_now(up_Uploader* object, GError** error)
 // Modifies the up_Uploader runtime configuration. Any upload that is
 // in progress is not interrupted.
 gboolean up_Uploader_reconfigure(up_Uploader* object,
-				 const char* key,
-				 const void* value, 
+				 const gchar* key,
+				 const gchar* value, 
 				 GError** error)
 {
   up_ConfigItem* item = g_slice_new0(up_ConfigItem);

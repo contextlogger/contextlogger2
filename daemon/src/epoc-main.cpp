@@ -2,7 +2,7 @@
 // attached to any application.
 
 #include "application_config.h"
-#include "client-cl2.h"
+#include "kr_controller.h"
 #include "client-run.h"
 #include "epoc-ao-gerror.hpp"
 #include "er_errors.h"
@@ -38,7 +38,7 @@ static TInt MainLoop()
     return KErrNoMemory;
   }
 
-  ClientCl2* client = client_cl2_new(error);
+  kr_Controller* client = kr_Controller_new(error);
   if (!client) {
     logt("error in client creation");
     gx_error_log_clear(error);
@@ -46,10 +46,10 @@ static TInt MainLoop()
     return KGError;
   }
     
-  if (!client_cl2_start(client, error)) {
+  if (!kr_Controller_start(client, error)) {
     logt("error starting client");
     gx_error_log_clear(error);
-    g_object_unref(client);
+    kr_Controller_destroy(client);
     DELETE_GLOBAL_LOOP;
     return KGError;
   }
@@ -57,10 +57,10 @@ static TInt MainLoop()
   // Will not return until explicitly stopped by ExitApplication.
   globalLoop->Start();
 
-  // Note that calling client_cl2_stop is unnecessary since
+  // Note that calling kr_Controller_stop is unnecessary since
   // destruction is quite sufficient for stopping.
 
-  g_object_unref(client);
+  kr_Controller_destroy(client);
   DELETE_GLOBAL_LOOP;
 
   return 0;

@@ -6,17 +6,22 @@
 
 #if __FEATURE_UPLOADER__ && !__UPLOAD_WITH_CURL__
 #if !defined(__UPLOAD_TIME_EXPR__)
-#define __UPLOAD_TIME_EXPR__ "every day at 02:00"
+#define __UPLOAD_TIME_EXPR__ "never"
 #endif
 #if !defined(__USERNAME__)
-// This must be printable ASCII.
-#define __USERNAME__ "guest"
+// This must be printable ASCII identifier, see "is_ascii_ident".
+// This really should be overridden in the config file.
+#define __USERNAME__ "john_doe"
 #endif
 #if !defined(__UPLOAD_URL__)
-#error must define __UPLOAD_URL__
+// The idea is that uploads here will not work.
+// This really should be overridden in the config file.
+#define __UPLOAD_URL__ "http://127.0.0.1:12345/dummy"
 #endif
 #if !defined(__IAP_ID__)
-#error must define __IAP_ID__
+// Likely such an ID will not exist. Again, the idea is to fail,
+// and keep failing until this is overridden via ConfigDb.
+#define __IAP_ID__ 99999
 #endif
 #endif /* __FEATURE_UPLOADER__ */
 
@@ -25,6 +30,7 @@
 #endif /* __SYMBIAN32__ */
 
 #define NO_THREAD_SAFETY defined(__EPOC32__)
+#define THREAD_SAFETY (!(NO_THREAD_SAFETY))
 
 // Adapted from _LIT macro. For this one "s" must be a wide (i.e., L"") string.
 #define _LIT_W(name,s) const static TLitC<sizeof(s)/2> name={sizeof(s)/2-1,s}
