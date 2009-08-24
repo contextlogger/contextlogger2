@@ -1,0 +1,277 @@
+#{"CL2 All-In-One"}, (0xe846000d), <%= $MAJOR_VERSION %>, <%= $MINOR_VERSION %>, 0
+
+;; In S60 3rd ed SDKs, vendor name(s) are required.
+;; Apparently both unique and localized versions.
+
+;Localised Vendor name
+%{"HIIT"}
+
+;Unique Vendor name
+:"HIIT"
+
+;; Platform dependency.
+[0x101f7961], 0, 0, 0, {"Series60ProductID"}
+
+<% opts = []
+   optix = {}
+   if $WATCHDOG_SUPPORTED
+     opts.push("Install watchdog"); optix[:watchdog] = opts.size
+   end
+   opts.push("Install launcher"); optix[:launcher] = opts.size
+   opts.push("Install ErrRd file"); optix[:errrd] = opts.size
+%>
+!(<%= opt_join(opts) %>)
+
+;;
+;; Daemon.
+;;
+"../daemon/build/s60_30_udeb_dev/cl2app.exe" - "!:\sys\bin\cl2app.exe"
+;;"../daemon/src/backup_registration.xml" - "!:\private\e8460002\backup_registration.xml"
+
+;;
+;; Key events ANIM DLLs. (OPTIONAL)
+;;
+;; Requires heavy permissions, so not in self-signed version.
+;;
+<% if $KEYPRESS_ENABLED %>
+
+<% sisfile = '../keyevents/build/s60_30_%s/keyevents.sis' % $CERT_NAME
+   uid = lookup_uid sisfile
+   uid_s = ("0x%08x" % uid)
+%>
+if not package(<%= uid_s %>)
+
+<% srcdir = "keyevents_" + $CERT_NAME
+unpack_sis sisfile, srcdir
+entries = pkg_entries_for_sis srcdir, sisfile
+for entry in entries %>
+<%= entry %>
+<% end %>
+
+endif ;; package not installed
+
+<% end %>
+
+;;
+;; C++ client library.
+;;
+<% sisfile = '../cxx-cl2-cli-lib/build/s60_30_%s/cl2cli.sis' % $CERT_NAME
+   uid = lookup_uid sisfile
+   uid_s = ("0x%08x" % uid)
+%>
+if not package(<%= uid_s %>)
+
+<% srcdir = "cxx_cl2_client_" + $CERT_NAME
+unpack_sis sisfile, srcdir
+entries = pkg_entries_for_sis srcdir, sisfile
+for entry in entries %>
+<%= entry %>
+<% end %>
+
+endif ;; package not installed
+
+;;
+;; Python client library.
+;;
+<% sisfile = '../py-cl2-cli-lib/build/s60_30_%s/py_cl2_client.sis' % $CERT_NAME
+   uid = lookup_uid sisfile
+   uid_s = ("0x%08x" % uid)
+%>
+if not package(<%= uid_s %>)
+
+<% srcdir = "py_cl2_client_" + $CERT_NAME
+unpack_sis sisfile, srcdir
+entries = pkg_entries_for_sis srcdir, sisfile
+for entry in entries %>
+<%= entry %>
+<% end %>
+
+endif ;; package not installed
+
+;;
+;; Watchdog. (OPTIONAL)
+;;
+;; Requires heavy permissions, so not in self-signed version.
+;;
+<% if $WATCHDOG_SUPPORTED %>
+if option<%= optix[:watchdog] %> = 1
+
+<% ext = $SIGNED ? "sisx" : "sis"
+   srcfile = '../watchdog/build/s60_30_udeb_dev/cl2watchdog.%s' % ext
+   uid = lookup_uid srcfile
+   uid_s = ("0x%08x" % uid)
+   sisfile = copy_with_sis_ext srcfile
+%>
+if not package(<%= uid_s %>)
+@<%= sisfile.inspect %>, (<%= uid_s %>)
+endif
+
+endif ;; watchdog option chosen
+<% end %>
+
+;;
+;; Launcher. (OPTIONAL)
+;;
+;; Note that cannot just fold in the launcher SIS file here,
+;; as then it would not be possible to uninstall it separately.
+;; This unfortunately means that the launcher then must also
+;; be signed separately, making its embedding here a bit
+;; of a no-go in some cases.
+;;
+;; Embeds Python runtime, Python script shell, and Miso.
+;;
+;; Note that the script shell need not be signed in any
+;; particular way, as we merely require some Python libs
+;; from it.
+;;
+if option<%= optix[:launcher] %> = 1
+
+;; Python for S60.
+
+<% srcdir = '../libs-s60/pys60-1.4.5'
+   srcfiles = ['PythonForS60_1_4_5_3rdEd.sis',
+               'PythonScriptShell_1_4_5_3rdEd.SIS'] 
+%>
+
+<% if $non_redistributable %>
+<% for srcfile in srcfiles
+   srcfile = File.join(srcdir, srcfile)
+   uid = lookup_uid srcfile
+   uid_s = ("0x%08x" % uid) %>
+if not package(<%= uid_s %>)
+@<%= srcfile.inspect %>, (<%= uid_s %>)
+endif
+<% end %>
+<% end %>
+
+<% unless $non_redistributable
+  uids = srcfiles.map {|x| lookup_uid(File.join(srcdir, x))}
+  conds = uids.map {|x| "(not package(0x%08x))" % x}
+  condexpr = conds.join " or " %>
+if <%= condexpr %>
+<%= display_note ("Python for S60 is not installed. Please install the files %s. They are available for download from http://sourceforge.net/projects/pys60/files/." % (srcfiles.join(" and "))) %>
+endif
+<% end %>
+
+;; xxx any extra pure python libs we require?
+
+;; Miso.
+<% srcdir = '../libs-s60/miso-1.97'
+   old_ext = (($CERT_NAME == "dev") ? "sis" : "sisx")
+   kit = (($CERT_NAME == "self32") ? "s60_32" : "s60_30")
+   cert_name = case $CERT_NAME when "self30", "self32" then "self" else $CERT_NAME end
+   srcname = 'miso-1.97-%s_py1_%s.%s' % [kit, cert_name, old_ext]
+   srcfile = File.join(srcdir, srcname)
+   sisfile = copy_with_sis_ext srcfile
+   uid = lookup_uid sisfile
+   uid_s = ("0x%08x" % uid)
+%>
+if not package(<%= uid_s %>)
+@<%= sisfile.inspect %>, (<%= uid_s %>)
+endif
+
+;; The launcher itself.
+<% cert_name = $SIGNED ? $CERT_NAME : "unsigned"
+   old_ext = $SIGNED ? "sisx" : "sis"
+   old_home = "../launcher"
+   old_name = "cl2launcher_%s.%s" % [cert_name, old_ext]
+   old_file = File.join(old_home, old_name)
+   sisfile = copy_with_sis_ext old_file
+   uid = lookup_uid sisfile
+   uid_s = ("0x%08x" % uid)
+%>
+if not package(<%= uid_s %>)
+
+<% unless $unpack_apps %>
+@<%= sisfile.inspect %>, (<%= uid_s %>)
+<% end %>
+
+<% if $unpack_apps
+srcdir = "cl2launcher_" + $CERT_NAME
+entries = pkg_entries_for_sis srcdir, sisfile
+for entry in entries %>
+<%= entry %>
+<% end %>
+<% end %>
+
+endif ;; launcher app not installed
+
+endif ;; launcher install requested
+
+;;
+;; Open C.
+;;
+;; Signed as it is by Nokia.
+;;
+;; I think these are redistributable, but the compliance
+;; terms look rather involved.
+;;
+;; The stub file should indicate whether Open C is built in
+;; or not.
+;;
+<% srcdir = '../libs-s60/openc-1.5'
+   srcfiles = ['pips_s60_1_5_5b.sis',
+               'openc_glib_s60_1_5_5b.sis',
+	       # 'stdcpp_s60_1_5_5b.sis'
+              ] 
+%>
+if not exists("z:\system\install\openc_stdlibs_stub.sis")
+
+<% if $non_redistributable %>
+<% for srcfile in srcfiles
+   srcfile = File.join(srcdir, srcfile)
+   uid = lookup_uid srcfile
+   uid_s = ("0x%08x" % uid) %>
+if not package(<%= uid_s %>)
+@<%= srcfile.inspect %>, (<%= uid_s %>)
+endif
+<% end %>
+<% end %>
+
+<% unless $non_redistributable
+  uids = srcfiles.map {|x| lookup_uid(File.join(srcdir, x))}
+  conds = uids.map {|x| "(not package(0x%08x))" % x}
+  condexpr = conds.join " or " %>
+if <%= condexpr %>
+<%= display_note ("Required Open C libraries are not installed. Please install at least %s. They are available for download from http://www.forum.nokia.com/main/resources/technologies/open_c/." % (srcfiles.join(" and "))) %>
+endif
+<% end %>
+
+endif
+
+;;
+;; EUserHL.
+;;
+;; Signed as it is by Symbian.
+;;
+;; The documentation says nothing about IPR or redistribution,
+;; (except that the component is made available under SFL v1.0),
+;; so we cannot necessarily include this.
+;;
+<% srcfile = "../libs-s60/euserhl-1.2/euserhl.sis"
+   uid = lookup_uid srcfile
+   uid_s = ("0x%08x" % uid) %>
+if not package(<%= uid_s %>)
+<% if $non_redistributable %>
+@<%= srcfile.inspect %>, (<%= uid_s %>)
+<% else %>
+<%= display_note "This software requires the EUserHL v1.2 library. Please download and install it. The download URL is http://developer.symbian.com/main/downloads/files/EUserHL.zip." %>
+<% end %>
+endif
+
+;;
+;; ErrRd file. (OPTIONAL)
+;;
+;; Self-signed.
+;;
+;; Note that the @ directive is pointlessly requires that
+;; the file have .sis extension, not .sisx or anything else.
+;;
+<% srcfile = "../libs-s60/errrd_file.sis"
+   uid = lookup_uid srcfile
+   uid_s = ("0x%08x" % uid) %>
+if option<%= optix[:errrd] %> = 1
+if not package(<%= uid_s %>)
+@<%= srcfile.inspect %>, (<%= uid_s %>)
+endif
+endif

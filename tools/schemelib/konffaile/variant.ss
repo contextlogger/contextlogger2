@@ -24,6 +24,8 @@ Macros are provided for making it easier to define such subclasses.
 (require common/usual-4)
 (require common/class)
 
+(define* current-variant (make-parameter #f))
+
 ;; There is nothing here really, as a variant specification really is
 ;; project specific. However, a common baseclass for variants may turn
 ;; out to be of use.
@@ -37,6 +39,12 @@ Macros are provided for making it easier to define such subclasses.
 
     (define/public (variant-name.attr)
       (symbol->string name))
+
+    ;; This can be useful for more reflective configuration setups.
+    ;; Note, though, that these attributes can still be overridden
+    ;; with .attr methods.
+    (define/public (get-attrs)
+      #hasheq())
     ))
 
 (define-syntax* variant-class
@@ -74,7 +82,7 @@ Macros are provided for making it easier to define such subclasses.
 
 (define attr-getter-re "^(.*)[.]attr$")
 
-(define* (variant-attr-names variant)
+(define (variant-attr-names variant)
   ;; We could also consider using (get-fields/hasheq variant) if it
   ;; were useful, but for now only particularly named methods are
   ;; expected to return attribute values.
@@ -89,7 +97,9 @@ Macros are provided for making it easier to define such subclasses.
 (define* (variant-attr-values/hasheq variant)
   (let ((mnames 
          (interface->method-names (object-interface variant)))
-        (res (make-hasheq)))
+        ;;(res (make-hasheq))
+        (res (hash-copy (send variant get-attrs)))
+        )
     (for
      ((mname mnames))
      (awhen m (regexp-match attr-getter-re (symbol->string mname))
