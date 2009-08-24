@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 // We will have the event framework make this callback when it is time to process an event.
-MAYBE_ERROR_RTYPE event_cb(Event* event MAYBE_ERROR_PARAM)
+static MAYBE_ERROR_RTYPE event_cb(Event* event MAYBE_ERROR_PARAM)
 {
   Timer* timer = (Timer*)event;
   MAYBE_ERROR_INVOKE((*timer->callback), 0, timer->user_data);

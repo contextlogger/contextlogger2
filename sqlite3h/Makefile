@@ -7,7 +7,10 @@ SAKE := ../tools/bin/sake
 # expensive ARM compiler, or tweaks lots of Symbian headers.
 # Hence the "static" option here.
 symbian :
-	$(SAKE) --trace static=true kits=s60_30 udeb=true logging=true cert=$(CERT)
+	$(SAKE) --trace static=true kits=s60_30 udeb=true cert=$(CERT)
+
+symbian_rel :
+	$(SAKE) --trace static=true kits=s60_30 cert=$(CERT)
 
 changelog :
 	darcs changes > doc/changelog.txt

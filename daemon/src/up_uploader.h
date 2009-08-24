@@ -46,8 +46,8 @@ extern "C" {
   // Modifies the up_Uploader runtime configuration. Any upload that is
   // in progress is not interrupted.
   gboolean up_Uploader_reconfigure(up_Uploader* object,
-				   const char* key,
-				   const void* value,
+				   const gchar* key,
+				   const gchar* value,
 				   GError** error);
 
 #ifdef __cplusplus

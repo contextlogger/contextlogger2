@@ -2,6 +2,8 @@
 
 #if __FEATURE_UPLOADER__
 
+#include "kr_controller_private.h" // cf_STATIC_GET
+
 #include "common/assertions.h"
 #include "common/epoc-time.h"
 #include "common/logging.h"
@@ -13,12 +15,12 @@
 #include <es_enum.h>
 #include <f32file.h>
 
-#include <euserhl.h>
-
 CTOR_IMPL_CPosterAo;
 
 void CPosterAo::ConstructL()
 {
+  iFileDataSupplier = new (ELeave) CFileDataSupplier;
+
   //logt("doing poster init");
   LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iSocketServ, iSocketServ.Connect());
   //logt("socket server session open");
@@ -52,7 +54,7 @@ CPosterAo::~CPosterAo()
   SESSION_CLOSE_IF_OPEN(iConnection);
   SESSION_CLOSE_IF_OPEN(iSocketServ);
   iBufferDataSupplier.Close(); // safe when no data set
-  iFileDataSupplier.Close(); // safe when no data set
+  delete iFileDataSupplier;
 }
 
 // ----------------------------------------------------------------------------
@@ -87,7 +89,7 @@ void CPosterAo::Cancel()
   // resources allocated by transaction must be still freed with Close())
   SESSION_CLOSE_IF_OPEN(iHttpTransaction);
 
-  iFileDataSupplier.Close(); // important for closing any locked file
+  iFileDataSupplier->Close(); // important for closing any locked file
   }
 
 void CPosterAo::PostFileL(const TDesC8& aUri,
@@ -95,9 +97,9 @@ void CPosterAo::PostFileL(const TDesC8& aUri,
 {
   assert(!iRunning);
 
-  iFileDataSupplier.OpenL(aFileName);
-  SetMultiPart(iFileDataSupplier.Boundary());
-  PostGenericL(aUri, iFileDataSupplier);
+  iFileDataSupplier->OpenL(aFileName);
+  SetMultiPart(iFileDataSupplier->Boundary());
+  PostGenericL(aUri, *iFileDataSupplier);
 }
 
 void CPosterAo::PostBufferL(const TDesC8& aUri,
@@ -390,42 +392,79 @@ TInt RBufferDataSupplier::OverallDataSize()
 // --------------------------------------------------
 // --------------------------------------------------
 // --------------------------------------------------
-// RFileDataSupplier
+// CFileDataSupplier
 // --------------------------------------------------
 // --------------------------------------------------
 // --------------------------------------------------
 
-// xxx need some metadata support here, probably, unless user identified in some other manner
+CFileDataSupplier::~CFileDataSupplier()
+{
+  Close();
+}
+
+// xxx need some metadata support here, probably, unless user identified in some other manner (now all we have is the filename encoded username, but could have a JSON part with that and more, say)
+
+#if 0
+_LIT8(KPrelude, "-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"logdata\"; filename=\"" __USERNAME__ ".db\"\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: binary\r\n\r\n");
+_LIT8(KEpilogue, "\r\n-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"logdata_submit\"\r\n\r\nUpload\r\n-------AaB03xeql7dsxeql7ds--\r\n");
+#endif
+
+_LIT8(KSep, "--");
+_LIT8(KCrLf, "\r\n");
 
 _LIT8(KBoundary, "-----AaB03xeql7dsxeql7ds");
-_LIT8(KPrelude, "-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"logdata\"; filename=\"" __USERNAME__ ".db\"\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: binary\r\n\r\n"); // xxx should build this programmatically
-_LIT8(KEpilogue, "\r\n-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"logdata_submit\"\r\n\r\nUpload\r\n-------AaB03xeql7dsxeql7ds--\r\n"); // xxx should build this programmatically
 
-void RFileDataSupplier::OpenL(const TDesC& aFileName)
+void CFileDataSupplier::OpenL(const TDesC& aFileName)
 {
   Close();
 
   //logf("lens %d %d %d", KMaxFileName, iFileName.MaxLength(), aFileName.Length());
   iFileName = aFileName;
 
+  gchar* username = cf_STATIC_GET(username);
+  if (!username) 
+    username = __USERNAME__; // default value
+  logf("uploader using username %s", username);
+
+  // _LIT8(KPrelude, "-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"logdata\"; filename=\"" __USERNAME__ ".db\"\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: binary\r\n\r\n");
+  _LIT8(KPrelude1, "Content-Disposition: form-data; name=\"logdata\"; filename=\"");
+  _LIT8(KPrelude2, ".db\"\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: binary\r\n\r\n");
+  iPrelude.CopyL(KSep);
+  iPrelude.AppendL(KBoundary);
+  iPrelude.AppendL(KCrLf);
+  iPrelude.AppendL(KPrelude1);
+  iPrelude.AppendL((const TUint8*)username, strlen(username));
+  iPrelude.AppendL(KPrelude2);
+
+  // _LIT8(KEpilogue, "\r\n-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"logdata_submit\"\r\n\r\nUpload\r\n-------AaB03xeql7dsxeql7ds--\r\n");
+  _LIT8(KEpilogueSubmit, "Content-Disposition: form-data; name=\"logdata_submit\"\r\n\r\nUpload\r\n");
+  iEpilogue.CopyL(KCrLf);
+  iEpilogue.AppendL(KSep);
+  iEpilogue.AppendL(KBoundary);
+  iEpilogue.AppendL(KCrLf);
+  iEpilogue.AppendL(KEpilogueSubmit);
+  iEpilogue.AppendL(KSep);
+  iEpilogue.AppendL(KBoundary);
+  iEpilogue.AppendL(KSep);
+  iEpilogue.AppendL(KCrLf);
+
   LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iFs, iFs.Connect());
   LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iFile, iFile.Open(iFs, iFileName, EFileStream|EFileShareAny|EFileRead));
   TInt fileSize = 0;
   User::LeaveIfError(iFile.Size(fileSize));
-  iDataLen = KPrelude().Length() + fileSize + KEpilogue().Length();
-  //iStream.Attach(iFile, 0); // cannot leave
-  //SET_SESSION_OPEN(iStream);
+  //iDataLen = KPrelude().Length() + fileSize + KEpilogue().Length();
+  iDataLen = iPrelude.Length() + fileSize + iEpilogue.Length();
   iPhase = 0;
 }
 
-void RFileDataSupplier::Close()
+void CFileDataSupplier::Close()
 {
   //SESSION_CLOSE_IF_OPEN(iStream);
   SESSION_CLOSE_IF_OPEN(iFile);
   SESSION_CLOSE_IF_OPEN(iFs);
 }
 
-const TDesC8& RFileDataSupplier::Boundary() const
+const TDesC8& CFileDataSupplier::Boundary() const
 {
   return KBoundary;
 }
@@ -439,14 +478,15 @@ const TDesC8& RFileDataSupplier::Boundary() const
 // leaves in here. Obviously this API has not been thought out well
 // enough to actually robustly support incremental loading from any
 // error-prone source.
-TBool RFileDataSupplier::GetNextDataPart(TPtrC8& aDataPart) // May leave!
+TBool CFileDataSupplier::GetNextDataPart(TPtrC8& aDataPart) // May leave!
 {
   //logf("next data part in phase %d", iPhase);
   switch (iPhase)
     {
     case 0:
       {
-	aDataPart.Set(KPrelude);
+	//aDataPart.Set(KPrelude);
+	aDataPart.Set(iPrelude);
 	iPhase++;
         break;
       }
@@ -464,7 +504,8 @@ TBool RFileDataSupplier::GetNextDataPart(TPtrC8& aDataPart) // May leave!
       }
     case 2:
       {
-	aDataPart.Set(KEpilogue);
+	//aDataPart.Set(KEpilogue);
+	aDataPart.Set(iEpilogue);
 	iPhase++;
 	return ETrue; // last part
       }
@@ -478,7 +519,7 @@ TBool RFileDataSupplier::GetNextDataPart(TPtrC8& aDataPart) // May leave!
   return EFalse;
 }
 
-void RFileDataSupplier::ReleaseData() // May leave!
+void CFileDataSupplier::ReleaseData() // May leave!
 {
   // Nothing to do here, our buffer is static.
   //logt("ReleaseData invoked");
@@ -486,7 +527,7 @@ void RFileDataSupplier::ReleaseData() // May leave!
     iTransaction->NotifyNewRequestBodyPartL();
 }
 
-TInt RFileDataSupplier::Reset()
+TInt CFileDataSupplier::Reset()
 {
   //logt("Reset invoked");
   iPhase = 0;
@@ -494,7 +535,7 @@ TInt RFileDataSupplier::Reset()
   return iFile.Seek(ESeekStart, pos);
 }
 
-TInt RFileDataSupplier::OverallDataSize()
+TInt CFileDataSupplier::OverallDataSize()
 {
   //logf("OverallDataSize is %d", iDataLen);
   return iDataLen;

@@ -5,16 +5,18 @@
 
 require 'sake3/component'
 
-$uid_v8 = 0x08460002
-$basename = "cl2app"
-$version = [0, 1]
+require 'src/current_config'
 
-$is_application = true
-$feature_uploader = true
-$with_curl = false
+$uid_v8 = 0x08460002
+$basename = $APP_BASENAME
+$version = [$MAJOR_VERSION, $MINOR_VERSION]
+
+$is_application = $IS_APPLICATION
+$feature_uploader = $FEATURE_UPLOADER
+$with_curl = $UPLOAD_WITH_CURL
 $curl_as_source = true
 $pamp_curl = true
-$have_anim = true
+$have_anim = $HAVE_ANIM
 
 $proj = Sake::Project.new(:basename => $basename,
                           :name => "CL2 App",
@@ -83,10 +85,10 @@ end
 
 # This option will eventually move from here to cl2embed.
 case ($sqlite = $sake_op[:sqlite])
-when nil, "static"
+when nil, "source"
   # This option causes SQLite to be built from source and linked in
   # statically into the application.
-  $sqlite = :static
+  $sqlite = :source
 when "symbian"
   # Symbian provides an SQLite port, but it is not available for all
   # S60 3rd edition devices. This option indicates whether to use
@@ -139,10 +141,18 @@ class HexNum
   end
 end
 
-$sqlite = :static # always this setting for now, anything else needs some headers/libs
+$sqlite = :source # safer option (if relevant headers should change)
+$sqlite = :static # faster option (relevant headers rarely change in a relevant way)
+
+if $sqlite == :static or $sqlite == :source
+  $use_sqlite3h = true
+end
 
 # Defines site-specific $default_ values.
-try_load('local/default_options.rb')
+# Which we do not want into any released binaries.
+if $sake_op[:site]
+  try_load('local/default_options.rb')
+end
 
 $exeb = Hash.new
 for build in $builds
@@ -153,14 +163,10 @@ for build in $builds
     map[:uid] = HexNum.new(build.uid.number)
   end
 
-  map[($basename + "_version").to_sym] = ($version[0] * 100 + $version[1])
-
   # This define will allow us to pick the correct header.
-  if $sqlite == :static
+  if $use_sqlite3h
     map[:use_sqlite3h] = :define
   end
-
-  map[:have_euserhl] = 1 # or 0
 
   # NDEBUG controls whether asserts are to be compiled in (NDEBUG is
   # defined in UDEB builds). Normally an assert results in something
@@ -172,18 +178,10 @@ for build in $builds
   # if your SDK does not have the required API.
   map[:do_logging] = (($sake_op[:logging] and map[:has_flogger]) ? 1 : 0)
 
-  map[:is_application] = ($is_application ? 1 : 0)
-
-  map[:feature_uploader] = ($feature_uploader ? 1 : 0)
-
-  map[:upload_with_curl] = (($feature_uploader && $with_curl) ? 1 : 0)
-
   map[:upload_time_expr] = ($sake_op[:upload_time_expr] || $default_upload_time_expr || :undef)
   map[:upload_url] = ($sake_op[:upload_url] || $default_upload_url || :undef)
   map[:iap_id] = (($sake_op[:iap_id] && $sake_op[:iap_id].to_i) || $default_iap_id.to_i || :undef)
   map[:username] = ($sake_op[:username] || $default_username || :undef)
-
-  map[:have_anim] = ($have_anim ? 1 : 0)
 
   # Each build variant shall have all of the components.
   build.comp_builds = $comp_list.map do |comp|

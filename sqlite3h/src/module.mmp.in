@@ -2,8 +2,6 @@ targettype      <%= build.mmp_target_type %>
 
 target          <%= build.binary_file.basename %>
 
-<% # p [build.uid2, build.uid3] 
-%>
 uid             <%= build.uid2.chex_string %> <%= build.uid3.chex_string %>
 
 <% unless build.target_type == :staticlibrary %>
@@ -19,6 +17,7 @@ userinclude ..\..\src
 userinclude ..\..\src\sqlite3
 userinclude ..\..\..\shared
 
+<% unless build.target_type == :staticlibrary %>
 library apparc.lib
 library avkon.lib
 library cone.lib
@@ -32,9 +31,12 @@ library flogger.lib
 library libc.lib
 //library libpthread.lib
 //library libdl.lib
+<% end %>
 
+<% unless build.target_type == :staticlibrary %>
 sourcepath ..\..\..\shared\common
 source logging.cpp
+<% end %>
 
 sourcepath ..\..\src\sqlite3
 source alter.c
@@ -68,13 +70,13 @@ source mem5.c
 source memjournal.c
 source mutex.c
 source mutex_noop.c
-source mutex_os2.c
+//source mutex_os2.c
 source mutex_unix.c
-source mutex_w32.c
+//source mutex_w32.c
 source os.c
 source os_symbian.c
-source os_win.c
-source os_os2.c
+//source os_win.c
+//source os_os2.c
 source pager.c
 source pcache.c
 source pragma.c
@@ -107,7 +109,9 @@ LANG sc
 
 sourcepath ..\..\src
 
+<% unless build.target_type == :staticlibrary %>
 <% if build.v9? %>
 VENDORID 0
 CAPABILITY <%= build.caps_string %>
+<% end %>
 <% end %>

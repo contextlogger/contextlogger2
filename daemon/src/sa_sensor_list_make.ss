@@ -3,13 +3,6 @@
 ;; Here we deal with cross-cutting concerns related to our sensor
 ;; array, by generating some or all of the cross-cutting code. Join
 ;; points are defined simply as C function or macro invocations.
-;; 
-;; It would be possible to do regeneration automatically from our
-;; makefile, but at present we are not doing that, since it is good
-;; during development to have control over when to regenerate the
-;; output and when not. Without automatic regeneration it safer to
-;; experiment with manual changes to the output while adjusting the
-;; generator.
 
 (require (lib "usual-4.ss" "common"))
 (require (lib "ast-util.scm" "wg"))
@@ -290,6 +283,11 @@
 
   (define (symbol-upcase s)
     (string->symbol (string-upcase (symbol->string s))))
+
+  (define (for-each/sep elem-f sep-f lst)
+    (unless (null? lst)
+      (elem-f (car lst))
+      (for-each (lambda (x) (sep-f) (elem-f x)) (cdr lst))))
   
   (define (make-supported-sensor-definitions)
     (define (g)
@@ -325,9 +323,33 @@
       (display-nl " \\")
       (display "}"))
 
+    (define (h)
+      (display-nl (format "#define NUM_ALL_SENSORS ~a" (length active-sensors)))
+      (display "#define NUM_SUPPORTED_SENSORS (0")
+      (for-each
+       (lambda (sensor)
+         (let* ((sensor-name (fget-reqd-nlist-elem-1 sensor 'name)))
+           (display " + ")
+           (display (format "SENSOR_~a_IS_SUPPORTED" (symbol-upcase sensor-name)))))
+       active-sensors)
+      (display ")"))
+    
+    (define (hh)
+      (display "#define ALL_SENSOR_NAMES_LITERAL_LIST {")
+      (for-each/sep
+       (lambda (sensor)
+         (let* ((sensor-name (fget-reqd-nlist-elem-1 sensor 'name)))
+           (write (symbol->string sensor-name))))
+       (thunk (display ", "))
+       active-sensors)
+      (display ", NULL}"))
+    
     (sc
-     (apply cxx-internal-declarations (g))
-     (cxx-internal-declarations (capture-output f))))
+     (apply cxx-exported-declarations (g))
+     (cxx-exported-declarations (capture-output h))
+     (cxx-exported-declarations (capture-output hh))
+     (cxx-exported-declarations (capture-output f))
+     ))
 
   (define (make-stop-named-sensor)
     (define (f)
@@ -348,7 +370,7 @@
        active-sensors)
       (display-nl " \\")
       (display "}"))
-    (cxx-internal-declarations (capture-output f)))
+    (cxx-exported-declarations (capture-output f)))
 
   (define (make-start-named-sensor)
     (define (f)
@@ -369,7 +391,7 @@
        active-sensors)
       (display-nl " \\")
       (display "}"))
-    (cxx-internal-declarations (capture-output f)))
+    (cxx-exported-declarations (capture-output f)))
 
   (define (make-named-sensor-running)
     (define (f)
@@ -390,7 +412,7 @@
        active-sensors)
       (display-nl " \\")
       (display "}"))
-    (cxx-internal-declarations (capture-output f)))
+    (cxx-exported-declarations (capture-output f)))
 
   (define (make-reconfigure-matching-sensor)
     (define (f)
@@ -409,7 +431,7 @@
        active-sensors)
       (display-nl " \\")
       (display "}"))
-    (cxx-internal-declarations (capture-output f)))
+    (cxx-exported-declarations (capture-output f)))
   
   (define (make-stop-all-sensors)
     (define (f)
@@ -425,7 +447,7 @@
        active-sensors)
       (display-nl " \\")
       (display "}"))
-    (cxx-internal-declarations (capture-output f)))
+    (cxx-exported-declarations (capture-output f)))
 
   (define (make-start-all-sensors)
     (define (f)
@@ -435,12 +457,12 @@
          (let* ((sensor-name (fget-reqd-nlist-elem-1 sensor 'name))
                 (upcase-name (symbol-upcase sensor-name)))
            (display-nl " \\")
-           (display (format "WHEN_SENSOR_~a_SUPPORTED_NOTHING({if (!(SENSOR_~a_IS_RUNNING)) { SENSOR_~a_START; gerror_try_log_and_clear; }})" (symbol-upcase sensor-name) upcase-name upcase-name))
+           (display (format "WHEN_SENSOR_~a_SUPPORTED_NOTHING({if (!(SENSOR_~a_IS_RUNNING) && SENSOR_AUTOSTART_IS_ALLOWED(~a)) { SENSOR_~a_START; gerror_try_log_and_clear; }})" (symbol-upcase sensor-name) upcase-name sensor-name upcase-name))
            ))
        active-sensors)
       (display-nl " \\")
       (display "}"))
-    (cxx-internal-declarations (capture-output f)))
+    (cxx-exported-declarations (capture-output f)))
 
   (define (make-create-all-sensors)
     (define (f)
@@ -456,7 +478,7 @@
        active-sensors)
       (display-nl " \\")
       (display "}"))
-    (cxx-internal-declarations (capture-output f)))
+    (cxx-exported-declarations (capture-output f)))
 
   (define (make-destroy-all-sensors)
     (define (f)
@@ -472,7 +494,7 @@
        active-sensors)
       (display-nl " \\")
       (display "}"))
-    (cxx-internal-declarations (capture-output f)))
+    (cxx-exported-declarations (capture-output f)))
 
   ;; Here we generate definitions for ensuring that all of the listed
   ;; sensors are indeed included in the sensor array. There are no
@@ -481,6 +503,8 @@
   (define program-2
     (cunit
      (basename "sa_sensor_list_integration")
+     (includes
+      (system-include "string.h"))
      (body
 
       (make-supported-sensor-definitions)

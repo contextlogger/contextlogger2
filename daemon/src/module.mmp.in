@@ -32,7 +32,8 @@ userinclude ..\..\inc
 userinclude ..\..\src
 userinclude ..\..\..\shared
 userinclude ..\..\..\lua\src
-<% if $sqlite == :static %>
+userinclude ..\..\..\lua\etc // for lua.hpp
+<% if $use_sqlite3h %>
 userinclude ..\..\..\sqlite3h\src\sqlite3
 <% end %>
 
@@ -52,6 +53,10 @@ userinclude ..\..\..\time-spec
 
 <% if $have_anim %>
 userinclude ..\..\..\keyevents\inc
+<% end %>
+
+<% if $sqlite == :static %>
+staticlibrary sqlite3h.lib
 <% end %>
 
 // Any STATICLIBRARY declarations should come before other
@@ -94,7 +99,7 @@ library flogger.lib
 
 library profileeng.lib // SDK Plugins
 
-<% if build.trait_map[:have_euserhl] %>
+<% if $HAVE_EUSERHL %>
 library euserhl.lib    // High-Level APIs
 <% end %>
 
@@ -103,7 +108,7 @@ library libm.lib       // required for Lua
 library libglib.lib    // Open C
 library libgobject.lib // Open C
 library libpthread.lib // Open C
-library libstdcpp.lib  // Open C++
+//library libstdcpp.lib  // Open C++
 
 <% if $with_curl %>
 library libz.lib       // Open C, for Curl (be careful, there are two zlib.h files in the Symbian SDK, and both on the include path in our case)
@@ -112,7 +117,7 @@ library libcrypto.lib  // Open C, for Curl (maybe needed later)
 <% end %>
 
 // Only static linking is supported for now, not tested with Symbian version.
-<% if $sqlite != :static %>
+<% if $sqlite == :dynamic %>
 library sqlite3.lib
 <% end %>
 
@@ -121,14 +126,18 @@ library keyevents_client_2000af44.lib
 <% end %>
 
 sourcepath ..\..\src
+source cf_query.c
+source cf_rcfile.cpp
 <% if $is_application %>
 source cl2appapp.cpp
 source cl2appappui.cpp
 source cl2appcontainer.cpp
 source cl2appdocument.cpp
 <% end %>
-source client-cl2.c
+//source client-cl2.c
 source client-run.c
+source config_db.c
+source db_creation.c
 source epoc-ao-gerror.cpp
 source epoc-appfocus.cpp
 source epoc-btprox.cpp
@@ -136,7 +145,7 @@ source epoc-cellid.cpp
 source epoc-cliapi-server.cpp
 source epoc-flightmode.cpp
 source epoc-gps.cpp
-//source epoc-iap.cpp
+source epoc-iap.cpp
 <% if $have_anim %>
 source epoc-keypress-anim.cpp
 <% else %>
@@ -149,11 +158,12 @@ source epoc-profile.cpp
 source epoc-s60-version.cpp
 source er_errors.c
 source er_errors_cxx.cpp
+source kr_controller.c
 source libluasqlite3.c
 source local_server.cpp
 source lua_bindings.cpp
 source lua_cl2.cpp
-source lua_linit_cl2.c
+//source lua_linit_cl2.c
 source log-db.c
 source log-db-create.c
 source log-db-logging.c
@@ -196,17 +206,16 @@ source			lbaselib.c
 source			lcode.c
 source			ldblib.c
 source			ldebug.c
-//source			ldo.c
-source			ldo.cpp
+source			ldo.cpp       	// ldo.c compiled as C++
 source			ldump.c
 source			lfunc.c
 source			lgc.c
-//source			linit.c   // have a custom version
+source			linit.c
 source			liolib.c
 source			llex.c
 source			lmathlib.c
 source			lmem.c
-source			loadlib.cpp
+source			loadlib.cpp   	// loadlib.c compiled as C++
 source			lobject.c
 source			lopcodes.c
 source			loslib.c
@@ -222,7 +231,7 @@ source			lvm.c
 source 			lzio.c
 source			print.c
 
-<% if $sqlite == :static %>
+<% if $sqlite == :source %>
 sourcepath ..\..\..\sqlite3h\src\sqlite3
 source alter.c
 source analyze.c
@@ -412,7 +421,7 @@ AIF cl2app.aif ..\..\src cl2appaif.rss c8 context_pane_icon.bmp context_pane_ico
 
 <% if build.v9? %>
 VENDORID 0
-CAPABILITY <%= build.caps_string %>
+CAPABILITY <%= $CAPABILITIES %>
 <% end %>
 
 // No using the old client-server API.

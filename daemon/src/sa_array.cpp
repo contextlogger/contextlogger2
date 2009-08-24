@@ -1,5 +1,7 @@
 #include "sa_array_private.h"
 
+#include "cf_query.h"
+#include "kr_controller_private.h" // for runtime config queries
 #include "log-db-logging.h" // for error handling routines
 
 #include "common/assertions.h"
@@ -51,6 +53,7 @@
 // This file is generated, and included only once here. Code for
 // creating, destroying, starting, and stopping sensors comes from
 // here. The code is designed to mesh well with this file.
+// "sa_sensor_list_integration.h" may be #included elsewhere as well.
 #include "sa_sensor_list_integration.cpp"
 
 extern "C" struct _sa_Array
@@ -108,6 +111,11 @@ extern "C" struct _sa_Array
   TRAPD(_errCode, expr); \
   if (_errCode) { set_symbian_error(_errCode, msg); success = FALSE; } \
   else { success = TRUE; }					      \
+}
+
+#define typical_symbian_sensor_reconfigure(sn) {			\
+    (self->iSensor_##sn)->Reconfigure(key, value);			\
+    success = TRUE;							\
 }
 
 /* Sensor starting. (Statement.)
@@ -170,15 +178,17 @@ extern "C" struct _sa_Array
     success = FALSE; \
   }
 
+#define reconfigure_ignore_all_keys { success = TRUE; }
+
 /* Sensor reconfiguring. (Statement.) */
-#define SENSOR_APPFOCUS_RECONFIGURE(key,value) reconfigure_not_supported_by_component(key)
-#define SENSOR_BTPROX_RECONFIGURE(key,value) reconfigure_not_supported_by_component(key)
-#define SENSOR_CELLID_RECONFIGURE(key,value) reconfigure_not_supported_by_component(key)
-#define SENSOR_FLIGHTMODE_RECONFIGURE(key,value) reconfigure_not_supported_by_component(key)
-#define SENSOR_GPS_RECONFIGURE(key,value) reconfigure_not_supported_by_component(key)
-#define SENSOR_KEYPRESS_RECONFIGURE(key,value) reconfigure_not_supported_by_component(key)
-#define SENSOR_PROFILE_RECONFIGURE(key,value) reconfigure_not_supported_by_component(key)
-#define SENSOR_TIMER_RECONFIGURE(key,value) reconfigure_not_supported_by_component(key)
+#define SENSOR_APPFOCUS_RECONFIGURE(key,value) reconfigure_ignore_all_keys
+#define SENSOR_BTPROX_RECONFIGURE(key,value) typical_symbian_sensor_reconfigure(btprox)
+#define SENSOR_CELLID_RECONFIGURE(key,value) reconfigure_ignore_all_keys
+#define SENSOR_FLIGHTMODE_RECONFIGURE(key,value) reconfigure_ignore_all_keys
+#define SENSOR_GPS_RECONFIGURE(key,value) typical_symbian_sensor_reconfigure(gps)
+#define SENSOR_KEYPRESS_RECONFIGURE(key,value) reconfigure_ignore_all_keys
+#define SENSOR_PROFILE_RECONFIGURE(key,value) reconfigure_ignore_all_keys
+#define SENSOR_TIMER_RECONFIGURE(key,value) reconfigure_ignore_all_keys
 
 #define gerror_try_log_and_clear { \
     if (!success) {				     \
@@ -186,6 +196,16 @@ extern "C" struct _sa_Array
       g_clear_error(error);				\
     }							\
   }
+
+static gboolean sensor_autostart_is_allowed(const gchar* cfg_key)
+{
+  gboolean value = TRUE;
+  get_ConfigDb_bool(cfg_key, &value, TRUE, NULL);
+  return value;
+}
+
+#define SENSOR_AUTOSTART_IS_ALLOWED(_name) \
+  sensor_autostart_is_allowed("sensor." #_name ".autostart")
 
 /** Instantiates a sensor array consisting of all supported sensors. */
 extern "C" sa_Array *sa_Array_new(EventQueue* evQueue,
@@ -294,11 +314,22 @@ extern "C" gboolean sa_Array_sensor_start(sa_Array* self, const gchar* name, GEr
 
 extern "C" gboolean sa_Array_reconfigure(sa_Array* self, const gchar* key, const gchar* value, GError** error)
 {
-  // This macro returns if it finds a match.
-  gboolean success;
-  RECONFIGURE_MATCHING_SENSOR(key, value);
+  {
+    gboolean success;
+    // This macro returns if it finds a match.
+    RECONFIGURE_MATCHING_SENSOR(key, value);
+  }
 
+  /*
   if (error)
     *error = g_error_new(domain_cl2app, code_not_supported, "configuration key '%s' does not concern any supported component", key);
   return FALSE;
+  */
+
+  // We shall not complain about unsupported keys. It is possible that
+  // some sensor is not compiled in, or not yet supported, or
+  // whatever; why should the user not be able to add a config entry
+  // for it anyway. If the entry need not be propagated at this time,
+  // then the propagation surely does not fail.
+  return TRUE;
 }

@@ -31,6 +31,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
    "cl2app"
    "symbian" ;; indicates that "code" will be a Symbian error code
    "posix"   ;; indicates that "code" will be a POSIX error code
+   "lua"     ;; indicates that "code" will be a Lua C API error code
    ))
 
 ;; List of error codes. Each will get a dedicated gint.
@@ -65,6 +66,8 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     "timer"
     "no memory"
     "not supported"
+    "not found"
+    "type error"
     ))
 
 (define program-1

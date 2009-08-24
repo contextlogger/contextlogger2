@@ -1,7 +1,7 @@
 #ifndef __application_config_h__
 #define __application_config_h__
 
-#include "platform_config.h"
+#include "common/platform_config.h"
 
 // Invoked by logging.h.
 #define PRIMARY_LOG_FILENAME "sqlite3h_log.txt"

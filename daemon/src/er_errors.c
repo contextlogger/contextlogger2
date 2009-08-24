@@ -21,6 +21,16 @@ void gx_error_free(GError* error)
   if (error) g_error_free(error);
 }
 
+void gx_propagate_error(GError** dest, GError* src)
+{
+  if (dest) {
+    assert(!*dest);
+    *dest = src;
+  } else {
+    gx_error_free(src);
+  }
+}
+
 // Caller must free the returned buffer.
 // Note that you may not pass "error" as NULL.
 gchar* gx_error_to_string(GError* error)
@@ -58,6 +68,14 @@ void gx_error_log_clear(GError** error)
     gx_error_log_free(*error);
     *error = NULL;
   }
+}
+
+// Takes ownership of "errorToLog" even if fails.
+gboolean gx_db_log_free_error(LogDb* logDb, GError* errorToLog, GError** error)
+{
+  gboolean success = log_db_log_exception(logDb, errorToLog, error);
+  gx_error_free(errorToLog);
+  return success;
 }
 
 // Takes ownership of "errorToLog" even if fails.

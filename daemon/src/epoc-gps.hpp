@@ -38,6 +38,8 @@ NONSHARABLE_CLASS(CSensor_gps) :
 
   void Stop();
 
+  void Reconfigure(const gchar* name, const gchar* value);
+
  private:
  
   CSensor_gps(LogDb* aLogDb);
@@ -61,6 +63,8 @@ NONSHARABLE_CLASS(CSensor_gps) :
   void CreateSpecifiedPositionerL(TPositionModuleId bestId);
   TBool ChooseBestPositionerL(TPositionModuleId& bestId);
 
+  void RefreshPositionUpdateIntervalSecs();
+
  private: // MObserver_gps
 
   virtual gboolean PositionerEventL(GError** error);
@@ -80,6 +84,8 @@ NONSHARABLE_CLASS(CSensor_gps) :
   CPositioner_gps* iPositioner; // owned
 
   TPlatformVersion iPlatformVersion; // xxx could be more "global"
+
+  TInt iPositionUpdateIntervalSecs;
 };
 
 #endif // __GPS_ENABLED__

@@ -40,10 +40,15 @@ extern "C" {
   void gx_error_log_clear(GError** error);
 
   // Clears any "errorToLog" even if fails.
+  gboolean gx_db_log_free_error(LogDb* logDb, GError* errorToLog, GError** error);
+
+  // Clears any "errorToLog" even if fails.
   gboolean gx_db_log_clear_error(LogDb* logDb, GError** errorToLog, GError** error);
 
   // Best effort. Invokes EXIT_APPLICATION as the last thing.
   void gx_db_log_clear_fatal_error(LogDb* logDb, GError** errorToLog);
+
+  void gx_propagate_error(GError** dest, GError* src);
 
   // --------------------------------------------------
   // POSIX extras
@@ -78,5 +83,12 @@ extern "C" {
 #endif
 
 #define gx_error_no_memory NULL
+
+#define gx_error_is(_errorptr, d, c) \
+  ((_errorptr) && ((_errorptr)->domain == (d)) && ((_errorptr)->code == (c)))
+
+#define new_not_found_error g_error_new(domain_cl2app, code_not_found, "not found");
+
+#define is_not_found_error(_errorptr) gx_error_is(_errorptr, domain_cl2app, code_not_found)
 
 #endif /* __er_errors_h__ */

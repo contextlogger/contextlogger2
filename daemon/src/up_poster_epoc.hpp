@@ -7,6 +7,8 @@
 
 #include "utils_cl2.h"
 
+#include <euserhl.h>
+
 #include <e32base.h>
 #include <es_sock.h>
 #include <http.h>
@@ -40,10 +42,12 @@ NONSHARABLE_CLASS(RBufferDataSupplier) :
 
 #define KMultiPartBoundaryMaxLen 48
 
-NONSHARABLE_CLASS(RFileDataSupplier) :
-  public MDataSupplier
+NONSHARABLE_CLASS(CFileDataSupplier) :
+  public CBase, public MDataSupplier
 {
  public:
+  //CFileDataSupplier();
+  virtual ~CFileDataSupplier();
   void OpenL(const TDesC& aFileName);
   void Close();
   const TDesC8& Boundary() const; // at most KMultiPartBoundaryMaxLen bytes
@@ -58,6 +62,8 @@ NONSHARABLE_CLASS(RFileDataSupplier) :
   TFileName iFileName;
   DEF_SESSION(RFs, iFs);
   DEF_SESSION(RFile, iFile);
+  LString8 iPrelude;
+  LString8 iEpilogue;
   TBuf8<512> iBuffer;
   TInt iDataLen;
   TInt iPhase; // 0 = start, 1 = in file content, 2 = file content done (and suffix left)
@@ -168,7 +174,7 @@ NONSHARABLE_CLASS(CPosterAo) :
   TInt iHttpStatus;
 
   RBufferDataSupplier iBufferDataSupplier;
-  RFileDataSupplier iFileDataSupplier;
+  CFileDataSupplier* iFileDataSupplier;
 
   TBool iIsMultiPart;
   TBuf8<KMultiPartBoundaryMaxLen> iBoundary;

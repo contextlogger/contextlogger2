@@ -1,0 +1,7 @@
+-- This is a sample configuration file for ContextLogger2.
+-- This file must be named e:\data\cl2\config.txt on a Symbian device.
+
+return {
+  username = "teemuteekkari"; -- an identifier of the form [a-zA-Z][a-zA-Z0-9]*
+  upload_url = "https://myhost.mydomain/upload";
+}
