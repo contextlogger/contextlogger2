@@ -550,6 +550,7 @@ INPUT                  = inc \
                          src \
                          ../lua/src \
                          ../shared \
+                         ../sqlite3h/src/sqlite3 \
                          ../time-spec
 
 # This tag can be used to specify the character encoding of the source files 

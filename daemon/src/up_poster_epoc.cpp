@@ -1,3 +1,7 @@
+/*
+ !concept {:name => "Multipart HTTP posting"}
+*/
+
 #include "up_poster_epoc.hpp"
 
 #if __FEATURE_UPLOADER__

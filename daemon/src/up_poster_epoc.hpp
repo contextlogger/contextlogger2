@@ -1,3 +1,8 @@
+/*
+ !concept {:name => "Multipart HTTP posting",
+   :desc => "Multipart HTTP(S) POSTing using the Symbian HTTP client API."}
+*/
+
 #ifndef __up_poster_epoc_hpp__
 #define __up_poster_epoc_hpp__
 
@@ -13,8 +18,6 @@
 #include <es_sock.h>
 #include <http.h>
 #include <s32file.h>
-
-// xxx have yet to figure out how to get IAP by name, but ought to implement a function that resolves it by name and include that function here
 
 class MDataSupplier :
   public MHTTPDataSupplier

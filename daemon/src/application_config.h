@@ -6,22 +6,16 @@
 
 #if __FEATURE_UPLOADER__ && !__UPLOAD_WITH_CURL__
 #if !defined(__UPLOAD_TIME_EXPR__)
-#define __UPLOAD_TIME_EXPR__ "never"
+#error some default upload time expression should be defined
 #endif
 #if !defined(__USERNAME__)
-// This must be printable ASCII identifier, see "is_ascii_ident".
-// This really should be overridden in the config file.
-#define __USERNAME__ "john_doe"
+#error some default username should be defined
 #endif
 #if !defined(__UPLOAD_URL__)
-// The idea is that uploads here will not work.
-// This really should be overridden in the config file.
-#define __UPLOAD_URL__ "http://127.0.0.1:12345/dummy"
+#error some default upload url should be defined
 #endif
 #if !defined(__IAP_ID__)
-// Likely such an ID will not exist. Again, the idea is to fail,
-// and keep failing until this is overridden via ConfigDb.
-#define __IAP_ID__ 99999
+#error some default iap id should be defined
 #endif
 #endif /* __FEATURE_UPLOADER__ */
 

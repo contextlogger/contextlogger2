@@ -80,6 +80,8 @@ void cl2GlobalInit()
 {
   log_clear(PRIMARY_LOG_FILENAME);
   log_text(PRIMARY_LOG_FILENAME, "initializing");
+  logf("app '%s' v%s variant '%s'", 
+       __APP_NAME__, __VERSION_STRING__, __VARIANT_NAME__);
   logf("value is %d", 555);
   log_ctx(PRIMARY_LOG_FILENAME, "context test");
 #if __DO_LOGGING__

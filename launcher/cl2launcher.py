@@ -48,6 +48,7 @@ except ImportError:
 wd_pattern = u"*[08460006]*"
 cl2_pattern = u"*[e8460002]*"
 magic_file = u"c:\\data\\cl2\\disable_autostart.txt"
+data_dir = "e:\\data\\cl2"
 log_db_file = "e:\\data\\cl2\\log.db"
 config_db_file = "e:\\data\\cl2\\config.db"
 config_file = "e:\\data\\cl2\\config.txt"
@@ -108,7 +109,8 @@ class GUI:
 
             (u"Delete log database", self.delete_log_db),
             (u"Delete config database", self.delete_config_db),
-            (u"View config file", self.show_config),
+            (u"Create config file", self.create_config_file),
+            (u"View config file", self.show_config_file),
             (u"View log file", self.show_log),
             (u"Reboot device", self.reboot_device),
 
@@ -374,7 +376,19 @@ class GUI:
         """
         appuifw.e32.start_exe(u'z:\\sys\\bin\\starter.exe', '')
 
-    def show_config(self):
+    def create_config_file(self):
+	ret = appuifw.multi_query(u"Username", u"Upload URL")
+	if ret is None:
+	    return
+	text = """
+	return {
+	username = "%s";
+	upload_url = "%s";
+	}
+	""" % ret
+	make_file(config_file, str(text))
+
+    def show_config_file(self):
         doc_lock = e32.Ao_lock()
         ch = appuifw.Content_handler(doc_lock.signal)
         ch.open(unicode(config_file))

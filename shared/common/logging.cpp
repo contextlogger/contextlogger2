@@ -1,3 +1,5 @@
+// !concept {:name => "Portable logging"}
+
 #include "common/logging.h"
 
 #if __DO_LOGGING__

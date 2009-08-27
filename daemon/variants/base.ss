@@ -62,7 +62,21 @@ project must implement.
   
   (define/public (is-daemon.attr)
     (eq? (binary-type) 'daemon))
-  
+
+  (define/public (upload-time-expr.attr) "never")
+
+  ;; This must be printable ASCII identifier, see "is_ascii_ident".
+  ;; This really should be overridden in the config file.
+  (define/public (username.attr) "john_doe")
+
+  ;; The idea is that uploads to this URL will not work.
+  ;; This really should be overridden in the config file.
+  (define/public (upload-url.attr) "http://127.0.0.1:12345/dummy")
+
+  ;; Likely such an ID will not exist. Again, the idea is to fail,
+  ;; and keep failing until this is overridden via ConfigDb.
+  (define/public (iap-id.attr) 99999)
+
   ;; --------------------------------------------------
   ;; features
   ;; --------------------------------------------------

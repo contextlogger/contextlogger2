@@ -37,6 +37,8 @@
 #include "sqliteInt.h"
 #if SQLITE_OS_UNIX
 
+/* !concept {:name => "Porting SQLite3 to Symbian"} */
+
 /*
 ** standard include files.
 */
