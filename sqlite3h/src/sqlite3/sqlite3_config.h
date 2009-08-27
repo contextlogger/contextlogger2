@@ -14,6 +14,9 @@
 **
 ** @(#) $Id: config.h.in,v 1.3 2008/07/22 05:05:02 shane Exp $
 */
+
+/* !concept {:name => "Configuring SQLite3 for Symbian"} */
+
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 

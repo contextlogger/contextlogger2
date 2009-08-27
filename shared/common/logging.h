@@ -14,6 +14,8 @@
 // non-local return from these functions, nor should anything invoke
 // abort(), even if there is an out of memory error, or exhaustion of
 // file handles, or whatever.
+//
+// !concept {:name => "Portable logging"}
 
 #ifndef __LOGGING_H__
 #define __LOGGING_H__

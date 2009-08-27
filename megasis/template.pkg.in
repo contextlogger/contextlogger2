@@ -1,3 +1,7 @@
+;; Note that you should not be using "if not package" conditions
+;; for components of which multiple versions have been released,
+;; and its matters which one is installed.
+
 #{"CL2 All-In-One"}, (0xe846000d), <%= $MAJOR_VERSION %>, <%= $MINOR_VERSION %>, 0
 
 ;; In S60 3rd ed SDKs, vendor name(s) are required.
@@ -148,7 +152,8 @@ endif
   uids = srcfiles.map {|x| lookup_uid(File.join(srcdir, x))}
   conds = uids.map {|x| "(not package(0x%08x))" % x}
   condexpr = conds.join " or " %>
-if <%= condexpr %>
+;; The script shell is available both as self-signed and unsigned versions, with different UIDs.
+if (not package(0x2000b1a0)) or (not (package(0x2000b1a5) or package(0xe000b1a5)))
 <%= display_note ("Python for S60 is not installed. Please install the files %s. They are available for download from http://sourceforge.net/projects/pys60/files/." % (srcfiles.join(" and "))) %>
 endif
 <% end %>
@@ -157,7 +162,7 @@ endif
 
 ;; Miso.
 <% srcdir = '../libs-s60/miso-1.97'
-   old_ext = (($CERT_NAME == "dev") ? "sis" : "sisx")
+   old_ext = $SIGNED ? "sisx" : "sis"
    kit = (($CERT_NAME == "self32") ? "s60_32" : "s60_30")
    cert_name = case $CERT_NAME when "self30", "self32" then "self" else $CERT_NAME end
    srcname = 'miso-1.97-%s_py1_%s.%s' % [kit, cert_name, old_ext]
@@ -166,9 +171,9 @@ endif
    uid = lookup_uid sisfile
    uid_s = ("0x%08x" % uid)
 %>
-if not package(<%= uid_s %>)
+;;if not package(<%= uid_s %>)
 @<%= sisfile.inspect %>, (<%= uid_s %>)
-endif
+;;endif
 
 ;; The launcher itself.
 <% cert_name = $SIGNED ? $CERT_NAME : "unsigned"

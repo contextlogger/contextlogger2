@@ -17,6 +17,7 @@
 ** ===================================================================
 */
 
+// !concept {:name => "Configuring Lua for Symbian"}
 #ifdef __EPOC32__
 #define LUA_SYMBIAN
 #endif

@@ -1,3 +1,8 @@
+/*
+ !concept {:name => "Resolving AP names",
+   :desc => "Resolving an access point name to its ID on Symbian."}
+*/
+
 #include "epoc-iap.h"
 
 #include "er_errors.h"

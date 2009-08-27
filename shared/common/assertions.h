@@ -1,3 +1,5 @@
+// !concept {:name => "Portable assertions"}
+
 #ifndef __ASSERTIONS_H__
 #define __ASSERTIONS_H__
 

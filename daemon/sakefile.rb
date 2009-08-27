@@ -178,10 +178,10 @@ for build in $builds
   # if your SDK does not have the required API.
   map[:do_logging] = (($sake_op[:logging] and map[:has_flogger]) ? 1 : 0)
 
-  map[:upload_time_expr] = ($sake_op[:upload_time_expr] || $default_upload_time_expr || :undef)
-  map[:upload_url] = ($sake_op[:upload_url] || $default_upload_url || :undef)
-  map[:iap_id] = (($sake_op[:iap_id] && $sake_op[:iap_id].to_i) || $default_iap_id.to_i || :undef)
-  map[:username] = ($sake_op[:username] || $default_username || :undef)
+  #map[:upload_time_expr] = ($sake_op[:upload_time_expr] || $default_upload_time_expr || :undef)
+  #map[:upload_url] = ($sake_op[:upload_url] || $default_upload_url || :undef)
+  #map[:iap_id] = (($sake_op[:iap_id] && $sake_op[:iap_id].to_i) || $default_iap_id.to_i || :undef)
+  #map[:username] = ($sake_op[:username] || $default_username || :undef)
 
   # Each build variant shall have all of the components.
   build.comp_builds = $comp_list.map do |comp|

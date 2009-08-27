@@ -1,3 +1,5 @@
+// !concept {:name => "Portable assertions", :desc => "Assertions that are actually visible or logged on Symbian."}
+
 #include "common/assertions.h"
 #include "common/logging.h"
 
