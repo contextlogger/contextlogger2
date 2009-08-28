@@ -12,10 +12,13 @@ struct _cf_RcFile {
 };
 
 #ifdef __EPOC32__
-#define RCFILE_PATHNAME "e:\\data\\cl2\\config.txt"
+#define RCFILE_BASENAME "config.txt"
 #else
-#define RCFILE_PATHNAME ".cl2rc"
+#define RCFILE_BASENAME ".cl2rc"
 #endif
+
+#define RCFILE_DIR CONFIG_DIR
+#define RCFILE_FILE (RCFILE_DIR DIR_SEP RCFILE_BASENAME)
 
 #define return_with_error(s...) { if (error) *error = g_error_new(domain_cl2app, code_unspecified_error, s); return FALSE; }
 #define return_with_oom { if (error) *error = NULL; return FALSE; }
@@ -24,11 +27,11 @@ static gboolean ReadRcFile(cf_RcFile* self, lua_State *L, GError** error)
 {
   int errCode;
 
-  if ((errCode = luaL_loadfile(L, RCFILE_PATHNAME)) != 0) {
+  if ((errCode = luaL_loadfile(L, RCFILE_FILE)) != 0) {
     if (errCode == LUA_ERRFILE) {
       // Could not open or read the file. This is okay since a
       // configuration file is not compulsory.
-      logf("no (readable) configuration file '%s'", RCFILE_PATHNAME);
+      logf("no (readable) configuration file '%s'", RCFILE_FILE);
       return TRUE;
     }
 
@@ -40,14 +43,14 @@ static gboolean ReadRcFile(cf_RcFile* self, lua_State *L, GError** error)
 #endif /* __DO_LOGGING__ */
 
     if (error) 
-      *error = g_error_new(domain_cl2app, code_unspecified_error, "error parsing configuration file '%s'", RCFILE_PATHNAME);
+      *error = g_error_new(domain_cl2app, code_unspecified_error, "error parsing configuration file '%s'", RCFILE_FILE);
     return FALSE;
   }
   logt("config file parsed OK");
 
   if (lua_pcall(L, 0, 1, 0)) {
     if (error) 
-      *error = g_error_new(domain_cl2app, code_unspecified_error, "error evaluating configuration file '%s'", RCFILE_PATHNAME);
+      *error = g_error_new(domain_cl2app, code_unspecified_error, "error evaluating configuration file '%s'", RCFILE_FILE);
     return FALSE;
   }
   logt("config file evaluated OK");

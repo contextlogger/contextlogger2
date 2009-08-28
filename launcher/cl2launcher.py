@@ -48,10 +48,11 @@ except ImportError:
 wd_pattern = u"*[08460006]*"
 cl2_pattern = u"*[e8460002]*"
 magic_file = u"c:\\data\\cl2\\disable_autostart.txt"
-data_dir = "e:\\data\\cl2"
-log_db_file = "e:\\data\\cl2\\log.db"
-config_db_file = "e:\\data\\cl2\\config.db"
-config_file = "e:\\data\\cl2\\config.txt"
+db_dir = "e:\\data\\cl2"
+data_dir = "c:\\data\\cl2"
+log_db_file = db_dir + "\\log.db"
+config_db_file = data_dir + "\\config.db"
+config_file = data_dir + "\\config.txt"
 
 def makedirs(path):
     try:
