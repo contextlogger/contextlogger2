@@ -12,7 +12,7 @@
 
 #include "utils_cl2.h"
 
-#include <euserhl.h>
+#include <estring.h> // EUserHL
 
 #include <e32base.h>
 #include <es_sock.h>

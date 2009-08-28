@@ -40,10 +40,14 @@
 #else
 #include "epoc-keypress.hpp"
 #endif
-#endif
+#endif // __KEYPRESS_ENABLED__
 #if __PROFILE_ENABLED__
+#if __HAVE_PROFILEENGINE_LIB__
+#include "epoc-profile-31.hpp"
+#else
 #include "epoc-profile.hpp"
 #endif
+#endif // __PROFILE_ENABLED__
 #if __TIMER_ENABLED__
 #include "sa_sensor_timer_posix.h"
 #endif

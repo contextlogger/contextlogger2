@@ -3,7 +3,7 @@
 
 #include "application_config.h"
 
-#if __PROFILE_ENABLED__
+#if __PROFILE_ENABLED__ && !__HAVE_PROFILEENGINE_LIB__
 
 #include <glib.h>
 
@@ -11,11 +11,13 @@
 #include <cprofilechangenotifyhandler.h>
 #include <mprofilechangeobserver.h>
 
-// For S60 v3.0 there is ProfilesEngine.ZIP, but not for v3.1.
-// Presumably with v3.1 we must use ProfilesEngineExtendedAPI.ZIP.
-// Mind you though that v3.1 maintains binary compatibility with the
-// ProfilesEngine.ZIP defined API. So for now it seems to be okay to
-// just install the v3.0 ProfilesEngine.ZIP plugin to a v3.1 SDK.
+// For S60 v3.0 there is ProfilesEngine.ZIP SDK API plugin, but not
+// for later platform versions. (Mind you though that at least v3.1
+// maintains binary compatibility with the ProfilesEngine.ZIP defined
+// API. So for now it seems to be okay to just install the v3.0
+// ProfilesEngine.ZIP plugin to a v3.1 SDK.)
+//
+// We require a separate implementation for later platform versions.
 #include <mprofileengine.h>
 
 #include "log-db.h"

@@ -87,6 +87,14 @@ gboolean gx_db_log_clear_error(LogDb* logDb, GError** errorToLog, GError** error
 }
 
 // Best effort. Invokes EXIT_APPLICATION as the last thing.
+void gx_db_log_free_fatal_error(LogDb* logDb, GError* errorToLog)
+{
+  gx_db_log_free_error(logDb, errorToLog, NULL);
+  WHEN_SYMBIAN(ex_show_default_error());
+  EXIT_APPLICATION;
+}
+
+// Best effort. Invokes EXIT_APPLICATION as the last thing.
 void gx_db_log_clear_fatal_error(LogDb* logDb, GError** errorToLog)
 {
   gx_db_log_clear_error(logDb, errorToLog, NULL);

@@ -9,6 +9,12 @@ SAKE := ../tools/bin/sake
 symbian :
 	$(SAKE) --trace static=true kits=s60_30 udeb=true cert=$(CERT)
 
+symbian31 :
+	$(SAKE) --trace static=true kits=s60_31 udeb=true cert=$(CERT)
+
+symbian32 :
+	$(SAKE) --trace static=true kits=s60_32 udeb=true cert=$(CERT)
+
 symbian_rel :
 	$(SAKE) --trace static=true kits=s60_30 cert=$(CERT)
 

@@ -1,6 +1,6 @@
 #include "epoc-profile.hpp"
 
-#if __PROFILE_ENABLED__
+#if __PROFILE_ENABLED__ && !__HAVE_PROFILEENGINE_LIB__
 
 #include "epoc-ao-gerror.hpp"
 #include "sa_sensor_list_log_db.h"
