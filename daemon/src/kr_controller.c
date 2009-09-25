@@ -1,6 +1,5 @@
 #include "kr_controller_private.h"
 
-#include "application_config.h"
 #include "utils_cl2.h"
 
 #include "common/assertions.h"
@@ -8,6 +7,10 @@
 #include "common/logging.h"
 #include "common/platform_config.h"
 #include "common/utilities.h"
+
+#if !defined(__SYMBIAN32__)
+#include <ev.h>
+#endif /* __SYMBIAN32__ */
 
 // --------------------------------------------------
 // global instance
@@ -23,27 +26,27 @@ kr_Controller* getGlobalClient() {
 // internal
 // --------------------------------------------------
 
+#if __FEATURE_UPLOADER__
 static gboolean start_uploader(kr_Controller* self, GError** error)
 {
-#if __FEATURE_UPLOADER__
   assert(!self->uploader);
   self->uploader = up_Uploader_new(self->log, error);
   if (!self->uploader) {
     assert_error_set(error);
     return FALSE;
   }
-#endif
   return TRUE;
 }
+#endif
 
+#if __FEATURE_UPLOADER__
 static void stop_uploader(kr_Controller* self)
 {
-#if __FEATURE_UPLOADER__
   up_Uploader_destroy(self->uploader); // safe if NULL
   self->uploader = NULL;
   logt("uploader destroyed");
-#endif
 }
+#endif
 
 // --------------------------------------------------
 // exported interface
@@ -60,7 +63,15 @@ kr_Controller* kr_Controller_new(GError** error)
   }
   globalClient = self;
 
-  UNLESS_SYMBIAN(event_init(&(self->eventQueue)));
+#if !defined(__SYMBIAN32__)
+  // Creates the default event loop, unless already created.
+  struct ev_loop* loop = ev_default_loop(0);
+  if (!loop) {
+    if (error) *error = NULL;
+    kr_Controller_destroy(self);
+    return NULL;
+  }
+#endif /* __SYMBIAN32__ */
 
   self->rcFile = cf_RcFile_new(error);
   if (!(self->rcFile)) {
@@ -80,13 +91,22 @@ kr_Controller* kr_Controller_new(GError** error)
     return NULL;
   }
   self->log = log;
-  
+
+#if __FEATURE_UPLOADER__
+  // This is a bit different in that Uploader is not affected by
+  // controller start/stop. Even though Uploader typically does not
+  // consume much resources (i.e., connections are only made when
+  // there is something to upload), this is still somewhat
+  // questionable. Consider uploader/start stop in the start stop
+  // methods, but remember that then self->uploader will be NULL at
+  // times.
   if (!start_uploader(self, error)) {
     kr_Controller_destroy(self);
     return NULL;
   }
+#endif
   
-  sa_Array* scanner = sa_Array_new(&(self->eventQueue), log, error);
+  sa_Array* scanner = sa_Array_new(log, error);
   if (!scanner) {
     kr_Controller_destroy(self);
     return NULL;
@@ -99,6 +119,14 @@ kr_Controller* kr_Controller_new(GError** error)
     return NULL;
   }
   self->localServer = localServer;
+
+#if __FEATURE_REMOKON__
+  self->remokon = rk_Remokon_new(error);
+  if (!self->remokon) {
+    kr_Controller_destroy(self);
+    return NULL;
+  }
+#endif
   
   return self;
 }
@@ -106,16 +134,21 @@ kr_Controller* kr_Controller_new(GError** error)
 void kr_Controller_destroy(kr_Controller* self)
 {
   if (self) {
-    // This stops all event delivery, so the cleanup of the other
-    // subcomponents must be synchronous, not depending on event
-    // delivery.
-    UNLESS_SYMBIAN(event_close(&(self->eventQueue)));
+    // Note that we are not destroying any event loop here, with
+    // ev_default_destroy(), so any components signed up with it are
+    // responsible for deregistering.
+
+#if __FEATURE_REMOKON__
+    FREE_Z(self->remokon, rk_Remokon_destroy);
+#endif
 
     LocalServer_destroy(self->localServer); // safe if NULL
     self->localServer = NULL;
     logt("local server destroyed");
 
+#if __FEATURE_UPLOADER__
     stop_uploader(self);
+#endif
 
     // We sometimes get USER 42 here. Say the cellid sensor is
     // enough to make this happen, but uploader may also be
@@ -149,6 +182,11 @@ gboolean kr_Controller_start(kr_Controller* self, GError** error)
   sa_Array_start(self->scanner);
   if (!LocalServer_start(self->localServer, error))
     return FALSE;
+#if __FEATURE_REMOKON__
+  if (rk_Remokon_is_autostart_enabled(self->remokon))
+    if (!rk_Remokon_start(self->remokon, error))
+      return FALSE;
+#endif
   return TRUE;
 }
 
@@ -157,6 +195,9 @@ gboolean kr_Controller_start(kr_Controller* self, GError** error)
 // handled separately.
 void kr_Controller_stop(kr_Controller* self)
 {
+#if __FEATURE_REMOKON__
+  rk_Remokon_stop(self->remokon);
+#endif
   LocalServer_stop(self->localServer);
   sa_Array_stop(self->scanner);
 }
@@ -166,10 +207,11 @@ void kr_Controller_stop(kr_Controller* self)
 gboolean kr_Controller_run(kr_Controller* self, GError** error)
 {
 #if defined(__SYMBIAN32__)
-  { assert(0); return TRUE; }
+  assert(0);
 #else
-  return event_loop(&(self->eventQueue), error);
+  ev_loop(EV_DEFAULT, 0);
 #endif /* __SYMBIAN32__ */
+  return TRUE;
 }
 
 #define NAME_STARTS_WITH(lit) \
@@ -184,19 +226,40 @@ gboolean kr_Controller_reconfigure(kr_Controller* self,
 				   GError** error)
 {
   const char* pfx;
+
   if (NAME_STARTS_WITH("sensor.") ||
       NAME_STARTS_WITH("array.")) {
     sa_Array* obj = self->scanner;
     if (!sa_Array_reconfigure(obj, name, value, error))
       return FALSE;
   } 
+
+#if __FEATURE_UPLOADER__ || __FEATURE_REMOKON__
+  else if (NAME_EQUALS("iap")) {
 #if __FEATURE_UPLOADER__
-  else if (NAME_STARTS_WITH("uploader.") ||
-	   NAME_EQUALS("iap")) {
-    up_Uploader* obj = self->uploader;
-    if (!up_Uploader_reconfigure(obj, name, value, error))
+    if (!up_Uploader_reconfigure(self->uploader, name, value, error))
+      return FALSE;
+#endif
+#if __FEATURE_REMOKON__
+    if (!rk_Remokon_reconfigure(self->remokon, name, value, error))
+      return FALSE;
+#endif
+  }
+#endif
+
+#if __FEATURE_UPLOADER__
+  else if (NAME_STARTS_WITH("uploader.")) {
+    if (!up_Uploader_reconfigure(self->uploader, name, value, error))
       return FALSE;
   }
 #endif
+
+#if __FEATURE_REMOKON__
+  else if (NAME_STARTS_WITH("remokon.")) {
+    if (!rk_Remokon_reconfigure(self->remokon, name, value, error))
+      return FALSE;
+  }
+#endif
+
   return TRUE;
 }

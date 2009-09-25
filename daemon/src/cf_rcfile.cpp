@@ -2,13 +2,14 @@
 
 #if __FEATURE_RCFILE__
 
+#include "cf_rcfile_list_private.h"
+
 #include "er_errors.h"
 #include "lua_cl2.h"
 #include "utils_cl2.h"
 
 struct _cf_RcFile {
-  gchar* username;
-  gchar* upload_url;
+  DECLARE_STATE_ALL;
 };
 
 #ifdef __EPOC32__
@@ -46,7 +47,7 @@ static gboolean ReadRcFile(cf_RcFile* self, lua_State *L, GError** error)
       *error = g_error_new(domain_cl2app, code_unspecified_error, "error parsing configuration file '%s'", RCFILE_FILE);
     return FALSE;
   }
-  logt("config file parsed OK");
+  logf("config file '%s' parsed OK", RCFILE_FILE);
 
   if (lua_pcall(L, 0, 1, 0)) {
     if (error) 
@@ -55,38 +56,18 @@ static gboolean ReadRcFile(cf_RcFile* self, lua_State *L, GError** error)
   }
   logt("config file evaluated OK");
 
-  {
-    lua_getfield(L, -1, "username");
-    if (!lua_isnil(L, -1)) {
-      const char* s = lua_tostring(L, -1);
-      if (!s) return_with_error("value 'username' is not a string");
-      if (!is_ascii_ident(s)) return_with_error("value 'username' is not a valid ident string");
-      self->username = strdup(s);
-      if (!self->username) return_with_oom;
-    }
-    lua_pop(L, 1);
-  }
-  
-  {
-    lua_getfield(L, -1, "upload_url");
-    if (!lua_isnil(L, -1)) {
-      const char* s = lua_tostring(L, -1);
-      if (!s) return_with_error("value 'upload_url' is not a string");
-
-      // We trust any uploader to do proper URL validation.
-      if (!*s) return_with_error("value 'upload_url' may not be an empty string");
-
-      self->upload_url = strdup(s);
-      if (!self->upload_url) return_with_oom;
-    }
-    lua_pop(L, 1);
-  }
+  STATE_INIT_ALL;
 
 #if defined(__DO_LOGGING__)
-  if (self->username)
+  if (self->username) {
     logf("username configured to '%s'", self->username);
-  if (self->upload_url)
+  }
+  if (self->upload_url) {
     logf("upload_url configured to '%s'", self->upload_url);
+  }
+  if (self->remokon_host) {
+    logf("remokon_host configured to '%s'", self->remokon_host);
+  }
 #endif /* __DO_LOGGING__ */
   
   return TRUE;
@@ -129,22 +110,13 @@ extern "C" cf_RcFile* cf_RcFile_new(GError** error)
 extern "C" void cf_RcFile_destroy(cf_RcFile* self)
 {
   if (self) {
-    g_free(self->username);
-    g_free(self->upload_url);
+    CLEANUP_ALL;
     g_free(self);
   }
 }
 
-extern "C" gchar* cf_RcFile_get_username(cf_RcFile* self)
-{
-  return self->username;
+extern "C" {
+#include "cf_rcfile_list.c"
 }
-
-#if __FEATURE_UPLOADER__
-extern "C" gchar* cf_RcFile_get_upload_url(cf_RcFile* self)
-{
-  return self->upload_url;
-}
-#endif // __FEATURE_UPLOADER__
 
 #endif /* __FEATURE_RCFILE__ */

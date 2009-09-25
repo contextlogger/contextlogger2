@@ -14,6 +14,13 @@ void er_global_cleanup()
 {
 }
 
+void er_fatal_error()
+{
+  logt("fatal error");
+  WHEN_SYMBIAN(ex_show_default_error());
+  EXIT_APPLICATION;
+}
+
 // The docs of g_error_free do not say if the error may be NULL. Well
 // with this function it may.
 void gx_error_free(GError* error)

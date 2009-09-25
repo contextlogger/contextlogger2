@@ -1,8 +1,9 @@
 #ifndef __client_run_h__
 #define __client_run_h__
 
-#include <glib.h>
 #include "application_config.h"
+
+#include <glib.h>
 
 G_BEGIN_DECLS
 

@@ -2,16 +2,19 @@
 
 #if __CELLID_ENABLED__
 
+#include "er_errors.h"
 #include "log-db-logging.h"
 #include "sa_sensor_list_log_db.h"
 #include "utils_cl2.h"
 
 #include "common/assertions.h"
-#include "er_errors.h"
+#include "common/epoc-time.h"
 #include "common/error_list.h"
 #include "common/logging.h"
 #include "common/platform_error.h"
 #include "common/utilities.h"
+
+#include <stdlib.h> // rand
 
 // -------------------------------------------------------------------
 // the sensor object implementation...
@@ -21,11 +24,13 @@ CTOR_IMPL_CSensor_cellid;
 void CSensor_cellid::ConstructL()
 {
   iTelephony = CTelephony::NewL();
+  LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iTimer, iTimer.CreateLocal()); 
 }
 
 CSensor_cellid::~CSensor_cellid()
 {
   Cancel();
+  SESSION_CLOSE_IF_OPEN(iTimer);
   delete iTelephony;
 }
 
@@ -39,12 +44,6 @@ gboolean CSensor_cellid::StartL(GError** error)
   return TRUE;
 }
 
-void CSensor_cellid::MakeRequest()
-{
-  iTelephony->NotifyChange(iStatus, CTelephony::ECurrentNetworkInfoChange, iDataDes);
-  SetActive();
-}
-
 void CSensor_cellid::Stop()
 {
   if ((IsActive())) {
@@ -53,24 +52,60 @@ void CSensor_cellid::Stop()
   }
 }
 
-// To display readable logged times, do something like
-//
-//   select datetime(unixtime, 'unixepoch', 'localtime') from cellid_scan;
-gboolean CSensor_cellid::RunGL(GError** error)
+void CSensor_cellid::MakeRequest()
 {
-  assert_error_unset(error);
+  iTelephony->NotifyChange(iStatus, CTelephony::ECurrentNetworkInfoChange, iDataDes);
+  SetActive();
+  iState = EQuerying;
+}
 
-#if 0
-  { // test code...
-    TInt errCode = KErrGeneral;
-    Leave(g_error_new(domain_symbian, errCode,
-		      "dummy failure: %s (%d)", 
-		      plat_error_strerror(errCode), errCode));
-    assert(0);
-  }
-#endif
+void CSensor_cellid::SetTimer() 
+{
+  int secs = 5 * (1 + iNumScanFailures) + (rand() % 10);
+  TTimeIntervalMicroSeconds32 interval = SecsToUsecs(secs);
+  logf("cellid timer set to %d secs / %d usecs", secs, interval.Int());
+  iTimer.After(iStatus, interval);
+  SetActive();
+  iState = ERetryWaiting;
+}
 
+// Retry timer expired.
+void CSensor_cellid::HandleTimerL()
+{
   int errCode = iStatus.Int();
+  User::LeaveIfError(errCode); // unexpected with an interval timer
+  SetTimer();
+}
+
+gboolean CSensor_cellid::HandleReadGL(GError** error)
+{
+  int errCode = iStatus.Int();
+
+  if (errCode) {
+    // Sensor read error. Log it and issue a new request if there have
+    // not been all that many consecutive errors. (It is particularly
+    // important to avoid a situation in which we would "busy loop" by
+    // repeatedly making immediately failing requests, and this
+    // approach certainly avoids that.) Read errors should not be all
+    // that unusual here if one disables the network or something, but
+    // hopefully network becoming unavailable is just one event among
+    // others. Have seen at least KErrOverflow here upon turning on
+    // flight mode.
+    iNumScanFailures++;
+    logf("%dth consecutive failure in cellid", iNumScanFailures);
+
+    if (iNumScanFailures < 100) {
+      if (!log_db_log_status(iLogDb, error, "ERROR: failure reading cellid sensor: %s (%d)", plat_error_strerror(errCode), errCode)) {
+	// Logging failed.
+	return FALSE;
+      }
+      SetTimer();
+    } else {
+      logt("stopping cellid scanning due to too many errors");
+    }
+
+    return TRUE;
+  }
 
   if (errCode == KErrNone) {
     iNumScanFailures = 0;
@@ -117,49 +152,69 @@ gboolean CSensor_cellid::RunGL(GError** error)
 
 	gboolean ok = log_db_log_cellid(iLogDb, (char*)(countryCode->Ptr()), (char*)(networkCode->Ptr()), areaCode, cellId, error);
 	CleanupStack::PopAndDestroy(2); // networkCode, countryCode
-
-	if (ok) {
-	  MakeRequest();
-	} else {
-	  // Logging failed. This is bad. What is the point of running a
-	  // context logger that cannot log.
-	  assert_error_set(error);
-	  return FALSE;
-	}
+	if (!ok) return FALSE;
+	MakeRequest();
       }
-    }
-  } else {
-    // Sensor read error. Log it and issue a new request if there have
-    // not been all that many consecutive errors. (It is particularly
-    // important to avoid a situation in which we would "busy loop" by
-    // repeatedly making immediately failing requests, and this
-    // approach certainly avoids that.) Read errors should not be all
-    // that unusual here if one disables the network or something, but
-    // hopefully network becoming unavailable is just one event among
-    // others. Have seen at least KErrOverflow here upon turning on
-    // flight mode.
-    iNumScanFailures++;
-
-    logf("%dth consecutive failure in cellid", iNumScanFailures);
-    if (iNumScanFailures < 100) {
-      if (!log_db_log_status(iLogDb, error, "ERROR: failure reading cellid sensor: %s (%d)", plat_error_strerror(errCode), errCode)) {
-	// Logging failed. This is bad. What is the point of running a
-	// context logger that cannot log.
-	assert_error_set(error);
-	return FALSE;
-      }
-      MakeRequest();
-    } else {
-      logt("stopping cellid scanning due to too many errors");
     }
   }
 
   return TRUE;
 }
 
+// To display readable logged times, do something like
+//
+//   select datetime(unixtime, 'unixepoch', 'localtime') from cellid_scan;
+gboolean CSensor_cellid::RunGL(GError** error)
+{
+  assert_error_unset(error);
+  TState oldState = iState;
+  iState = EInactive;
+
+  switch (oldState)
+    {
+    case EQuerying:
+      {
+	return HandleReadGL(error);
+      }
+    case ERetryWaiting:
+      {
+	HandleTimerL();
+        break;
+      }
+    default:
+      {
+        assert(0 && "unexpected state");
+        break;
+      }
+    }
+
+  return TRUE;
+}
+
 void CSensor_cellid::DoCancel()
 {
-  iTelephony->CancelAsync(CTelephony::ECurrentNetworkInfoChangeCancel);
+  switch (iState)
+    {
+    case EQuerying:
+      {
+	iTelephony->CancelAsync(CTelephony::ECurrentNetworkInfoChangeCancel);
+        break;
+      }
+    case ERetryWaiting:
+      {
+	iTimer.Cancel();
+        break;
+      }
+    default:
+      {
+        assert(0 && "unexpected state");
+        break;
+      }
+    }
+
+  // Note that the state must never become anything else without
+  // invoking SetActive at the same time.
+  iState = EInactive;
 }
 
 const char* CSensor_cellid::Description()

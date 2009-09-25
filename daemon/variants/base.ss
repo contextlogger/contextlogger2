@@ -90,6 +90,9 @@ project must implement.
   (define/public (upload-with-curl.attr)
     (eq? (platform) 'linux))
 
+  (define/public (feature-remokon.attr)
+    #t)
+
   ;; --------------------------------------------------
   ;; sensors
   ;; --------------------------------------------------
@@ -253,7 +256,7 @@ project must implement.
               (capabilities)))
   
   (define/public (cellid-enabled.attr)
-    (sublist? '(Location)
+    (sublist? '(ReadDeviceData)
               (capabilities)))
 
   (define/public (signed.attr)

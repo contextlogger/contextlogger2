@@ -12,6 +12,8 @@
 
 #ifdef __EPOC32__
 #include <e32std.h>
+#else
+#include <ev.h>
 #endif
 
 #include <string.h>
@@ -49,7 +51,7 @@
 #endif
 #endif // __PROFILE_ENABLED__
 #if __TIMER_ENABLED__
-#include "sa_sensor_timer_posix.h"
+#include "sa_sensor_timer_libev.h"
 #endif
 
 #define __NEED_TELEPHONY__ 0
@@ -62,7 +64,6 @@
 
 extern "C" struct _sa_Array
 {
-  EventQueue* evQueue; // not owned
   LogDb* logDb; // not owned
 
 #if __NEED_TELEPHONY__
@@ -174,7 +175,7 @@ extern "C" struct _sa_Array
 #define SENSOR_GPS_CREATE typical_symbian_sensor_create(self->iSensor_gps = CSensor_gps::NewL(self->logDb), "gps sensor initialization")
 #define SENSOR_APPFOCUS_CREATE typical_symbian_sensor_create(self->iSensor_appfocus = CSensor_appfocus::NewL(self->logDb), "appfocus sensor initialization")
 #define SENSOR_KEYPRESS_CREATE typical_symbian_sensor_create(self->iSensor_keypress = CSensor_keypress::NewL(self->logDb), "keypress sensor initialization")
-#define SENSOR_TIMER_CREATE { self->iSensor_timer = sa_Sensor_timer_new(self->evQueue, self->logDb, error); success = (self->iSensor_timer != NULL); }
+#define SENSOR_TIMER_CREATE { self->iSensor_timer = sa_Sensor_timer_new(self->logDb, error); success = (self->iSensor_timer != NULL); }
 
 #define reconfigure_not_supported_by_component(key) { \
     if (error) \
@@ -212,8 +213,7 @@ static gboolean sensor_autostart_is_allowed(const gchar* cfg_key)
   sensor_autostart_is_allowed("sensor." #_name ".autostart")
 
 /** Instantiates a sensor array consisting of all supported sensors. */
-extern "C" sa_Array *sa_Array_new(EventQueue* evQueue,
-				  LogDb* logDb,
+extern "C" sa_Array *sa_Array_new(LogDb* logDb,
 				  GError** error)
 {
   sa_Array* self = g_try_new0(sa_Array, 1);
@@ -222,7 +222,6 @@ extern "C" sa_Array *sa_Array_new(EventQueue* evQueue,
     return NULL;
   }
 
-  self->evQueue = evQueue;
   self->logDb = logDb;
 
 #if __NEED_TELEPHONY__

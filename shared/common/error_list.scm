@@ -22,7 +22,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
 ;; 
 ;; We use these to point out the source code component in which the
 ;; offending code resides. We also share the same error list in many
-;; such components, of which Valantine is only one.
+;; such components.
 (define domain-list
   (list
    "shared"
@@ -32,6 +32,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
    "symbian" ;; indicates that "code" will be a Symbian error code
    "posix"   ;; indicates that "code" will be a POSIX error code
    "lua"     ;; indicates that "code" will be a Lua C API error code
+   "iksemel" ;; indicates that "code" will be an Iksemel C API error code
    ))
 
 ;; List of error codes. Each will get a dedicated gint.
@@ -68,6 +69,8 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     "not supported"
     "not found"
     "type error"
+    "not connected"
+    "no configuration"
     ))
 
 (define program-1

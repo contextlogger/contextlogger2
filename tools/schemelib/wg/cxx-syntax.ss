@@ -104,7 +104,7 @@
   (true? (memq x '(public private protected))))
 
 (define (func-attr-symbol? x)
-  (true? (memq x '(export public private protected pure static virtual))))
+  (true? (memq x '(export extern-c public private protected pure static virtual))))
 
 (define texpr-arg/c
   (or/c symbol/c? a.type-expression?))
@@ -150,6 +150,9 @@
  (doc (func-listof/c string? any/c))
  (dtor func-decl/c)
  (cexport symbol?)
+ (extern-c symbol?)
+ (field-on (-> expr/c? symbol/c? any/c))
+ (field-via (-> expr/c? symbol/c? any/c))
  (func func-decl/c)
  (includes (func-listof/c (or/c include? splice?) any/c))
  (cinit (-> expr/c? any/c))

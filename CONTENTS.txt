@@ -18,6 +18,12 @@ The logger program.
 
 Can be built both for Symbian and Linux, but the Linux variant has somewhat less functionality. At present support for Linux builds really only exists to allow for some of the functionality to be tested on the PC rather than on mobile.
 
+h2. iksemel/
+
+A port of the [Iksemel http://code.google.com/p/iksemel/] XML and Jabber/XMPP library for Symbian. This not quite your plain port, but rather it excludes some APIs and includes some new ones.
+
+Most notably, there is a new ``stream`` API for asynchronous streaming, with which connects, reads, and writes, are all driven asynchronously. This preserves developer sanity by allowing for single-threaded programming without a danger of blocking the whole application when the network layer blocks. There are two implementations of the API, one implemented in Symbian C++, and one based on POSIX and libev.
+
 h2. keyevents/
 
 The keyevents libraries (client side and server side), from [Jaiku http://code.google.com/p/jaikuengine-mobile-client/].
@@ -44,7 +50,7 @@ Some of the extras in this component come from the [alua http://code.google.com/
 
 h2. megasis/
 
-Build scripts for building a SIS file containing multiple components.
+Build scripts for building a SIS file containing multiple components. This is intended to facilitate convenient deployment of the software.
 
 h2. py-cl2-cli-lib/
 
@@ -86,4 +92,6 @@ For the on-boot start up to work the executable must have a protected UID and su
 
 This component is entirely Symbian-specific.
 
-
+% Local Variables:
+% mode: longlines
+% End:

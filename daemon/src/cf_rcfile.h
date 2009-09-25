@@ -30,11 +30,10 @@ extern "C" {
   void cf_RcFile_destroy(cf_RcFile* self);
 
   // The configuration parameter value getters must be consistently
-  // named, as we have macros assuming so.
+  // named, as we have macros assuming so. And they are, as we are
+  // generating them with consistent naming.
 
-  gchar* cf_RcFile_get_username(cf_RcFile* self);
-
-  gchar* cf_RcFile_get_upload_url(cf_RcFile* self);
+#include "cf_rcfile_list.h"
 
 #ifdef __cplusplus
 } /* extern "C" */

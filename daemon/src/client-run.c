@@ -6,7 +6,6 @@
 #include "utils_cl2.h"
 
 #include "common/assertions.h"
-#include "er_errors.h"
 #include "common/logging-stack.h"
 
 #include <stdio.h>

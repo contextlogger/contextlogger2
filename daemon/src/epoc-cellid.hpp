@@ -7,6 +7,7 @@
 
 #include "epoc-ao-gerror.hpp"
 #include "log-db.h"
+#include "utils_cl2.h"
 
 #include <e32base.h>
 #include <etel3rdparty.h>
@@ -76,6 +77,12 @@ private:
 
   void MakeRequest();
 
+  void SetTimer();
+
+  void HandleTimerL();
+
+  gboolean HandleReadGL(GError** error);
+
   virtual gboolean RunGL(GError** error);
   
   virtual const char* Description();
@@ -95,6 +102,15 @@ private:
   TInt iNumScanFailures;
 
   CTelephony::TNetworkInfoV1 iOldData;
+
+  enum TState {
+    EInactive = 0,
+    EQuerying,
+    ERetryWaiting
+  };
+  TState iState;
+
+  DEF_SESSION(RTimer, iTimer);
 
 };
 

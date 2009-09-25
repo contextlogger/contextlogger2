@@ -1,7 +1,6 @@
 #ifndef __sa_array_h__
 #define __sa_array_h__
 
-#include "common/evq_event.h"
 #include "log-db.h"
 
 #include <glib.h>
@@ -14,8 +13,7 @@ extern "C" {
 
   /** Instantiates a sensor array consisting of all supported sensors.
       Does not yet start the sensors. */
-  sa_Array* 	sa_Array_new	(EventQueue* evQueue,
-				 LogDb* log,
+  sa_Array* 	sa_Array_new	(LogDb* log,
 				 GError** error);
   
   /** Starts all supported sensors. */
