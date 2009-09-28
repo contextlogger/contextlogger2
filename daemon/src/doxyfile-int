@@ -548,6 +548,7 @@ WARN_LOGFILE           =
 
 INPUT                  = inc \
                          src \
+                         ../iksemel/src \
                          ../lua/src \
                          ../shared \
                          ../sqlite3h/src/sqlite3 \

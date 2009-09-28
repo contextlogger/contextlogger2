@@ -21,6 +21,8 @@ gboolean is_ascii_ident(const gchar* s);
 #define DELETE_Z(x) { delete x; x = NULL; }
 #endif // __cplusplus
 
+#define FREE_Z(_x,_f) { if (_x) { _f(_x); (_x) = NULL; } }
+
 #if !GLIB_CHECK_VERSION(2,14,6)
 void g_string_vprintf(GString *string,
 		      const gchar *format,

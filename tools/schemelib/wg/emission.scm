@@ -63,7 +63,7 @@
      (type-spec-to-cxx dform cexpr-conv)))
 
  ;; To be used with variables and typedefs.
- (define var-type-string
+ (define* var-type-string
    (lambda (ast)
      (let* ((type (fget-reqd-nlist-elem-1 ast 'type))
 	    (name (fget-reqd-nlist-elem-1 ast 'name))

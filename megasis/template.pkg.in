@@ -29,8 +29,8 @@
 ;;
 ;; Daemon.
 ;;
-"../daemon/build/s60_30_udeb_dev/cl2app.exe" - "!:\sys\bin\cl2app.exe"
-;;"../daemon/src/backup_registration.xml" - "!:\private\e8460002\backup_registration.xml"
+"../daemon/build/<%= $KIT_NAME %>_udeb_dev/cl2app.exe" - "!:\sys\bin\cl2app.exe"
+"../daemon/src/backup_registration.xml" - "!:\private\e8460002\backup_registration.xml"
 
 ;;
 ;; Key events ANIM DLLs. (OPTIONAL)

@@ -184,6 +184,7 @@ void CUploader::RefreshSnapshotTimeExpr(TBool aNotInitial)
     else
       gx_error_free(localError);
   } else {
+    assert(newOne != NULL);
     g_free(iSnapshotTimeExpr);
     iSnapshotTimeExpr = newOne;
     logt("got time expression");

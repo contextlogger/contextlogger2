@@ -14,6 +14,13 @@ void er_global_cleanup()
 {
 }
 
+void er_fatal_error()
+{
+  logt("fatal error");
+  WHEN_SYMBIAN(ex_show_default_error());
+  EXIT_APPLICATION;
+}
+
 // The docs of g_error_free do not say if the error may be NULL. Well
 // with this function it may.
 void gx_error_free(GError* error)
@@ -84,6 +91,14 @@ gboolean gx_db_log_clear_error(LogDb* logDb, GError** errorToLog, GError** error
   gboolean success = log_db_log_exception(logDb, *errorToLog, error);
   g_clear_error(errorToLog);
   return success;
+}
+
+// Best effort. Invokes EXIT_APPLICATION as the last thing.
+void gx_db_log_free_fatal_error(LogDb* logDb, GError* errorToLog)
+{
+  gx_db_log_free_error(logDb, errorToLog, NULL);
+  WHEN_SYMBIAN(ex_show_default_error());
+  EXIT_APPLICATION;
 }
 
 // Best effort. Invokes EXIT_APPLICATION as the last thing.

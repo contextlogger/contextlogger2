@@ -16,11 +16,13 @@
 // we are not recomputing those here, although we could.
 
 #ifdef __SYMBIAN32__
+
 #include "sconfig.hrh"
 
 #ifndef __SYMBIAN_VERSION__
 #error incompatible build tool chain
 #endif
+
 #endif // __SYMBIAN32__
 
 #ifdef __SYMBIAN32__

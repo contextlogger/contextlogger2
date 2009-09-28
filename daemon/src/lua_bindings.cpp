@@ -27,14 +27,21 @@ static int f_shutdown(lua_State* L)
   return 0;
 }
 
+static int lua_error_unsupported(lua_State* L)
+{
+  lua_pushstring(L, "unsupported");
+  lua_error(L); // will not return
+  return 0; // to avoid warnings
+}
+
+#define throw_error_unsupported { return lua_error_unsupported(L); }
+
 /***koog (lua-func iap_id_by_name) ***/
 static int f_iap_id_by_name(lua_State* L)
 /***end***/
 {
 #if !defined(__SYMBIAN32__)
-  lua_pushstring(L, "unsupported");
-  lua_error(L); // will not return
-  return 0; // to avoid warnings
+  throw_error_unsupported;
 #else
   // When Lua invokes a C function a fresh new stack will be used;
   // hence our sole argument will be the only item on the stack;
@@ -158,8 +165,60 @@ static int f_sensor_start(lua_State* L)
   return 0;
 }
 
+/***koog (lua-func upload_now) ***/
+static int f_upload_now(lua_State* L)
+/***end***/
+{
+#if __FEATURE_UPLOADER__
+  kr_Controller* kr = getGlobalClient();
+  if (!kr->uploader) {
+    lua_pushstring(L, "uploader not started");
+    lua_error(L); // will not return
+  }
+  GError* localError = NULL;
+  if (!up_Uploader_upload_now(kr->uploader, &localError)) {
+    return lua_raise_gerror(L, localError);
+  }
+#else
+  lua_error_unsupported(L);
+#endif
+  return 0;
+}
+
+/***koog (lua-func remokon_start) ***/
+static int f_remokon_start(lua_State* L)
+/***end***/
+{
+#if __FEATURE_REMOKON__
+  kr_Controller* kr = getGlobalClient();
+  GError* localError = NULL;
+  if (!rk_Remokon_start(kr->remokon, &localError)) {
+    return lua_raise_gerror(L, localError);
+  }
+#else
+  lua_error_unsupported(L);
+#endif
+  return 0;
+}
+
+/***koog (lua-func remokon_stop) ***/
+static int f_remokon_stop(lua_State* L)
+/***end***/
+{
+#if __FEATURE_REMOKON__
+  kr_Controller* kr = getGlobalClient();
+  rk_Remokon_stop(kr->remokon);
+#else
+  lua_error_unsupported(L);
+#endif
+  return 0;
+}
+
 static const luaL_Reg function_table[] = {
 /***koog (lua-entries) ***/
+  {"remokon_stop", f_remokon_stop},
+  {"remokon_start", f_remokon_start},
+  {"upload_now", f_upload_now},
   {"sensor_start", f_sensor_start},
   {"sensor_stop", f_sensor_stop},
   {"is_sensor_running", f_is_sensor_running},

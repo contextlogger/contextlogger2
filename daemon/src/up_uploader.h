@@ -54,10 +54,6 @@ extern "C" {
 } /* extern "C" */
 #endif
 
-#else
-
-typedef int up_Uploader; // dummy
-
 #endif // __FEATURE_UPLOADER__
 
 #endif /* __up_uploader_h__ */

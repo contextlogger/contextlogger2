@@ -90,6 +90,9 @@ project must implement.
   (define/public (upload-with-curl.attr)
     (eq? (platform) 'linux))
 
+  (define/public (feature-remokon.attr)
+    #t)
+
   ;; --------------------------------------------------
   ;; sensors
   ;; --------------------------------------------------
@@ -139,6 +142,16 @@ project must implement.
 
   (define/public (capabilities.attr)
     (symbol-sjoin (capabilities)))
+
+  (define/public (s60-vernum.attr) 30)
+
+  (define/public (kit-name) 's60_30)
+  
+  (define/public (kit-name.attr)
+    (symbol->string (kit-name)))
+
+  (define/public (have-profileengine-lib.attr)
+    (>= (s60-vernum.attr) 31))
   
   ;; --------------------------------------------------
   ;; available libs
@@ -214,16 +227,23 @@ project must implement.
 (define-variant* release-variant% symbian-variant%
   (init-field caps cert-name
               (signed? #t)
-              (dist-variant-name #f))
+              (dist-variant-name #f)
+              (s60-vernum 30)
+              (btype 'daemon)
+              (kit 's60_30))
 
   (super-new)
 
+  (define/override (s60-vernum.attr) s60-vernum)
+    
+  (define/override (kit-name) kit)
+    
   (define/public (dist-variant-name.attr)
     (aif n dist-variant-name
          (symbol->string n)
          (send this variant-name.attr)))
          
-  (define/override (binary-type) 'daemon)
+  (define/override (binary-type) btype)
 
   (define/override (capabilities) caps)
 
@@ -236,7 +256,7 @@ project must implement.
               (capabilities)))
   
   (define/public (cellid-enabled.attr)
-    (sublist? '(Location)
+    (sublist? '(ReadDeviceData)
               (capabilities)))
 
   (define/public (signed.attr)

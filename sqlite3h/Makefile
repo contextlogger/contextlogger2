@@ -3,11 +3,21 @@ VERSION := 0.01
 CERT := dev
 SAKE := ../tools/bin/sake
 
+default : symbian
+
+symbian : symbian30
+
 # Presently building a DLL is not an option, unless one has the
 # expensive ARM compiler, or tweaks lots of Symbian headers.
 # Hence the "static" option here.
-symbian :
+symbian30 :
 	$(SAKE) --trace static=true kits=s60_30 udeb=true cert=$(CERT)
+
+symbian31 :
+	$(SAKE) --trace static=true kits=s60_31 udeb=true cert=$(CERT)
+
+symbian32 :
+	$(SAKE) --trace static=true kits=s60_32 udeb=true cert=$(CERT)
 
 symbian_rel :
 	$(SAKE) --trace static=true kits=s60_30 cert=$(CERT)

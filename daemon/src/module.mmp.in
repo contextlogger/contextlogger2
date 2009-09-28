@@ -90,6 +90,7 @@ library etel3rdparty.lib
 library euser.lib
 library http.lib
 library inetprotutil.lib // URI parsers
+library insock.lib // Internet protocol support for esock
 library lbs.lib
 library ws32.lib
 
@@ -97,7 +98,11 @@ library ws32.lib
 library flogger.lib
 <% end %>
 
+<% if $HAVE_PROFILEENGINE_LIB %>
+library profileengine.lib
+<% else %>
 library profileeng.lib // SDK Plugins
+<% end %>
 
 <% if $HAVE_EUSERHL %>
 library euserhl.lib    // High-Level APIs
@@ -154,7 +159,11 @@ source epoc-keypress.cpp
 <% unless $is_application %>
 source epoc-main.cpp
 <% end %>
+<% if $HAVE_PROFILEENGINE_LIB %>
+source epoc-profile-31.cpp
+<% else %>
 source epoc-profile.cpp
+<% end %>
 source epoc-s60-version.cpp
 source er_errors.c
 source er_errors_cxx.cpp
@@ -167,9 +176,18 @@ source lua_cl2.cpp
 source log-db.c
 source log-db-create.c
 source log-db-logging.c
+<% if $FEATURE_REMOKON %>
+source rk_jabber_session.c
+source rk_remokon.c
+<% end %>
 source sa_array.cpp 
 source sa_sensor_list_log_db.c
+<% if $FEATURE_UPLOADER %>
 source timer_generic_epoc.cpp
+<% end %>
+<% if $FEATURE_REMOKON %>
+source ut_timer_epoc.cpp
+<% end %>
 source utils_cl2.c
 source utils_cl2_cxx.cpp
 
@@ -197,6 +215,25 @@ source utilities_cxx.cpp
 sourcepath ..\..\..\time-spec
 source moment_parser.c
 source time_utils.c
+<% end %>
+
+<% if $FEATURE_REMOKON %>
+userinclude ..\..\..\iksemel\include
+userinclude ..\..\..\iksemel\src
+sourcepath ..\..\..\iksemel\src
+source base64.c
+source dom.c
+source filter.c
+source iks.c
+source ikss_stream.c
+source ikst_transport_epoc.cpp
+source ikstack.c
+source jabber.c
+source md5.c
+source sax.c
+source sha.c
+source socketaos.cpp
+source utility.c
 <% end %>
 
 sourcepath ..\..\..\lua\src

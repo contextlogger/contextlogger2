@@ -48,10 +48,11 @@ except ImportError:
 wd_pattern = u"*[08460006]*"
 cl2_pattern = u"*[e8460002]*"
 magic_file = u"c:\\data\\cl2\\disable_autostart.txt"
-data_dir = "e:\\data\\cl2"
-log_db_file = "e:\\data\\cl2\\log.db"
-config_db_file = "e:\\data\\cl2\\config.db"
-config_file = "e:\\data\\cl2\\config.txt"
+db_dir = "e:\\data\\cl2"
+data_dir = "c:\\data\\cl2"
+log_db_file = db_dir + "\\log.db"
+config_db_file = data_dir + "\\config.db"
+config_file = data_dir + "\\config.txt"
 
 def makedirs(path):
     try:
@@ -78,6 +79,7 @@ class GUI:
         app_path = os.path.split(appuifw.app.full_name())[0]
         self.app_drive = app_path[:2]
 
+	# 30 seems to be the max number of menu items.
         main_menu = [
             (u"CL2 running?", self.show_is_cl2_running),
             (u"Start CL2", self.start_cl2_daemon),
@@ -92,6 +94,8 @@ class GUI:
             (u"WD autostart enabled?", self.is_wd_enabled),
             (u"Disable WD autostart", self.disable_wd),
             (u"Enable WD autostart", self.enable_wd),
+
+	    (u"Upload now", self.upload_now),
 
             (u"Select sensor", self.select_sensor),
             (u"Sensor supported?", self.sensor_is_supported),
@@ -112,7 +116,7 @@ class GUI:
             (u"Create config file", self.create_config_file),
             (u"View config file", self.show_config_file),
             (u"View log file", self.show_log),
-            (u"Reboot device", self.reboot_device),
+            #(u"Reboot device", self.reboot_device),
 
             (u"Exit", self.abort)
             ]
@@ -251,6 +255,9 @@ class GUI:
         if index is None:
             return
 	self.current_sensor = str(choices[index])
+
+    def upload_now(self):
+        self.daemon_exec_ok(""" cl2.upload_now(); return "ok" """, u"Immediate upload requested", u"Failed to request upload")
 
     def sensor_is_supported(self):
 	if self.current_sensor is None:

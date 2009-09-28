@@ -23,6 +23,12 @@ extern "C" {
   void er_global_cleanup();
 
   // --------------------------------------------------
+  // general error reporting
+  // --------------------------------------------------
+
+  void er_fatal_error();
+
+  // --------------------------------------------------
   // GLib extras
   // --------------------------------------------------
 
@@ -39,11 +45,14 @@ extern "C" {
 
   void gx_error_log_clear(GError** error);
 
-  // Clears any "errorToLog" even if fails.
+  // Frees any "errorToLog" even if fails.
   gboolean gx_db_log_free_error(LogDb* logDb, GError* errorToLog, GError** error);
 
   // Clears any "errorToLog" even if fails.
   gboolean gx_db_log_clear_error(LogDb* logDb, GError** errorToLog, GError** error);
+
+  // Best effort. Invokes EXIT_APPLICATION as the last thing.
+  void gx_db_log_free_fatal_error(LogDb* logDb, GError* errorToLog);
 
   // Best effort. Invokes EXIT_APPLICATION as the last thing.
   void gx_db_log_clear_fatal_error(LogDb* logDb, GError** errorToLog);

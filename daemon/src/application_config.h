@@ -46,14 +46,20 @@
 // Invoked internally by panic.cpp.
 #define DEFINE_PANIC_CATEGORY COMPONENT_NAME_LIT(KPanicCategory)
 
+#ifdef __SYMBIAN32__
+  // Note that anything under C: is automatically included in system
+  // backups, so do not change this elsewhere without good reason.
+#define CONFIG_DIR "c:\\data\\cl2"
+#define DATABASE_DIR "e:\\data\\cl2"
+#else
+#define CONFIG_DIR "."
+#define DATABASE_DIR "."
+#endif
+
 /** Log database file.
  */
 #define LOGDB_BASENAME "log.db"
-#ifdef __SYMBIAN32__
-#define LOGDB_DIR "e:\\data\\cl2"
-#else
-#define LOGDB_DIR "."
-#endif
+#define LOGDB_DIR DATABASE_DIR
 #define LOGDB_FILE (LOGDB_DIR DIR_SEP LOGDB_BASENAME)
 
 /** These options should generally not be enabled,

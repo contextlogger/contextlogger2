@@ -1,12 +1,11 @@
-#ifndef __sa_sensor_timer_posix_h__
-#define __sa_sensor_timer_posix_h__
+#ifndef __sa_sensor_timer_libev_h__
+#define __sa_sensor_timer_libev_h__
 
 #include "application_config.h"
 
 #if __TIMER_ENABLED__
 
 #include "log-db.h"
-#include "common/evq_event.h"
 
 #include <glib.h>
 
@@ -16,7 +15,7 @@ extern "C" {
 
   typedef struct _sa_Sensor_timer sa_Sensor_timer;
 
-  sa_Sensor_timer* sa_Sensor_timer_new(EventQueue* evQueue, LogDb* log, GError** error);
+  sa_Sensor_timer* sa_Sensor_timer_new(LogDb* log, GError** error);
 
   void sa_Sensor_timer_destroy(sa_Sensor_timer* self);
 
@@ -32,4 +31,4 @@ extern "C" {
 
 #endif /* __TIMER_ENABLED__ */
 
-#endif /* __sa_sensor_timer_posix_h__ */
+#endif /* __sa_sensor_timer_libev_h__ */

@@ -6,42 +6,31 @@
 
 #include <string.h>
 
+// --------------------------------------------------
+// general
+// --------------------------------------------------
+
 #define SET_LUA_ERROR(_code) \
   if (error) { \
     const char* _luaErr = lua_tostring(L, -1); \
-    *error = g_error_new(domain_lua, _code, _luaErr); \
+    *error = g_error_new_literal(domain_lua, _code, _luaErr); \
   }
 
-static gboolean try_get_lua(const gchar* name, lua_State** pL, GError** error)
+// Evaluates the Lua expression "luaStr". If it evaluates to a nil
+// value, sets "L" to NULL. If there is an actual error, returns it.
+// Otherwise leaves the result to the Lua state "L", and the caller
+// takes ownership of "L".
+static gboolean eval_lua_str(const gchar* luaStr, lua_State** pL, GError** error)
 {
-  gchar* luaStr;
-
-  {
-    GError* localError = NULL;
-    luaStr = cf_DYNAMIC_GET_ERR(name, &localError);
-    if (!luaStr) {
-      if (is_not_found_error(localError)) {
-	g_error_free(localError);
-	*pL = NULL;
-	return TRUE;
-      } else {
-	gx_propagate_error(error, localError);
-	return FALSE;
-      }
-    }
-  }
-
   {
     lua_State* L = cl_lua_new_libs();
     if (!L) {
       if (error) *error = gx_error_no_memory;
-      g_free(luaStr);
       return FALSE;
     }
     //logf("will load string '%s'", luaStr);
 
     int res = (luaL_loadstring(L, luaStr) || lua_pcall(L, 0, 1, 0));
-    g_free(luaStr);
     if (res != 0) {
       SET_LUA_ERROR(res);
       lua_close(L);
@@ -60,63 +49,68 @@ static gboolean try_get_lua(const gchar* name, lua_State** pL, GError** error)
   }
 }
 
-// xxx code duplication, could implement based on try_get_lua
+// Gets a Lua expression from configuration by "name". If there is no
+// value by "name", or if it evaluates to a nil value, sets "L" to
+// NULL. If there is an actual error, returns it. Otherwise leaves the
+// result to the Lua state "L", and the caller takes ownership of "L".
+static gboolean get_lua_value(const gchar* name, lua_State** pL, GError** error)
+{
+  gchar* luaStr;
+
+  {
+    GError* localError = NULL;
+    luaStr = cf_DYNAMIC_GET_ERR(name, &localError);
+    if (!luaStr) {
+      if (is_not_found_error(localError)) {
+	g_error_free(localError);
+	*pL = NULL;
+	return TRUE;
+      } else {
+	gx_propagate_error(error, localError);
+	return FALSE;
+      }
+    }
+  }
+
+  gboolean ok = eval_lua_str(luaStr, pL, error);
+  g_free(luaStr);
+  return ok;
+}
+
+// --------------------------------------------------
+// integer
+// --------------------------------------------------
+
+static gboolean get_int_from_lua(lua_State* L, int* value, GError** error)
+{
+  if (!lua_isnumber(L, -1)) {
+    if (error)
+      *error = g_error_new(domain_cl2app, code_type_error, 
+			   "integer type Lua value expected");
+    return FALSE;
+  }
+  //logt("lua value is a number");
+    
+  lua_Number num = lua_tonumber(L, -1); // double by default
+  *value = (int)num; // not checking for loss of precision
+  return TRUE;
+}
+
 gboolean try_get_ConfigDb_int(const gchar* name, int* value, 
 			      gboolean* found, GError** error)
 {
-  GError* localError = NULL;
-  gchar* luaStr = cf_DYNAMIC_GET_ERR(name, &localError);
-  if (!luaStr) {
-    if (is_not_found_error(localError)) {
-      g_error_free(localError);
-      if (found) *found = FALSE;
-      return TRUE;
-    } else {
-      gx_propagate_error(error, localError);
-      return FALSE;
-    }
+  lua_State* L = NULL;
+  if (!get_lua_value(name, &L, error)) {
+    return FALSE;
   }
-
-  // Evaluate Lua string.
-  {
-    lua_State* L = cl_lua_new_libs();
-    if (!L) {
-      if (error) *error = gx_error_no_memory;
-      g_free(luaStr);
-      return FALSE;
-    }
-    //logf("will load string '%s'", luaStr);
-
-    int res = (luaL_loadstring(L, luaStr) || lua_pcall(L, 0, 1, 0));
-    g_free(luaStr);
-    if (res != 0) {
-      SET_LUA_ERROR(res);
-      lua_close(L);
-      return FALSE;
-    }
-    //logt("lua string evaluated ok");
-
-    if (lua_isnil(L, -1)) {
-      lua_close(L);
-      if (found) *found = FALSE;
-      return TRUE;
-    }
-    //logt("lua value is not nil");
-
-    if (!lua_isnumber(L, -1)) {
-      if (error)
-	*error = g_error_new(domain_cl2app, code_type_error, "code for '%s' did not yield a number", name);
-      lua_close(L);
-      return FALSE;
-    }
-    //logt("lua value is a number");
-    
-    lua_Number num = lua_tonumber(L, -1); // double by default
-    *value = (int)num; // not checking for loss of precision
+  
+  if (L) {
+    gboolean typeOk = get_int_from_lua(L, value, error);
     lua_close(L);
+    if (!typeOk) return FALSE;
   }
 
-  if (found) *found = TRUE;
+  if (found) *found = (L != NULL);
   return TRUE;
 }
 
@@ -131,26 +125,56 @@ gboolean get_ConfigDb_int(const gchar* name, int* value,
   return TRUE;
 }
 
+int force_get_ConfigDb_int(const gchar* name, int default_value)
+{
+  int value = default_value;
+  try_get_ConfigDb_int(name, &value, NULL, NULL);
+  return value;
+}
+
+int force_lua_eval_int(const gchar* luaStr, int default_value)
+{
+  lua_State* L = NULL;
+  if (eval_lua_str(luaStr, &L, NULL)) {
+    int value;
+    gboolean typeOk = get_int_from_lua(L, &value, NULL);
+    lua_close(L);
+    if (typeOk) return value;
+  }
+  return default_value;
+}
+
+// --------------------------------------------------
+// boolean
+// --------------------------------------------------
+
+static gboolean get_bool_from_lua(lua_State* L, gboolean* value, GError** error)
+{
+  if (!lua_isboolean(L, -1)) {
+    if (error)
+      *error = g_error_new(domain_cl2app, code_type_error, 
+			   "boolean type Lua value expected");
+    return FALSE;
+  }
+  //logt("lua value is a boolean");
+    
+  int num = lua_toboolean(L, -1);
+  *value = (num ? TRUE : FALSE);
+  return TRUE;
+}
+
 gboolean try_get_ConfigDb_bool(const gchar* name, gboolean* value, 
 			       gboolean* found, GError** error)
 {
   lua_State* L = NULL;
-  if (!try_get_lua(name, &L, error)) {
+  if (!get_lua_value(name, &L, error)) {
     return FALSE;
   }
   
   if (L) {
-    if (!lua_isboolean(L, -1)) {
-      if (error)
-	*error = g_error_new(domain_cl2app, code_type_error, "code for '%s' did not yield a boolean", name);
-      lua_close(L);
-      return FALSE;
-    }
-    //logt("lua value is a boolean");
-    
-    int num = lua_toboolean(L, -1);
-    *value = ((!num) ? FALSE : TRUE);
+    gboolean typeOk = get_bool_from_lua(L, value, error);
     lua_close(L);
+    if (!typeOk) return FALSE;
   }
 
   if (found) *found = (L != NULL);
@@ -168,50 +192,39 @@ gboolean get_ConfigDb_bool(const gchar* name, gboolean* value,
   return TRUE;
 }
 
-#define SET_DEFAULT_STR { if (default_s) { gotStr = strdup(default_s); goto gotit; } else { *s = NULL; return TRUE; } }
-
-gboolean get_ConfigDb_str(const gchar* name, gchar** s, 
-			  const gchar* default_s, GError** error)
+gboolean force_get_ConfigDb_bool(const gchar* name, gboolean default_value)
 {
+  gboolean value = default_value;
+  try_get_ConfigDb_bool(name, &value, NULL, NULL);
+  return value;
+}
+
+gboolean force_lua_eval_bool(const gchar* luaStr, gboolean default_value)
+{
+  lua_State* L = NULL;
+  if (eval_lua_str(luaStr, &L, NULL)) {
+    gboolean value;
+    gboolean typeOk = get_bool_from_lua(L, &value, NULL);
+    lua_close(L);
+    if (typeOk) return value;
+  }
+  return default_value;
+}
+
+// --------------------------------------------------
+// string
+// --------------------------------------------------
+
+gboolean try_get_ConfigDb_str(const gchar* name, gchar** s, GError** error)
+{
+  lua_State* L = NULL;
+  if (!get_lua_value(name, &L, error)) {
+    return FALSE;
+  }
+  
   gchar* gotStr = NULL;
 
-  GError* localError = NULL;
-  gchar* luaStr = cf_DYNAMIC_GET_ERR(name, &localError);
-  if (!luaStr) {
-    if (is_not_found_error(localError)) {
-      g_error_free(localError);
-      SET_DEFAULT_STR;
-    } else {
-      gx_propagate_error(error, localError);
-      return FALSE;
-    }
-  }
-
-  // Evaluate Lua string.
-  {
-    lua_State* L = cl_lua_new_libs();
-    if (!L) {
-      if (error) *error = gx_error_no_memory;
-      g_free(luaStr);
-      return FALSE;
-    }
-    //logf("will load string '%s'", luaStr);
-
-    int res = (luaL_loadstring(L, luaStr) || lua_pcall(L, 0, 1, 0));
-    g_free(luaStr);
-    if (res != 0) {
-      SET_LUA_ERROR(res);
-      lua_close(L);
-      return FALSE;
-    }
-    //logt("lua string evaluated ok");
-
-    if (lua_isnil(L, -1)) {
-      lua_close(L);
-      SET_DEFAULT_STR;
-    }
-    //logt("lua value is not nil");
-
+  if (L) {
     if (!lua_isstring(L, -1)) {
       if (error)
 	*error = g_error_new(domain_cl2app, code_type_error, "code for '%s' did not yield a string", name);
@@ -219,17 +232,34 @@ gboolean get_ConfigDb_str(const gchar* name, gchar** s,
       return FALSE;
     }
     //logt("lua value is a string");
-    
-    const char* luaOwned = lua_tostring(L, -1); // double by default
+
+    const char* luaOwned = lua_tostring(L, -1);
     gotStr = strdup(luaOwned);
     lua_close(L);
+
+    if (!gotStr) {
+      if (error) *error = gx_error_no_memory;
+      return FALSE;
+    }
   }
 
- gotit:
-  if (!gotStr) {
-    if (error) *error = gx_error_no_memory;
-    return FALSE;
-  }
   *s = gotStr;
   return TRUE;
 }
+
+gboolean get_ConfigDb_str(const gchar* name, gchar** s, 
+			  gchar* default_s, GError** error)
+{
+  if (!try_get_ConfigDb_str(name, s, error)) {
+    return FALSE;
+  }
+  if (!*s && default_s) {
+    *s = strdup(default_s);
+    if (!*s) {
+      if (error) *error = gx_error_no_memory;
+      return FALSE;
+    }
+  }
+  return TRUE;
+}
+

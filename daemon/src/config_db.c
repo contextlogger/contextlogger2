@@ -13,7 +13,7 @@
 /** Config database file.
  */
 #define CONFIGDB_BASENAME "config.db"
-#define CONFIGDB_DIR LOGDB_DIR
+#define CONFIGDB_DIR CONFIG_DIR
 #define CONFIGDB_FILE (CONFIGDB_DIR DIR_SEP CONFIGDB_BASENAME)
 
 static const char create_tables_sql[] =

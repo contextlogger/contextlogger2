@@ -1,0 +1,24 @@
+This iksemel Symbian port is not JUST a Symbian port. For one thing,
+it strives to retain compatibility with other platforms.
+
+Also, this port defines new transport implementations, one implemented
+in Symbian C++, and one based on POSIX and libev.
+
+The port also includes a new stream API for asynchronous streaming,
+connects, reads, writes, the works, all driven asynchronously. The key
+here is that we want the stream of ``iksStreamHook`` invocations to
+come in without blocking the thread. The stream API is somewhat
+different from the original, and most names have been changed to avoid
+confusion, but the API is close to the original in spirit.
+
+Our port is based on a recent mainline snapshot of iksemel, which
+appeared to have improved support for asynchrony, and we did want to
+drive iksemel asynchronously both on Symbian and Linux.
+
+The modifications are licensed under the LGPL 2.1 license, as is the
+case with the original code. In addition, the ikst_* and socketaos.*
+source files are also dual licensed under the MIT license.
+
+The documentation has not been updated to reflect the modifications to
+the original.
+

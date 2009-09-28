@@ -18,7 +18,7 @@
 #include "common/logging.h"
 #include "common/logging-stack.h"
 #include "common/assertions.h"
-//#include "common/threading.h"
+#include "common/sh_utils.h"
 
 #include <errno.h>
 #include <stdlib.h> // abort
@@ -483,8 +483,6 @@ static gboolean doMulti(up_Uploader* object, GError** error)
 // When uploading big logfiles, we better hope Curl does not read the
 // whole thing into memory before doing the upload. Probably not, but
 // we can override that if need be.
-
-#define memzero(x) memset(&(x), 0, sizeof(x))
 
 #define up_NUDGE_STOP 0 // stop request (for cleanup)
 #define up_NUDGE_NOW 'n' // snapshot request

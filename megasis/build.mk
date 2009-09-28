@@ -2,6 +2,9 @@ CURRENT_CONFIG := ../daemon/src/current_config.mk
 
 include $(CURRENT_CONFIG)
 
+static_libs :
+	cd ../sqlite3h && sake static=true kits=$(KIT_NAME) udeb=true cert=dev
+
 s60_30_self30 :
 	cd ../daemon && make
 	cd ../cxx-cl2-cli-lib && sake cert=self30 kits=s60_30
