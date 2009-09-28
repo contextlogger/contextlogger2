@@ -206,7 +206,8 @@ rk_Remokon* rk_Remokon_new(GError** error)
   self->params.observer.gotMsg = cb_gotMsg;
 
   self->params.server = cf_STATIC_GET(remokon_host);
-  self->params.port = (cf_STATIC_GET(remokon_port) || 5222);
+  self->params.port = cf_STATIC_GET(remokon_port);
+  if (!self->params.port) self->params.port = 5222; // default Jabber port
   self->params.username = cf_STATIC_GET(username);
   self->params.password = cf_STATIC_GET(remokon_password);
   self->params.jid = cf_STATIC_GET(jid);
