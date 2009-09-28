@@ -1,3 +1,9 @@
+Mon Aug 24 11:46:50 EEST 2009  tero.hasu@hut.fi
+  * makefile with releasing rule
+
+Fri Jul 24 15:22:11 EEST 2009  tero.hasu@hut.fi
+  * no time_t dep; codegen driven by makefile
+
 Wed Jul 15 22:49:18 EEST 2009  tero.hasu@hut.fi
   * polish and comment updates
 

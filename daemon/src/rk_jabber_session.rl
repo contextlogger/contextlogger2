@@ -23,6 +23,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+  !concept {:name => "Keeping track of AO state with Ragel.",
+            :desc => "Using a Ragel-generated state machine to track active object (AO) state."}
+*/
+
 typedef char letter; // alphabet type, big enough for us
 
 typedef struct {

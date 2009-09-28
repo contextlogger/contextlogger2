@@ -49,7 +49,7 @@
 #define LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(x,act) { User::LeaveIfError(act); x##IsOpen = ETrue; }
 
 /*
-  !concept {:name => "Simple logging.",
+  !concept {:name => "Minimal logging.",
             :desc => "Quick and dirty configurable logging."}
 */
 #if INTERNAL_LOGGING

@@ -19,6 +19,11 @@
 // to code shorter and easier to grasp. We may have to bring back some
 // of that code if we find a way to implement TLS for Symbian.
 
+/*
+  !concept {:name => "Asynchronous Iksemel use.",
+            :desc => "Hacking Iksemel to do asynchronous streaming."}
+*/
+
 #include "common.h"
 #include "iksemel.h"
 
