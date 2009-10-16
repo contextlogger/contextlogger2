@@ -79,44 +79,53 @@ class GUI:
         app_path = os.path.split(appuifw.app.full_name())[0]
         self.app_drive = app_path[:2]
 
-	# 30 seems to be the max number of menu items.
+        # 30 seems to be the max number of menu items, but this is
+        # fine since there can be that menu submenus as well, which in
+        # turn can also have that many items.
         main_menu = [
+            (u"Status overview", self.status_overview),
+            
             (u"CL2 running?", self.show_is_cl2_running),
             (u"Start CL2", self.start_cl2_daemon),
             (u"Stop CL2", self.stop_cl2_daemon),
             (u"Kill CL2", self.kill_cl2_daemon),
 
-            (u"WD running?", self.show_is_wd_running),
-            (u"Start WD", self.start_wd_daemon),
-            (u"Stop WD", self.stop_wd_daemon),
-            (u"Kill WD", self.kill_wd_daemon),
+            (u"Watchdog",
+             ((u"WD running?", self.show_is_wd_running),
+              (u"Start WD", self.start_wd_daemon),
+              (u"Stop WD", self.stop_wd_daemon),
+              (u"Kill WD", self.kill_wd_daemon),
 
-            (u"WD autostart enabled?", self.is_wd_enabled),
-            (u"Disable WD autostart", self.disable_wd),
-            (u"Enable WD autostart", self.enable_wd),
+              (u"WD autostart enabled?", self.is_wd_enabled),
+              (u"Disable WD autostart", self.disable_wd),
+              (u"Enable WD autostart", self.enable_wd))),
 
 	    (u"Upload now", self.upload_now),
 
-            (u"Select sensor", self.select_sensor),
-            (u"Sensor supported?", self.sensor_is_supported),
-            (u"Sensor running?", self.sensor_is_running),
-            (u"Start sensor", self.sensor_start),
-            (u"Stop sensor", self.sensor_stop),
-            (u"Allow sensor", lambda: self.sensor_allow(True)),
-	    (u"Forbid sensor", lambda: self.sensor_allow(False)),
-	    
-            (u"Select IAP", self.select_iap),
-            (u"Set IAP name", self.set_iap_name),
-            (u"Set upload frequency", self.select_upload_time),
-	    (u"Set BT scan interval", self.set_btprox_interval),
-	    (u"Set GPS scan interval", self.set_gps_interval),
+            (u"Sensors",
+             ((u"Select sensor", self.select_sensor),
+              (u"Sensor supported?", self.sensor_is_supported),
+              (u"Sensor running?", self.sensor_is_running),
+              (u"Start sensor", self.sensor_start),
+              (u"Stop sensor", self.sensor_stop),
+              (u"Allow sensor", lambda: self.sensor_allow(True)),
+              (u"Forbid sensor", lambda: self.sensor_allow(False)))),
 
-            (u"Delete log database", self.delete_log_db),
-            (u"Delete config database", self.delete_config_db),
-            (u"Create config file", self.create_config_file),
+	    (u"Parameters",
+             ((u"Select IAP", self.select_iap),
+              (u"Set IAP name", self.set_iap_name),
+              (u"Set upload frequency", self.select_upload_time),
+              (u"Set BT scan interval", self.set_btprox_interval),
+              (u"Set GPS scan interval", self.set_gps_interval))),
+
             (u"View config file", self.show_config_file),
             (u"View log file", self.show_log),
-            #(u"Reboot device", self.reboot_device),
+
+            (u"Misc",
+             ((u"Create config file", self.create_config_file),
+              (u"Delete log database", self.delete_log_db),
+              (u"Delete config database", self.delete_config_db),
+              (u"Reboot device", self.reboot_device))),
 
             (u"Exit", self.abort)
             ]
@@ -124,13 +133,24 @@ class GUI:
         appuifw.app.menu = main_menu
         appuifw.app.exit_key_handler = self.abort
 
+        self.sensor_list = None
 	self.current_sensor = None
+        self.app_info = None
 
 	print "Welcome."
 
+    def is_wd_running(self):
+        return miso.have_process(wd_pattern)
+
+    def is_cl2_running(self):
+        # In practice it is the former pattern that matches if any, as
+        # we have been unsuccessful in naming the process.
+        return (miso.have_process(cl2_pattern) or
+                miso.have_process(u"cl2app"))
+
     def show_is_wd_running(self):
         if have_miso:
-            if miso.have_process(wd_pattern):
+            if self.is_wd_running():
                 appuifw.note(u"WD running", "info")
             else:
                 appuifw.note(u"WD not running", "info")
@@ -139,9 +159,7 @@ class GUI:
 
     def show_is_cl2_running(self):
         if have_miso:
-            if miso.have_process(u"cl2app"):
-                appuifw.note(u"Named CL2 running", "info")
-            elif miso.have_process(cl2_pattern):
+            if self.is_cl2_running():
                 appuifw.note(u"CL2 running", "info")
             else:
                 appuifw.note(u"CL2 not running", "info")
@@ -241,23 +259,49 @@ class GUI:
 		pass
         return self.with_daemon_session(f)
 
+    def status_overview(self):
+        b2s = lambda v: v and "yes" or "no"
+        running = self.is_cl2_running()
+        print ""
+        print "logger running: %s" % b2s(running)
+        print "watchdog running: %s" % b2s(self.is_wd_running())
+        if not running: return
+        if self.app_info is None:
+            self.app_info = self.daemon_query(""" return string.format("%s v%s (%s) %s %s", cl2.app_name, cl2.app_version, cl2.app_variant, cl2.build_type, cl2.compiler_version and string.format("%s v%s", cl2.compiler_name, cl2.compiler_version) or cl2.compiler_name) """)
+        print self.app_info
+        print self.daemon_query("""
+do
+  local function get (n) return (cl2.config_get(n) or "(default)") end
+  return string.format("Params: [IAP: %s] [BT interval: %s] [GPS interval: %s] [upload time: %s]", get("iap"), get("sensor.btprox.interval"), get("sensor.gps.interval"), get("uploader.time_expr"))
+end """)
+        print self.daemon_query(""" do local lst = cl2.all_sensor_names(); local function get (n) if cl2.is_sensor_supported(n) then if cl2.is_sensor_running(n) then return "active" else return "inactive" end else return "unsupported" end end; local function map (f, lst) local nlst = {}; for i,v in ipairs(lst) do nlst[i] = f(v); end; return nlst; end; local function kjoin (lst) local s = ""; local first = true; local add = function (x) s = (s .. x) end; for i,x in ipairs(lst) do if first then first = false else add(" ") end; add(x); end; return s; end; local function g (n) return string.format("[%s: %s]", n, get(n)); end; return ("Sensors: " .. kjoin(map(g, lst))); end """)
+        print ""
+
     def select_sensor(self):
-	choices = [
-	    u"appfocus",
-	    u"btprox",
-	    u"cellid",
-	    u"flightmode",
-	    u"gps",
-	    u"keypress",
-	    u"profile"
-	    ]
+        if self.sensor_list is None:
+            res = self.daemon_query(""" do
+local function kjoin (lst)
+  local s = ""
+  local first = true
+  local add = function (x) s = (s .. x) end
+  for i,x in ipairs(lst) do
+    if first then first = false else add(",") end
+    add(x)
+  end
+  return s
+end
+return kjoin(cl2.all_sensor_names())
+end """)
+            self.sensor_list = res.split(",")
+        choices = [ unicode(x) for x in self.sensor_list ]
         index = appuifw.popup_menu(choices, u'Select sensor')
         if index is None:
             return
 	self.current_sensor = str(choices[index])
+        appuifw.note(u"Sensor %s selected" % self.current_sensor, "info")
 
     def upload_now(self):
-        self.daemon_exec_ok(""" cl2.upload_now(); return "ok" """, u"Immediate upload requested", u"Failed to request upload")
+        self.daemon_exec_ok(""" cl2.upload_now(); return "ok" """, u"Upload requested", u"Failed to request upload")
 
     def sensor_is_supported(self):
 	if self.current_sensor is None:
@@ -394,6 +438,7 @@ class GUI:
 	}
 	""" % ret
 	make_file(config_file, str(text))
+        appuifw.note(u"Config file written", "info")
 
     def show_config_file(self):
         doc_lock = e32.Ao_lock()

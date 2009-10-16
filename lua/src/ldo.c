@@ -35,6 +35,7 @@
 #include <e32std.h>
 #endif
 
+#include "common/logging.h"
 
 
 /*
@@ -96,7 +97,9 @@ static void resetstack (lua_State *L, int status) {
 
 
 void luaD_throw (lua_State *L, int errcode) {
+  logf("luaD_throw errCode %d", errcode);
   if (L->errorJmp) {
+    logt("have errorJmp");
     L->errorJmp->status = errcode;
     LUAI_THROW(L, L->errorJmp);
   }
@@ -120,6 +123,7 @@ int luaD_rawrunprotected (lua_State *L, Pfunc f, void *ud) {
   LUAI_TRY(L, &lj,
     (*f)(L, ud);
   );
+  //logt("exited LUAI_TRY");
   L->errorJmp = lj.previous;  /* restore old error handler */
   return lj.status;
 }
@@ -176,7 +180,7 @@ static CallInfo *growCI (lua_State *L) {
   else {
     luaD_reallocCI(L, 2*L->size_ci);
     if (L->size_ci > LUAI_MAXCALLS)
-      luaG_runerror(L, "stack overflow");
+      luaG_runerror_1(L, "stack overflow");
   }
   return ++L->ci;
 }
@@ -373,7 +377,7 @@ int luaD_poscall (lua_State *L, StkId firstResult) {
 void luaD_call (lua_State *L, StkId func, int nResults) {
   if (++L->nCcalls >= LUAI_MAXCCALLS) {
     if (L->nCcalls == LUAI_MAXCCALLS)
-      luaG_runerror(L, "C stack overflow");
+      luaG_runerror_1(L, "C stack overflow");
     else if (L->nCcalls >= (LUAI_MAXCCALLS + (LUAI_MAXCCALLS>>3)))
       luaD_throw(L, LUA_ERRERR);  /* error while handing stack error */
   }
@@ -448,7 +452,7 @@ LUA_API int lua_yield (lua_State *L, int nresults) {
   luai_userstateyield(L, nresults);
   lua_lock(L);
   if (L->nCcalls > L->baseCcalls)
-    luaG_runerror(L, "attempt to yield across metamethod/C-call boundary");
+    luaG_runerror_1(L, "attempt to yield across metamethod/C-call boundary");
   L->base = L->top - nresults;  /* protect stack slots below */
   L->status = LUA_YIELD;
   lua_unlock(L);

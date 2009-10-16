@@ -71,6 +71,12 @@ staticlibrary libcurl.lib    // built by us
   <% end %>
 <% end %>
 
+// With DLLs, note that if there are symbol conflicts, it's first
+// come, first served, so may want to have the more stable libraries
+// listed first.
+
+library euser.lib
+
 library apgrfx.lib
 library apparc.lib
 library avkon.lib
@@ -78,6 +84,7 @@ library bafl.lib
 library bluetooth.lib
 library btmanclient.lib
 library charconv.lib
+//library cntmodel.lib // CContactGroup
 library commdb.lib
 library commonui.lib // CErrorUI
 library cone.lib
@@ -86,12 +93,14 @@ library eikcoctl.lib
 library eikcore.lib
 library esock.lib
 //library estor.lib // RReadStream
-library etel3rdparty.lib
-library euser.lib
+//library etel.lib // RCall, RLine
+library etel3rdparty.lib // CTelephony
 library http.lib
 library inetprotutil.lib // URI parsers
 library insock.lib // Internet protocol support for esock
 library lbs.lib
+//library logcli.lib // CLogClient
+//library pbkeng.lib // CPbkContactEngine
 library ws32.lib
 
 <% if build.trait_map[:do_logging] %>
@@ -131,6 +140,7 @@ library keyevents_client_2000af44.lib
 <% end %>
 
 sourcepath ..\..\src
+source ac_app_context.cpp
 source cf_query.c
 source cf_rcfile.cpp
 <% if $is_application %>
@@ -146,17 +156,20 @@ source db_creation.c
 source epoc-ao-gerror.cpp
 source epoc-appfocus.cpp
 source epoc-btprox.cpp
+source epoc-callstatus.cpp
 source epoc-cellid.cpp
 source epoc-cliapi-server.cpp
-source epoc-flightmode.cpp
+//source epoc-flightmode.cpp
 source epoc-gps.cpp
 source epoc-iap.cpp
+source epoc-inactivity.cpp
+source epoc-indicator.cpp
 <% if $have_anim %>
 source epoc-keypress-anim.cpp
 <% else %>
 source epoc-keypress.cpp
 <% end %>
-<% unless $is_application %>
+<% unless $IS_APPLICATION %>
 source epoc-main.cpp
 <% end %>
 <% if $HAVE_PROFILEENGINE_LIB %>
@@ -168,8 +181,12 @@ source epoc-s60-version.cpp
 source er_errors.c
 source er_errors_cxx.cpp
 source kr_controller.c
+source kr_diskspace.cpp
+source kr_plat_ao_epoc.cpp
 source libluasqlite3.c
+<% if $FEATURE_LOCALSERVER %>
 source local_server.cpp
+<% end %>
 source lua_bindings.cpp
 source lua_cl2.cpp
 //source lua_linit_cl2.c
@@ -182,17 +199,27 @@ source rk_remokon.c
 <% end %>
 source sa_array.cpp 
 source sa_sensor_list_log_db.c
+source sa_sensor_mark.c
+//source sa_sensor_util_epoc.cpp
+source symbian_auto_ptr.cpp
 <% if $FEATURE_UPLOADER %>
 source timer_generic_epoc.cpp
 <% end %>
+source ut_diskspace_epoc.cpp
+//source ut_phonecall_epoc.cpp   //xxx experimental
+source ut_retry_epoc.cpp
+<% if $FLIGHTMODE_ENABLED or $CALLSTATUS_ENABLED %>
+source ut_telephony_epoc.cpp
+<% end %>
+//source ut_timeout_epoc.cpp   //xxx experimental
 <% if $FEATURE_REMOKON %>
 source ut_timer_epoc.cpp
 <% end %>
 source utils_cl2.c
 source utils_cl2_cxx.cpp
 
-<% if $feature_uploader %>
-<% if $with_curl %>
+<% if $FEATURE_UPLOADER %>
+<% if $UPLOAD_WITH_CURL %>
 source up_uploader_curl.c
 <% else %>
 source up_uploader_epoc.cpp

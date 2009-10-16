@@ -49,7 +49,7 @@ void *luaM_growaux_ (lua_State *L, void *block, int *size, size_t size_elems,
   int newsize;
   if (*size >= limit/2) {  /* cannot double it? */
     if (*size >= limit)  /* cannot grow even a little? */
-      luaG_runerror(L, errormsg);
+      luaG_runerror_1(L, errormsg);
     newsize = limit;  /* still have at least one free place */
   }
   else {
@@ -64,7 +64,7 @@ void *luaM_growaux_ (lua_State *L, void *block, int *size, size_t size_elems,
 
 
 void *luaM_toobig (lua_State *L) {
-  luaG_runerror(L, "memory allocation error: block too big");
+  luaG_runerror_1(L, "memory allocation error: block too big");
   return NULL;  /* to avoid warnings */
 }
 

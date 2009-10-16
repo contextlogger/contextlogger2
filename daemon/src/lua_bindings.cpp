@@ -1,9 +1,11 @@
 #include "lua_bindings.h"
 
+#include "ac_app_context.h"
 #include "application_config.h"
 #include "kr_controller_private.h"
 #include "lua_cl2.h"
 #include "sa_sensor_list_integration.h"
+#include "sa_sensor_list_log_db.h"
 
 #if defined(__SYMBIAN32__)
 #include "epoc-iap.h"
@@ -214,8 +216,25 @@ static int f_remokon_stop(lua_State* L)
   return 0;
 }
 
+/***koog (lua-func log_message) ***/
+static int f_log_message(lua_State* L)
+/***end***/
+{
+#if __APPMESSAGE_ENABLED__
+  const char* msgText = luaL_checklstring(L, 1, NULL);
+  GError* localError = NULL;
+  if (!log_db_log_appmessage(ac_global_LogDb, msgText, &localError)) {
+    return lua_raise_gerror(L, localError);
+  }
+#else
+  lua_error_unsupported(L);
+#endif
+  return 0;
+}
+
 static const luaL_Reg function_table[] = {
 /***koog (lua-entries) ***/
+  {"log_message", f_log_message},
   {"remokon_stop", f_remokon_stop},
   {"remokon_start", f_remokon_start},
   {"upload_now", f_upload_now},
@@ -235,7 +254,38 @@ static const luaL_Reg function_table[] = {
 extern "C" int luaopen_cl2(lua_State *L) 
 {
   luaL_register(L, LUA_CL2LIBNAME, function_table);
+
+  /*
   lua_pushnumber(L, __VERSION100__);
   lua_setfield(L, -2, "version");
+  */
+
+  lua_pushstring(L, __APP_NAME__);
+  lua_setfield(L, -2, "app_name");
+
+  lua_pushstring(L, __VERSION_STRING__);
+  lua_setfield(L, -2, "app_version");
+
+  lua_pushstring(L, __VARIANT_NAME__);
+  lua_setfield(L, -2, "app_variant");
+
+  lua_pushstring(L, __COMPILER_NAME__);
+  lua_setfield(L, -2, "compiler_name");
+
+#if defined(__GNUC__)
+  lua_pushfstring(L, "%d.%d.%d",
+		  __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
+#else
+  lua_pushnil(L);
+#endif
+  lua_setfield(L, -2, "compiler_version");
+
+#if defined(NDEBUG)
+  lua_pushstring(L, "release");
+#else
+  lua_pushstring(L, "debug");
+#endif
+  lua_setfield(L, -2, "build_type");
+
   return 1;
 }

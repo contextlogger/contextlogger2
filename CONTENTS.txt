@@ -66,7 +66,7 @@ h2. sqlite3h/
 
 A Symbian port of [SQLite 3 http://www.sqlite.org/].
 
-This code comes from a recent mainline SQLite release, and considerable changes have been made to get the code to work on Symbian. This code is built in statically to Symbian builds of the logger program. Recent versions of the Symbian Platform have SQLite built in, and on such devices one presumably could and should dynamically link against the built-in database code, instead of building in this custom port.
+This code comes from a recent mainline SQLite release, and considerable changes have been made to get the code to work on Symbian. This code is built in statically to Symbian builds of the logger program. Recent versions of the Symbian Platform have SQLite built in (within Symbian SQL), and on such devices one presumably could and should dynamically link against the built-in database code, instead of building in this custom port. Unfortunately it seems that Symbian presently only provides a Symbian-specific interface to the SQL engine (see ``sqldb.h``), and not the standard one, so this may not be possible yet.
 
 h2. time-spec/
 

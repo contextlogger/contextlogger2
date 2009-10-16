@@ -11,6 +11,7 @@
 ;; existing code.
 (require (except-in scheme
                     class
+                    const
                     export
                     file
                     import
@@ -41,6 +42,7 @@
 (define cstruct struct)
 (define cthis this)
 (define cunit unit)
+(define cconst const) ;; defined in scheme and scheme/function (in v4.2.1)
 
 (define (elem-named? name elem)
   (list-named? elem name))
@@ -104,7 +106,7 @@
   (true? (memq x '(public private protected))))
 
 (define (func-attr-symbol? x)
-  (true? (memq x '(export extern-c public private protected pure static virtual))))
+  (true? (memq x '(export extern-c inline non-modifying public private protected pure static virtual))))
 
 (define texpr-arg/c
   (or/c symbol/c? a.type-expression?))
@@ -132,16 +134,23 @@
  (call-on call/id/c)
  (call-via call/id/c)
  (cclass (func-listof/c (or/c bases? class-attr-symbol? non-sharable? name? a.docstring? body?) any/c))
+ (cconst (-> texpr-arg/c any/c))
  (cdelete (-> expr/c? any/c))
  (cdelete-array (-> expr/c? any/c))
+ (cexport symbol?)
+ (cinit (-> expr/c? any/c))
+ (cnew new/c)
+ (const (-> texpr-arg/c any/c)) ;; xxx deprecated
  (cpp-else (->* () () #:rest any/c any/c)) ;; xxx would like to use context-spec? here if not for the kw arg differences
  (cpp-end (->* () () #:rest any/c any/c))
  (cpp-if (->* (string?) () #:rest any/c any/c))
- (const (-> texpr-arg/c any/c))
+ (cprivate symbol?)
+ (cpublic symbol?)
  (ctor func-decl/c)
  (ctor-init-list (func-listof/c (or/c a.ctor-super? a.ctor-var?) any/c))
  (ctor-super (-> texpr-arg/c (listof expr/c?) any/c))
  (ctor-var (-> symbol/c? (listof expr/c?) any/c))
+ (cunit (func-listof/c (or/c basename? includes? body? a.docstring?) any/c))
  (cxx-cmt-doc (func-listof/c string? any/c))
  (cxx-doc (func-listof/c string? any/c))
  (cxx-exported-declarations (func-listof/c string? any/c))
@@ -149,24 +158,21 @@
  (cxx-line (-> string? any/c))
  (doc (func-listof/c string? any/c))
  (dtor func-decl/c)
- (cexport symbol?)
  (extern-c symbol?)
  (field-on (-> expr/c? symbol/c? any/c))
  (field-via (-> expr/c? symbol/c? any/c))
  (func func-decl/c)
  (includes (func-listof/c (or/c include? splice?) any/c))
- (cinit (-> expr/c? any/c))
+ (inline symbol?)
  (leaving leaving?)
  (leaving-new new/c)
  (local-include (-> string? any/c))
  (name (-> (or/c symbol? string?) name?))
- (cnew new/c)
+ (non-modifying symbol?)
  (non-sharable non-sharable?)
  (not-leaving leaving?)
- (cprivate symbol?)
  (protected symbol?)
  (ptr-to (-> texpr-arg/c any/c))
- (cpublic symbol?)
  (pure symbol?)
  (qual-name (func-listof/c (or/c symbol/c?) any/c))
  (ref-to (-> texpr-arg/c any/c))
@@ -175,7 +181,6 @@
  (static symbol?)
  (system-include (-> string? any/c))
  (type (-> texpr-arg/c any/c))
- (cunit (func-listof/c (or/c basename? includes? body? a.docstring?) any/c))
  (var (func-listof/c (or/c type? name? init? var-attr-symbol? a.docstring?) any/c))
  (virtual symbol?)
  )

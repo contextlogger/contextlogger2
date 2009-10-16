@@ -28,6 +28,8 @@
 #include "ltm.h"
 #include "lvm.h"
 
+#include "common/logging.h"
+
 
 
 static const char *getfuncname (lua_State *L, CallInfo *ci, const char **name);
@@ -565,16 +567,20 @@ static int isinstack (CallInfo *ci, const TValue *o) {
 
 
 void luaG_typeerror (lua_State *L, const TValue *o, const char *op) {
+  logt("luaG_typeerror");
+  logf("operation is '%s'", op ? op : "NULL");
   const char *name = NULL;
   const char *t = luaT_typenames[ttype(o)];
+  logf("type name is '%s'", t ? t : "NULL");
   const char *kind = (isinstack(L->ci, o)) ?
                          getobjname(L, L->ci, cast_int(o - L->base), &name) :
                          NULL;
+  logf("kind is '%s'", kind ? kind : "NULL");
   if (kind)
-    luaG_runerror(L, "attempt to %s %s " LUA_QS " (a %s value)",
+    luaG_runerror_m(L, "attempt to %s %s " LUA_QS " (a %s value)",
                 op, kind, name, t);
   else
-    luaG_runerror(L, "attempt to %s a %s value", op, t);
+    luaG_runerror_m(L, "attempt to %s a %s value", op, t);
 }
 
 
@@ -594,29 +600,28 @@ void luaG_aritherror (lua_State *L, const TValue *p1, const TValue *p2) {
 
 
 int luaG_ordererror (lua_State *L, const TValue *p1, const TValue *p2) {
+  logt("luaG_ordererror");
   const char *t1 = luaT_typenames[ttype(p1)];
   const char *t2 = luaT_typenames[ttype(p2)];
+#if 0
+  // This does not cause a crash on Symbian.
+  setsvalue2s(L, L->top, luaS_new(L, "dummy message"));
+  incr_top(L);
+  luaD_throw(L, LUA_ERRRUN);
+#else
   if (t1[2] == t2[2])
-    luaG_runerror(L, "attempt to compare two %s values", t1);
+    luaG_runerror_m(L, "attempt to compare two %s values", t1);
   else
-    luaG_runerror(L, "attempt to compare %s with %s", t1, t2);
+    luaG_runerror_m(L, "attempt to compare %s with %s", t1, t2);
+#endif
   return 0;
 }
 
 
-static void addinfo (lua_State *L, const char *msg) {
-  CallInfo *ci = L->ci;
-  if (isLua(ci)) {  /* is Lua code? */
-    char buff[LUA_IDSIZE];  /* add file:line information */
-    int line = currentline(L, ci);
-    luaO_chunkid(buff, getstr(getluaproto(ci)->source), LUA_IDSIZE);
-    luaO_pushfstring(L, "%s:%d: %s", buff, line, msg);
-  }
-}
-
-
 void luaG_errormsg (lua_State *L) {
+  logt("luaG_errormsg");
   if (L->errfunc != 0) {  /* is there an error handling function? */
+    logt("have error handling function");
     StkId errfunc = restorestack(L, L->errfunc);
     if (!ttisfunction(errfunc)) luaD_throw(L, LUA_ERRERR);
     setobjs2s(L, L->top, L->top - 1);  /* move argument */
@@ -624,11 +629,42 @@ void luaG_errormsg (lua_State *L) {
     incr_top(L);
     luaD_call(L, L->top - 2, 1);  /* call it */
   }
+  logt("throwing now");
   luaD_throw(L, LUA_ERRRUN);
 }
 
+#if EXCEPTION_CRASHES_VARARGS_BUG
+// It seems that on Symbian, merely invoking a function with varargs
+// can mess up the stack so that an exception (or possibly some other
+// kind of a return) will then cause a KERN-EXEC 3. Possibly we will
+// have to avoid invoking this function on Symbian until we can find a
+// fix. In any case, this is a known problem, see
+// http://discussion.forum.nokia.com/forum/showthread.php?t=115248.
+// Upgrading to GCCE 4 might possibly help?
+void luaG_runerror_wa (lua_State *L, const char *s) {
+  logt("luaG_runerror_wa");
+  setsvalue2s(L, L->top, luaS_new(L, s));
+  incr_top(L);
+  luaG_errormsg(L);
+}
 
-void luaG_runerror (lua_State *L, const char *fmt, ...) {
+#else
+
+// only used in luaG_runerror
+static void addinfo (lua_State *L, const char *msg) {
+  logt("addinfo");
+  CallInfo *ci = L->ci;
+  if (isLua(ci)) {  /* is Lua code? */
+    logt("is Lua code");
+    char buff[LUA_IDSIZE];  /* add file:line information */
+    int line = currentline(L, ci);
+    luaO_chunkid(buff, getstr(getluaproto(ci)->source), LUA_IDSIZE);
+    luaO_pushfstring(L, "%s:%d: %s", buff, line, msg);
+  }
+}
+
+void luaG_runerror_ok (lua_State *L, const char *fmt, ...) {
+  logt("luaG_runerror");
   va_list argp;
   va_start(argp, fmt);
   addinfo(L, luaO_pushvfstring(L, fmt, argp));
@@ -636,3 +672,4 @@ void luaG_runerror (lua_State *L, const char *fmt, ...) {
   luaG_errormsg(L);
 }
 
+#endif

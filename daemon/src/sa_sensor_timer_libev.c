@@ -33,7 +33,7 @@ static void timerCallback(EV_P_ ev_timer* w, int revents);
 
 static void setTimer(sa_Sensor_timer* self)
 {
-  int wait_secs = ((rand() % 10) + 1);
+  int wait_secs = ((rand() % 30) + 1);
   logf("waiting for %d secs", wait_secs);
   
   ev_tstamp after = wait_secs; // coerce to float type of some kind

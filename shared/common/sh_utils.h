@@ -39,4 +39,14 @@ class name \
 #define UNLESS_SYMBIAN(stmt) { stmt ; }
 #endif /* __SYMBIAN32__ */
 
+#if defined(__SYMBIAN32__) && defined(__cplusplus)
+#define DEFINE_FOR_SYMBIAN_CXX(def) def
+#define WHEN_SYMBIAN_CXX(stmt) { stmt ; }
+#define UNLESS_SYMBIAN_CXX(stmt)
+#else
+#define DEFINE_FOR_SYMBIAN_CXX(def)
+#define WHEN_SYMBIAN_CXX(stmt)
+#define UNLESS_SYMBIAN_CXX(stmt) { stmt ; }
+#endif
+
 #endif /* __sh_utils_h__ */

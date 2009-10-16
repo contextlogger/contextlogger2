@@ -18,6 +18,37 @@
 
 #include <string.h>
 
+#define SA_ARRAY_INTEGRATION 1
+
+#define sa_set_symbian_error(errCode,msg) \
+    if (error) \
+      *error = g_error_new(domain_symbian, errCode, msg ": %s (%d)", plat_error_strerror(errCode), errCode);
+
+#define sa_check_symbian_error(errCode,msg,rval) \
+  if (errCode) { \
+    sa_set_symbian_error(errCode,msg); \
+    return (rval); \
+  }
+
+#define sa_typical_symbian_sensor_start(object,msg) { \
+  success = TRUE; \
+  TRAPD(_errCode, success = (object)->StartL(error));		       \
+  if (_errCode) { sa_set_symbian_error(_errCode, msg); success = FALSE; } \
+}
+
+#define sa_typical_symbian_sensor_create(expr,msg) { \
+  TRAPD(_errCode, expr); \
+  if (_errCode) { sa_set_symbian_error(_errCode, msg); success = FALSE; } \
+  else { success = TRUE; }					      \
+}
+
+#define sa_typical_symbian_sensor_reconfigure(sn) {			\
+    (self->iSensor_##sn)->Reconfigure(key, value);			\
+    success = TRUE;							\
+}
+
+#define sa_reconfigure_ignore_all_keys { success = TRUE; }
+
 /* Sensor implementation includes.
    There may be variant implementations for different builds.
  */
@@ -36,6 +67,12 @@
 #if __GPS_ENABLED__
 #include "epoc-gps.hpp"
 #endif
+#if __INACTIVITY_ENABLED__
+#include "epoc-inactivity.hpp"
+#endif
+#if __INDICATOR_ENABLED__
+#include "epoc-indicator.hpp"
+#endif
 #if __KEYPRESS_ENABLED__
 #if __HAVE_ANIM__
 #include "epoc-keypress-anim.hpp"
@@ -53,6 +90,11 @@
 #if __TIMER_ENABLED__
 #include "sa_sensor_timer_libev.h"
 #endif
+#if __MARK_ENABLED__
+#include "sa_sensor_mark.h"
+#endif
+
+#include "epoc-callstatus.hpp"
 
 #define __NEED_TELEPHONY__ 0
 
@@ -64,6 +106,7 @@
 
 extern "C" struct _sa_Array
 {
+  ac_AppContext* ac; // not owned
   LogDb* logDb; // not owned
 
 #if __NEED_TELEPHONY__
@@ -85,6 +128,12 @@ extern "C" struct _sa_Array
 #if __GPS_ENABLED__
   CSensor_gps *iSensor_gps;
 #endif
+#if __INACTIVITY_ENABLED__
+  CSensor_inactivity *iSensor_inactivity;
+#endif
+#if __INDICATOR_ENABLED__
+  CSensor_indicator *iSensor_indicator;
+#endif
 #if __KEYPRESS_ENABLED__
   CSensor_keypress *iSensor_keypress;
 #endif
@@ -94,46 +143,26 @@ extern "C" struct _sa_Array
 #if __TIMER_ENABLED__
   sa_Sensor_timer* iSensor_timer;
 #endif
+#if __MARK_ENABLED__
+  sa_Sensor_mark* iSensor_mark;
+#endif
+  DECLARE_SENSOR_callstatus;
 };
-
-#define set_symbian_error(errCode,msg) \
-    if (error) \
-      *error = g_error_new(domain_symbian, errCode, msg ": %s (%d)", plat_error_strerror(errCode), errCode);
-
-#define check_symbian_error(errCode,msg,rval) \
-  if (errCode) { \
-    set_symbian_error(errCode,msg); \
-    return (rval); \
-  }
-
-#define typical_symbian_sensor_start(object,msg) { \
-  success = TRUE; \
-  TRAPD(_errCode, success = (object)->StartL(error));		       \
-  if (_errCode) { set_symbian_error(_errCode, msg); success = FALSE; } \
-}
-
-#define typical_symbian_sensor_create(expr,msg) { \
-  TRAPD(_errCode, expr); \
-  if (_errCode) { set_symbian_error(_errCode, msg); success = FALSE; } \
-  else { success = TRUE; }					      \
-}
-
-#define typical_symbian_sensor_reconfigure(sn) {			\
-    (self->iSensor_##sn)->Reconfigure(key, value);			\
-    success = TRUE;							\
-}
 
 /* Sensor starting. (Statement.)
    Must set "success" (gboolean) and "error" (GError**) to indicate what happened.
  */
-#define SENSOR_APPFOCUS_START typical_symbian_sensor_start(self->iSensor_appfocus, "failed to start appfocus scanning")
-#define SENSOR_BTPROX_START typical_symbian_sensor_start(self->iSensor_btprox, "failed to start btprox scanning")
-#define SENSOR_CELLID_START typical_symbian_sensor_start(self->iSensor_cellid, "failed to start cellid scanning")
-#define SENSOR_FLIGHTMODE_START typical_symbian_sensor_start(self->iSensor_flightmode, "failed to start flightmode scanning")
-#define SENSOR_GPS_START typical_symbian_sensor_start(self->iSensor_gps, "failed to start gps scanning")
-#define SENSOR_KEYPRESS_START typical_symbian_sensor_start(self->iSensor_keypress, "failed to start keypress scanning")
-#define SENSOR_PROFILE_START typical_symbian_sensor_start(self->iSensor_profile, "failed to start profile scanning")
+#define SENSOR_APPFOCUS_START sa_typical_symbian_sensor_start(self->iSensor_appfocus, "failed to start appfocus scanning")
+#define SENSOR_BTPROX_START sa_typical_symbian_sensor_start(self->iSensor_btprox, "failed to start btprox scanning")
+#define SENSOR_CELLID_START sa_typical_symbian_sensor_start(self->iSensor_cellid, "failed to start cellid scanning")
+#define SENSOR_FLIGHTMODE_START sa_typical_symbian_sensor_start(self->iSensor_flightmode, "failed to start flightmode scanning")
+#define SENSOR_GPS_START sa_typical_symbian_sensor_start(self->iSensor_gps, "failed to start gps scanning")
+#define SENSOR_INACTIVITY_START sa_typical_symbian_sensor_start(self->iSensor_inactivity, "failed to start inactivity scanning")
+#define SENSOR_INDICATOR_START sa_typical_symbian_sensor_start(self->iSensor_indicator, "failed to start indicator scanning")
+#define SENSOR_KEYPRESS_START sa_typical_symbian_sensor_start(self->iSensor_keypress, "failed to start keypress scanning")
+#define SENSOR_PROFILE_START sa_typical_symbian_sensor_start(self->iSensor_profile, "failed to start profile scanning")
 #define SENSOR_TIMER_START { success = sa_Sensor_timer_start(self->iSensor_timer, error); }
+#define SENSOR_MARK_START { success = sa_Sensor_mark_start(self->iSensor_mark, error); }
 
 /* Sensor stopping. (Statement.) */
 #define SENSOR_APPFOCUS_STOP { self->iSensor_appfocus->Stop(); }
@@ -141,9 +170,12 @@ extern "C" struct _sa_Array
 #define SENSOR_CELLID_STOP { self->iSensor_cellid->Stop(); }
 #define SENSOR_FLIGHTMODE_STOP { self->iSensor_flightmode->Stop(); }
 #define SENSOR_GPS_STOP { self->iSensor_gps->Stop(); }
+#define SENSOR_INACTIVITY_STOP { self->iSensor_inactivity->Stop(); }
+#define SENSOR_INDICATOR_STOP { self->iSensor_indicator->Stop(); }
 #define SENSOR_KEYPRESS_STOP { self->iSensor_keypress->Stop(); }
 #define SENSOR_PROFILE_STOP { self->iSensor_profile->Stop(); }
 #define SENSOR_TIMER_STOP { sa_Sensor_timer_stop(self->iSensor_timer); }
+#define SENSOR_MARK_STOP { sa_Sensor_mark_stop(self->iSensor_mark); }
 
 /* Sensor running querying. (Boolean expression.) */
 #define SENSOR_APPFOCUS_IS_RUNNING (self->iSensor_appfocus->IsActive())
@@ -151,9 +183,12 @@ extern "C" struct _sa_Array
 #define SENSOR_CELLID_IS_RUNNING (self->iSensor_cellid->IsActive())
 #define SENSOR_FLIGHTMODE_IS_RUNNING (self->iSensor_flightmode->IsActive())
 #define SENSOR_GPS_IS_RUNNING (self->iSensor_gps->IsActive())
+#define SENSOR_INACTIVITY_IS_RUNNING (self->iSensor_inactivity->IsActive())
+#define SENSOR_INDICATOR_IS_RUNNING (self->iSensor_indicator->IsActive())
 #define SENSOR_KEYPRESS_IS_RUNNING (self->iSensor_keypress->IsActive())
 #define SENSOR_PROFILE_IS_RUNNING (self->iSensor_profile->IsActive())
 #define SENSOR_TIMER_IS_RUNNING (sa_Sensor_timer_is_active(self->iSensor_timer))
+#define SENSOR_MARK_IS_RUNNING (sa_Sensor_mark_is_active(self->iSensor_mark))
 
 /* Sensor destruction. (Statement.) */
 #define SENSOR_APPFOCUS_DESTROY { delete self->iSensor_appfocus; self->iSensor_appfocus = NULL; }
@@ -161,21 +196,27 @@ extern "C" struct _sa_Array
 #define SENSOR_CELLID_DESTROY { delete self->iSensor_cellid; self->iSensor_cellid = NULL; }
 #define SENSOR_FLIGHTMODE_DESTROY { delete self->iSensor_flightmode; self->iSensor_flightmode = NULL; }
 #define SENSOR_GPS_DESTROY { delete self->iSensor_gps; self->iSensor_gps = NULL; }
+#define SENSOR_INACTIVITY_DESTROY { delete self->iSensor_inactivity; self->iSensor_inactivity = NULL; }
+#define SENSOR_INDICATOR_DESTROY { delete self->iSensor_indicator; self->iSensor_indicator = NULL; }
 #define SENSOR_KEYPRESS_DESTROY { delete self->iSensor_keypress; self->iSensor_keypress = NULL; }
 #define SENSOR_PROFILE_DESTROY { delete self->iSensor_profile; self->iSensor_profile = NULL; }
 #define SENSOR_TIMER_DESTROY { sa_Sensor_timer_destroy(self->iSensor_timer); }
+#define SENSOR_MARK_DESTROY { sa_Sensor_mark_destroy(self->iSensor_mark); }
 
 /* Sensor creation. (Statement.) 
    Must set "success" (gboolean) and "error" (GError**) to indicate what happened.
 */
-#define SENSOR_FLIGHTMODE_CREATE typical_symbian_sensor_create(self->iSensor_flightmode = CSensor_flightmode::NewL(self->logDb), "flightmode sensor initialization")
-#define SENSOR_PROFILE_CREATE typical_symbian_sensor_create(self->iSensor_profile = CSensor_profile::NewL(self->logDb), "profile sensor initialization")
-#define SENSOR_CELLID_CREATE typical_symbian_sensor_create(self->iSensor_cellid = CSensor_cellid::NewL(self->logDb), "cellid sensor initialization")
-#define SENSOR_BTPROX_CREATE typical_symbian_sensor_create(self->iSensor_btprox = CSensor_btprox::NewL(self->logDb), "btprox sensor initialization")
-#define SENSOR_GPS_CREATE typical_symbian_sensor_create(self->iSensor_gps = CSensor_gps::NewL(self->logDb), "gps sensor initialization")
-#define SENSOR_APPFOCUS_CREATE typical_symbian_sensor_create(self->iSensor_appfocus = CSensor_appfocus::NewL(self->logDb), "appfocus sensor initialization")
-#define SENSOR_KEYPRESS_CREATE typical_symbian_sensor_create(self->iSensor_keypress = CSensor_keypress::NewL(self->logDb), "keypress sensor initialization")
+#define SENSOR_FLIGHTMODE_CREATE sa_typical_symbian_sensor_create(self->iSensor_flightmode = CSensor_flightmode::NewL(self->logDb), "flightmode sensor initialization")
+#define SENSOR_PROFILE_CREATE sa_typical_symbian_sensor_create(self->iSensor_profile = CSensor_profile::NewL(self->logDb), "profile sensor initialization")
+#define SENSOR_CELLID_CREATE sa_typical_symbian_sensor_create(self->iSensor_cellid = CSensor_cellid::NewL(self->logDb), "cellid sensor initialization")
+#define SENSOR_BTPROX_CREATE sa_typical_symbian_sensor_create(self->iSensor_btprox = CSensor_btprox::NewL(self->logDb), "btprox sensor initialization")
+#define SENSOR_GPS_CREATE sa_typical_symbian_sensor_create(self->iSensor_gps = CSensor_gps::NewL(self->logDb), "gps sensor initialization")
+#define SENSOR_INACTIVITY_CREATE sa_typical_symbian_sensor_create(self->iSensor_inactivity = CSensor_inactivity::NewL(self->ac), "inactivity sensor initialization")
+#define SENSOR_INDICATOR_CREATE sa_typical_symbian_sensor_create(self->iSensor_indicator = CSensor_indicator::NewL(self->ac), "indicator sensor initialization")
+#define SENSOR_APPFOCUS_CREATE sa_typical_symbian_sensor_create(self->iSensor_appfocus = CSensor_appfocus::NewL(self->logDb), "appfocus sensor initialization")
+#define SENSOR_KEYPRESS_CREATE sa_typical_symbian_sensor_create(self->iSensor_keypress = CSensor_keypress::NewL(self->logDb), "keypress sensor initialization")
 #define SENSOR_TIMER_CREATE { self->iSensor_timer = sa_Sensor_timer_new(self->logDb, error); success = (self->iSensor_timer != NULL); }
+#define SENSOR_MARK_CREATE { self->iSensor_mark = sa_Sensor_mark_new(self->logDb, error); success = (self->iSensor_mark != NULL); }
 
 #define reconfigure_not_supported_by_component(key) { \
     if (error) \
@@ -183,17 +224,18 @@ extern "C" struct _sa_Array
     success = FALSE; \
   }
 
-#define reconfigure_ignore_all_keys { success = TRUE; }
-
 /* Sensor reconfiguring. (Statement.) */
-#define SENSOR_APPFOCUS_RECONFIGURE(key,value) reconfigure_ignore_all_keys
-#define SENSOR_BTPROX_RECONFIGURE(key,value) typical_symbian_sensor_reconfigure(btprox)
-#define SENSOR_CELLID_RECONFIGURE(key,value) reconfigure_ignore_all_keys
-#define SENSOR_FLIGHTMODE_RECONFIGURE(key,value) reconfigure_ignore_all_keys
-#define SENSOR_GPS_RECONFIGURE(key,value) typical_symbian_sensor_reconfigure(gps)
-#define SENSOR_KEYPRESS_RECONFIGURE(key,value) reconfigure_ignore_all_keys
-#define SENSOR_PROFILE_RECONFIGURE(key,value) reconfigure_ignore_all_keys
-#define SENSOR_TIMER_RECONFIGURE(key,value) reconfigure_ignore_all_keys
+#define SENSOR_APPFOCUS_RECONFIGURE(key,value) sa_reconfigure_ignore_all_keys
+#define SENSOR_BTPROX_RECONFIGURE(key,value) sa_typical_symbian_sensor_reconfigure(btprox)
+#define SENSOR_CELLID_RECONFIGURE(key,value) sa_reconfigure_ignore_all_keys
+#define SENSOR_FLIGHTMODE_RECONFIGURE(key,value) sa_reconfigure_ignore_all_keys
+#define SENSOR_GPS_RECONFIGURE(key,value) sa_typical_symbian_sensor_reconfigure(gps)
+#define SENSOR_INACTIVITY_RECONFIGURE(key,value) sa_reconfigure_ignore_all_keys
+#define SENSOR_INDICATOR_RECONFIGURE(key,value) sa_reconfigure_ignore_all_keys
+#define SENSOR_KEYPRESS_RECONFIGURE(key,value) sa_reconfigure_ignore_all_keys
+#define SENSOR_PROFILE_RECONFIGURE(key,value) sa_reconfigure_ignore_all_keys
+#define SENSOR_TIMER_RECONFIGURE(key,value) sa_reconfigure_ignore_all_keys
+#define SENSOR_MARK_RECONFIGURE(key,value) sa_reconfigure_ignore_all_keys
 
 #define gerror_try_log_and_clear { \
     if (!success) {				     \
@@ -213,7 +255,7 @@ static gboolean sensor_autostart_is_allowed(const gchar* cfg_key)
   sensor_autostart_is_allowed("sensor." #_name ".autostart")
 
 /** Instantiates a sensor array consisting of all supported sensors. */
-extern "C" sa_Array *sa_Array_new(LogDb* logDb,
+extern "C" sa_Array *sa_Array_new(ac_AppContext* ac,
 				  GError** error)
 {
   sa_Array* self = g_try_new0(sa_Array, 1);
@@ -222,12 +264,13 @@ extern "C" sa_Array *sa_Array_new(LogDb* logDb,
     return NULL;
   }
 
-  self->logDb = logDb;
+  self->ac = ac;
+  self->logDb = ac_LogDb(ac);
 
 #if __NEED_TELEPHONY__
   logt("initializing telephony");
   TRAPD(errCode, self->iTelephony = CTelephony::NewL());
-  check_symbian_error(errCode, "telephony init failure", NULL);
+  sa_check_symbian_error(errCode, "telephony init failure", NULL);
 #endif
 
   gboolean success; // for the macro

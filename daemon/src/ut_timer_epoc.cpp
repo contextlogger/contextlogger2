@@ -97,6 +97,8 @@ extern "C" void ut_Timer_destroy(ut_Timer* self)
 
 extern "C" gboolean ut_Timer_set_after(ut_Timer* self, int secs, GError** error)
 {
+  ut_Timer_cancel(self);
+
   TTimeIntervalMicroSeconds32 interval = SecsToUsecs(secs);
   logf("interval timer set to %d secs / %d usecs", secs, interval.Int());
 

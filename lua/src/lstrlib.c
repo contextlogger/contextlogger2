@@ -19,6 +19,8 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
+#include "common/logging.h"
+
 
 /* macro to `unsign' a character */
 #define uchar(c)        ((unsigned char)(c))
@@ -754,9 +756,11 @@ static void addintlen (char *form) {
 
 
 static int str_format (lua_State *L) {
+  //logt("str_format");
   int arg = 1;
   size_t sfl;
   const char *strfrmt = luaL_checklstring(L, arg, &sfl);
+  //logt(strfrmt);
   const char *strfrmt_end = strfrmt+sfl;
   luaL_Buffer b;
   luaL_buffinit(L, &b);
@@ -769,7 +773,10 @@ static int str_format (lua_State *L) {
       char form[MAX_FORMAT];  /* to store the format (`%...') */
       char buff[MAX_ITEM];  /* to store the formatted item */
       arg++;
+      //logt("entering scanformat");
       strfrmt = scanformat(L, strfrmt, form);
+      //logt("exiting scanformat");
+      //logt(strfrmt);
       switch (*strfrmt++) {
         case 'c': {
           sprintf(buff, form, (int)luaL_checknumber(L, arg));

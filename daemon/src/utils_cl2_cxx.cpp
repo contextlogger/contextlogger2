@@ -116,7 +116,6 @@ extern "C" gint g_snprintf_fix(gchar *string,
 }
 #endif // PRINTF_DOUBLE_BUGGY
 
-
 #if PRINTF_DOUBLE_BUGGY
 // This is only an approximation. The semantics are not exactly the
 // same, and hence we are using a different name.

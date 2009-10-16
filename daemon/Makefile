@@ -3,8 +3,8 @@ include src/current_config.mk
 CC := gcc
 
 SRC_PATH := src
-APP_C_FILES := cf_query.c client-run.c config_db.c db_creation.c er_errors.c kr_controller.c libluasqlite3.c log-db-create.c log-db-logging.c posix-main.c rk_jabber_session.c rk_remokon.c sa_sensor_list_log_db.c sa_sensor_timer_libev.c up_shared.c up_uploader_curl.c ut_timer_libev.c utils_cl2.c
-APP_CXX_FILES := cf_rcfile.cpp local_server.cpp lua_bindings.cpp lua_cl2.cpp sa_array.cpp
+APP_C_FILES := cf_query.c client-run.c config_db.c db_creation.c er_errors.c kr_controller.c libluasqlite3.c log-db-create.c log-db-logging.c posix-main.c rk_jabber_session.c rk_remokon.c sa_sensor_list_log_db.c sa_sensor_mark.c sa_sensor_timer_libev.c up_shared.c up_uploader_curl.c ut_timer_libev.c utils_cl2.c
+APP_CXX_FILES := ac_app_context.cpp cf_rcfile.cpp lua_bindings.cpp lua_cl2.cpp sa_array.cpp
 
 SHARED_PATH := ../shared
 SHARED_C_FILES := error_list.c logging-time.c platform_error.c utilities.c
@@ -46,13 +46,21 @@ CURL_LSFLAGS := $(shell $(CURL_CONFIG) --static-libs)
 CURL_FEATURES := $(shell $(CURL_CONFIG) --features)
 CURL_PREFIX := $(shell $(CURL_CONFIG) --prefix)
 
+BUILD_LUA := true
+ifeq ($(BUILD_LUA),true)
+LUA_CFLAGS := -I../lua/src -I../lua/etc
+LUA_LDFLAGS :=
+LUA_C_FILES := $(patsubst %, ../lua/src/%, lapi.c lauxlib.c lbaselib.c lcode.c ldblib.c ldebug.c ldo.c ldump.c lfunc.c lgc.c linit.c liolib.c llex.c lmathlib.c lmem.c loadlib.c lobject.c lopcodes.c loslib.c lparser.c lstate.c lstring.c lstrlib.c ltable.c ltablib.c ltm.c lundump.c lvm.c lzio.c print.c)
+else
 LUA_CFLAGS := -I/usr/include/lua5.1
 LUA_LDFLAGS := -llua5.1
+LUA_C_FILES := 
+endif
 
 # We need this for fastdep at least.
 KEYEVENTS_CFLAGS := -I../keyevents/inc
 
-ALL_C_FILES := $(C_FILES) $(GOB_C_FILES)
+ALL_C_FILES := $(C_FILES) $(GOB_C_FILES) $(LUA_C_FILES)
 ALL_CXX_FILES := $(CXX_FILES)
 ALL_OBJ_FILES := $(patsubst %.c, %.o, $(ALL_C_FILES)) $(patsubst %.cpp, %.o, $(ALL_CXX_FILES))
 
@@ -71,7 +79,7 @@ default : epoc_codegen binary
 
 binary : $(if $(IS_SYMBIAN), symbian, posix_test)
 
-config :
+config : 
 	$(PLT_ENV) ./configure.scm $(VARIANT_NAME)
 
 # Unfortunately the file produced by this rule contains some absolute paths, which means that the end result is platform specific. But then, some of the binaries might be as well. You may just want to do a "make clean" when moving over to another host.

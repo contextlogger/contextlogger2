@@ -5,7 +5,7 @@
 */
 
 
-#include <assert.h>
+//#include <assert.h>
 #include <math.h>
 #include <stdarg.h>
 #include <string.h>
@@ -205,7 +205,7 @@ LUA_API void lua_replace (lua_State *L, int idx) {
   lua_lock(L);
   /* explicit test for incompatible code */
   if (idx == LUA_ENVIRONINDEX && L->ci == L->base_ci)
-    luaG_runerror(L, "no calling environment");
+    luaG_runerror_1(L, "no calling environment");
   api_checknelems(L, 1);
   o = index2adr(L, idx);
   api_checkvalidindex(L, o);

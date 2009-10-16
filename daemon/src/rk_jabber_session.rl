@@ -239,7 +239,7 @@ static int tagHook(void *user_data, int type, iks *node)
   rk_JabberSession* self = (rk_JabberSession*)user_data;
 
 #if __DO_LOGGING__
-  logf("tag event %d", type);
+  //logf("tag event %d", type);
   if (node)
     logf("tag name '%s'", iks_name(node));
 #endif

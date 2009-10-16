@@ -90,7 +90,16 @@ project must implement.
   (define/public (upload-with-curl.attr)
     (eq? (platform) 'linux))
 
+  (define/public (feature-localserver.attr)
+    (eq? (platform) 'symbian))
+
   (define/public (feature-remokon.attr)
+    #t)
+
+  (define/public (mark-enabled.attr)
+    #t)
+
+  (define/public (appmessage-enabled.attr)
     #t)
 
   ;; --------------------------------------------------
@@ -195,7 +204,7 @@ project must implement.
   )
 
 (define (all-symbian-sensors)
-  '(flightmode profile cellid btprox gps appfocus keypress))
+  '(flightmode callstatus profile cellid btprox gps appfocus keypress inactivity indicator))
 
 (define* (new-symbian-variant
           #:class (class slist-variant%)
@@ -259,6 +268,10 @@ project must implement.
     (sublist? '(ReadDeviceData)
               (capabilities)))
 
+  ;; The "callstatus" sensor makes "flightmode" somewhat redundant.
+  (define/public (flightmode-enabled.attr)
+    #f)
+    
   (define/public (signed.attr)
     signed?)
   

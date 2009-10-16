@@ -5,7 +5,7 @@ SAKE := ../tools/bin/sake
 
 default : symbian
 
-symbian : symbian30
+symbian : symbian30 symbian31 symbian32
 
 # Presently building a DLL is not an option, unless one has the
 # expensive ARM compiler, or tweaks lots of Symbian headers.

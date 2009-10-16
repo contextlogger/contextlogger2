@@ -3,6 +3,8 @@
 #include <glib.h>
 
 // This fixes a bug in Open C MR.
+//
+// xxx This bug might no longer apply for newer versions of Open C.
 #ifdef __SYMBIAN32__
 #undef g_utf8_next_char
 #define g_utf8_next_char(p) (char *)((p) + *(*_g_utf8_skip() + *(guchar *)(p)))

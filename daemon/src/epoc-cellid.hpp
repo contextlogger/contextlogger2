@@ -50,10 +50,6 @@ CSensor_cellid::CSensor_cellid(LogDb* aLogDb) : CActiveRunG(EPriorityStandard), 
 {CActiveScheduler::Add(this);}
 /***end***/
 
-// If we should ever run into errors of a transient nature in
-// accessing CTelephony, we might want to have an internal retry timer
-// within this object. But I am not really expecting coming across
-// such errors.
 NONSHARABLE_CLASS(CSensor_cellid) :
   public CActiveRunG
 {

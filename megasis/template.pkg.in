@@ -161,11 +161,15 @@ endif
 ;; xxx any extra pure python libs we require?
 
 ;; Miso.
-<% srcdir = '../libs-s60/miso-1.97'
+;;
+;; Since we are embedding without building Miso here, do make sure that a sensible
+;; version has been built (and in a DevCert case) appropriately signed as well.
+<% misover = '1.97'
+   srcdir = '../libs-s60/miso-%s' % misover
    old_ext = $SIGNED ? "sisx" : "sis"
    kit = (($CERT_NAME == "self32") ? "s60_32" : "s60_30")
    cert_name = case $CERT_NAME when "self30", "self32" then "self" else $CERT_NAME end
-   srcname = 'miso-1.97-%s_py1_%s.%s' % [kit, cert_name, old_ext]
+   srcname = 'miso-%s-%s_py1_%s.%s' % [misover, kit, cert_name, old_ext]
    srcfile = File.join(srcdir, srcname)
    sisfile = copy_with_sis_ext srcfile
    uid = lookup_uid sisfile

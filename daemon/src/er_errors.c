@@ -109,6 +109,14 @@ void gx_db_log_clear_fatal_error(LogDb* logDb, GError** errorToLog)
   EXIT_APPLICATION;
 }
 
+// Invokes EXIT_APPLICATION as the last thing.
+void gx_log_free_fatal_error(GError* errorToLog)
+{
+  gx_error_log_free(errorToLog);
+  WHEN_SYMBIAN(ex_show_default_error());
+  EXIT_APPLICATION;
+}
+
 void px_db_log_fatal_error(LogDb* logDb, int errCode)
 {
   log_db_log_status(logDb, NULL, "FATAL: POSIX error: %s (%d)", strerror(errCode), errCode);

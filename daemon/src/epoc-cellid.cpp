@@ -74,7 +74,7 @@ void CSensor_cellid::HandleTimerL()
 {
   int errCode = iStatus.Int();
   User::LeaveIfError(errCode); // unexpected with an interval timer
-  SetTimer();
+  MakeRequest();
 }
 
 gboolean CSensor_cellid::HandleReadGL(GError** error)
