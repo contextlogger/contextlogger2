@@ -7,6 +7,7 @@
 #ifndef ldebug_h
 #define ldebug_h
 
+#include "common/platform_config.h"
 
 #include "lstate.h"
 
@@ -25,9 +26,19 @@ LUAI_FUNC void luaG_aritherror (lua_State *L, const TValue *p1,
                                               const TValue *p2);
 LUAI_FUNC int luaG_ordererror (lua_State *L, const TValue *p1,
                                              const TValue *p2);
-LUAI_FUNC void luaG_runerror (lua_State *L, const char *fmt, ...);
 LUAI_FUNC void luaG_errormsg (lua_State *L);
 LUAI_FUNC int luaG_checkcode (const Proto *pt);
 LUAI_FUNC int luaG_checkopenop (Instruction i);
+
+#if EXCEPTION_CRASHES_VARARGS_BUG
+// workaround
+LUAI_FUNC void luaG_runerror_wa (lua_State *L, const char *s);
+#define luaG_runerror_1(_L, _s) luaG_runerror_wa(_L, _s)
+#define luaG_runerror_m(_L, _s, rest...) luaG_runerror_wa(_L, _s)
+#else
+LUAI_FUNC void luaG_runerror_ok (lua_State *L, const char *fmt, ...);
+#define luaG_runerror_1(_L, _s) luaG_runerror_ok(_L, _s)
+#define luaG_runerror_m(_L, rest...) luaG_runerror_ok(_L, rest)
+#endif
 
 #endif

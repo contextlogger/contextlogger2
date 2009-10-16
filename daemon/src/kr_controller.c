@@ -1,5 +1,6 @@
 #include "kr_controller_private.h"
 
+#include "kr_diskspace.h"
 #include "utils_cl2.h"
 
 #include "common/assertions.h"
@@ -44,7 +45,7 @@ static void stop_uploader(kr_Controller* self)
 {
   up_Uploader_destroy(self->uploader); // safe if NULL
   self->uploader = NULL;
-  logt("uploader destroyed");
+  //logt("uploader destroyed");
 }
 #endif
 
@@ -56,18 +57,41 @@ kr_Controller* kr_Controller_new(GError** error)
 {
   assert_error_unset(error);
 
+  ac_AppContext* ac = ac_AppContext_new(error);
+  if (!ac) {
+    return NULL;
+  }
+  ac_set_global_AppContext(ac);
+
+#if LOGGING_MEDIUM_CHECK_SUPPORTED
+  // Don't even bother with initialization in this case, so that we do
+  // not end up doing a lot of work every time a watchdog awakens us,
+  // just to find out that no logging can be done anyway.
+  if (!check_logging_medium_ready(error)) {
+    ac_set_global_AppContext(NULL);
+    ac_AppContext_destroy(ac);
+    return NULL;
+  }
+  logt("logging medium ready");
+#endif
+
   kr_Controller* self = g_try_new0(kr_Controller, 1);
   if (!self) {
-    if (error) *error = NULL;
+    ac_set_global_AppContext(NULL);
+    ac_AppContext_destroy(ac);
+    if (error) *error = gx_error_no_memory;
     return NULL;
   }
   globalClient = self;
+
+  self->appContext = ac;
+  ac_AppContext_set_controller(self->appContext, self);
 
 #if !defined(__SYMBIAN32__)
   // Creates the default event loop, unless already created.
   struct ev_loop* loop = ev_default_loop(0);
   if (!loop) {
-    if (error) *error = NULL;
+    if (error) *error = gx_error_no_memory;
     kr_Controller_destroy(self);
     return NULL;
   }
@@ -106,19 +130,21 @@ kr_Controller* kr_Controller_new(GError** error)
   }
 #endif
   
-  sa_Array* scanner = sa_Array_new(log, error);
+  sa_Array* scanner = sa_Array_new(ac, error);
   if (!scanner) {
     kr_Controller_destroy(self);
     return NULL;
   }
   self->scanner = scanner;
   
+#if __FEATURE_LOCALSERVER__
   LocalServer* localServer = LocalServer_new(error);
   if (!localServer) {
     kr_Controller_destroy(self);
     return NULL;
   }
   self->localServer = localServer;
+#endif
 
 #if __FEATURE_REMOKON__
   self->remokon = rk_Remokon_new(error);
@@ -128,6 +154,14 @@ kr_Controller* kr_Controller_new(GError** error)
   }
 #endif
   
+#if HAVE_PLAT_AO
+  self->platAo = kr_PlatAo_new(error);
+  if (!self->platAo) {
+    kr_Controller_destroy(self);
+    return NULL;
+  }
+#endif
+
   return self;
 }
 
@@ -138,13 +172,18 @@ void kr_Controller_destroy(kr_Controller* self)
     // ev_default_destroy(), so any components signed up with it are
     // responsible for deregistering.
 
+#if HAVE_PLAT_AO
+  kr_PlatAo_destroy(self->platAo);
+#endif
+
 #if __FEATURE_REMOKON__
     FREE_Z(self->remokon, rk_Remokon_destroy);
 #endif
 
+#if __FEATURE_LOCALSERVER__
     LocalServer_destroy(self->localServer); // safe if NULL
     self->localServer = NULL;
-    logt("local server destroyed");
+#endif
 
 #if __FEATURE_UPLOADER__
     stop_uploader(self);
@@ -153,22 +192,24 @@ void kr_Controller_destroy(kr_Controller* self)
     // We sometimes get USER 42 here. Say the cellid sensor is
     // enough to make this happen, but uploader may also be
     // required.
-    logt("invoking sa_Array_destroy");
     sa_Array_destroy(self->scanner);
     self->scanner = NULL;
-    logt("scanner array destroyed");
+    //logt("scanner array destroyed");
     
     XDECREF(self->log);
-    logt("LogDb session destroyed");
+    //logt("LogDb session destroyed");
 
     ConfigDb_destroy(self->configDb);
     self->configDb = NULL;
 
     cf_RcFile_destroy(self->rcFile);
     self->rcFile = NULL;
+
+    ac_AppContext_destroy(self->appContext);
+    ac_set_global_AppContext(NULL);
     
     g_free(self);
-    logt("logger controller destroyed");
+    //logt("logger controller destroyed");
     
     globalClient = NULL;
   }
@@ -180,8 +221,10 @@ void kr_Controller_destroy(kr_Controller* self)
 gboolean kr_Controller_start(kr_Controller* self, GError** error)
 {
   sa_Array_start(self->scanner);
+#if __FEATURE_LOCALSERVER__
   if (!LocalServer_start(self->localServer, error))
     return FALSE;
+#endif
 #if __FEATURE_REMOKON__
   if (rk_Remokon_is_autostart_enabled(self->remokon))
     if (!rk_Remokon_start(self->remokon, error))
@@ -198,7 +241,9 @@ void kr_Controller_stop(kr_Controller* self)
 #if __FEATURE_REMOKON__
   rk_Remokon_stop(self->remokon);
 #endif
+#if __FEATURE_LOCALSERVER__
   LocalServer_stop(self->localServer);
+#endif
   sa_Array_stop(self->scanner);
 }
 

@@ -1,6 +1,10 @@
 #ifndef __local_server_h__
 #define __local_server_h__
 
+#include "application_config.h"
+
+#if __FEATURE_LOCALSERVER__
+
 #include <glib.h>
 
 #ifdef __cplusplus
@@ -24,5 +28,7 @@ void LocalServer_destroy(LocalServer* self);
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
+
+#endif // __FEATURE_LOCALSERVER__
 
 #endif /* __local_server_h__ */

@@ -48,9 +48,13 @@
 
 #ifdef __SYMBIAN32__
   // Note that anything under C: is automatically included in system
-  // backups, so do not change this elsewhere without good reason.
+  // backups, so do not change this elsewhere without good reason. (We
+  // might want to use RFs::GetSystemDrive() to get the drive letter
+  // instead of assuming "C:".)
 #define CONFIG_DIR "c:\\data\\cl2"
 #define DATABASE_DIR "e:\\data\\cl2"
+#define DATABASE_DRIVE_LETTER 'e'
+#define DATABASE_VOLUME_THRESHOLD 10e6
 #else
 #define CONFIG_DIR "."
 #define DATABASE_DIR "."

@@ -60,7 +60,7 @@ orig_exit_key_handler = appuifw.app.exit_key_handler
 def run_app():
     try:
         try:
-            print "launching", app_script
+            #print "launching", app_script
             execfile(app_script, globals())
         finally:
             appuifw.app.exit_key_handler = orig_exit_key_handler

@@ -1,7 +1,7 @@
 #!/bin/sh
 #| # -*- scheme -*-
 exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\") (file \"$0\")) (current-load-relative-directory (path-dirname (path->complete-path \"$0\"))) (main) (void)" -- ${1+"$@"}
-Yes, convoluted, but we want this file to be a module rathar than a script.
+Yes, convoluted, but we want this file to be a module rather than a script.
 |#
 
 #lang scheme

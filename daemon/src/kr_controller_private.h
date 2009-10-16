@@ -5,10 +5,12 @@
 
 #include "application_config.h"
 
+#include "ac_app_context_private.h"
 #include "cf_rcfile.h"
 #include "config_db.h"
 #include "local_server.h"
 #include "log-db.h"
+#include "kr_plat_ao.h"
 #include "rk_remokon.h"
 #include "sa_array.h"
 #include "up_uploader.h"
@@ -20,6 +22,12 @@ extern "C" {
   kr_Controller* getGlobalClient();
 
   struct _kr_Controller {
+#if HAVE_PLAT_AO
+    kr_PlatAo* platAo;
+#endif
+
+    ac_AppContext* appContext;
+
     LogDb* log; // owned
 
     ConfigDb* configDb; // owned
@@ -28,7 +36,9 @@ extern "C" {
 
     sa_Array* scanner; // owned
 
+#if __FEATURE_LOCALSERVER__
     LocalServer* localServer; // owned
+#endif
 
 #if __FEATURE_REMOKON__
     rk_Remokon* remokon; // owned

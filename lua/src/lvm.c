@@ -127,7 +127,7 @@ void luaV_gettable (lua_State *L, const TValue *t, TValue *key, StkId val) {
     }
     t = tm;  /* else repeat with `tm' */ 
   }
-  luaG_runerror(L, "loop in gettable");
+  luaG_runerror_1(L, "loop in gettable");
 }
 
 
@@ -154,7 +154,7 @@ void luaV_settable (lua_State *L, const TValue *t, TValue *key, StkId val) {
     }
     t = tm;  /* else repeat with `tm' */ 
   }
-  luaG_runerror(L, "loop in settable");
+  luaG_runerror_1(L, "loop in settable");
 }
 
 
@@ -292,7 +292,7 @@ void luaV_concat (lua_State *L, int total, int last) {
       /* collect total length */
       for (n = 1; n < total && tostring(L, top-n-1); n++) {
         size_t l = tsvalue(top-n-1)->len;
-        if (l >= MAX_SIZET - tl) luaG_runerror(L, "string length overflow");
+        if (l >= MAX_SIZET - tl) luaG_runerror_1(L, "string length overflow");
         tl += l;
       }
       buffer = luaZ_openspace(L, &G(L)->buff, tl);
@@ -665,11 +665,11 @@ void luaV_execute (lua_State *L, int nexeccalls) {
         const TValue *pstep = ra+2;
         L->savedpc = pc;  /* next steps may throw errors */
         if (!tonumber(init, ra))
-          luaG_runerror(L, LUA_QL("for") " initial value must be a number");
+          luaG_runerror_1(L, LUA_QL("for") " initial value must be a number");
         else if (!tonumber(plimit, ra+1))
-          luaG_runerror(L, LUA_QL("for") " limit must be a number");
+          luaG_runerror_1(L, LUA_QL("for") " limit must be a number");
         else if (!tonumber(pstep, ra+2))
-          luaG_runerror(L, LUA_QL("for") " step must be a number");
+          luaG_runerror_1(L, LUA_QL("for") " step must be a number");
         setnvalue(ra, luai_numsub(nvalue(ra), nvalue(pstep)));
         dojump(L, pc, GETARG_sBx(i));
         continue;

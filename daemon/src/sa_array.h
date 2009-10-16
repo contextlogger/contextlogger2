@@ -1,7 +1,7 @@
 #ifndef __sa_array_h__
 #define __sa_array_h__
 
-#include "log-db.h"
+#include "ac_app_context.h"
 
 #include <glib.h>
 
@@ -13,7 +13,7 @@ extern "C" {
 
   /** Instantiates a sensor array consisting of all supported sensors.
       Does not yet start the sensors. */
-  sa_Array* 	sa_Array_new	(LogDb* log,
+  sa_Array* 	sa_Array_new	(ac_AppContext* ac,
 				 GError** error);
   
   /** Starts all supported sensors. */

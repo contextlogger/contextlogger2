@@ -25,8 +25,17 @@
 #ifdef LUA_SYMBIAN
 //#define LUA_USE_ALUA_LOGGER
 #define LUA_USE_SYMBIAN_PIPS // otherwise libc.lib
+
+// Should not matter which option we choose to implement Lua
+// exceptions, as they should only be used internally, long as we use
+// pcall to invoke Lua code.
+#define LUA_THROW_WITH_LEAVE 0
+//#define LUA_THROW_WITH_LEAVE !defined(__SUPPORT_CPP_EXCEPTIONS__)
 //#define LUA_THROW_WITH_LEAVE defined(__cplusplus)
-#define LUA_THROW_WITH_LEAVE 1
+#endif
+
+#if !defined(NDEBUG)
+#define LUA_USE_APICHECK 1
 #endif
 
 
@@ -398,7 +407,8 @@
 ** with Lua. A useful redefinition is to use assert.h.
 */
 #if defined(LUA_USE_APICHECK)
-#include <assert.h>
+#include "common/assertions.h"
+//#include <assert.h>
 #define luai_apicheck(L,o)	{ (void)L; assert(o); }
 #else
 #define luai_apicheck(L,o)	{ (void)L; }
@@ -642,13 +652,24 @@ exceptions, hence this toolchain check.
 ** compiling as C++ code, with _longjmp/_setjmp when asked to use them,
 ** and with longjmp/setjmp otherwise.
 */
-#if defined(LUA_SYMBIAN) && LUA_THROW_WITH_LEAVE
+#if defined(LUA_SYMBIAN)
+
+#if LUA_THROW_WITH_LEAVE
 /* Symbian's TRAP mechanism, based on C++ exceptions */
 #define LUAI_THROW(L,c)	User::Leave((c)->status)
 #define LUAI_TRY(L,c,a)	TRAPD(((c)->status), { a })
 #define luai_jmpbuf	int  /* dummy variable */
+#else
+/* C++ exceptions */
+#define LUAI_THROW(L,c)	throw(c)
+#define LUAI_TRY(L,c,a)	try { a } catch(...) \
+	{ if ((c)->status == 0) (c)->status = -1; }
+#define luai_jmpbuf	int  /* dummy variable */
+#endif
 
-#elif defined(__cplusplus)
+#else /* not Symbian */
+
+#if defined(__cplusplus)
 /* C++ exceptions */
 #define LUAI_THROW(L,c)	throw(c)
 #define LUAI_TRY(L,c,a)	try { a } catch(...) \
@@ -669,6 +690,7 @@ exceptions, hence this toolchain check.
 
 #endif
 
+#endif /* not Symbian */
 
 /*
 @@ LUA_MAXCAPTURES is the maximum number of captures that a pattern

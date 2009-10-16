@@ -59,6 +59,9 @@ extern "C" {
 
   void gx_propagate_error(GError** dest, GError* src);
 
+  // Invokes EXIT_APPLICATION as the last thing.
+  void gx_log_free_fatal_error(GError* errorToLog);
+
   // --------------------------------------------------
   // POSIX extras
   // --------------------------------------------------

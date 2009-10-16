@@ -40,8 +40,10 @@
 (define* (constant x)
   (thunk x))
 
-(define* (hash-has-key? hash key)
-  (and (hash-ref hash key #f) #t))
+;; Apparently this is defined in recent versions of PLT Scheme,
+;; with exactly the same name as we came up with for it.
+;;(define* (hash-has-key? hash key)
+;;  (and (hash-ref hash key #f) #t))
 
 ;; For whatever reason this macro no longer works when defined in the
 ;; "mzscheme" language, so we export a copy that is defined in

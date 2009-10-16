@@ -160,6 +160,10 @@
              ('double 'sqlite3_bind_double)
              (else (error "bind-func-by-type unsupported type" type))))
 
+  ;; When using 'static rather than 'transient, the string "has to
+  ;; remain valid during all subsequent calls to sqlite3_step() on the
+  ;; statement handle. Or until you bind a different value to the same
+  ;; parameter."
   (define (maybe-dispose type dispose)
     (if dispose
         (string-append ", "
@@ -252,7 +256,7 @@
 
       (func (name "get_create_tables_sql") cexport
             ;;(verbatim-modifier "EXTERN_C")
-            (returns (type (ptr-to (const 'char))))
+            (returns (type (ptr-to (cconst 'char))))
             (block
              (return 'create_tables_sql)))
       

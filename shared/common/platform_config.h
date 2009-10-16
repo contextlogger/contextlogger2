@@ -1,6 +1,28 @@
 #ifndef __platform_config_h__
 #define __platform_config_h__
 
+// --------------------------------------------------
+// compiler
+// --------------------------------------------------
+
+#if defined(__GCCE__)
+#define __COMPILER_NAME__ "GCCE"
+#elif defined(__GNUC__)
+#define __COMPILER_NAME__ "GCC"
+#else
+#define __COMPILER_NAME__ "non-GCC"
+#endif
+
+#if defined(__GNUC__)
+#define __GCC_VERSION__ (__GNUC__ * 10000			\
+			 + __GNUC_MINOR__ * 100			\
+			 + __GNUC_PATCHLEVEL__)
+#endif
+
+// --------------------------------------------------
+// toolchain
+// --------------------------------------------------
+
 // Based on __EKA_VERSION__ and __SYMBIAN_VERSION__ and
 // __S60_VERSION__ we can compute a numerous platform-specific
 // definitions based on the version numbers. We can expect this
@@ -17,13 +39,27 @@
 
 #ifdef __SYMBIAN32__
 
+// We will eventually deprecate sconfig.hrh use altogether, but for
+// now we assume its availability unless certain platform version
+// identifiers have been #defined.
+#if defined(__XXX_S60_VERSION__)
+// xxx Define the sconfig.hrh stuff here.
+#elif defined(__SYMBIANHAT_VERSION__)
+// xxx Define the sconfig.hrh stuff here. based on Symbian^version
+#else
 #include "sconfig.hrh"
+#endif
 
+// xxx Is this set in sconfig.hrh?
 #ifndef __SYMBIAN_VERSION__
 #error incompatible build tool chain
 #endif
 
 #endif // __SYMBIAN32__
+
+// --------------------------------------------------
+// platform
+// --------------------------------------------------
 
 #ifdef __SYMBIAN32__
 #define DIR_SEP "\\"
@@ -31,14 +67,27 @@
 #define DIR_SEP "/"
 #endif
 
+// --------------------------------------------------
+// libraries
+// --------------------------------------------------
+
 // It seems that the safer "n" variants of printf and g_printf are all
 // broken for floats in Open C. May be fixed in some versions of Open
 // C. Could compute this based on version number as well, if new of
 // any working version. Implementing a similar replacement in Symbian
 // C++ is definitely a possibility.
 // 
+// Possibly the bug does not apply to all locales.
+//
 // The functions that we have deemed broken include: vsprintf,
 // vsnprintf.
 #define PRINTF_DOUBLE_BUGGY defined(__SYMBIAN32__)
+
+// Be careful not to use an octal number here.
+#if (defined(__GCCE__) && (__GCC_VERSION__ <= 30403))
+#define EXCEPTION_CRASHES_VARARGS_BUG 1
+#else
+#define EXCEPTION_CRASHES_VARARGS_BUG 0
+#endif
 
 #endif /* __platform_config_h__ */

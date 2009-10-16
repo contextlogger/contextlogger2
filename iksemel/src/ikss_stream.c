@@ -322,6 +322,8 @@ ikss_Stream_new (char *name_space, void *user_data, iksStreamHook *streamHook, i
   return self;
 }
 
+// xxx Make sure that the stream generates no callbacks during or
+// after destruction.
 void ikss_Stream_destroy(ikss_Stream *self)
 {
   if (!self) return;
