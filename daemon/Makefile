@@ -113,6 +113,9 @@ src/timer_generic_epoc.h src/timer_generic_epoc.cpp : src/timer_generic_epoc.scm
 src/cf_rcfile_list.h src/cf_rcfile_list.c src/cf_rcfile_list_private.h : src/cf_rcfile_list_spec.ss
 	$(PLT_ENV) $<
 
+src/ut_telephony_epoc.h src/ut_telephony_epoc.cpp : src/ut_telephony_epoc.scm
+	$(PLT_ENV) $<
+
 $(SHARED_PATH)/common/error_list.h $(SHARED_PATH)/common/error_list.c : $(SHARED_PATH)/common/error_list.scm
 	$(PLT_ENV) $<
 

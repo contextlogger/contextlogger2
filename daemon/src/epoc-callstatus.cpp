@@ -67,6 +67,7 @@ void CSensor_callstatus::Cancel()
 gboolean CSensor_callstatus::StartL(GError** error)
 {
   if (!IsActive()) {
+    iRetryAo->ResetFailures();
     iFlightModeGetter->MakeRequest();
     iState = EQueryingFlightMode;
     logt("callstatus sensor started");

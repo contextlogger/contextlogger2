@@ -204,6 +204,7 @@ rk_Remokon* rk_Remokon_new(GError** error)
   self->params.observer.severeError = cb_severeError;
   self->params.observer.fatalError = cb_fatalError;
   self->params.observer.gotMsg = cb_gotMsg;
+  // not defining self->params.observer.messageSent as have no flow control
 
   self->params.server = cf_STATIC_GET(remokon_host);
   self->params.port = cf_STATIC_GET(remokon_port);

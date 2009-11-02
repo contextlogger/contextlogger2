@@ -592,7 +592,7 @@ ikss_Stream_disconnect (ikss_Stream *self)
   ikst_Close(self->sock);
   self->sock = NULL;
 
-  iks_parser_reset (self->prs);
+  iks_parser_reset (self->prs); // invokes any parser deleteHook
 
   resetSendBuf(self);
 }

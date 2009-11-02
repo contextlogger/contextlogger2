@@ -233,7 +233,11 @@ static gboolean doNext(rk_JabberSession* self, letter evCode)
   return FALSE;
 }
 
-// See http://xmpp.org/rfcs/rfc3921.html for info on the messaging protocol.
+// See http://xmpp.org/rfcs/rfc3921.html for info on the messaging
+// protocol.
+// 
+// From here we should return something other than IKS_OK if we do not
+// want further callbacks.
 static int tagHook(void *user_data, int type, iks *node)
 {
   rk_JabberSession* self = (rk_JabberSession*)user_data;
