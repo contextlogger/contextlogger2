@@ -86,6 +86,7 @@ static void startSessionOrRetry(rk_Remokon* self)
   }
 }
 
+// ut_Timer callback
 static void cb_timerExpired(void* userdata, GError* timerError)
 {
   rk_Remokon* self = (rk_Remokon*)userdata;
@@ -97,37 +98,46 @@ static void cb_timerExpired(void* userdata, GError* timerError)
   }
 }
 
-static void cb_sessionEstablished(void* userdata)
+// rk_JabberObserver
+static int cb_sessionEstablished(void* userdata)
 {
   rk_Remokon* self = (rk_Remokon*)userdata;
   self->num_failures = 0;
   self->is_connected = TRUE;
   logt("Jabber connection established");
+  return rk_PROCEED;
 }
 
-static void cb_gotEof(void* userdata)
+// rk_JabberObserver
+static int cb_gotEof(void* userdata)
 {
   rk_Remokon* self = (rk_Remokon*)userdata;
   logt("Jabber server closed connection");
   stopSession(self);
   setRetryTimer(self);
+  return rk_HALT;
 }
 
-static void cb_severeError(void* userdata, const char* msg)
+// rk_JabberObserver
+static int cb_severeError(void* userdata, const char* msg)
 {
   rk_Remokon* self = (rk_Remokon*)userdata;
   logf("Jabber error: %s", msg);
   stopSession(self);
   setRetryTimer(self);
+  return rk_HALT;
 }
 
-static void cb_fatalError(void* userdata, const char* msg)
+// rk_JabberObserver
+static int cb_fatalError(void* userdata, const char* msg)
 {
   logf("fatal Jabber error: %s", msg);
   er_fatal_error();
+  return rk_HALT;
 }
 
-static void cb_gotMsg(void* userdata, const char* fromJid, const char* luaStr)
+// rk_JabberObserver
+static int cb_gotMsg(void* userdata, const char* fromJid, const char* luaStr)
 {
   rk_Remokon* self = (rk_Remokon*)userdata;
   lua_State* L = self->L;
@@ -183,10 +193,11 @@ static void cb_gotMsg(void* userdata, const char* fromJid, const char* luaStr)
       gx_error_log_free(localError);
       if (pop) lua_pop(L, pop);
       cb_severeError(self, "failed to send Jabber reply");
-      return;
+      return rk_HALT;
     }
   }
   if (pop) lua_pop(L, pop);
+  return rk_PROCEED;
 }
 
 rk_Remokon* rk_Remokon_new(GError** error)

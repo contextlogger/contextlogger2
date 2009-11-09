@@ -212,6 +212,9 @@ send_sasl_challenge (ikss_Stream *self, iks *challenge)
 }
 
 // iksparser calls this when it has a full tag
+// 
+// Important: Nothing must be done after a self->streamHook invocation
+// if the hook returns a non-zero value.
 static int
 tagHook (ikss_Stream *self, char *name, char **atts, int type)
 {
@@ -378,6 +381,9 @@ static int handle_recv (ikss_Stream *self, int len)
 }
 
 // ikst_NotifyFunc
+// 
+// Important: Any callback made here must always be in a tail
+// position.
 static void transportCallback(void *user_data, ikst_event *event)
 {
   ikss_Stream *self = (ikss_Stream*)user_data;

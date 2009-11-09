@@ -26,15 +26,20 @@
 extern "C" {
 #endif
 
+#define rk_PROCEED 0 // IKS_OK
+#define rk_HALT 3 // IKS_HOOK
+
   // Any returned messages as allocated internally by rk_JabberSession
-  // as required.
+  // as required. Should return rk_PROCEED to indicate that
+  // rk_JabberSession may take further action, or rk_HALT to indicate
+  // that it should not.
   typedef struct {
-    void (*sessionEstablished)(void* userdata);
-    void (*gotEof)(void* userdata);
-    void (*severeError)(void* userdata, const char* msg);
-    void (*fatalError)(void* userdata, const char* msg);
-    void (*messageSent)(void* userdata);
-    void (*gotMsg)(void* userdata, const char* fromJid, const char* msgText);
+    int (*sessionEstablished)(void* userdata);
+    int (*gotEof)(void* userdata);
+    int (*severeError)(void* userdata, const char* msg);
+    int (*fatalError)(void* userdata, const char* msg);
+    int (*messageSent)(void* userdata);
+    int (*gotMsg)(void* userdata, const char* fromJid, const char* msgText);
   } rk_JabberObserver;
 
   // Jabber parameters for the current (or next) Jabber session. These
