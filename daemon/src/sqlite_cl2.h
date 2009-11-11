@@ -26,4 +26,7 @@
 #define sqlite_prepare sqlite3_prepare_v2
 #endif
 
+#define sqlite3_bind_text_or_null(db, ix, t, n, f) \
+  (t ? sqlite3_bind_text(db, ix, t, n, f) : sqlite3_bind_null(db, ix))
+
 #endif /* __sqlite_cl2_h__ */

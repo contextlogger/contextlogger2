@@ -16,7 +16,7 @@ echo STATUS INDICATORS
 sqlite3 log.db "select datetime(unixtime, 'unixepoch'), value, caps from indicator_scan;"
 
 echo CALL STATUS
-sqlite3 log.db "select datetime(unixtime, 'unixepoch'), value from callstatus_scan;"
+sqlite3 log.db "select datetime(unixtime, 'unixepoch'), value, number from callstatus_scan;"
 
 echo INACTIVITY '(active=1)'
 sqlite3 log.db "select datetime(unixtime, 'unixepoch'), value from inactivity_scan;"

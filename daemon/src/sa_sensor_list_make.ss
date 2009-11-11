@@ -157,6 +157,7 @@
              ('int 'sqlite3_bind_int)
              ('int64 'sqlite3_bind_int64)
              ('text 'sqlite3_bind_text)
+             ('text? 'sqlite3_bind_text_or_null)
              ('double 'sqlite3_bind_double)
              (else (error "bind-func-by-type unsupported type" type))))
 
