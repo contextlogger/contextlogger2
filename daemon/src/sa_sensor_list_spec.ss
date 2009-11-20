@@ -226,9 +226,24 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
               )
              (bindings 
               (binding (index 2) (type int) (value "value"))
-              (binding (index 3) (type text?) (value "aNumber, aNumber ? strlen(aNumber) : 0") (dispose static))
+              (binding (index 3) (type text?) (value "aNumber, strlen(aNumber)") (dispose static))
               )
              ))
+    
+    (sensor (name smsevent)
+            (platforms "__SMSEVENT_ENABLED__")
+            (sql-schema "create table smsevent_scan (unixtime INTEGER, evtype TEXT, number TEXT);")
+            (sql-statements "insert into smsevent_scan (unixtime, evtype, number) values (?, ?, ?);")
+            (log-insert-api
+             (args
+              ,(arg (type (ptr-to (cconst 'char))) (name 'aEvType))
+              ,(arg (type (ptr-to (cconst 'char))) (name 'aNumber))
+              )
+             (bindings 
+              (binding (index 2) (type text) (value "aEvType, strlen(aEvType)") (dispose static))
+              (binding (index 3) (type text) (value "aNumber, strlen(aNumber)") (dispose static))
+              )
+            ))
     
     ))
 

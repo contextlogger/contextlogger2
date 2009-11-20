@@ -18,6 +18,9 @@ sqlite3 log.db "select datetime(unixtime, 'unixepoch'), value, caps from indicat
 echo CALL STATUS
 sqlite3 log.db "select datetime(unixtime, 'unixepoch'), value, number from callstatus_scan;"
 
+echo SMS EVENT
+sqlite3 log.db "select datetime(unixtime, 'unixepoch'), evtype, number from smsevent_scan;"
+
 echo INACTIVITY '(active=1)'
 sqlite3 log.db "select datetime(unixtime, 'unixepoch'), value from inactivity_scan;"
 

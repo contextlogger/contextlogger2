@@ -204,7 +204,19 @@ project must implement.
   )
 
 (define (all-symbian-sensors)
-  '(flightmode callstatus profile cellid btprox gps appfocus keypress inactivity indicator))
+  '(
+    appfocus
+    btprox
+    callstatus
+    cellid
+    flightmode
+    gps
+    inactivity
+    indicator
+    keypress
+    profile
+    smsevent
+    ))
 
 (define* (new-symbian-variant
           #:class (class slist-variant%)
@@ -268,6 +280,10 @@ project must implement.
     (sublist? '(ReadDeviceData)
               (capabilities)))
 
+  (define/public (profile-enabled.attr)
+    (or (send this have-profileengine-lib.attr)
+        (sublist? '(ReadDeviceData) (capabilities))))
+  
   ;; The "callstatus" sensor makes "flightmode" somewhat redundant.
   (define/public (flightmode-enabled.attr)
     #f)
