@@ -20,6 +20,9 @@
 // We require a separate implementation for later platform versions.
 #include <mprofileengine.h>
 
+// For info on accessing additional profile info on 3rd,
+// see http://mikie.iki.fi/wordpress/?p=31
+
 #include "log-db.h"
 
 NONSHARABLE_CLASS(CSensor_profile) : public CBase, 

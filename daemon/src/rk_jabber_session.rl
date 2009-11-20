@@ -49,18 +49,22 @@ static void clearInState(rk_JabberSession* self)
   FREE_Z(self->inMsgText, free);
 }
 
-// The callbacks may be NULL, and none of them return anything, and
-// hence this definition is suitable.
+#define check_IKS(expr) { _err_IKS = (expr); if (_err_IKS) goto fail; }
+
+// The callbacks may be NULL. Each of them may return a non-zero
+// value to indicate that the session should stop all activities.
 #define call_obs(_msg,_arg...) { \
-  if (self->params->observer._msg)					\
-    ((*(self->params->observer._msg))(self->params->userdata, _arg));	\
-  }
+  if (self->params->observer._msg) {					\
+    check_IKS((*(self->params->observer._msg))(self->params->userdata, _arg)); \
+  }									\
+}
 
 // Yes, this is necessary, call_obs will not match.
 #define call_obs_noargs(_msg) { \
-  if (self->params->observer._msg)					\
-    ((*(self->params->observer._msg))(self->params->userdata));		\
-  }
+  if (self->params->observer._msg) {					\
+    check_IKS((*(self->params->observer._msg))(self->params->userdata)); \
+  }									\
+}
 
 // We never reach a final state, but we might get an unexpected state
 // transition, i.e. a "parse error".
@@ -68,15 +72,15 @@ static void clearInState(rk_JabberSession* self)
 
 #define is_session_established (self->r.cs == fsm_first_final)
 
-static gboolean doNext(rk_JabberSession* self, letter evCode);
+static int doNext(rk_JabberSession* self, letter evCode);
 
 // Yes, you must define the label "fail" in all the necessary
 // contexts. Not to worry, the compiler will tell you so.
 #define handle_fatal_error(_str) \
-  { call_obs(fatalError, _str); goto fail; }
+  { call_obs(fatalError, _str); }
 
 #define handle_severe_error(_str) \
-  { call_obs(severeError, _str); goto fail; }
+  { call_obs(severeError, _str); }
 
 #define handle_oom_error handle_fatal_error("out of memory")
 
@@ -91,10 +95,11 @@ static gboolean doNext(rk_JabberSession* self, letter evCode);
     } \
   }
 
-#define got_event(_evcode) \
+#define got_event(_evcode) {   \
   logf("got event " #_evcode); \
-  if (!doNext(self, _evcode)) { \
-    handle_parse_error(_evcode); \
+  _err_IKS = doNext(self, _evcode); \
+  if (_err_IKS == IKS_BADXML) handle_parse_error(_evcode); \
+  if (_err_IKS) goto fail; \
   }
 
 // We want these defined both for C and Ragel, and putting them in a
@@ -219,23 +224,31 @@ static gboolean doNext(rk_JabberSession* self, letter evCode);
 // 
 // Note that you cannot really go invoking this function from within
 // an action.
-static gboolean doNext(rk_JabberSession* self, letter evCode)
+static int doNext(rk_JabberSession* self, letter evCode)
 {
+  int _err_IKS = IKS_OK;
+
   //logf("doNext %d", evCode);
   const letter* p = &evCode;
   const letter* pe = p + 1;
   //const int* eof = NULL;
   %%write exec;
-  return !at_parse_error;
 
-  // This is for "non-local" escaping from machine actions.
+  if (at_parse_error) return IKS_BADXML;
+
+  return IKS_OK;
  fail:
-  return FALSE;
+  return _err_IKS;
 }
 
-// See http://xmpp.org/rfcs/rfc3921.html for info on the messaging protocol.
+// See http://xmpp.org/rfcs/rfc3921.html for info on the messaging
+// protocol.
+// 
+// From here we should return something other than IKS_OK if we do not
+// want further callbacks.
 static int tagHook(void *user_data, int type, iks *node)
 {
+  int _err_IKS = IKS_OK;
   rk_JabberSession* self = (rk_JabberSession*)user_data;
 
 #if __DO_LOGGING__
@@ -336,12 +349,14 @@ static int tagHook(void *user_data, int type, iks *node)
       }
     }
 
+  return IKS_OK;
  fail:
-  return 0;
+  return _err_IKS;
 }
 
 static int ctrlHook(void *user_data, int type, int data)
 {
+  int _err_IKS = IKS_OK;
   rk_JabberSession* self = (rk_JabberSession*)user_data;
 
   logf("status event %d", type);
@@ -377,8 +392,9 @@ static int ctrlHook(void *user_data, int type, int data)
       }
     }
 
+  return IKS_OK;
  fail:
-  return 0;
+  return _err_IKS;
 }
 
 static void resetMachine(rk_JabberSession* self)

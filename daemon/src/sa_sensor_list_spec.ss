@@ -217,16 +217,33 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     
     (sensor (name callstatus)
             (platforms "__CALLSTATUS_ENABLED__")
-            (sql-schema "create table callstatus_scan (unixtime INTEGER, value INTEGER);")
-            (sql-statements "insert into callstatus_scan (unixtime, value) values (?, ?);")
+            (sql-schema "create table callstatus_scan (unixtime INTEGER, value INTEGER, number TEXT);")
+            (sql-statements "insert into callstatus_scan (unixtime, value, number) values (?, ?, ?);")
             (log-insert-api
              (args
               ,(arg (type 'int) (name 'value))
+              ,(arg (type (ptr-to (cconst 'char))) (name 'aNumber))
               )
              (bindings 
               (binding (index 2) (type int) (value "value"))
+              (binding (index 3) (type text?) (value "aNumber, strlen(aNumber)") (dispose static))
               )
              ))
+    
+    (sensor (name smsevent)
+            (platforms "__SMSEVENT_ENABLED__")
+            (sql-schema "create table smsevent_scan (unixtime INTEGER, evtype TEXT, number TEXT);")
+            (sql-statements "insert into smsevent_scan (unixtime, evtype, number) values (?, ?, ?);")
+            (log-insert-api
+             (args
+              ,(arg (type (ptr-to (cconst 'char))) (name 'aEvType))
+              ,(arg (type (ptr-to (cconst 'char))) (name 'aNumber))
+              )
+             (bindings 
+              (binding (index 2) (type text) (value "aEvType, strlen(aEvType)") (dispose static))
+              (binding (index 3) (type text) (value "aNumber, strlen(aNumber)") (dispose static))
+              )
+            ))
     
     ))
 

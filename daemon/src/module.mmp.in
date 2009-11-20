@@ -103,6 +103,12 @@ library lbs.lib
 //library pbkeng.lib // CPbkContactEngine
 library ws32.lib
 
+<% if $SMSEVENT_ENABLED %>
+library gsmu.lib // CSmsPDU
+library msgs.lib // CMsvSession
+library smcm.lib // CSmsClientMtm
+<% end %>
+
 <% if build.trait_map[:do_logging] %>
 library flogger.lib
 <% end %>
@@ -178,6 +184,7 @@ source epoc-profile-31.cpp
 source epoc-profile.cpp
 <% end %>
 source epoc-s60-version.cpp
+source epoc-smsevent.cpp
 source er_errors.c
 source er_errors_cxx.cpp
 source kr_controller.c
@@ -208,10 +215,15 @@ source timer_generic_epoc.cpp
 source ut_diskspace_epoc.cpp
 //source ut_phonecall_epoc.cpp   //xxx experimental
 source ut_retry_epoc.cpp
+<% if $SMSEVENT_ENABLED %>
+source ut_sms_epoc.cpp   // xxx experimental
+<% end %>
 <% if $FLIGHTMODE_ENABLED or $CALLSTATUS_ENABLED %>
 source ut_telephony_epoc.cpp
 <% end %>
+<% if $SMSEVENT_ENABLED %>
 //source ut_timeout_epoc.cpp   //xxx experimental
+<% end %>
 <% if $FEATURE_REMOKON %>
 source ut_timer_epoc.cpp
 <% end %>

@@ -95,6 +95,7 @@
 #endif
 
 #include "epoc-callstatus.hpp"
+#include "epoc-smsevent.hpp"
 
 #define __NEED_TELEPHONY__ 0
 
@@ -147,6 +148,7 @@ extern "C" struct _sa_Array
   sa_Sensor_mark* iSensor_mark;
 #endif
   DECLARE_SENSOR_callstatus;
+  DECLARE_SENSOR_smsevent;
 };
 
 /* Sensor starting. (Statement.)

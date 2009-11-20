@@ -16,7 +16,12 @@
 
 #include <stdlib.h> // rand
 
-// http://www.forum.nokia.com/infocenter/index.jsp?topic=/S60_5th_Edition_Cpp_Developers_Library/GUID-35228542-8C95-4849-A73F-2B4F082F0C44/sdk/doc_source/guide/Telephony-subsystem-guide/ThirdPartyTelephony/info_calls.html
+// http://library.forum.nokia.com/topic/S60_3rd_Edition_Cpp_Developers_Library/GUID-35228542-8C95-4849-A73F-2B4F082F0C44/html/SDL_93/doc_source/guide/Telephony-subsystem-guide/ThirdPartyTelephony/info_calls.html
+
+// xxx We might also want to log the remote party phone number when
+// the remote party information changes. This would involve a separate
+// active object for requesting notification of remote party info
+// change (with a separate ``NotifyChange`` request).
 
 // -------------------------------------------------------------------
 // utilities...
@@ -30,6 +35,30 @@ static gboolean TFlightModeV1ToBoolean(const CTelephony::TFlightModeV1& data)
   else
     assert(0 && "unexpected TFlightModeStatus value");
   return EFalse;
+}
+
+// ``GetCallInfo`` should be used after a notification of an incoming
+// call (``EStatusRinging``?), notification of line status change to
+// dialling (``EStatusDialling``), or notification of remote party
+// info change (with a separate ``NotifyChange`` request).
+
+static TInt GetRemotePartyInfo(CTelephony& aTelephony,
+			       CTelephony::TCallInfoV1& callInfo,
+			       CTelephony::TRemotePartyInfoV1& remoteInfo)
+{
+  CTelephony::TCallSelectionV1 callSelect;
+  CTelephony::TCallSelectionV1Pckg callSelectPckg(callSelect);
+  callSelect.iLine = CTelephony::EVoiceLine;
+  // Call during setup/disconnecting process, not active.
+  callSelect.iSelect = CTelephony::EInProgressCall;
+
+  CTelephony::TCallInfoV1Pckg callInfoPckg(callInfo);
+  CTelephony::TRemotePartyInfoV1Pckg remoteInfoPckg(remoteInfo);
+
+  // "If a call with the appropriate status is not available, then
+  // KErrNotFound is returned."
+  TInt errCode = aTelephony.GetCallInfo(callSelectPckg, callInfoPckg, remoteInfoPckg);
+  return errCode;
 }
 
 // -------------------------------------------------------------------
@@ -67,6 +96,7 @@ void CSensor_callstatus::Cancel()
 gboolean CSensor_callstatus::StartL(GError** error)
 {
   if (!IsActive()) {
+    iRetryAo->ResetFailures();
     iFlightModeGetter->MakeRequest();
     iState = EQueryingFlightMode;
     logt("callstatus sensor started");
@@ -139,16 +169,81 @@ void CSensor_callstatus::HandleCallStatusChange(TInt errCode)
     iState = ERetryWaiting;
   } else {
     iRetryAo->ResetFailures();
+
+    // Here iStatus is of the enum type TCallStatus which has at
+    // least 10 or so different possible values.
+    CTelephony::TCallStatus callStatus = iCallStatusNotifier->Data().iStatus;
+
+    TBuf8<CTelephony::KMaxTelNumberSize + 1> numberBuf;
+    const char* number = NULL;
+
+    // Get remote party phone number if possible.
     {
+      switch (callStatus)
+        {
+        case CTelephony::EStatusRinging: // use TRemotePartyInfoV1
+        case CTelephony::EStatusDialling: // use TCallInfoV1
+          {
+	    CTelephony::TCallInfoV1 callInfo;
+	    CTelephony::TRemotePartyInfoV1 remoteInfo;
+	    errCode = GetRemotePartyInfo(*iTelephony, callInfo, remoteInfo);
+	    if (errCode) {
+	      logf("failed to get remote party info: %s (%d)", 
+		   plat_error_strerror(errCode), errCode);
+	    } else {
+	      if (callStatus == CTelephony::EStatusRinging) {
+		switch (remoteInfo.iRemoteIdStatus)
+		  {
+		  case CTelephony::ERemoteIdentityUnknown:
+		    {
+		      number = "(unknown)";
+		      break;
+		    }
+		  case CTelephony::ERemoteIdentitySuppressed:
+		    {
+		      number = "(suppressed)";
+		      break;
+		    }
+		  case CTelephony::ERemoteIdentityAvailable:
+		    {
+		      TDesC& numberW = remoteInfo.iRemoteNumber.iTelNumber; // TBuf<KMaxTelNumberSize>
+		      numberBuf.Copy(numberW);
+		      number = (const char*)(numberBuf.PtrZ());
+		      break;
+		    }
+		  default:
+		    {
+		      logt("unknown remoteInfo.iRemoteIdStatus");
+		      break;
+		    }
+		  }
+	      } else { // callStatus == CTelephony::EStatusDialling
+		TDesC& numberW = callInfo.iDialledParty.iTelNumber; // TBuf<KMaxTelNumberSize>
+		numberBuf.Copy(numberW);
+		number = (const char*)(numberBuf.PtrZ());
+	      }
+	    }
+            break;
+          }
+
+	default:
+	  {
+	    // Number may not be available in this state.
+	  }
+        }
+    }
+      
+    // Log.
+    {
+      //if (number) logf("remote party number is '%s'", number);
+
       GError* localError = NULL;
-      // Here iStatus is of the enum type TCallStatus which has at
-      // least 10 or so different possible values.
-      if (!log_db_log_callstatus(GetLogDb(), iCallStatusNotifier->Data().iStatus,
-				&localError)) {
+      if (!log_db_log_callstatus(GetLogDb(), callStatus, number, &localError)) {
 	gx_log_free_fatal_error(localError);
 	return;
       }
     }
+
     iCallStatusNotifier->MakeRequest();
     iState = EQueryingCallStatus;
   }
