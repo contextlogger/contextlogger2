@@ -155,6 +155,8 @@
   (define (bind-func-by-type type)
     (case-eq type
              ('int 'sqlite3_bind_int)
+             ('int?-neqz 'sqlite3_bind_int_neqz)
+             ('int?-ltez 'sqlite3_bind_int_ltez)
              ('int64 'sqlite3_bind_int64)
              ('text 'sqlite3_bind_text)
              ('text? 'sqlite3_bind_text_or_null)

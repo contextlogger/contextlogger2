@@ -248,9 +248,15 @@ extern "C" struct _sa_Array
 
 static gboolean sensor_autostart_is_allowed(const gchar* cfg_key)
 {
-  gboolean value = TRUE;
-  get_ConfigDb_bool(cfg_key, &value, TRUE, NULL);
-  return value;
+  gboolean dvalue = TRUE; // default value
+#if __GPS_ENABLED__
+  // GPS autostart can cause problems due to phones without integrated
+  // GPS looking for an external GPS device via Bluetooth, so we do
+  // not have this on by default.
+  if (strcmp(cfg_key, "sensor.gps.autostart") == 0)
+    dvalue = FALSE;
+#endif
+  return force_get_ConfigDb_bool(cfg_key, dvalue);
 }
 
 #define SENSOR_AUTOSTART_IS_ALLOWED(_name) \

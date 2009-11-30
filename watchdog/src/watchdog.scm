@@ -203,6 +203,12 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
                        (call 'UpdateAppStartTime)
                        (call 'ObserveProcess)
                        (call-on 'iProcess 'Resume))
+                     (case 'KErrNotFound
+                       ;; Do not know, there might be other causes for
+                       ;; this error code.
+                       (call 'ExitWatchdog
+                             (list 'errCode
+                                   (cstr "daemon binary not found"))))
                      (else (call 'HandleMinorError)))))
 
           ;; Better use TInt RProcess::RenameMe(const TDesC &aName) to
