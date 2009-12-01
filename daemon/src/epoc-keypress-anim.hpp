@@ -1,6 +1,6 @@
 // This is a variant implementation of the "keypress" sensor,
 // utilizing the Jaiku "keyevents" component. Unfortunately the Jaiku
-// codebase does not actually appeat to have any code that uses the
+// codebase does not actually appear to have any code that uses the
 // component, but hopefully we manage it without an example, and
 // hopefully it actually does work.
 

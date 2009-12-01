@@ -11,7 +11,7 @@
 (require konffaile/variant)
 
 (define* (info)
-  (new-symbian-variant #:btype 'daemon
-                       #:exclude '()))
-
+  (new devel-variant%
+       (binary-type/o 'daemon)
+       (sensor-list ALL-SYMBIAN-SENSORS)))
 

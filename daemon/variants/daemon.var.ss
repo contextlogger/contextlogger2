@@ -11,5 +11,6 @@ A daemon for Symbian.
 (require konffaile/variant)
 
 (define* (info)
-  (new-symbian-variant #:btype 'daemon))
+  (new devel-variant%
+       (binary-type/o 'daemon)))
 

@@ -67,7 +67,7 @@ ALL_OBJ_FILES := $(patsubst %.c, %.o, $(ALL_C_FILES)) $(patsubst %.cpp, %.o, $(A
 DEP_FLAGS := -I$(SRC_PATH) -I$(SHARED_PATH) -I$(TIMESPEC_PATH) $(CURL_CFLAGS) $(LUA_CFLAGS) $(KEYEVENTS_CFLAGS) $(IKSEMEL_DEP_FLAGS)
 COMMON_FLAGS := $(DEP_FLAGS)
 GNOME_FLAGS := `pkg-config --cflags gobject-2.0` -DG_DISABLE_DEPRECATED=1
-FEATURES := -D__DO_LOGGING__=1
+FEATURES := 
 WARNINGS := -Wall -Wmissing-declarations -Wsign-compare -Werror
 CFLAGS := $(WARNINGS) $(COMMON_FLAGS) $(GNOME_FLAGS) $(FEATURES)
 CXXFLAGS := $(CFLAGS)

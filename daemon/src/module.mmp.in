@@ -18,7 +18,7 @@ systeminclude \epoc32\include
 systeminclude \epoc32\include\stdapis
 systeminclude \epoc32\include\stdapis\glib-2.0
 
-<% if $with_curl
+<% if $UPLOAD_WITH_CURL
    curl_dir = ($pamp_curl ? "libcurl-pamp" : "libcurl-std") %>
   <% if $pamp_curl and not $curl_as_source %>
 systeminclude     \epoc32\include\curl-7.16
@@ -37,7 +37,7 @@ userinclude ..\..\..\lua\etc // for lua.hpp
 userinclude ..\..\..\sqlite3h\src\sqlite3
 <% end %>
 
-<% if $with_curl %>
+<% if $UPLOAD_WITH_CURL %>
   <% if $pamp_curl %>
     <% if $curl_as_source %>
 userinclude ..\..\..\<%= curl_dir %>\include\curl
@@ -47,11 +47,11 @@ userinclude ..\..\..\<%= curl_dir %>\include\curl // weird that this is required
   <% end %>
 <% end %>
 
-<% if $feature_uploader %>
+<% if $FEATURE_UPLOADER %>
 userinclude ..\..\..\time-spec
 <% end %>
 
-<% if $have_anim %>
+<% if $HAVE_ANIM %>
 userinclude ..\..\..\keyevents\inc
 <% end %>
 
@@ -61,7 +61,7 @@ staticlibrary sqlite3h.lib
 
 // Any STATICLIBRARY declarations should come before other
 // stuff that is linked.
-<% if $with_curl %>
+<% if $UPLOAD_WITH_CURL %>
   <% unless $curl_as_source %>
     <% if $pamp_curl %>
 staticlibrary abiv2_libcurl-7_16.lib
@@ -109,7 +109,10 @@ library msgs.lib // CMsvSession
 library smcm.lib // CSmsClientMtm
 <% end %>
 
-<% if build.trait_map[:do_logging] %>
+<% if $DO_LOGGING %>
+// With logging enabled, there is a dependency on the (deprecated) file
+// logger API. Without logging enabled errors are still displayed on
+// the console (if you have one and have time to read it).
 library flogger.lib
 <% end %>
 
@@ -130,7 +133,7 @@ library libgobject.lib // Open C
 library libpthread.lib // Open C
 //library libstdcpp.lib  // Open C++
 
-<% if $with_curl %>
+<% if $UPLOAD_WITH_CURL %>
 library libz.lib       // Open C, for Curl (be careful, there are two zlib.h files in the Symbian SDK, and both on the include path in our case)
 library libssl.lib     // Open C, for Curl (maybe needed later)
 library libcrypto.lib  // Open C, for Curl (maybe needed later)
@@ -141,7 +144,7 @@ library libcrypto.lib  // Open C, for Curl (maybe needed later)
 library sqlite3.lib
 <% end %>
 
-<% if $have_anim %>
+<% if $HAVE_ANIM %>
 library keyevents_client_2000af44.lib
 <% end %>
 
@@ -149,7 +152,7 @@ sourcepath ..\..\src
 source ac_app_context.cpp
 source cf_query.c
 source cf_rcfile.cpp
-<% if $is_application %>
+<% if $IS_APPLICATION %>
 source cl2appapp.cpp
 source cl2appappui.cpp
 source cl2appcontainer.cpp
@@ -170,7 +173,7 @@ source epoc-gps.cpp
 source epoc-iap.cpp
 source epoc-inactivity.cpp
 source epoc-indicator.cpp
-<% if $have_anim %>
+<% if $HAVE_ANIM %>
 source epoc-keypress-anim.cpp
 <% else %>
 source epoc-keypress.cpp
@@ -250,7 +253,7 @@ source platform_error.c
 source utilities.c
 source utilities_cxx.cpp
 
-<% if $feature_uploader %>
+<% if $FEATURE_UPLOADER %>
 sourcepath ..\..\..\time-spec
 source moment_parser.c
 source time_utils.c
@@ -376,7 +379,7 @@ source opcodes.c
 source parse.c
 <% end %>
 
-<% if $with_curl %>
+<% if $UPLOAD_WITH_CURL %>
   <% if $curl_as_source %>
 // It seems that abld does not like source filename clashes (even for .c files in different directories), so we better make sure that we despite having all these files name each one uniquely.
 sourcepath ..\..\..\<%= curl_dir %>\lib
@@ -473,7 +476,7 @@ sourcepath ..\..\src
 
 LANG sc
 
-<% if $is_application %>
+<% if $IS_APPLICATION %>
 
 <% if build.v9? %>
 start resource    cl2app.rss

@@ -6,7 +6,7 @@ Yes, convoluted, but we want this file to be a module rather than a script.
 
 #lang scheme
 
-;; This is a script for configuring this project. The idea is simple,
+;; This is a script for configuring this project. The idea is simple:
 ;; you choose a single configuration (from variants/), passing its
 ;; name on the command line. This script will then proceed to generate
 ;; a bunch of include files that reflect the configuration. The
@@ -28,8 +28,12 @@ Yes, convoluted, but we want this file to be a module rather than a script.
 (command-line
  #:once-each
  (("-v" "--verbose") "be verbose"
-  (verbose? #t))
+  (verbose? #t)) ;; xxx currently unused
  #:args (config_name) (variant-name config_name))
+
+;; --------------------------------------------------
+;; general utilities
+;; --------------------------------------------------
 
 (define-syntax on-fail
   (syntax-rules ()
@@ -63,6 +67,31 @@ Yes, convoluted, but we want this file to be a module rather than a script.
      #:exists 'truncate/replace)
     (display-nl file)))
 
+(define (capture-output f)
+  (let ((output (open-output-string)))
+    (parameterize ((current-output-port output))
+      (f))
+    (get-output-string output)))
+
+(define-syntax capture
+  (syntax-rules ()
+    ((_ body ...)
+     (capture-output (lambda () body ...)))))
+
+;; --------------------------------------------------
+;; local utilities
+;; --------------------------------------------------
+
+(define (disp . args)
+  (display (apply format args)))
+
+(define (disp-nl . args)
+  (apply disp args) (newline))
+
+;; --------------------------------------------------
+;; variant management
+;; --------------------------------------------------
+
 (define variant-dir (build-path "variants"))
 
 (define (get-variant-basename varname)
@@ -76,23 +105,6 @@ Yes, convoluted, but we want this file to be a module rather than a script.
 (define (display-generated-notice pfx)
   (display pfx)
   (display-nl " generated -- do not edit"))
-
-(define (capture-output f)
-  (let ((output (open-output-string)))
-    (parameterize ((current-output-port output))
-      (f))
-    (get-output-string output)))
-
-(define-syntax capture
-  (syntax-rules ()
-    ((_ body ...)
-     (capture-output (lambda () body ...)))))
-
-(define (disp . args)
-  (display (apply format args)))
-
-(define (disp-nl . args)
-  (apply disp args) (newline))
 
 (define (write-variant-symlink varname)
   (define file variant-symlink-file)
@@ -252,6 +264,10 @@ Yes, convoluted, but we want this file to be a module rather than a script.
            ))
        attrs)
       ))))
+
+;; --------------------------------------------------
+;; main
+;; --------------------------------------------------
 
 (define* (main)
   (let* ((varname (variant-name))

@@ -12,10 +12,10 @@
 
 (define* (info)
   (new release-variant%
-       (kit 's60_31)
-       (s60-vernum 31)
-       (cert-name 'dev)
-       (caps DEV-CAPS)))
+       (kit/o 's60_31)
+       (s60-vernum/o 31)
+       (cert/o 'dev)
+       (caps/o DEV-CAPS)))
 
 
 

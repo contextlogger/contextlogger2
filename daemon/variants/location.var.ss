@@ -11,8 +11,8 @@ A GUI application for Symbian.
 (require konffaile/variant)
 
 (define* (info)
-  (new-symbian-variant #:btype 'application
-                       #:include '(cellid gps)))
+  (new devel-variant%
+       (sensor-list '(cellid gps))))
 
 
 

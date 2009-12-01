@@ -11,7 +11,6 @@ A GUI application for Symbian.
 (require konffaile/variant)
 
 (define* (info)
-  (new-symbian-variant #:btype 'application
-                       #:exclude '()))
-
+  (new devel-variant%
+       (sensor-list ALL-SYMBIAN-SENSORS)))
 

@@ -17,7 +17,7 @@
 <% if build.v9? %>
 "cl2app.exe"                 -"!:\sys\bin\cl2app.exe"
 
-<% if $is_application %>
+<% if $IS_APPLICATION %>
 "epoc32/data/z/resource/apps/cl2app.rsc"              -"!:\resource\apps\cl2app.rsc"
 "epoc32/data/z/private/10003a3f/import/apps/cl2app_reg.rsc"  -"!:\private\10003a3f\import\apps\cl2app_reg.rsc"
 "epoc32/data/z/resource/apps/cl2app_aif.mif"		-"!:\resource\apps\cl2app_aif.mif"

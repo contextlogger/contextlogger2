@@ -11,7 +11,7 @@ A GUI application for Symbian.
 (require konffaile/variant)
 
 (define* (info)
-  (new-symbian-variant #:btype 'application
-                       #:exclude '(btprox gps)))
+  (new devel-variant%
+       (sensor-list (symbian-sensor-exclude '(btprox gps)))))
 
 

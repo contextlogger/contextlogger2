@@ -2,6 +2,8 @@ CURRENT_CONFIG := ../daemon/src/current_config.mk
 
 include $(CURRENT_CONFIG)
 
+# Currently we only do UDEB builds, and so we do not require UREL builds
+# of static libs yet either.
 static_libs :
 	cd ../sqlite3h && sake static=true kits=$(KIT_NAME) udeb=true cert=dev
 

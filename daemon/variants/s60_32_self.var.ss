@@ -12,10 +12,10 @@
 
 (define* (info)
   (new release-variant%
-       (kit 's60_32)
-       (s60-vernum 32)
-       (caps SELF-CAPS-32)
-       (cert-name 'self32)))
+       (kit/o 's60_32)
+       (s60-vernum/o 32)
+       (caps/o SELF-CAPS-32)
+       (cert/o 'self32)))
 
 
 
