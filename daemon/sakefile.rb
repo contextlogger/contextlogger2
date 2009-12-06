@@ -6,6 +6,7 @@
 require 'sake3/component'
 
 require 'src/current_config'
+require 'src/dependencies'
 
 $uid_v8 = 0x08460002
 $basename = $APP_BASENAME

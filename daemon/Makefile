@@ -82,6 +82,10 @@ binary : $(if $(IS_SYMBIAN), symbian, posix_test)
 config : 
 	$(PLT_ENV) ./configure.scm $(VARIANT_NAME)
 
+# This does not change variant, but updates dependencies.
+deps :
+	$(PLT_ENV) mzscheme --eval '(require (file "configure.scm")) (deps-main)'
+
 # Unfortunately the file produced by this rule contains some absolute paths, which means that the end result is platform specific. But then, some of the binaries might be as well. You may just want to do a "make clean" when moving over to another host.
 .depend : Makefile $(GEN_FILES)
 	fastdep $(DEP_FLAGS) --remakedeptarget=$@ $(ALL_C_FILES) $(ALL_CXX_FILES) > $@

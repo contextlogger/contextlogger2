@@ -77,54 +77,17 @@ staticlibrary libcurl.lib    // built by us
 
 library euser.lib
 
-library apgrfx.lib
-library apparc.lib
-library avkon.lib
-library bafl.lib
-library bluetooth.lib
-library btmanclient.lib
-library charconv.lib
+<% for libfile in $MMP_LIBRARIES %>
+library <%= libfile %>
+<% end %>
+
 //library cntmodel.lib // CContactGroup
-library commdb.lib
-library commonui.lib // CErrorUI
-library cone.lib
-library efsrv.lib
-library eikcoctl.lib
-library eikcore.lib
-library esock.lib
 //library estor.lib // RReadStream
 //library etel.lib // RCall, RLine
-library etel3rdparty.lib // CTelephony
-library http.lib
-library inetprotutil.lib // URI parsers
-library insock.lib // Internet protocol support for esock
-library lbs.lib
 //library logcli.lib // CLogClient
 //library pbkeng.lib // CPbkContactEngine
-library ws32.lib
 
-<% if $SMSEVENT_ENABLED %>
-library gsmu.lib // CSmsPDU
-library msgs.lib // CMsvSession
-library smcm.lib // CSmsClientMtm
-<% end %>
-
-<% if $DO_LOGGING %>
-// With logging enabled, there is a dependency on the (deprecated) file
-// logger API. Without logging enabled errors are still displayed on
-// the console (if you have one and have time to read it).
-library flogger.lib
-<% end %>
-
-<% if $HAVE_PROFILEENGINE_LIB %>
-library profileengine.lib
-<% else %>
-library profileeng.lib // SDK Plugins
-<% end %>
-
-<% if $HAVE_EUSERHL %>
 library euserhl.lib    // High-Level APIs
-<% end %>
 
 library libc.lib       // PIPS
 library libm.lib       // required for Lua
@@ -144,7 +107,7 @@ library libcrypto.lib  // Open C, for Curl (maybe needed later)
 library sqlite3.lib
 <% end %>
 
-<% if $HAVE_ANIM %>
+<% if $KEYPRESS_ENABLED and $HAVE_ANIM %>
 library keyevents_client_2000af44.lib
 <% end %>
 
@@ -168,7 +131,7 @@ source epoc-btprox.cpp
 source epoc-callstatus.cpp
 source epoc-cellid.cpp
 source epoc-cliapi-server.cpp
-//source epoc-flightmode.cpp
+//source epoc-flightmode.cpp // obsolete
 source epoc-gps.cpp
 source epoc-iap.cpp
 source epoc-inactivity.cpp
@@ -219,14 +182,12 @@ source ut_diskspace_epoc.cpp
 //source ut_phonecall_epoc.cpp   //xxx experimental
 source ut_retry_epoc.cpp
 <% if $SMSEVENT_ENABLED %>
-source ut_sms_epoc.cpp   // xxx experimental
+source ut_sms_epoc.cpp
 <% end %>
 <% if $FLIGHTMODE_ENABLED or $CALLSTATUS_ENABLED %>
 source ut_telephony_epoc.cpp
 <% end %>
-<% if $SMSEVENT_ENABLED %>
 //source ut_timeout_epoc.cpp   //xxx experimental
-<% end %>
 <% if $FEATURE_REMOKON %>
 source ut_timer_epoc.cpp
 <% end %>

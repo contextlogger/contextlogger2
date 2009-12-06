@@ -6,6 +6,8 @@ Yes, convoluted, but we want this file to be a module rather than a script.
 
 #lang scheme
 
+;; INTRODUCTION
+;; 
 ;; This is a script for configuring this project. The idea is simple:
 ;; you choose a single configuration (from variants/), passing its
 ;; name on the command line. This script will then proceed to generate
@@ -14,9 +16,23 @@ Yes, convoluted, but we want this file to be a module rather than a script.
 ;; result of the change in configuration; this is to allow this script
 ;; to better work with build tools whose dependency checking is based
 ;; on timestamps.
+;; 
+;; This script also has another, fairly orthogonal function, namely
+;; that of determining what must be built for the chosen (or current)
+;; configuration. Such resolution is always performed after changing
+;; the configuration variant, but it may (and should) also be
+;; performed after a change in component descriptions. The general
+;; idea is to select the set of components based on the configuration,
+;; and then from modular component descriptions resolve the full set
+;; of source files and libraries and macro definitions that are
+;; required for the build. And once again generate a bunch of include
+;; files that contain that information.
 
 (require common/usual-4)
+(require konffaile/class-attr)
+(require konffaile/component)
 (require konffaile/variant)
+(require konffaile/writer)
 (require scheme/cmdline)
 (require common/class)
 
@@ -24,69 +40,6 @@ Yes, convoluted, but we want this file to be a module rather than a script.
 
 (define verbose? (make-parameter #t))
 (define variant-name (make-parameter #f))
-
-(command-line
- #:once-each
- (("-v" "--verbose") "be verbose"
-  (verbose? #t)) ;; xxx currently unused
- #:args (config_name) (variant-name config_name))
-
-;; --------------------------------------------------
-;; general utilities
-;; --------------------------------------------------
-
-(define-syntax on-fail
-  (syntax-rules ()
-    ((_ fail-expr expr)
-     (with-handlers
-         ((exn:fail?
-           (lambda (e) fail-expr)))
-       expr))))
-
-(define (file-read file)
-  (call-with-input-file*
-   file
-   (lambda (in)
-     (port->string in))))
-     
-;; Checks whether a file either does not exist or has been changed.
-(define (file-changed? file s)
-  ;; Would there be a good way to write a function for comparing two
-  ;; input streams? Then we could handle large files as well. ((nin
-  ;; (open-input-string s))) and then compare to file input.
-  (on-fail #t (not (equal? (file-read file) s))))
-
-;;(write-nl (file-changed? configure-script (file-read configure-script)))
-
-(define (write-changed-file file s)
-  (when (file-changed? file s)
-    (call-with-output-file*
-     file
-     (lambda (out)
-       (display s out))
-     #:exists 'truncate/replace)
-    (display-nl file)))
-
-(define (capture-output f)
-  (let ((output (open-output-string)))
-    (parameterize ((current-output-port output))
-      (f))
-    (get-output-string output)))
-
-(define-syntax capture
-  (syntax-rules ()
-    ((_ body ...)
-     (capture-output (lambda () body ...)))))
-
-;; --------------------------------------------------
-;; local utilities
-;; --------------------------------------------------
-
-(define (disp . args)
-  (display (apply format args)))
-
-(define (disp-nl . args)
-  (apply disp args) (newline))
 
 ;; --------------------------------------------------
 ;; variant management
@@ -102,174 +55,52 @@ Yes, convoluted, but we want this file to be a module rather than a script.
 
 (define variant-symlink-file (get-variant-file "current"))
 
-(define (display-generated-notice pfx)
-  (display pfx)
-  (display-nl " generated -- do not edit"))
-
 (define (write-variant-symlink varname)
   (define file variant-symlink-file)
   (let ((basename (get-variant-basename varname)))
-    (write-changed-file
-     file
-     (capture
-      (display-generated-notice ";;")
-      (display-nl "#lang scheme")
-      (disp-nl "(require ~s)" basename)
-      (disp-nl "(provide (all-from-out ~s))" basename)))))
-
-(define path-censor-re #rx"[-.]")
-
-(define (path-h-ifdefy p)
-  (string-append
-   "__"
-   (string-downcase
-    (regexp-replace* path-censor-re (path->string (path-basename p)) "_"))
-   "__"))
+    (write-scheme-symlink file basename)))
 
 (define src-dir (build-path "src"))
-(define c-file (build-path src-dir "current_config.hrh"))
-(define gmake-file (build-path src-dir "current_config.mk"))
-(define ruby-file (build-path src-dir "current_config.rb"))
 
-(define ident-censor-re #rx"[-]")
+(define c-config-file (build-path src-dir "current_config.hrh"))
+(define gmake-config-file (build-path src-dir "current_config.mk"))
+(define ruby-config-file (build-path src-dir "current_config.rb"))
 
-(define (name-to-c sym)
-  (string->symbol
-   (string-append
-    "__"
-    (string-upcase
-     (regexp-replace* ident-censor-re (symbol->string sym) "_"))
-    "__")))
+(define (write-variant-config varinfo)
+  (let ((attrs (object-attr-values/sorted varinfo)))
+    ;;(pretty-nl attrs)
+    (write-c-file c-config-file attrs)
+    (write-ruby-file ruby-config-file attrs)
+    (write-gmake-file gmake-config-file attrs)))
 
-(define (name-to-ruby sym)
-  (string->symbol
-   (string-append
-    "$"
-    (string-upcase
-     (regexp-replace* ident-censor-re (symbol->string sym) "_"))
-    )))
+;; --------------------------------------------------
+;; dependency management
+;; --------------------------------------------------
 
-(define (name-to-gmake sym)
-  (string->symbol
-   (string-append
-    (string-upcase
-     (regexp-replace* ident-censor-re (symbol->string sym) "_"))
-    )))
+(define ruby-deps-file (build-path src-dir "dependencies.rb"))
 
-(define (display-attr/c name value)
-  (set! name (name-to-c name))
-  (cond
-   ((attr-undefined? value)
-    (void))
-   ((or (attr-defined? value) (eqv? value #t))
-    (disp-nl "#define ~a 1" name))
-   ((eqv? value #f)
-    (disp-nl "#define ~a 0" name))
-   ((number? value)
-    (disp-nl "#define ~a ~s" name value))
-   ((hexnum? value)
-    (disp-nl "#define ~a 0x~a"
-             name (number->string (hexnum-num value) 16)))
-   ((string? value)
-    (disp-nl "#define ~a ~s" name value))
-   ))
-
-(define (display-attr/ruby name value)
-  (set! name (name-to-ruby name))
-  (cond
-   ((attr-undefined? value)
-    (void))
-   ((or (attr-defined? value) (eqv? value #t))
-    (disp-nl "~a = true" name))
-   ((eqv? value #f)
-    (disp-nl "~a = false" name))
-   ((number? value)
-    (disp-nl "~a = ~s" name value))
-   ((hexnum? value)
-    (disp-nl "~a = 0x~a"
-             name (number->string (hexnum-num value) 16)))
-   ((string? value)
-    (disp-nl "~a = ~s" name value))
-   ))
-
-(define (display-attr/gmake name value)
-  (set! name (name-to-gmake name))
-  (cond
-   ((attr-undefined? value)
-    (void))
-   ((attr-defined? value)
-    (disp-nl "~a := 1" name))
-   ((eqv? value #t)
-    (begin (disp-nl "~a := 1" name)
-           (disp-nl "NOT__~a :=" name)))
-   ((eqv? value #f)
-    (begin (disp-nl "~a :=" name)
-           (disp-nl "NOT__~a := 1" name)))
-   ((number? value)
-    (disp-nl "~a := ~s" name value))
-   ((hexnum? value)
-    (begin
-      (disp-nl "~a__DEC := ~s" name (hexnum-num value))
-      (disp-nl "~a__HEX := ~a"
-               name (number->string (hexnum-num value) 16))))
-   ((string? value)
-    (disp-nl "~a := ~a" name value))
-   ))
-
-(define (write-c-file attrs)
-  (let ((file c-file)
-        (harness-name (path-h-ifdefy c-file)))
-    (write-changed-file
-     file
-     (capture
-      (display-generated-notice "//")
-      (disp-nl "#ifndef ~a" harness-name)
-      (disp-nl "#define ~a" harness-name)
-      (for-each
-       (lambda (entry)
-         (let ((name (first entry))
-               (value (second entry)))
-           (display-attr/c name value)
-           ))
-       attrs)
-      (disp-nl "#endif // ~a" harness-name)
-      ))))
-
-(define (write-ruby-file attrs)
-  (let ((file ruby-file))
-    (write-changed-file
-     file
-     (capture
-      (display-generated-notice "#")
-      (for-each
-       (lambda (entry)
-         (let ((name (first entry))
-               (value (second entry)))
-           (display-attr/ruby name value)
-           ))
-       attrs)
-      ))))
-
-(define (write-gmake-file attrs)
-  (let ((file gmake-file))
-    (write-changed-file
-     file
-     (capture
-      (display-generated-notice "#")
-      (for-each
-       (lambda (entry)
-         (let ((name (first entry))
-               (value (second entry)))
-           (display-attr/gmake name value)
-           ))
-       attrs)
-      ))))
+(define (write-deps-config rcomp)
+  (parameterize ((component-search-path
+                  (list src-dir
+                        (build-path "../shared"))))
+    (let* ((deps (resolve-deps rcomp))
+           (attrs (comps-combine-attrs deps)))
+      ;;(write-nl (comps-attr-combinator-list deps))
+      ;;(write-nl attrs)
+      (write-ruby-file ruby-deps-file attrs)
+      )))
 
 ;; --------------------------------------------------
 ;; main
 ;; --------------------------------------------------
 
 (define* (main)
+  (command-line
+   #:once-each
+   (("-v" "--verbose") "be verbose"
+    (verbose? #t)) ;; xxx currently unused
+   #:args (config_name) (variant-name config_name))
+
   (let* ((varname (variant-name))
          (varfile (get-variant-file varname))
          (varinfo-f (dynamic-require (path->string varfile) 'info))
@@ -277,15 +108,46 @@ Yes, convoluted, but we want this file to be a module rather than a script.
          (set-name (class-field-mutator variant% name)))
     (set-name varinfo (string->symbol varname))
 
-    ;;(write-nl (get-fields/hasheq varinfo))
-    ;;(write-nl (interface->method-names (object-interface varinfo)))
-    ;;(write-nl (variant-attr-names varinfo))
-    ;;(write-nl (variant-attr-values/hasheq varinfo))
-    ;;(write-nl (variant-attr-values/sorted varinfo))
-    (let ((attrs (variant-attr-values/sorted varinfo)))
-      ;;(pretty-nl attrs)
-      (write-c-file attrs)
-      (write-ruby-file attrs)
-      (write-gmake-file attrs))
+    (write-variant-config varinfo)
+    (write-variant-symlink varname)
 
-    (write-variant-symlink varname)))
+    (parameterize ((current-variant varinfo))
+      (write-deps-config 'main))
+    (void)))
+
+(define* (deps-main)
+  (let* ((varfile variant-symlink-file)
+         (varinfo-f (dynamic-require (path->string varfile) 'info))
+         (varinfo (varinfo-f)))
+    (parameterize ((current-variant varinfo))
+      (write-deps-config 'main))
+    (void)))
+
+#|
+
+Copyright 2009 Helsinki Institute for Information Technology (HIIT)
+and the authors. All rights reserved.
+
+Authors: Tero Hasu <tero.hasu@hut.fi>
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation files
+(the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software,
+and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+|#

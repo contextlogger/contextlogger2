@@ -190,7 +190,7 @@ project must implement.
     btprox
     callstatus
     cellid
-    flightmode
+    ;;flightmode
     gps
     inactivity
     indicator
@@ -237,9 +237,14 @@ project must implement.
   (define/public (abld-variant.attr)
     (symbol->string (abld-variant)))
   
-  (define/public (devcert-caps.attr)
+  (define/public (have-devcert-caps.attr)
     (sublist? DEV-CAPS (capabilities)))
-    
+
+  (define/public (protected-uid-signable.attr)
+    ;; Having a DevCert is not quite the same thing as having DevCert
+    ;; caps, so override this as necessary.
+    (have-devcert-caps.attr))
+  
   ;; --------------------------------------------------
   ;; supportable components
   ;; --------------------------------------------------
@@ -248,7 +253,7 @@ project must implement.
     ;; Due to the requirement to use a protected development UID (or
     ;; the do proper Symbian signing), in practice we will only be
     ;; able to do this if we have a DevCert.
-    (devcert-caps.attr))
+    (protected-uid-signable.attr))
 
   ;; --------------------------------------------------
   ;; available libs
@@ -261,6 +266,16 @@ project must implement.
 
   (define/public (have-euserhl.attr) #t)
 
+  ;; --------------------------------------------------
+  ;; features
+  ;; --------------------------------------------------
+  
+  ;; The "callstatus" sensor makes "flightmode" somewhat redundant. We
+  ;; actually no longer even support "flightmode" as a standalone
+  ;; sensor.
+  (define/public (flightmode-enabled.attr)
+    #f)
+    
   ) ;; end symbian-variant%
 
 (define-variant* devel-variant% symbian-variant%
@@ -277,10 +292,6 @@ project must implement.
   (define/override (s60-vernum.attr) s60-vernum/o)
     
   (define/override (kit-name) kit/o)
-    
-  ;; The "callstatus" sensor makes "flightmode" somewhat redundant.
-  (define/public (flightmode-enabled.attr)
-    #f)
     
   (define/override (get-attrs)
     (make-sensor-attrs/name-lst sensor-list))
@@ -331,10 +342,6 @@ project must implement.
   ;; they make some sense. Redundant sensors and test sensors and such
   ;; we do not enable.
   
-  ;; The "callstatus" sensor makes "flightmode" somewhat redundant.
-  (define/public (flightmode-enabled.attr)
-    #f)
-    
   (define/public (keypress-enabled.attr)
     (sublist? '(ReadDeviceData WriteDeviceData PowerMgmt ProtServ SwEvent)
               (capabilities)))
@@ -356,4 +363,31 @@ project must implement.
     
   ) ;; end release-variant%
 
-  
+#|
+
+Copyright 2009 Helsinki Institute for Information Technology (HIIT)
+and the authors. All rights reserved.
+
+Authors: Tero Hasu <tero.hasu@hut.fi>
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation files
+(the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software,
+and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+|#
