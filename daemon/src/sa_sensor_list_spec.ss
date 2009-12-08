@@ -217,16 +217,22 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     
     (sensor (name callstatus)
             (platforms "__CALLSTATUS_ENABLED__")
-            (sql-schema "create table callstatus_scan (unixtime INTEGER, value INTEGER, number TEXT);")
-            (sql-statements "insert into callstatus_scan (unixtime, value, number) values (?, ?, ?);")
+            (sql-schema "create table callstatus_scan (unixtime INTEGER not null, value INTEGER not null, number TEXT, starttime INTEGER, osterm INTEGER, netterm INTEGER);")
+            (sql-statements "insert into callstatus_scan (unixtime, value, number, starttime, osterm, netterm) values (?, ?, ?, ?, ?, ?);")
             (log-insert-api
              (args
               ,(arg (type 'int) (name 'value))
               ,(arg (type (ptr-to (cconst 'char))) (name 'aNumber))
+              ,(arg (type 'int) (name 'aStartTime))
+              ,(arg (type 'int) (name 'aOsTerm))
+              ,(arg (type 'int) (name 'aNetTerm))
               )
              (bindings 
               (binding (index 2) (type int) (value "value"))
               (binding (index 3) (type text?) (value "aNumber, strlen(aNumber)") (dispose static))
+              (binding (index 4) (type int?-neqz) (value "aStartTime"))
+              (binding (index 5) (type int?-ltez) (value "aOsTerm"))
+              (binding (index 6) (type int?-ltez) (value "aNetTerm"))
               )
              ))
     

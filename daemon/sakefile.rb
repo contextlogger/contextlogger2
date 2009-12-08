@@ -6,17 +6,14 @@
 require 'sake3/component'
 
 require 'src/current_config'
+require 'src/dependencies'
 
 $uid_v8 = 0x08460002
 $basename = $APP_BASENAME
 $version = [$MAJOR_VERSION, $MINOR_VERSION]
 
-$is_application = $IS_APPLICATION
-$feature_uploader = $FEATURE_UPLOADER
-$with_curl = $UPLOAD_WITH_CURL
 $curl_as_source = true
 $pamp_curl = true
-$have_anim = $HAVE_ANIM
 
 $proj = Sake::Project.new(:basename => $basename,
                           :name => "CL2 App",
@@ -31,7 +28,8 @@ class <<$proj
 end
 
 $app = Sake::Component.new(:project => $proj,
-                           :target_type => ($is_application ? :application : :exe),
+                           :target_type => ($IS_APPLICATION ?
+                                            :application : :exe),
                            :basename => $basename,
                            :bin_basename => $basename,
                            :uid3 => Sake::Uid.v8($uid_v8),
@@ -60,12 +58,11 @@ end
 
 $builds = $kits.map do |kit|
   build = Sake::ProjBuild.new(:project => $proj,
+                              :handle => $VARIANT_NAME,
                               :devkit => kit)
   build.abld_platform = (build.v9? ? "gcce" : "armi")
-  build.abld_build = ($sake_op[:udeb] ? "udeb" : "urel")
-  if $sake_op[:udeb]
-    build.handle = (build.handle + "_udeb")
-  end
+  build.abld_build = ($ABLD_VARIANT || raise)
+  #build.handle = (build.handle + "_udeb") if $sake_op[:udeb]
   build
 end
 
@@ -176,7 +173,7 @@ for build in $builds
   # logger API, and errors are still displayed on the console (if you
   # have one and have time to read it). "logging=true" has no effect
   # if your SDK does not have the required API.
-  map[:do_logging] = (($sake_op[:logging] and map[:has_flogger]) ? 1 : 0)
+#  map[:do_logging] = (($sake_op[:logging] and map[:has_flogger]) ? 1 : 0)
 
   #map[:upload_time_expr] = ($sake_op[:upload_time_expr] || $default_upload_time_expr || :undef)
   #map[:upload_url] = ($sake_op[:upload_url] || $default_upload_url || :undef)

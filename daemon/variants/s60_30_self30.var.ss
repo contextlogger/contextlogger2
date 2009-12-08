@@ -12,8 +12,8 @@
 
 (define* (info)
   (new release-variant%
-       (cert-name 'self30)
-       (caps SELF-CAPS-30)))
+       (cert/o 'self30)
+       (caps/o SELF-CAPS-30)))
 
 
 

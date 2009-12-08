@@ -16,12 +16,16 @@
 
 #include <stdlib.h> // rand
 
+#include <glib/gprintf.h>
+
 // http://library.forum.nokia.com/topic/S60_3rd_Edition_Cpp_Developers_Library/GUID-35228542-8C95-4849-A73F-2B4F082F0C44/html/SDL_93/doc_source/guide/Telephony-subsystem-guide/ThirdPartyTelephony/info_calls.html
 
 // xxx We might also want to log the remote party phone number when
 // the remote party information changes. This would involve a separate
 // active object for requesting notification of remote party info
 // change (with a separate ``NotifyChange`` request).
+
+// TCallInfoV1::iExitCode is not documented in API docs, but see http://wiki.forum.nokia.com/index.php/TSS001320_-_Interpreting_TCallInfoV1::iExitCode_value -- supposedly "gives the reason for the termination of a finished call"
 
 // -------------------------------------------------------------------
 // utilities...
@@ -42,9 +46,9 @@ static gboolean TFlightModeV1ToBoolean(const CTelephony::TFlightModeV1& data)
 // dialling (``EStatusDialling``), or notification of remote party
 // info change (with a separate ``NotifyChange`` request).
 
-static TInt GetRemotePartyInfo(CTelephony& aTelephony,
-			       CTelephony::TCallInfoV1& callInfo,
-			       CTelephony::TRemotePartyInfoV1& remoteInfo)
+static TInt DoGetCallInfo(CTelephony& aTelephony,
+			  CTelephony::TCallInfoV1& callInfo,
+			  CTelephony::TRemotePartyInfoV1& remoteInfo)
 {
   CTelephony::TCallSelectionV1 callSelect;
   CTelephony::TCallSelectionV1Pckg callSelectPckg(callSelect);
@@ -174,63 +178,114 @@ void CSensor_callstatus::HandleCallStatusChange(TInt errCode)
     // least 10 or so different possible values.
     CTelephony::TCallStatus callStatus = iCallStatusNotifier->Data().iStatus;
 
-    TBuf8<CTelephony::KMaxTelNumberSize + 1> numberBuf;
+    // Set to remote party phone number if possible. Will be left as
+    // NULL otherwise.
     const char* number = NULL;
 
-    // Get remote party phone number if possible.
-    {
-      switch (callStatus)
-        {
-        case CTelephony::EStatusRinging: // use TRemotePartyInfoV1
-        case CTelephony::EStatusDialling: // use TCallInfoV1
-          {
-	    CTelephony::TCallInfoV1 callInfo;
-	    CTelephony::TRemotePartyInfoV1 remoteInfo;
-	    errCode = GetRemotePartyInfo(*iTelephony, callInfo, remoteInfo);
-	    if (errCode) {
-	      logf("failed to get remote party info: %s (%d)", 
-		   plat_error_strerror(errCode), errCode);
-	    } else {
-	      if (callStatus == CTelephony::EStatusRinging) {
-		switch (remoteInfo.iRemoteIdStatus)
-		  {
-		  case CTelephony::ERemoteIdentityUnknown:
-		    {
-		      number = "(unknown)";
-		      break;
-		    }
-		  case CTelephony::ERemoteIdentitySuppressed:
-		    {
-		      number = "(suppressed)";
-		      break;
-		    }
-		  case CTelephony::ERemoteIdentityAvailable:
-		    {
-		      TDesC& numberW = remoteInfo.iRemoteNumber.iTelNumber; // TBuf<KMaxTelNumberSize>
-		      numberBuf.Copy(numberW);
-		      number = (const char*)(numberBuf.PtrZ());
-		      break;
-		    }
-		  default:
-		    {
-		      logt("unknown remoteInfo.iRemoteIdStatus");
-		      break;
-		    }
-		  }
-	      } else { // callStatus == CTelephony::EStatusDialling
-		TDesC& numberW = callInfo.iDialledParty.iTelNumber; // TBuf<KMaxTelNumberSize>
-		numberBuf.Copy(numberW);
-		number = (const char*)(numberBuf.PtrZ());
-	      }
-	    }
-            break;
-          }
+    // Any additional information encoded as a string. May be left as NULL.
+    const char* extra = NULL;
 
+    // Call start time. May be left as zero, which means no start time.
+    time_t startTime = 0;
+
+    // Call termination reason codes. May be left as 1, which means no
+    // reason.
+    TInt etelCode = 1;
+    TInt netCode = 1;
+
+    CTelephony::TCallInfoV1 callInfo;
+    CTelephony::TRemotePartyInfoV1 remoteInfo;
+    errCode = DoGetCallInfo(*iTelephony, callInfo, remoteInfo);
+
+    if (errCode) {
+      // Certainly this is true for idle line (1), and probably for
+      // unknown status (0) as well.
+      logf("failed to get call info for status %d: %s (%d)", 
+	   callStatus, plat_error_strerror(errCode), errCode);
+    } else {
+      logf("got call info for status %d", callStatus);
+    }
+    TBool gotCallInfo = (errCode == 0);
+
+    if (gotCallInfo) {
+      // We would like to use call start time as the "call ID", as it
+      // ought to be unique enough, but it seems to always be 0.
+      {
+	const TDateTime& dt = callInfo.iStartTime;
+	TTime epocStartTime(dt);
+	if (epocStartTime.Int64() != 0) {
+	  logf("call start datetime is %d.%d.%d %d:%d:%d.%d",
+	       dt.Year(), dt.Month(), dt.Day(),
+	       dt.Hour(), dt.Minute(), dt.Second(), dt.MicroSecond());
+	  startTime = LocalEpocTimeToUnixTime(epocStartTime);
+	  logf("call start time is %d", startTime);
+	  logf("time now is %d", time(NULL));
+	}
+      }
+
+      // For some cases we can get some additional useful information.
+      switch (callStatus)
+	{
+	  // May be able to get remote party phone number in these cases.
+	case CTelephony::EStatusRinging: // use TRemotePartyInfoV1
+	case CTelephony::EStatusDialling: // use TCallInfoV1
+	  {
+	    TBuf8<CTelephony::KMaxTelNumberSize + 1> numberBuf;
+
+	    if (callStatus == CTelephony::EStatusRinging) {
+	      switch (remoteInfo.iRemoteIdStatus)
+		{
+		case CTelephony::ERemoteIdentityUnknown:
+		  {
+		    number = "(unknown)";
+		    break;
+		  }
+		case CTelephony::ERemoteIdentitySuppressed:
+		  {
+		    number = "(suppressed)";
+		    break;
+		  }
+		case CTelephony::ERemoteIdentityAvailable:
+		  {
+		    TDesC& numberW = remoteInfo.iRemoteNumber.iTelNumber; // TBuf<KMaxTelNumberSize>
+		    numberBuf.Copy(numberW);
+		    number = (const char*)(numberBuf.PtrZ());
+		    break;
+		  }
+		default:
+		  {
+		    logt("unknown remoteInfo.iRemoteIdStatus");
+		    break;
+		  }
+		}
+	    } else { // callStatus == CTelephony::EStatusDialling
+	      TDesC& numberW = callInfo.iDialledParty.iTelNumber; // TBuf<KMaxTelNumberSize>
+	      numberBuf.Copy(numberW);
+	      number = (const char*)(numberBuf.PtrZ());
+	    }
+	    break;
+	  }
+	  
+	  // May be able to get disconnect reason in this case. The
+	  // information is supplied by the operator, though, which
+	  // means we depend on what they choose to tell us.
+	case CTelephony::EStatusDisconnecting:
+	  {
+	    TInt& exitCode = callInfo.iExitCode;
+	    etelCode = (exitCode | 0xFFFF0000);
+	    netCode = (exitCode >> 16); 
+	    logf("disconnect reason: etel=%d, net=%d", etelCode, netCode);
+	    char extraBuf[50];
+	    g_sprintf(extraBuf, "os=%d/net=%d", etelCode, netCode);
+	    extra = extraBuf;
+	    break;
+	  }
+	  
 	default:
 	  {
-	    // Number may not be available in this state.
+	    // No additional information to record in this state.
 	  }
-        }
+	} // end switch
     }
       
     // Log.
@@ -238,7 +293,7 @@ void CSensor_callstatus::HandleCallStatusChange(TInt errCode)
       //if (number) logf("remote party number is '%s'", number);
 
       GError* localError = NULL;
-      if (!log_db_log_callstatus(GetLogDb(), callStatus, number, &localError)) {
+      if (!log_db_log_callstatus(GetLogDb(), callStatus, number, startTime, etelCode, netCode, &localError)) {
 	gx_log_free_fatal_error(localError);
 	return;
       }

@@ -7,6 +7,8 @@ CREATE := ruby $(SCRIPT)
 FLAGS :=             # you may pass FLAGS=--nr
 BASENAME := cl2_megasis
 TEMPLATE := template.pkg.in
+
+# Note that $(DIST_VARIANT_NAME) is defined only for release variants.
 PKGFILE := $(BASENAME)-$(DIST_VARIANT_NAME).pkg
 SISFILE := $(BASENAME)-$(VERSION_STRING)-$(DIST_VARIANT_NAME).sis
 SISXFILE := $(SISFILE)x

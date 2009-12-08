@@ -1,27 +1,23 @@
 #lang scheme
 
-(provide define/c* unary-predicate?)
+(require common/usual-4)
 
-(define-syntax define/c*
-  (syntax-rules ()
-    ((_ (name arg ... . rest) contract body ...)
-     (begin
-       (define (name arg ... . rest) contract body ...)
-       (provide/contract (name contract))))
-    ((_ (name arg ...) contract body ...)
-     (begin
-       (define (name arg ...) body ...)
-       (provide/contract (name contract))))
-    ((_ name contract body)
-     (begin
-       (define name body)
-       (provide/contract (name contract))))))
+(define* (symbol<? s1 s2)
+  (string<? (symbol->string s1) (symbol->string s2)))
 
-(define unary-predicate? (-> any/c boolean?))
+;; --------------------------------------------------
+;; set
+;; --------------------------------------------------
+
+(define* (new-Set) (make-hasheq))
+
+(define* (Set-put! s e) (hash-set! s e e))
+
+(define* (Set-values s) (hash-map s (lambda (k v) v)))
 
 #|
 
-Copyright 2008 Helsinki Institute for Information Technology (HIIT)
+Copyright 2009 Helsinki Institute for Information Technology (HIIT)
 and the authors. All rights reserved.
 
 Authors: Tero Hasu <tero.hasu@hut.fi>

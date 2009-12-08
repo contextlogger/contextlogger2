@@ -81,7 +81,7 @@ NONSHARABLE_CLASS(CSensor_indicator) :
   
   void HandleRead();
 
-private:
+ private:
 
   ac_AppContext* iAppContext; // not owned
 

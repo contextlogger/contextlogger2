@@ -97,8 +97,6 @@
 #include "epoc-callstatus.hpp"
 #include "epoc-smsevent.hpp"
 
-#define __NEED_TELEPHONY__ 0
-
 // This file is generated, and included only once here. Code for
 // creating, destroying, starting, and stopping sensors comes from
 // here. The code is designed to mesh well with this file.
@@ -109,10 +107,6 @@ extern "C" struct _sa_Array
 {
   ac_AppContext* ac; // not owned
   LogDb* logDb; // not owned
-
-#if __NEED_TELEPHONY__
-  CTelephony *iTelephony;
-#endif
 
 #if __APPFOCUS_ENABLED__
   CSensor_appfocus *iSensor_appfocus;
@@ -248,9 +242,15 @@ extern "C" struct _sa_Array
 
 static gboolean sensor_autostart_is_allowed(const gchar* cfg_key)
 {
-  gboolean value = TRUE;
-  get_ConfigDb_bool(cfg_key, &value, TRUE, NULL);
-  return value;
+  gboolean dvalue = TRUE; // default value
+#if __GPS_ENABLED__
+  // GPS autostart can cause problems due to phones without integrated
+  // GPS looking for an external GPS device via Bluetooth, so we do
+  // not have this on by default.
+  if (strcmp(cfg_key, "sensor.gps.autostart") == 0)
+    dvalue = FALSE;
+#endif
+  return force_get_ConfigDb_bool(cfg_key, dvalue);
 }
 
 #define SENSOR_AUTOSTART_IS_ALLOWED(_name) \
@@ -268,12 +268,6 @@ extern "C" sa_Array *sa_Array_new(ac_AppContext* ac,
 
   self->ac = ac;
   self->logDb = ac_LogDb(ac);
-
-#if __NEED_TELEPHONY__
-  logt("initializing telephony");
-  TRAPD(errCode, self->iTelephony = CTelephony::NewL());
-  sa_check_symbian_error(errCode, "telephony init failure", NULL);
-#endif
 
   gboolean success; // for the macro
   CREATE_ALL_SENSORS_OR_FAIL;
@@ -312,10 +306,6 @@ extern "C" void sa_Array_destroy(sa_Array* self)
     // assume all of the sensors objects have been created.
     DESTROY_ALL_SENSORS;
     logt("all sensors destroyed");
-#if __NEED_TELEPHONY__
-    delete self->iTelephony;
-    logt("telephony killed");
-#endif
     g_free(self);
     logt("sensor array object freed");
   }

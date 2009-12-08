@@ -13,10 +13,26 @@ project must implement.
 (require (lib "ast-util.scm" "wg"))
 
 ;; --------------------------------------------------
+;; utilities
+;; --------------------------------------------------
+
+(define (symbol<? s1 s2)
+  (string<? (symbol->string s1) (symbol->string s2)))
+
+(define (symbol-sort lst)
+  (sort lst symbol<?))
+
+(define (sublist? s lst)
+  (true? (andmap (lambda (x) (memq x lst)) s)))
+
+(define (include? e lst)
+  (true? (memq e lst)))
+
+;; --------------------------------------------------
 ;; sensors
 ;; --------------------------------------------------
 
-(define sensor-list (cdr all-sensors))
+(define FULL-SENSOR-LIST (cdr all-sensors))
 
 (define (get-sensor-name sensor)
   (fget-reqd-nlist-elem-1 sensor 'name))
@@ -29,6 +45,33 @@ project must implement.
 
 (define (symbol-sjoin lst)
   (string-join (map symbol->string lst) " "))
+
+(define (make-sensor-attrs/sensor-pred p?)
+  (for/hasheq
+   ((sensor FULL-SENSOR-LIST))
+   (alet name (get-sensor-name sensor)
+         (values (enabled-symbol name)
+                 (p? sensor)))))
+
+(define essential-sensor-attrs
+  (make-sensor-attrs/sensor-pred sensor-essential?))
+
+;; Includes essential ones.
+(define (make-sensor-attrs/name-pred p?)
+  (for/hasheq
+   ((sensor FULL-SENSOR-LIST))
+   (alet name (get-sensor-name sensor)
+         (values (enabled-symbol name)
+                 (or (sensor-essential? sensor)
+                     (p? name))))))
+
+;; Includes essential ones.
+(define (make-sensor-attrs/name-lst lst)
+  (make-sensor-attrs/name-pred (lambda (name) (include? name lst))))
+
+;; --------------------------------------------------
+;; base variants
+;; --------------------------------------------------
 
 (define-variant* project-variant% variant%
   (super-new)
@@ -69,17 +112,45 @@ project must implement.
   ;; This really should be overridden in the config file.
   (define/public (username.attr) "john_doe")
 
+  ;; This setting, when true, indicates that unless the config file
+  ;; specifies a username, a username should be derived from the phone
+  ;; IMEI code. With this setting username.attr is ignored.
+  (define/public (username-from-imei.attr) #f)
+    
   ;; The idea is that uploads to this URL will not work.
   ;; This really should be overridden in the config file.
   (define/public (upload-url.attr) "http://127.0.0.1:12345/dummy")
 
-  ;; Likely such an ID will not exist. Again, the idea is to fail,
-  ;; and keep failing until this is overridden via ConfigDb.
+  ;; This can be a string, namely a Lua expression that computes a
+  ;; value. The semantics is that this is used only when there is no
+  ;; "iap" key in ConfigDb. This value be also be left as 0, implying
+  ;; no default string.
+  (define/public (iap-id-expr.attr) 0)
+  
+  ;; Likely such an ID will not exist. Again, the idea is to fail, and
+  ;; keep failing until this is overridden in ConfigDb. The semantics
+  ;; is that this value is used as the fallback value if there is any
+  ;; problem getting a value from elsewhere.
   (define/public (iap-id.attr) 99999)
 
   ;; --------------------------------------------------
   ;; features
   ;; --------------------------------------------------
+
+  ;; The way the Symbian IMEI queries are implemented annoyingly
+  ;; complicated, and hence we do not want to do this needlessly.
+  (define/public (need-imei.attr)
+    (and (username-from-imei.attr)))
+
+  ;; If a "global" copy of a Symbian CTelephony object is needed.
+  (define/public (need-telephony.attr)
+    (and (is-symbian.attr) (need-imei.attr)))
+  
+  (define/public (feature-debugging.attr)
+    #t)
+  
+  (define/public (do-logging.attr)
+    (feature-debugging.attr))
   
   (define/public (feature-rcfile.attr)
     #t)
@@ -105,38 +176,50 @@ project must implement.
   ;; --------------------------------------------------
   ;; sensors
   ;; --------------------------------------------------
-  
-  (define/override (get-attrs)
-    (for/hasheq
-     ((sensor sensor-list))
-     (alet name (get-sensor-name sensor)
-           (values (enabled-symbol name)
-                   (sensor-essential? sensor)))))
+
+  (define/override (get-attrs) essential-sensor-attrs)
     
   )
 
+;; --------------------------------------------------
+;; Linux specific
+;; --------------------------------------------------
+
 (define-variant* linux-variant% project-variant%
-    (super-new)
+  (super-new)
   
-    (define/override (platform) 'linux)
+  (define/override (platform) 'linux)
 
-    ;; No finished Linux implementation.
-    (define/override (feature-uploader.attr) #f)
+  ;; No finished Linux implementation.
+  (define/override (feature-uploader.attr) #f)
 
-    (define/public (timer-enabled.attr) #t)
+  (define/public (timer-enabled.attr) #t)
 
-    )
+  )
 
-(define (symbol<? s1 s2)
-  (string<? (symbol->string s1) (symbol->string s2)))
-
-(define (symbol-sort lst)
-  (sort lst symbol<?))
+;; --------------------------------------------------
+;; Symbian specific
+;; --------------------------------------------------
 
 (define* SELF-CAPS-30 '(LocalServices NetworkServices ReadUserData UserEnvironment WriteUserData))
 (define* SELF-CAPS-32 (symbol-sort (cons 'Location SELF-CAPS-30)))
 (define* DEV-CAPS (symbol-sort (append SELF-CAPS-32 '(PowerMgmt ProtServ ReadDeviceData SurroundingsDD SwEvent TrustedUI WriteDeviceData))))
 (define* PUBLID-CAPS (symbol-sort (append DEV-CAPS '(CommDD DiskAdmin NetworkControl MultimediaDD))))
+
+(define* ALL-SYMBIAN-SENSORS
+  '(
+    appfocus
+    btprox
+    callstatus
+    cellid
+    ;;flightmode
+    gps
+    inactivity
+    indicator
+    keypress
+    profile
+    smsevent
+    ))
 
 (define-variant* symbian-variant% project-variant%
   (super-new)
@@ -146,8 +229,17 @@ project must implement.
   (define/public (uid-v9.attr)
     (make-hexnum #xe8460002))
   
+  (define/public (signed.attr)
+    #t)
+  
+  (define/public (cert-name)
+    'dev)
+  
+  (define/public (cert-name.attr)
+    (symbol->string (cert-name)))
+  
   (define/public (capabilities)
-    '())
+    DEV-CAPS)
 
   (define/public (capabilities.attr)
     (symbol-sjoin (capabilities)))
@@ -159,115 +251,119 @@ project must implement.
   (define/public (kit-name.attr)
     (symbol->string (kit-name)))
 
-  (define/public (have-profileengine-lib.attr)
-    (>= (s60-vernum.attr) 31))
+  ;; Abld build type. These days the options generally are "udeb",
+  ;; "urel", and "all", but here only either udeb or urel is allowed.
+  (define/public (abld-variant)
+    (if (send this feature-debugging.attr) 'udeb 'urel))
+
+  (define/public (abld-variant.attr)
+    (symbol->string (abld-variant)))
   
+  (define/public (have-devcert-caps.attr)
+    (sublist? DEV-CAPS (capabilities)))
+
+  (define/public (protected-uid-signable.attr)
+    ;; Having a DevCert is not quite the same thing as having DevCert
+    ;; caps, so override this as necessary.
+    (have-devcert-caps.attr))
+  
+  ;; --------------------------------------------------
+  ;; supportable components
+  ;; --------------------------------------------------
+  
+  (define/public (watchdog-supported.attr)
+    ;; Due to the requirement to use a protected development UID (or
+    ;; the do proper Symbian signing), in practice we will only be
+    ;; able to do this if we have a DevCert.
+    (protected-uid-signable.attr))
+
   ;; --------------------------------------------------
   ;; available libs
   ;; --------------------------------------------------
   
-  (define/public (have-anim.attr)
-    (eq? (platform) 'symbian))
-
-  (define/public (have-euserhl.attr)
-    (eq? (platform) 'symbian))
+  (define/public (have-profileengine-lib.attr)
+    (>= (s60-vernum.attr) 31))
   
-  )
+  (define/public (have-anim.attr) #t)
 
-(define-variant* slist-variant% symbian-variant%
-  (field
-   (btype 'application)
-   (slist '())
-   (caps DEV-CAPS))
+  (define/public (have-euserhl.attr) #t)
+
+  ;; --------------------------------------------------
+  ;; features
+  ;; --------------------------------------------------
+  
+  ;; The "callstatus" sensor makes "flightmode" somewhat redundant. We
+  ;; actually no longer even support "flightmode" as a standalone
+  ;; sensor.
+  (define/public (flightmode-enabled.attr)
+    #f)
+    
+  ) ;; end symbian-variant%
+
+(define-variant* devel-variant% symbian-variant%
+  (init-field (binary-type/o 'application)
+              (s60-vernum/o 30)
+              (kit/o 's60_30)
+              (sensor-list '())
+              )
   
   (super-new)
 
-  (define/public (set-binary-type x) (set! btype x))
+  (define/override (binary-type) binary-type/o)
   
-  (define/public (set-sensor-list x) (set! slist x))
-  
-  (define/override (binary-type) btype)
-  
-  (define/override (capabilities) caps)
-  
-  (define/public (have-sensor? name)
-    (true? (memq name slist)))
-  
+  (define/override (s60-vernum.attr) s60-vernum/o)
+    
+  (define/override (kit-name) kit/o)
+    
   (define/override (get-attrs)
-    (for/hasheq
-     ((sensor sensor-list))
-     (alet name (get-sensor-name sensor)
-           (values (enabled-symbol name)
-                   (or (sensor-essential? sensor)
-                       (have-sensor? name))))))
-    
+    (make-sensor-attrs/name-lst sensor-list))
+
   )
 
-(define (all-symbian-sensors)
-  '(
-    appfocus
-    btprox
-    callstatus
-    cellid
-    flightmode
-    gps
-    inactivity
-    indicator
-    keypress
-    profile
-    smsevent
-    ))
+(define* (symbian-sensor-include ilist)
+  ilist)
 
-(define* (new-symbian-variant
-          #:class (class slist-variant%)
-          #:btype (btype 'application)
-          #:include (ilist #f)
-          #:exclude (elist #f)
-         )
-  (let ((slist
-         (cond
-          (ilist ilist)
-          (elist
-           (filter
-            (lambda (x) (not (memq x elist)))
-            (all-symbian-sensors)))
-          (else #f))))
-    (alet obj (make-object class)
-          (when btype
-            (send obj set-binary-type btype))
-          (when slist
-            (send obj set-sensor-list slist))
-          obj)))
-
-(define (sublist? s lst)
-  (true? (andmap (lambda (x) (memq x lst)) s)))
-
-(define (include? e lst)
-  (true? (memq e lst)))
-
+(define* (symbian-sensor-exclude elist)
+  (filter
+   (lambda (x) (not (memq x elist)))
+   ALL-SYMBIAN-SENSORS))
+  
 (define-variant* release-variant% symbian-variant%
-  (init-field caps cert-name
-              (signed? #t)
+  (init-field caps/o
+              cert/o
+              (signed/o #t)
               (dist-variant-name #f)
-              (s60-vernum 30)
-              (btype 'daemon)
-              (kit 's60_30))
+              (s60-vernum/o 30)
+              (binary-type/o 'daemon)
+              (kit/o 's60_30))
 
   (super-new)
 
-  (define/override (s60-vernum.attr) s60-vernum)
+  (define/override (s60-vernum.attr) s60-vernum/o)
     
-  (define/override (kit-name) kit)
+  (define/override (kit-name) kit/o)
     
+  (define/override (binary-type) binary-type/o)
+
+  (define/override (capabilities) caps/o)
+
+  (define/override (signed.attr) signed/o)
+  
+  (define/override (cert-name) cert/o)
+
   (define/public (dist-variant-name.attr)
     (aif n dist-variant-name
          (symbol->string n)
          (send this variant-name.attr)))
          
-  (define/override (binary-type) btype)
+  ;; --------------------------------------------------
+  ;; sensors
+  ;; --------------------------------------------------
 
-  (define/override (capabilities) caps)
-
+  ;; In release builds we enable all sensors that we can, assuming
+  ;; they make some sense. Redundant sensors and test sensors and such
+  ;; we do not enable.
+  
   (define/public (keypress-enabled.attr)
     (sublist? '(ReadDeviceData WriteDeviceData PowerMgmt ProtServ SwEvent)
               (capabilities)))
@@ -284,33 +380,36 @@ project must implement.
     (or (send this have-profileengine-lib.attr)
         (sublist? '(ReadDeviceData) (capabilities))))
   
-  ;; The "callstatus" sensor makes "flightmode" somewhat redundant.
-  (define/public (flightmode-enabled.attr)
-    #f)
-    
-  (define/public (signed.attr)
-    signed?)
-  
-  (define/public (devcert-caps.attr)
-    (true? (memq cert-name '(dev))))
-    
-  (define/public (watchdog-supported.attr)
-    ;; Due to the requirement to use a protected development UID (or
-    ;; the do proper Symbian signing), in practice we will only be
-    ;; able to do this if we have a DevCert.
-    (devcert-caps.attr))
-
-  (define/public (cert-name.attr)
-    (symbol->string cert-name))
-  
   (define/override (get-attrs)
-    (for/hasheq
-     ((sensor sensor-list))
-     (alet name (get-sensor-name sensor)
-           (values (enabled-symbol name)
-                   (or (sensor-essential? sensor)
-                       (include? name (all-symbian-sensors)))))))
+    (make-sensor-attrs/name-lst ALL-SYMBIAN-SENSORS))
     
-  )
+  ) ;; end release-variant%
 
-  
+#|
+
+Copyright 2009 Helsinki Institute for Information Technology (HIIT)
+and the authors. All rights reserved.
+
+Authors: Tero Hasu <tero.hasu@hut.fi>
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation files
+(the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software,
+and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+|#

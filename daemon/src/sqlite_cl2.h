@@ -27,6 +27,12 @@
 #endif
 
 #define sqlite3_bind_text_or_null(db, ix, t, n, f) \
-  (t ? sqlite3_bind_text(db, ix, t, n, f) : sqlite3_bind_null(db, ix))
+  ((t) ? sqlite3_bind_text(db, ix, t, n, f) : sqlite3_bind_null(db, ix))
+
+#define sqlite3_bind_int_neqz(db, ix, val) \
+  (((val) != 0) ? sqlite3_bind_int(db, ix, val) : sqlite3_bind_null(db, ix))
+
+#define sqlite3_bind_int_ltez(db, ix, val) \
+  (((val) <= 0) ? sqlite3_bind_int(db, ix, val) : sqlite3_bind_null(db, ix))
 
 #endif /* __sqlite_cl2_h__ */

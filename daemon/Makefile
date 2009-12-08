@@ -67,7 +67,7 @@ ALL_OBJ_FILES := $(patsubst %.c, %.o, $(ALL_C_FILES)) $(patsubst %.cpp, %.o, $(A
 DEP_FLAGS := -I$(SRC_PATH) -I$(SHARED_PATH) -I$(TIMESPEC_PATH) $(CURL_CFLAGS) $(LUA_CFLAGS) $(KEYEVENTS_CFLAGS) $(IKSEMEL_DEP_FLAGS)
 COMMON_FLAGS := $(DEP_FLAGS)
 GNOME_FLAGS := `pkg-config --cflags gobject-2.0` -DG_DISABLE_DEPRECATED=1
-FEATURES := -D__DO_LOGGING__=1
+FEATURES := 
 WARNINGS := -Wall -Wmissing-declarations -Wsign-compare -Werror
 CFLAGS := $(WARNINGS) $(COMMON_FLAGS) $(GNOME_FLAGS) $(FEATURES)
 CXXFLAGS := $(CFLAGS)
@@ -81,6 +81,10 @@ binary : $(if $(IS_SYMBIAN), symbian, posix_test)
 
 config : 
 	$(PLT_ENV) ./configure.scm $(VARIANT_NAME)
+
+# This does not change variant, but updates dependencies.
+deps :
+	$(PLT_ENV) mzscheme --eval '(require (file "configure.scm")) (deps-main)'
 
 # Unfortunately the file produced by this rule contains some absolute paths, which means that the end result is platform specific. But then, some of the binaries might be as well. You may just want to do a "make clean" when moving over to another host.
 .depend : Makefile $(GEN_FILES)

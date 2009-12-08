@@ -224,7 +224,7 @@ rk_Remokon* rk_Remokon_new(GError** error)
   self->params.password = cf_STATIC_GET(remokon_password);
   self->params.jid = cf_STATIC_GET(jid);
 #if defined(__SYMBIAN32__)
-  self->params.iap_id = force_get_ConfigDb_int("iap", __IAP_ID__);
+  self->params.iap_id = get_ConfigDb_iap_id();
 #endif /* __SYMBIAN32__ */
 
   self->have_config = ((self->params.server != NULL) &&

@@ -6,7 +6,7 @@
 
 #if __FEATURE_UPLOADER__
 
-#include "kr_controller_private.h" // cf_STATIC_GET
+#include "cf_query.h" // for username
 
 #include "common/assertions.h"
 #include "common/epoc-time.h"
@@ -408,10 +408,8 @@ CFileDataSupplier::~CFileDataSupplier()
 
 // xxx need some metadata support here, probably, unless user identified in some other manner (now all we have is the filename encoded username, but could have a JSON part with that and more, say)
 
-#if 0
-_LIT8(KPrelude, "-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"logdata\"; filename=\"" __USERNAME__ ".db\"\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: binary\r\n\r\n");
-_LIT8(KEpilogue, "\r\n-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"logdata_submit\"\r\n\r\nUpload\r\n-------AaB03xeql7dsxeql7ds--\r\n");
-#endif
+//_LIT8(KPrelude, "-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"logdata\"; filename=\"" __USERNAME__ ".db\"\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: binary\r\n\r\n");
+//_LIT8(KEpilogue, "\r\n-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"logdata_submit\"\r\n\r\nUpload\r\n-------AaB03xeql7dsxeql7ds--\r\n");
 
 _LIT8(KSep, "--");
 _LIT8(KCrLf, "\r\n");
@@ -425,9 +423,7 @@ void CFileDataSupplier::OpenL(const TDesC& aFileName)
   //logf("lens %d %d %d", KMaxFileName, iFileName.MaxLength(), aFileName.Length());
   iFileName = aFileName;
 
-  gchar* username = cf_STATIC_GET(username);
-  if (!username) 
-    username = __USERNAME__; // default value
+  gchar* username = get_config_username();
   logf("uploader using username %s", username);
 
   // _LIT8(KPrelude, "-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"logdata\"; filename=\"" __USERNAME__ ".db\"\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: binary\r\n\r\n");

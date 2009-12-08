@@ -5,4 +5,4 @@
 (require konffaile/variant)
 
 (define* (info)
-  (new-symbian-variant))
+  (new devel-variant%))

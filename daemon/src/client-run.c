@@ -81,13 +81,16 @@ void cl2GlobalInit()
   log_text(PRIMARY_LOG_FILENAME, "initializing");
   logf("app '%s' v%s variant '%s'", 
        __APP_NAME__, __VERSION_STRING__, __VARIANT_NAME__);
+#if defined(__ABLD_VARIANT__)
+  logf("Symbian ABLD build variant is '%s'", __ABLD_VARIANT__);
+#endif
 #if defined(__GNUC__)
   logf("compiled with %s version %d.%d.%d (%06d)",
        __COMPILER_NAME__,
        __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__,
        __GCC_VERSION__);
 #endif
-  logf("value is %d", 555);
+  logf("built on %s at %s", __DATE__, __TIME__);
   log_ctx(PRIMARY_LOG_FILENAME, "context test");
 #if __DO_LOGGING__
   gchar* eData = g_strescape("hello", NULL);

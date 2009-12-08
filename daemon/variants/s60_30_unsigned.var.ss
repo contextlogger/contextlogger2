@@ -12,10 +12,10 @@
 
 (define* (info)
   (new release-variant%
-       (cert-name 'dev)
-       (signed? #f)
+       (cert/o 'dev)
+       (signed/o #f)
        (dist-variant-name 's60_30_dev)
-       (caps DEV-CAPS)))
+       (caps/o DEV-CAPS)))
 
 
 

@@ -131,13 +131,19 @@ void MainLoopL()
   CleanupStack::PopAndDestroy(loop);
 }
 
+// This only works for applications, not your plain EXEs.
 static TBool IsAppInstalledL()
 {
+#if 1
+  return ETrue;
+#else
   TBool result;
   RApaLsSession ls;
   User::LeaveIfError(ls.Connect());
   CleanupClosePushL(ls);
   TApaAppInfo appInfo;
+  // Note that this returns false for applications which have not been
+  // installed using a SIS file.
   TInt errCode = ls.GetAppInfo(appInfo, TUid::Uid(APP_UID_CL2_LOGGER_DAEMON));
   if (errCode == KErrNotFound)
     result = EFalse;
@@ -147,6 +153,7 @@ static TBool IsAppInstalledL()
     result = ETrue;
   CleanupStack::PopAndDestroy(); // ls
   return result;
+#endif
 }
 
 static TBool MagicFileExists(RFs& fs)

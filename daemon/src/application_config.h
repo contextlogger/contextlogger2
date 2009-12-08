@@ -4,6 +4,14 @@
 #include "common/platform_config.h"
 #include "current_config.hrh"
 
+// NDEBUG controls whether asserts are to be compiled in (NDEBUG is
+// defined automatically for Symbian UDEB builds). Normally an assert
+// results in something being printed to the console. Whether the
+// assertion errors are also logged is controlled by __DO_LOGGING__.
+#if !defined(__SYMBIAN32__) && !__FEATURE_DEBUGGING__
+#define NDEBUG 1
+#endif
+
 #if __FEATURE_UPLOADER__ && !__UPLOAD_WITH_CURL__
 #if !defined(__UPLOAD_TIME_EXPR__)
 #error some default upload time expression should be defined
