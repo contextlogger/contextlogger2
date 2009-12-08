@@ -49,13 +49,14 @@ static gboolean eval_lua_str(const gchar* luaStr, lua_State** pL, GError** error
   }
 }
 
-// Gets a Lua expression from configuration by "name". If there is no
-// value by "name", or if it evaluates to a nil value, sets "L" to
-// NULL. If there is an actual error, returns it. Otherwise leaves the
-// result to the Lua state "L", and the caller takes ownership of "L".
-static gboolean get_lua_value(const gchar* name, lua_State** pL, GError** error)
+// Like get_lua_value, but uses a default Lua expression when not
+// found from the database. "With default", that is. defStr may be
+// NULL, and it will not be freed.
+static gboolean get_lua_value_wd(const gchar* name,
+				 const gchar* defStr,
+				 lua_State** pL, GError** error)
 {
-  gchar* luaStr;
+  gchar* luaStr = NULL;
 
   {
     GError* localError = NULL;
@@ -63,8 +64,10 @@ static gboolean get_lua_value(const gchar* name, lua_State** pL, GError** error)
     if (!luaStr) {
       if (is_not_found_error(localError)) {
 	g_error_free(localError);
-	*pL = NULL;
-	return TRUE;
+	if (!defStr) {
+	  *pL = NULL;
+	  return TRUE;
+	}
       } else {
 	gx_propagate_error(error, localError);
 	return FALSE;
@@ -72,10 +75,16 @@ static gboolean get_lua_value(const gchar* name, lua_State** pL, GError** error)
     }
   }
 
-  gboolean ok = eval_lua_str(luaStr, pL, error);
-  g_free(luaStr);
+  gboolean ok = eval_lua_str(luaStr ? luaStr : defStr, pL, error);
+  if (luaStr) g_free(luaStr);
   return ok;
 }
+
+// Gets a Lua expression from configuration by "name". If there is no
+// value by "name", or if it evaluates to a nil value, sets "L" to
+// NULL. If there is an actual error, returns it. Otherwise leaves the
+// result to the Lua state "L", and the caller takes ownership of "L".
+#define get_lua_value(name,L,err) get_lua_value_wd(name,NULL,L,err)
 
 // --------------------------------------------------
 // integer
@@ -263,3 +272,29 @@ gboolean get_ConfigDb_str(const gchar* name, gchar** s,
   return TRUE;
 }
 
+int get_ConfigDb_iap_id()
+{
+  int value = __IAP_ID__;
+  lua_State* L = NULL;
+  if (get_lua_value_wd("iap", __IAP_ID_EXPR__, &L, NULL)) {
+    if (L) {
+      get_int_from_lua(L, &value, NULL);
+      lua_close(L);
+    }
+  }
+  return value;
+}
+
+gchar* get_config_username()
+{
+  gchar* username = cf_STATIC_GET(username);
+#if __USERNAME_FROM_IMEI__
+  if (!username) {
+    username = ac_Imei(ac_get_global_AppContext());
+  }
+#endif
+  if (!username) {
+    username = __USERNAME__; // default value
+  }
+  return username;
+}

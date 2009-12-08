@@ -35,6 +35,11 @@ extern "C" {
 
   ConfigDb* ac_ConfigDb(ac_AppContext* self);
 
+#if __NEED_IMEI__
+  // Returned buffer must not be freed.
+  const char* ac_Imei(ac_AppContext* self);
+#endif
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
@@ -70,11 +75,11 @@ extern "C" {
 #ifdef __cplusplus
 #if defined(__SYMBIAN32__)
 
-#include <e32std.h>
-
 class RFs;
-
 RFs& ac_Fs(ac_AppContext* self);
+
+class CTelephony;
+CTelephony& ac_Telephony(ac_AppContext* self);
 
 #endif /* __SYMBIAN32__ */
 #endif

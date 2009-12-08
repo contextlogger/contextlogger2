@@ -112,18 +112,40 @@ project must implement.
   ;; This really should be overridden in the config file.
   (define/public (username.attr) "john_doe")
 
+  ;; This setting, when true, indicates that unless the config file
+  ;; specifies a username, a username should be derived from the phone
+  ;; IMEI code. With this setting username.attr is ignored.
+  (define/public (username-from-imei.attr) #f)
+    
   ;; The idea is that uploads to this URL will not work.
   ;; This really should be overridden in the config file.
   (define/public (upload-url.attr) "http://127.0.0.1:12345/dummy")
 
-  ;; Likely such an ID will not exist. Again, the idea is to fail,
-  ;; and keep failing until this is overridden via ConfigDb.
+  ;; This can be a string, namely a Lua expression that computes a
+  ;; value. The semantics is that this is used only when there is no
+  ;; "iap" key in ConfigDb. This value be also be left as 0, implying
+  ;; no default string.
+  (define/public (iap-id-expr.attr) 0)
+  
+  ;; Likely such an ID will not exist. Again, the idea is to fail, and
+  ;; keep failing until this is overridden in ConfigDb. The semantics
+  ;; is that this value is used as the fallback value if there is any
+  ;; problem getting a value from elsewhere.
   (define/public (iap-id.attr) 99999)
 
   ;; --------------------------------------------------
   ;; features
   ;; --------------------------------------------------
 
+  ;; The way the Symbian IMEI queries are implemented annoyingly
+  ;; complicated, and hence we do not want to do this needlessly.
+  (define/public (need-imei.attr)
+    (and (username-from-imei.attr)))
+
+  ;; If a "global" copy of a Symbian CTelephony object is needed.
+  (define/public (need-telephony.attr)
+    (and (is-symbian.attr) (need-imei.attr)))
+  
   (define/public (feature-debugging.attr)
     #t)
   

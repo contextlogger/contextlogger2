@@ -156,6 +156,12 @@ CTOR_IMPL_CUploader;
 // change succeeded.
 void CUploader::RefreshIap(TBool aNotInitial)
 {
+#if 1
+  // TUint32 coercion hopefully okay.
+  iIapId = (TUint32)get_ConfigDb_iap_id();
+  if (aNotInitial)
+    log_db_log_status(iLogDb, NULL, "Uploader IAP changed to %d", iIapId);
+#else
   GError* localError = NULL;
   gboolean found = FALSE;
   int newId = 0;
@@ -170,6 +176,7 @@ void CUploader::RefreshIap(TBool aNotInitial)
     if (aNotInitial)
       log_db_log_status(iLogDb, NULL, "Uploader IAP changed to %d", iIapId);
   }
+#endif
 }
 
 void CUploader::RefreshSnapshotTimeExpr(TBool aNotInitial)
