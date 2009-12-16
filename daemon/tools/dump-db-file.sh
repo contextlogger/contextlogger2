@@ -16,10 +16,10 @@ echo STATUS INDICATORS
 sqlite3 log.db "select datetime(unixtime, 'unixepoch'), value, caps from indicator_scan;"
 
 echo CALL STATUS
-sqlite3 log.db "select datetime(unixtime, 'unixepoch'), value, number, datetime(starttime, 'unixepoch'), osterm, netterm from callstatus_scan;"
+sqlite3 log.db "select datetime(unixtime, 'unixepoch'), value, number, contact_name, datetime(starttime, 'unixepoch'), osterm, netterm from callstatus_scan;"
 
 echo SMS EVENT
-sqlite3 log.db "select datetime(unixtime, 'unixepoch'), evtype, number from smsevent_scan;"
+sqlite3 log.db "select datetime(unixtime, 'unixepoch'), evtype, number, contact_name from smsevent_scan;"
 
 echo INACTIVITY '(active=1)'
 sqlite3 log.db "select datetime(unixtime, 'unixepoch'), value from inactivity_scan;"

@@ -35,7 +35,7 @@ evaluated.
 
 =end
 
-require 'sake0/sake'
+require 'sake3/sake'
 require 'build/with'
 
 $rake_application = Rake::Application.new

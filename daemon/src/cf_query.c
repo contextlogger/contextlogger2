@@ -272,11 +272,14 @@ gboolean get_ConfigDb_str(const gchar* name, gchar** s,
   return TRUE;
 }
 
-int get_ConfigDb_iap_id()
+int get_config_iap_id()
 {
   int value = __IAP_ID__;
   lua_State* L = NULL;
-  if (get_lua_value_wd("iap", __IAP_ID_EXPR__, &L, NULL)) {
+  gchar* expr = cf_STATIC_GET(iap); // may be NULL
+  if (!expr)
+    expr = __IAP_ID_EXPR__; // may also be NULL
+  if (get_lua_value_wd("iap", expr, &L, NULL)) {
     if (L) {
       get_int_from_lua(L, &value, NULL);
       lua_close(L);

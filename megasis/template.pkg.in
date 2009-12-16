@@ -1,6 +1,10 @@
 ;; Note that you should not be using "if not package" conditions
 ;; for components of which multiple versions have been released,
 ;; and it matters which one is installed.
+;;
+;; Note also that some components cannot be successfully installed
+;; on top of the old one, and in those cases it is probably best
+;; to use "if not package" no matter what.
 
 #{"CL2 All-In-One"}, (0xe846000d), <%= $MAJOR_VERSION %>, <%= $MINOR_VERSION %>, 0
 
@@ -18,7 +22,7 @@
 
 <% opts = []
    optix = {}
-   if $WATCHDOG_SUPPORTED
+   if $WATCHDOG_SUPPORTED and not $unpack_embedded
      opts.push("Install watchdog"); optix[:watchdog] = opts.size
    end
    opts.push("Install launcher"); optix[:launcher] = opts.size
@@ -30,12 +34,12 @@
 ;; Daemon.
 ;;
 
-<% unless $SIGNED %>
+<% if $unpack_embedded %>
 "../daemon/build/<%= $VARIANT_NAME %>/cl2app.exe" - "!:\sys\bin\cl2app.exe"
 "../daemon/src/backup_registration.xml" - "!:\private\e8460002\backup_registration.xml"
 <% end %>
 
-<% if $SIGNED
+<% unless $unpack_embedded
    sisxfile = '../daemon/build/%s/cl2app.sisx' % [$VARIANT_NAME]
    uid = lookup_uid sisxfile
    uid_s = ("0x%08x" % uid)
@@ -56,11 +60,17 @@
 %>
 if not package(<%= uid_s %>)
 
+<% if $unpack_embedded %>
 <% srcdir = "keyevents_" + $CERT_NAME
 unpack_sis sisfile, srcdir
 entries = pkg_entries_for_sis srcdir, sisfile
 for entry in entries %>
 <%= entry %>
+<% end %>
+<% end %>
+
+<% unless $unpack_embedded %>
+@<%= sisfile.inspect %>, (<%= uid_s %>)
 <% end %>
 
 endif ;; package not installed
@@ -76,11 +86,17 @@ endif ;; package not installed
 %>
 if not package(<%= uid_s %>)
 
+<% if $unpack_embedded %>
 <% srcdir = "cxx_cl2_client_" + $CERT_NAME
 unpack_sis sisfile, srcdir
 entries = pkg_entries_for_sis srcdir, sisfile
 for entry in entries %>
 <%= entry %>
+<% end %>
+<% end %>
+
+<% unless $unpack_embedded %>
+@<%= sisfile.inspect %>, (<%= uid_s %>)
 <% end %>
 
 endif ;; package not installed
@@ -94,11 +110,17 @@ endif ;; package not installed
 %>
 if not package(<%= uid_s %>)
 
+<% if $unpack_embedded %>
 <% srcdir = "py_cl2_client_" + $CERT_NAME
 unpack_sis sisfile, srcdir
 entries = pkg_entries_for_sis srcdir, sisfile
 for entry in entries %>
 <%= entry %>
+<% end %>
+<% end %>
+
+<% unless $unpack_embedded %>
+@<%= sisfile.inspect %>, (<%= uid_s %>)
 <% end %>
 
 endif ;; package not installed
@@ -108,7 +130,7 @@ endif ;; package not installed
 ;;
 ;; Requires heavy permissions, so not in self-signed version.
 ;;
-<% if $WATCHDOG_SUPPORTED %>
+<% if $WATCHDOG_SUPPORTED and not $unpack_embedded %>
 if option<%= optix[:watchdog] %> = 1
 
 <% ext = $SIGNED ? "sisx" : "sis"
@@ -139,6 +161,16 @@ endif ;; watchdog option chosen
 ;; particular way, as we merely require some Python libs
 ;; from it.
 ;;
+;; Not sure if it is okay to install Python on top of an old
+;; installation, so we shall not do that if any version of
+;; Python is already installed. Hopefully the version is
+;; compatible enough. The chances are good as Python 1.4.5
+;; is not that new any longer.
+;;
+;; PythonForS60_1_4_5_3rdEd.sis: 0x2000b1a0
+;; PythonScriptShell_1_4_5_3rdEd.SIS: 0x2000b1a5
+;; PythonScriptShell_1_4_5_3rdEd_unsigned_testrange.SIS: 0xe000b1a5
+;;
 if option<%= optix[:launcher] %> = 1
 
 ;; Python for S60.
@@ -149,14 +181,25 @@ if option<%= optix[:launcher] %> = 1
 %>
 
 <% if $non_redistributable %>
-<% for srcfile in srcfiles
+
+;; Runtime.
+<% srcfile = srcfiles[0]
    srcfile = File.join(srcdir, srcfile)
    uid = lookup_uid srcfile
    uid_s = ("0x%08x" % uid) %>
 if not package(<%= uid_s %>)
 @<%= srcfile.inspect %>, (<%= uid_s %>)
 endif
-<% end %>
+
+;; Script shell.
+<% srcfile = srcfiles[1]
+   srcfile = File.join(srcdir, srcfile)
+   uid = lookup_uid srcfile
+   uid_s = ("0x%08x" % uid) %>
+if not (package(0x2000b1a5) or package(0xe000b1a5))
+@<%= srcfile.inspect %>, (<%= uid_s %>)
+endif
+
 <% end %>
 
 <% unless $non_redistributable
@@ -165,7 +208,7 @@ endif
   condexpr = conds.join " or " %>
 ;; The script shell is available both as self-signed and unsigned versions, with different UIDs.
 if (not package(0x2000b1a0)) or (not (package(0x2000b1a5) or package(0xe000b1a5)))
-<%= display_note ("Python for S60 is not installed. Please install the files %s. They are available for download from http://sourceforge.net/projects/pys60/files/." % (srcfiles.join(" and "))) %>
+<%= display_note ("Python for S60 is not (fully) installed. Please install the files %s. They are available for download from http://sourceforge.net/projects/pys60/files/." % (srcfiles.join(" and "))) %>
 endif
 <% end %>
 
@@ -182,11 +225,20 @@ endif
    srcfile = File.join(srcdir, srcname)
    sisfile = copy_with_sis_ext srcfile
    uid = lookup_uid sisfile
-   uid_s = ("0x%08x" % uid)
-%>
-;;if not package(<%= uid_s %>)
+   uid_s = ("0x%08x" % uid) %>
+
+<% if $unpack_embedded %>
+<% srcdir = "miso_" + $CERT_NAME
+unpack_sis sisfile, srcdir
+entries = pkg_entries_for_sis srcdir, sisfile
+for entry in entries %>
+<%= entry %>
+<% end %>
+<% end %>
+
+<% unless $unpack_embedded %>
 @<%= sisfile.inspect %>, (<%= uid_s %>)
-;;endif
+<% end %>
 
 ;; The launcher itself.
 <% cert_name = $SIGNED ? $CERT_NAME : "unsigned"
@@ -198,21 +250,19 @@ endif
    uid = lookup_uid sisfile
    uid_s = ("0x%08x" % uid)
 %>
-if not package(<%= uid_s %>)
 
-<% unless $unpack_apps %>
+<% unless $unpack_embedded %>
 @<%= sisfile.inspect %>, (<%= uid_s %>)
 <% end %>
 
-<% if $unpack_apps
-srcdir = "cl2launcher_" + $CERT_NAME
+<% if $unpack_embedded
+srcdir = "cl2launcher_" + cert_name
+unpack_sis sisfile, srcdir
 entries = pkg_entries_for_sis srcdir, sisfile
 for entry in entries %>
 <%= entry %>
 <% end %>
 <% end %>
-
-endif ;; launcher app not installed
 
 endif ;; launcher install requested
 
@@ -227,11 +277,11 @@ endif ;; launcher install requested
 ;; The stub file should indicate whether Open C is built in
 ;; or not.
 ;;
-<% srcdir = '../libs-s60/openc-1.5'
-   srcfiles = ['pips_s60_1_5_5b.sis',
-               'openc_glib_s60_1_5_5b.sis',
-	       # 'stdcpp_s60_1_5_5b.sis'
-              ] 
+<% srcdir = '../libs-s60/openc-1.6'
+   srcfiles = %w{
+openc_glib_s60_1_6_ss.sis  pips_s60_1_6_ss.sis    stdioserver_s60_1_6_ss.sis
+openc_ssl_s60_1_6_ss.sis   stdcpp_s60_1_6_ss.sis
+   }
 %>
 if not exists("z:\system\install\openc_stdlibs_stub.sis")
 
@@ -251,7 +301,7 @@ endif
   conds = uids.map {|x| "(not package(0x%08x))" % x}
   condexpr = conds.join " or " %>
 if <%= condexpr %>
-<%= display_note ("Required Open C libraries are not installed. Please install at least %s. They are available for download from http://www.forum.nokia.com/main/resources/technologies/open_c/." % (srcfiles.join(" and "))) %>
+<%= display_note ("Required Open C libraries are not installed. Please install the files %s. They are available for download from http://www.forum.nokia.com/main/resources/technologies/open_c/." % (srcfiles.join(" and "))) %>
 endif
 <% end %>
 
@@ -269,20 +319,23 @@ endif
 <% srcfile = "../libs-s60/euserhl-1.2/euserhl.sis"
    uid = lookup_uid srcfile
    uid_s = ("0x%08x" % uid) %>
-if not package(<%= uid_s %>)
+
 <% if $non_redistributable %>
 @<%= srcfile.inspect %>, (<%= uid_s %>)
-<% else %>
-<%= display_note "This software requires the EUserHL v1.2 library. Please download and install it. The download URL is http://developer.symbian.com/main/downloads/files/EUserHL.zip." %>
 <% end %>
+
+<% unless $non_redistributable %>
+if not package(<%= uid_s %>)
+<%= display_note "This software requires the EUserHL v1.2 library. Please download and install it. The download URL is http://developer.symbian.com/main/downloads/files/EUserHL.zip." %>
 endif
+<% end %>
 
 ;;
 ;; ErrRd file. (OPTIONAL)
 ;;
-;; Self-signed.
+;; Self-signed by us, and that is always okay.
 ;;
-;; Note that the @ directive is pointlessly requires that
+;; Note that the @ directive pointlessly requires that
 ;; the file have .sis extension, not .sisx or anything else.
 ;;
 <% srcfile = "../libs-s60/errrd_file.sis"

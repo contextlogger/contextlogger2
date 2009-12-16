@@ -158,7 +158,7 @@ void CUploader::RefreshIap(TBool aNotInitial)
 {
 #if 1
   // TUint32 coercion hopefully okay.
-  iIapId = (TUint32)get_ConfigDb_iap_id();
+  iIapId = (TUint32)get_config_iap_id();
   if (aNotInitial)
     log_db_log_status(iLogDb, NULL, "Uploader IAP changed to %d", iIapId);
 #else
@@ -482,6 +482,7 @@ void CUploader::HandleCommsError(TInt anError)
     case KErrServerBusy: // local daemon, such as socket or file server
     case -8268: // not documented, but getting this in flight mode
     case -30180: // not documented, getting this when WLAN specified in IAP is not within range
+    case -5120: // no response from DNS server
       {
 	DestroyPosterAo();
       } // fall through...

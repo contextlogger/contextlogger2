@@ -45,27 +45,27 @@
   (define (get-sensor-name sensor)
     (fget-reqd-nlist-elem-1 sensor 'name))
 
-  (define (get-sensor-platforms sensor)
-    (fget-opt-nlist-elem-1 sensor 'platforms))
+  (define (get-sensor-cpp-condition sensor)
+    (fget-opt-nlist-elem-1 sensor 'cpp-condition))
 
   (define (for-each-statement f)
     (for-each
      (lambda (sensor)
        (let* ((sensor-name (fget-reqd-nlist-elem-1 sensor 'name))
-              (platforms (fget-opt-nlist-elem-1 sensor 'platforms))
+              (cpp-condition (fget-opt-nlist-elem-1 sensor 'cpp-condition))
               (stmt-list (fget-opt-nlist-elem-1up-e sensor 'sql-statements)))
          (for-each
           (lambda (stmt)
             (let* ((stmt-name (if (string? stmt) "" (first stmt)))
                    (stmt-sql (if (string? stmt) stmt (second stmt))))
-              (f sensor-name platforms stmt-name stmt-sql)))
+              (f sensor-name cpp-condition stmt-name stmt-sql)))
           stmt-list)))
      (get-sensor-list)))
 
-  (define (with-platform-harness platforms f)
-    (if platforms
+  (define (with-cpp-condition-harness cpp-condition f)
+    (if cpp-condition
         (begin
-          (display "#if ") (display-nl platforms)
+          (display "#if ") (display-nl cpp-condition)
           (f)
           (display-nl "#endif"))
         (f)))
@@ -80,13 +80,13 @@
          ;; creating tables for all the sensors, even those ones not
          ;; in the particular build, as this will make it easier to
          ;; change the configuration.
-         (let* ((platforms #f) ;;(fget-opt-nlist-elem-1 sensor 'platforms)
+         (let* ((cpp-condition #f) ;;(fget-opt-nlist-elem-1 sensor 'cpp-condition)
                 (schema (fget-opt-nlist-elem-1up-e sensor 'sql-schema))
                 (write-schema (thunk (for-each write-nl schema))))
            (when schema
-             (if platforms
+             (if cpp-condition
                  (begin
-                   (display "#if ") (display-nl platforms)
+                   (display "#if ") (display-nl cpp-condition)
                    (write-schema)
                    (display-nl "#endif"))
                  (write-schema)))))
@@ -100,7 +100,7 @@
       (for-each
        (lambda (sensor)
          (let* ((sensor-name (fget-reqd-nlist-elem-1 sensor 'name))
-                (platforms (fget-opt-nlist-elem-1 sensor 'platforms))
+                (cpp-condition (fget-opt-nlist-elem-1 sensor 'cpp-condition))
                 (stmt-list (fget-opt-nlist-elem-1up-e sensor 'sql-statements))
                 (write-them
                  (thunk
@@ -111,9 +111,9 @@
                                          (if (string? stmt) "" (first stmt)))))
                    stmt-list))))
            (when stmt-list
-             (if platforms
+             (if cpp-condition
                  (begin
-                   (display "#if ") (display-nl platforms)
+                   (display "#if ") (display-nl cpp-condition)
                    (write-them)
                    (display-nl "#endif"))
                  (write-them)))))
@@ -125,9 +125,9 @@
     (capture-output
      (thunk
       (for-each-statement
-       (lambda (sensor-name platforms stmt-name stmt-sql)
+       (lambda (sensor-name cpp-condition stmt-name stmt-sql)
          (alet write-them (thunk (display-nl (format "if (sqlite_prepare(self->db, ~s, -1, &(self->_priv->stmts.~a~aStmt), 0)) { goto fail; }" stmt-sql sensor-name stmt-name)))
-               (with-platform-harness platforms write-them))))
+               (with-cpp-condition-harness cpp-condition write-them))))
       (display-nl "return TRUE;")
       (display-nl "fail:")
       (display-nl "if (error) *error = g_error_new(domain_cl2app, code_database_state_init, \"error preparing statements for database '%s': %s (%d)\", LOGDB_FILE, sqlite3_errmsg(self->db), sqlite3_errcode(self->db));")
@@ -137,16 +137,16 @@
     (capture-output
      (thunk
       (for-each-statement
-       (lambda (sensor-name platforms stmt-name stmt-sql)
+       (lambda (sensor-name cpp-condition stmt-name stmt-sql)
          (alet write-them (thunk (display-nl (format "if (self->_priv->stmts.~a~aStmt) { sqlite3_finalize(self->_priv->stmts.~a~aStmt); self->_priv->stmts.~a~aStmt = NULL; }" sensor-name stmt-name sensor-name stmt-name sensor-name stmt-name)))
-               (with-platform-harness platforms write-them))))
+               (with-cpp-condition-harness cpp-condition write-them))))
       (display "return;"))))
 
-  (define (ast-with-platform-harness platforms ast)
-    (if platforms
+  (define (ast-with-cpp-condition-harness cpp-condition ast)
+    (if cpp-condition
         ;; Some trickery here, relying on ordering being preserved.
         (sc 
-         (cpp-if platforms)
+         (cpp-if cpp-condition)
          ast
          (cpp-end)
          )
@@ -184,7 +184,7 @@
          (aand*
           api (fget-opt-nlist-elem sensor 'log-insert-api)
           (let* ((sensor-name (fget-reqd-nlist-elem-1 sensor 'name))
-                 (platforms (fget-opt-nlist-elem-1 sensor 'platforms))
+                 (cpp-condition (fget-opt-nlist-elem-1 sensor 'cpp-condition))
                  (func-name (format "log_db_log_~a" sensor-name))
                  (specific-args (fget-opt-nlist-elem-1up-e api 'args))
                  (stmt-id (fget-opt-nlist-elem-1 api 'statement))
@@ -223,7 +223,7 @@
                                 (list (arg (name 'error) (type (ptr-to (ptr-to 'GError)))))))
                         (block
                          (cxx-line body-text)))))
-            (ast-with-platform-harness platforms func-decl))))
+            (ast-with-cpp-condition-harness cpp-condition func-decl))))
        (get-sensor-list)))))
 
   (define program-1
@@ -301,10 +301,10 @@
       (map
        (lambda (sensor)
          (let* ((sensor-name (fget-reqd-nlist-elem-1 sensor 'name))
-                (platforms (fget-opt-nlist-elem-1 sensor 'platforms)))
+                (cpp-condition (fget-opt-nlist-elem-1 sensor 'cpp-condition)))
            (capture-output
             (thunk
-             (display-nl (format "#if ~a" platforms))
+             (display-nl (format "#if ~a" cpp-condition))
              (display-nl (format "#define SENSOR_~a_IS_SUPPORTED 1" (symbol-upcase sensor-name)))
              (display-nl (format "#define WHEN_SENSOR_~a_SUPPORTED_BLOCK(x) x" (symbol-upcase sensor-name)))
              (display-nl (format "#define WHEN_SENSOR_~a_SUPPORTED_NOTHING(x) x" (symbol-upcase sensor-name)))

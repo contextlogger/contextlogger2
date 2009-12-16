@@ -33,7 +33,8 @@
             (report-if-bad 'attribute
                            (alt <inactive-attr>
                                 <name-attr>
-                                <plat-attr>
+                                <platforms-attr>
+                                <cpp-attr>
                                 <sql-schema>
                                 <sql-stmts>
                                 <log-insert-api>
@@ -47,11 +48,18 @@
            ;; a letter.
            (<name-attr> (lst 'name <name>))
 
-           ;; Indicates for which platforms the sensor is available.
-           ;; This is a CPP expression. There may be different
-           ;; implementations for different platforms. Without this
-           ;; attribute, available on all platforms.
-           (<plat-attr> (lst 'platforms <cpp-expr>))
+           ;; This can be used to specify the platforms for which this
+           ;; sensor is available. Available on all of them if not
+           ;; given, and on none if specified as an empty (platforms).
+           ;; This only matters for active sensors.
+           (<platforms-attr> (lst 'platforms (star <name>)))
+
+           ;; Indicates for the build condition for the sensor is
+           ;; available. This is a CPP expression. There may be
+           ;; different implementations in different builds, or none
+           ;; at all. Without this attribute, the sensor is available
+           ;; in all builds.
+           (<cpp-attr> (lst 'cpp-condition <cpp-expr>))
 
            ;; The SQL statements required for creating tables for the
            ;; sensor data. You need not specify any if you are going
@@ -104,6 +112,6 @@
  (sensor-list?
   '(sensors
     (sensor (name foobar))
-    (sensor (platforms "defined(__EPOC32__)"))
+    (sensor (cpp-condition "defined(__EPOC32__)"))
     (sensor))))
 

@@ -56,12 +56,6 @@
 
 #include <f32file.h>
 
-/*
- * now for handling both SMS and MMS
- * but compatible with old code that only handles SMS
- *
- */
-
 NONSHARABLE_CLASS(i_handle_received_sms)
 {
  public:

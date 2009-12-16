@@ -33,7 +33,7 @@ require 'erb'
 require 'stringio'
 require 'build/path_utils'
 require 'sake3/component'
-require 'sake0/sake'
+require 'sake3/sake'
 require 'build/write_file'
 
 # TODO:
@@ -819,7 +819,7 @@ EOF
   end
 
   def force_uncurrent_on_op_change op = {}
-    require 'sake0/sake_utils'
+    require 'sake3/sake_utils'
 
     # Note that this does not apply to any tasks implicitly or explicitly
     # defined afterwards. Note also that while this affects Sake tasks,

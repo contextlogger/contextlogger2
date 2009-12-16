@@ -9,8 +9,10 @@ project must implement.
 
 (require (lib "usual-4.ss" "common"))
 (require konffaile/variant)
-(require "../src/sa_sensor_list_spec.ss")
 (require (lib "ast-util.scm" "wg"))
+
+(require "../src/sa_sensor_list_spec.ss")
+(require (for-syntax "../src/sa_sensor_list_spec.ss"))
 
 ;; --------------------------------------------------
 ;; utilities
@@ -28,29 +30,47 @@ project must implement.
 (define (include? e lst)
   (true? (memq e lst)))
 
+(define (symbol-sjoin lst)
+  (string-join (map symbol->string lst) " "))
+
 ;; --------------------------------------------------
 ;; sensors
 ;; --------------------------------------------------
 
-(define FULL-SENSOR-LIST (cdr all-sensors))
+(define-syntax (define-sensor-methods stx)
+  (syntax-case stx ()
+    ((_)
+     #`(begin
+         #,@(map
+             (lambda (sensor)
+               (let* ((sensor-name (get-sensor-name sensor))
+                      (method-sym (sensor-enabled-method-name sensor-name)))
+                 #`(define/public (#,(datum->syntax stx method-sym))
+                     #,(datum->syntax stx (sensor-essential? sensor)))))
+             FULL-SENSOR-LIST)))))
 
-(define (get-sensor-name sensor)
-  (fget-reqd-nlist-elem-1 sensor 'name))
+(define-syntax (override-sensor-methods stx)
+  (syntax-case stx ()
+    ((_ plat on/off)
+     #`(begin
+         ;; Debugging aid.
+         ;;(define/public (#,(datum->syntax stx 'foo))
+         ;;(list #,@(map (lambda (sym) #`'#,sym)
+         ;;(active-sensor-names-for (syntax->datum (syntax plat))))))
+         #,@(map
+             (lambda (sensor)
+               (let* ((sensor-name (get-sensor-name sensor))
+                      (method-sym (sensor-enabled-method-name sensor-name)))
+                 #`(define/override (#,(datum->syntax stx method-sym))
+                     on/off)))
+             (active-sensors-for (syntax->datum (syntax plat))))))))
 
-(define (sensor-essential? sensor)
-  (true? (fget-opt-nlist-elem-1 sensor 'inactive)))
-
-(define (enabled-symbol name)
-  (string->symbol (format "~a-enabled" name)))
-
-(define (symbol-sjoin lst)
-  (string-join (map symbol->string lst) " "))
-
+#|
 (define (make-sensor-attrs/sensor-pred p?)
   (for/hasheq
    ((sensor FULL-SENSOR-LIST))
    (alet name (get-sensor-name sensor)
-         (values (enabled-symbol name)
+         (values (sensor-enabled-symbol name)
                  (p? sensor)))))
 
 (define essential-sensor-attrs
@@ -61,13 +81,14 @@ project must implement.
   (for/hasheq
    ((sensor FULL-SENSOR-LIST))
    (alet name (get-sensor-name sensor)
-         (values (enabled-symbol name)
+         (values (sensor-enabled-symbol name)
                  (or (sensor-essential? sensor)
                      (p? name))))))
 
 ;; Includes essential ones.
 (define (make-sensor-attrs/name-lst lst)
   (make-sensor-attrs/name-pred (lambda (name) (include? name lst))))
+|#
 
 ;; --------------------------------------------------
 ;; base variants
@@ -115,6 +136,9 @@ project must implement.
   ;; This setting, when true, indicates that unless the config file
   ;; specifies a username, a username should be derived from the phone
   ;; IMEI code. With this setting username.attr is ignored.
+  ;; This should presently never be enabled, as the Symbian
+  ;; implementation with a nested event loop causes problems during
+  ;; startup.
   (define/public (username-from-imei.attr) #f)
     
   ;; The idea is that uploads to this URL will not work.
@@ -137,15 +161,6 @@ project must implement.
   ;; features
   ;; --------------------------------------------------
 
-  ;; The way the Symbian IMEI queries are implemented annoyingly
-  ;; complicated, and hence we do not want to do this needlessly.
-  (define/public (need-imei.attr)
-    (and (username-from-imei.attr)))
-
-  ;; If a "global" copy of a Symbian CTelephony object is needed.
-  (define/public (need-telephony.attr)
-    (and (is-symbian.attr) (need-imei.attr)))
-  
   (define/public (feature-debugging.attr)
     #t)
   
@@ -167,18 +182,11 @@ project must implement.
   (define/public (feature-remokon.attr)
     #t)
 
-  (define/public (mark-enabled.attr)
-    #t)
-
-  (define/public (appmessage-enabled.attr)
-    #t)
-
   ;; --------------------------------------------------
   ;; sensors
   ;; --------------------------------------------------
 
-  (define/override (get-attrs) essential-sensor-attrs)
-    
+  (define-sensor-methods)
   )
 
 ;; --------------------------------------------------
@@ -193,8 +201,7 @@ project must implement.
   ;; No finished Linux implementation.
   (define/override (feature-uploader.attr) #f)
 
-  (define/public (timer-enabled.attr) #t)
-
+  (override-sensor-methods linux #t)
   )
 
 ;; --------------------------------------------------
@@ -206,20 +213,7 @@ project must implement.
 (define* DEV-CAPS (symbol-sort (append SELF-CAPS-32 '(PowerMgmt ProtServ ReadDeviceData SurroundingsDD SwEvent TrustedUI WriteDeviceData))))
 (define* PUBLID-CAPS (symbol-sort (append DEV-CAPS '(CommDD DiskAdmin NetworkControl MultimediaDD))))
 
-(define* ALL-SYMBIAN-SENSORS
-  '(
-    appfocus
-    btprox
-    callstatus
-    cellid
-    ;;flightmode
-    gps
-    inactivity
-    indicator
-    keypress
-    profile
-    smsevent
-    ))
+(define* ALL-SYMBIAN-SENSORS (active-sensor-names-for 'symbian))
 
 (define-variant* symbian-variant% project-variant%
   (super-new)
@@ -292,19 +286,30 @@ project must implement.
   ;; features
   ;; --------------------------------------------------
   
-  ;; The "callstatus" sensor makes "flightmode" somewhat redundant. We
-  ;; actually no longer even support "flightmode" as a standalone
-  ;; sensor.
-  (define/public (flightmode-enabled.attr)
-    #f)
-    
+  ;; The way the Symbian IMEI queries are implemented annoyingly
+  ;; complicated, and hence we do not want to do this needlessly.
+  (define/public (need-imei.attr)
+    (and (send this username-from-imei.attr)))
+
+  ;; If a "global" copy of a Symbian CTelephony object is needed.
+  (define/public (need-telephony.attr)
+    (need-imei.attr))
+
+  ;; If a Contacts DB session is needed in the application context.
+  (define/public (need-contact-database.attr)
+    #t) ;; xxx
+  
   ) ;; end symbian-variant%
+
+(define-variant* symbian/all-variant% symbian-variant%
+  (super-new)
+  (override-sensor-methods symbian #t)
+  )
 
 (define-variant* devel-variant% symbian-variant%
   (init-field (binary-type/o 'application)
               (s60-vernum/o 30)
               (kit/o 's60_30)
-              (sensor-list '())
               )
   
   (super-new)
@@ -314,10 +319,11 @@ project must implement.
   (define/override (s60-vernum.attr) s60-vernum/o)
     
   (define/override (kit-name) kit/o)
-    
-  (define/override (get-attrs)
-    (make-sensor-attrs/name-lst sensor-list))
+  )
 
+(define-variant* devel/all-variant% devel-variant%
+  (super-new)
+  (override-sensor-methods symbian #t)
   )
 
 (define* (symbian-sensor-include ilist)
@@ -328,7 +334,7 @@ project must implement.
    (lambda (x) (not (memq x elist)))
    ALL-SYMBIAN-SENSORS))
   
-(define-variant* release-variant% symbian-variant%
+(define-variant* release-variant% symbian/all-variant%
   (init-field caps/o
               cert/o
               (signed/o #t)
@@ -355,6 +361,11 @@ project must implement.
     (aif n dist-variant-name
          (symbol->string n)
          (send this variant-name.attr)))
+
+  ;; This may affect some of the deployment options. Private trial
+  ;; releases may be packaged and deployed differently than public
+  ;; releases.
+  (define/public (is-trial.attr) #f)
          
   ;; --------------------------------------------------
   ;; sensors
@@ -364,25 +375,22 @@ project must implement.
   ;; they make some sense. Redundant sensors and test sensors and such
   ;; we do not enable.
   
-  (define/public (keypress-enabled.attr)
+  (define/override (keypress-enabled.attr)
     (sublist? '(ReadDeviceData WriteDeviceData PowerMgmt ProtServ SwEvent)
               (capabilities)))
   
-  (define/public (gps-enabled.attr)
+  (define/override (gps-enabled.attr)
     (sublist? '(Location)
               (capabilities)))
   
-  (define/public (cellid-enabled.attr)
+  (define/override (cellid-enabled.attr)
     (sublist? '(ReadDeviceData)
               (capabilities)))
 
-  (define/public (profile-enabled.attr)
+  (define/override (profile-enabled.attr)
     (or (send this have-profileengine-lib.attr)
         (sublist? '(ReadDeviceData) (capabilities))))
   
-  (define/override (get-attrs)
-    (make-sensor-attrs/name-lst ALL-SYMBIAN-SENSORS))
-    
   ) ;; end release-variant%
 
 #|

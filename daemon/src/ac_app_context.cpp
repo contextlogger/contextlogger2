@@ -16,6 +16,8 @@
 #include <etel3rdparty.h> // CTelephony
 #endif
 
+#include <cntdb.h> // CContactDatabase
+
 #if __NEED_IMEI__
 #include "ut_asynccallhandler_epoc.hpp"
 
@@ -91,6 +93,11 @@ NONSHARABLE_CLASS(CAppContext) : public CBase
 #if __NEED_IMEI__
   TBuf8<CTelephony::KPhoneSerialNumberSize + 1> iImeiBuf;
 #endif
+
+#if __NEED_CONTACT_DATABASE__
+  CContactDatabase* iContactDatabase;
+#endif
+
 };
 
 CTOR_IMPL_CAppContext;
@@ -111,10 +118,17 @@ void CAppContext::ConstructL()
   iImeiBuf.PtrZ();
   logf("IMEI code is '%s'", iImeiBuf.Ptr());
 #endif
+
+#if __NEED_CONTACT_DATABASE__
+  iContactDatabase = CContactDatabase::OpenL();
+#endif
 }
 
 CAppContext::~CAppContext()
 {
+#if __NEED_CONTACT_DATABASE__
+  delete iContactDatabase;
+#endif
 #if __NEED_TELEPHONY__
   delete iTelephony;
 #endif
@@ -225,6 +239,13 @@ CTelephony& ac_Telephony(ac_AppContext* self)
 }
 #endif
 
+#if __NEED_CONTACT_DATABASE__
+CContactDatabase& ac_ContactDatabase(ac_AppContext* self)
+{
+  return *(self->plat->iContactDatabase);
+}
+#endif
+
 #if __NEED_IMEI__
 EXTERN_C const char* ac_Imei(ac_AppContext* self)
 {
@@ -235,3 +256,33 @@ EXTERN_C const char* ac_Imei(ac_AppContext* self)
 #endif /* defined(__cplusplus) */
 #endif /* __SYMBIAN32__ */
 
+/**
+
+ac_app_context.cpp
+
+Copyright 2009 Helsinki Institute for Information Technology (HIIT)
+and the authors. All rights reserved.
+
+Authors: Tero Hasu <tero.hasu@hut.fi>
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation files
+(the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software,
+and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+ **/

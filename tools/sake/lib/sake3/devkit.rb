@@ -36,8 +36,9 @@ require 'build/path_utils'
 require 'build/registry'
 require 'pathname'
 require 'rbconfig'
-require 'sake0/sake'
+require 'sake3/sake'
 require 'sake3/target_platform'
+require 'sake3/traits'
 require 'sake3/utils'
 
 $use_devices = (Config::CONFIG['host_os'] == "cygwin")
@@ -85,7 +86,7 @@ module Sake
 
       # Platform version.
       hnd.sub!(/(v\d)_?(\d)/, "\\1\\2")
-      hnd.sub!(/^(n?s60_)(\d+)$/, "\\1v\\2")
+      hnd.sub!(/^(n?s60_)(\d+)/, "\\1v\\2")
 
       # Installation number.
       # If multiple copies of the same SDK are installed,
@@ -96,6 +97,8 @@ module Sake
       if hnd !~ /^n/
         hnd = "n" + hnd
       end
+
+      #p hnd
 
       hnd =
         case hnd
@@ -322,6 +325,7 @@ module Sake
       op = op.dup
       op.delete(:basename)
       op += {:handle => @basename} unless op[:handle]
+      #p op
       super(op)
     end
 

@@ -50,8 +50,11 @@ default : sis
 sis :
 	-rm -r myfiles
 	mkdir -p myfiles/extras/python
+	mkdir -p myfiles/extras/data/cl2
 	cp default.py myfiles/
 	cp $(BASENAME).py myfiles/extras/python/
+	cp cl2wizard.py myfiles/extras/python/
+	cp cl2-ca-cert.der myfiles/extras/data/cl2/
 	$(ENSYMBLE) py2sis $(APPOPT) myfiles $(BASENAME)_$(CERT).sis
 	$(MOVE)
 

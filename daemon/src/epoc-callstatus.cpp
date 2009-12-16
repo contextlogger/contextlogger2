@@ -5,6 +5,7 @@
 #include "er_errors.h"
 #include "log-db-logging.h"
 #include "sa_sensor_list_log_db.h"
+#include "ut_telno_epoc.hpp"
 #include "utils_cl2.h"
 
 #include "common/assertions.h"
@@ -182,8 +183,9 @@ void CSensor_callstatus::HandleCallStatusChange(TInt errCode)
     // NULL otherwise.
     const char* number = NULL;
 
-    // Any additional information encoded as a string. May be left as NULL.
-    const char* extra = NULL;
+    // Any contact name as a string. May be left as NULL. Must be
+    // freed if non-NULL.
+    gchar* contactName = NULL;
 
     // Call start time. May be left as zero, which means no start time.
     time_t startTime = 0;
@@ -250,6 +252,7 @@ void CSensor_callstatus::HandleCallStatusChange(TInt errCode)
 		    TDesC& numberW = remoteInfo.iRemoteNumber.iTelNumber; // TBuf<KMaxTelNumberSize>
 		    numberBuf.Copy(numberW);
 		    number = (const char*)(numberBuf.PtrZ());
+		    contactName = GetContactNameByPhoneNo(numberW);
 		    break;
 		  }
 		default:
@@ -262,6 +265,7 @@ void CSensor_callstatus::HandleCallStatusChange(TInt errCode)
 	      TDesC& numberW = callInfo.iDialledParty.iTelNumber; // TBuf<KMaxTelNumberSize>
 	      numberBuf.Copy(numberW);
 	      number = (const char*)(numberBuf.PtrZ());
+	      contactName = GetContactNameByPhoneNo(numberW);
 	    }
 	    break;
 	  }
@@ -275,9 +279,10 @@ void CSensor_callstatus::HandleCallStatusChange(TInt errCode)
 	    etelCode = (exitCode | 0xFFFF0000);
 	    netCode = (exitCode >> 16); 
 	    logf("disconnect reason: etel=%d, net=%d", etelCode, netCode);
+	    /*
 	    char extraBuf[50];
 	    g_sprintf(extraBuf, "os=%d/net=%d", etelCode, netCode);
-	    extra = extraBuf;
+	    */
 	    break;
 	  }
 	  
@@ -293,14 +298,17 @@ void CSensor_callstatus::HandleCallStatusChange(TInt errCode)
       //if (number) logf("remote party number is '%s'", number);
 
       GError* localError = NULL;
-      if (!log_db_log_callstatus(GetLogDb(), callStatus, number, startTime, etelCode, netCode, &localError)) {
+      if (!log_db_log_callstatus(GetLogDb(), callStatus, number, contactName, startTime, etelCode, netCode, &localError)) {
 	gx_log_free_fatal_error(localError);
-	return;
+	goto cleanup;
       }
     }
 
     iCallStatusNotifier->MakeRequest();
     iState = EQueryingCallStatus;
+
+  cleanup:
+    g_free(contactName);
   }
 }
 
@@ -319,3 +327,34 @@ void CSensor_callstatus::RetryTimerExpired(CRetryAo* src, TInt errCode)
 }
 
 #endif // __CALLSTATUS_ENABLED__
+
+/**
+
+epoc-callstatus.cpp
+
+Copyright 2009 Helsinki Institute for Information Technology (HIIT)
+and the authors. All rights reserved.
+
+Authors: Tero Hasu <tero.hasu@hut.fi>
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation files
+(the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software,
+and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+ **/
