@@ -33,7 +33,8 @@ SOFTWARE.
 
 require 'build/lang_ext'
 require 'pathname'
-require 'sake0/sake'
+require 'sake3/sake'
+require 'sake3/traits'
 require 'sake3/utils'
 
 module Sake

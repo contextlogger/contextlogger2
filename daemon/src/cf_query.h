@@ -45,7 +45,7 @@ extern "C" {
   gboolean get_ConfigDb_str(const gchar* name, gchar** s, 
 			    gchar* default_s, GError** error);
 
-  int get_ConfigDb_iap_id();
+  int get_config_iap_id();
 
   // The returned buffer is static, and not to be freed.
   gchar* get_config_username();

@@ -34,15 +34,10 @@ SOFTWARE.
 require 'build/path_utils'
 require 'pathname'
 
-require 'sake0/sake'
+require 'sake3/sake'
 
-require 'sake3/traits'
 require 'sake3/delegation'
 require 'sake3/utils'
-
-class Module
-  include Sake::Traits
-end
 
 require 'sake3/devkit'
 require 'sake3/target_platform'

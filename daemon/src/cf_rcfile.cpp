@@ -68,6 +68,9 @@ static gboolean ReadRcFile(cf_RcFile* self, lua_State *L, GError** error)
   if (self->remokon_host) {
     logf("remokon_host configured to '%s'", self->remokon_host);
   }
+  if (self->iap) {
+    logf("IAP expr configured to '%s'", self->iap);
+  }
 #endif /* __DO_LOGGING__ */
   
   return TRUE;
@@ -81,9 +84,7 @@ extern "C" cf_RcFile* cf_RcFile_new(GError** error)
     return NULL;
   }
 
-  // No, we are not providing access to _any_ libraries, either the
-  // standard ones or the application specific ones.
-  lua_State *L = lua_newstate(l_alloc, NULL);
+  lua_State *L = cl_lua_new_libs();
   if (!L) {
     g_free(self);
     return NULL;

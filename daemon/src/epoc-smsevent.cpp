@@ -5,6 +5,7 @@
 #include "er_errors.h"
 #include "log-db-logging.h"
 #include "sa_sensor_list_log_db.h"
+#include "ut_telno_epoc.hpp"
 #include "utils_cl2.h"
 
 // -------------------------------------------------------------------
@@ -50,62 +51,6 @@ void CSensor_smsevent::Disactivate()
   DELETE_Z(iSmsEventNotifier);
 }
 
-/*
-void CSensor_smsevent::HandleRead()
-{
-  int errCode = iStatus.Int();
-
-  LogDb* logDb = ac_LogDb(iAppContext);
-  GError* localError = NULL;
-
-  if (errCode) {
-    iNumScanFailures++;
-    logf("%dth consecutive failure in smsevent", iNumScanFailures);
-
-    if (iNumScanFailures < 100) {
-      if (!log_db_log_status(logDb, &localError, 
-			     "ERROR: failure reading smsevent sensor: %s (%d)", 
-			     plat_error_strerror(errCode), errCode)) {
-	// Logging failed.
-	gx_log_free_fatal_error(localError);
-	return;
-      }
-
-      SetTimer();
-    } else {
-      logt("stopping smsevent scanning due to too many errors");
-    }
-
-    return;
-  }
-
-  {
-    iNumScanFailures = 0;
-
-    if (!(SMSEVENT_EQ(iSmsevent, iOldSmsevent))) {
-      logf("new smsevent value: %u/%u", 
-	   iSmsevent.iSmsevent,
-	   iSmsevent.iCapabilities);
-      logf("smsevents: charger=%c network=%c call=%c", 
-	   IND2CH(CTelephony::KIndChargerConnected),
-	   IND2CH(CTelephony::KIndNetworkAvailable),
-	   IND2CH(CTelephony::KIndCallInProgress));
-
-      if (!log_db_log_smsevent(logDb, iSmsevent.iSmsevent, 
-				iSmsevent.iCapabilities,
-				&localError)) {
-	gx_log_free_fatal_error(localError);
-	return;
-      }
-      
-      iOldSmsevent = iSmsevent;
-    }
-
-    MakeRequest();
-  }
-}
-*/
-
 void CSensor_smsevent::LogEvent(const char* evType, const TDesC& aTelNoDes)
 {
   gchar* telNo = ConvToUtf8CString(aTelNoDes);
@@ -113,13 +58,16 @@ void CSensor_smsevent::LogEvent(const char* evType, const TDesC& aTelNoDes)
     ex_log_fatal_error(KErrNoMemory);
     return;
   }
-
   logf("smsevent %s, number '%s'", evType, telNo);
+
+  gchar* contactName = GetContactNameByPhoneNo(aTelNoDes);
+  logf("smsevent contact name '%s'", contactName);
 
   LogDb* logDb = GetLogDb();
   GError* localError = NULL;
-  gboolean ok = log_db_log_smsevent(logDb, evType, telNo, &localError);
+  gboolean ok = log_db_log_smsevent(logDb, evType, telNo, contactName, &localError);
   g_free(telNo);
+  g_free(contactName);
 
   if (!ok) {
     gx_log_free_fatal_error(localError);
@@ -176,3 +124,34 @@ void CSensor_smsevent::handle_close()
 }
 
 #endif // __SMSEVENT_ENABLED__
+
+/**
+
+epoc-smsevent.cpp
+
+Copyright 2009 Helsinki Institute for Information Technology (HIIT)
+and the authors. All rights reserved.
+
+Authors: Tero Hasu <tero.hasu@hut.fi>
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation files
+(the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software,
+and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+ **/

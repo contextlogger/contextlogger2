@@ -34,7 +34,7 @@ SOFTWARE.
 require 'build/lang_ext'
 require 'build/memoize'
 require 'pathname'
-require 'sake0/sake'
+require 'sake3/sake'
 
 def true? value
   value ? true : false

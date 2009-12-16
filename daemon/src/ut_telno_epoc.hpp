@@ -1,24 +1,21 @@
-#ifndef __application_config_h__
-#define __application_config_h__
+#ifndef __ut_telno_epoc_hpp__
+#define __ut_telno_epoc_hpp__
 
-#include "common/platform_config.h"
+#include "application_config.h"
 
-#define PRIMARY_LOG_FILENAME "watchdog_log.txt"
+#include <glib.h>
 
-// Invoked internally by logging.cpp.
-#define DEFINE_LOG_FILE_DIR _LIT(KLogFileDir, "cl2");
+#include <e32std.h>
 
-// Invoked internally by logging.cpp.
-#define DEFINE_ASSERT_LOG_FILENAME _LIT(KAssertLogFile, "watchdog_assert.txt");
+gchar* GetContactNameByPhoneNoL(const TDesC& phoneNo);
 
-// Invoked internally by panic.cpp.
-#define DEFINE_PANIC_CATEGORY _LIT(KPanicCategory, "cl2watchdog")
+gchar* GetContactNameByPhoneNo(const TDesC& phoneNo);
 
-#endif /* __application_config_h__ */
+#endif /* __ut_telno_epoc_hpp__ */
 
 /**
 
-application_config.h
+ut_telno_epoc.hpp
 
 Copyright 2009 Helsinki Institute for Information Technology (HIIT)
 and the authors. All rights reserved.

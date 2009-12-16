@@ -8,17 +8,17 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
 #lang scheme
 
 (require (lib "usual-4.ss" "common"))
+(require (lib "ast-util.scm" "wg"))
 (require (lib "cxx-syntax.ss" "wg"))
-;;(require (lib "node-ctors.scm" "wg"))
 (require "sa_sensor_list_make.ss")
 
 (define*
-  all-sensors
+  SENSORS-SPEC
   `(sensors
 
     ;; Not really a sensor.
     (sensor (name transaction) (inactive #t)
-            (platforms "__TRANSACTION_ENABLED__")
+            (cpp-condition "__TRANSACTION_ENABLED__")
             (sql-statements (Begin "begin transaction;")
                             (Commit "commit transaction;")
                             (Rollback "rollback transaction;")))
@@ -29,13 +29,13 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     
     ;; status
     (sensor (name status) (inactive #t)
-            (platforms "__STATUS_ENABLED__")
+            (cpp-condition "__STATUS_ENABLED__")
             (sql-schema "create table status_log (unixtime INTEGER, message TEXT);")
             (sql-statements "insert into status_log (unixtime, message) values (?, ?);"))
 
     ;; mark
     (sensor (name mark)
-            (platforms "__MARK_ENABLED__")
+            (cpp-condition "__MARK_ENABLED__")
             (sql-schema "create table mark_log (unixtime INTEGER);")
             (sql-statements "insert into mark_log (unixtime) values (?);")
             (log-insert-api (args) (bindings)))
@@ -46,7 +46,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     ;; not an active sensor in the sense that any activity is
     ;; initiated by another application, via a Lua binding.
     (sensor (name appmessage) (inactive #t)
-            (platforms "__APPMESSAGE_ENABLED__")
+            (cpp-condition "__APPMESSAGE_ENABLED__")
             (sql-schema "create table appmessage_log (unixtime INTEGER, message TEXT);")
             (sql-statements "insert into appmessage_log (unixtime, message) values (?, ?);")
             (log-insert-api
@@ -56,8 +56,8 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
             )
 
     ;; timer
-    (sensor (name timer)
-            (platforms "__TIMER_ENABLED__")
+    (sensor (name timer) (platforms linux)
+            (cpp-condition "__TIMER_ENABLED__")
             (sql-schema "create table timer_scan (unixtime INTEGER);")
             (sql-statements "insert into timer_scan (unixtime) values (?);")
             (log-insert-api (args) (bindings)))
@@ -67,9 +67,9 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     ;; We have code for a dedicated "flightmode" sensor, but that is
     ;; rather redundant as the "callstatus" sensor can easily log
     ;; flightmode changes as well.
-    (sensor (name flightmode) (inactive #t)
-            ;;(platforms "__FLIGHTMODE_ENABLED__")
-            (platforms "__CALLSTATUS_ENABLED__")
+    (sensor (name flightmode) (inactive #t) (platforms)
+            ;;(cpp-condition "__FLIGHTMODE_ENABLED__")
+            (cpp-condition "__CALLSTATUS_ENABLED__")
             (sql-schema "create table flightmode_scan (unixtime INTEGER, value INTEGER);")
             (sql-statements "insert into flightmode_scan (unixtime, value) values (?, ?);")
             (log-insert-api
@@ -78,8 +78,8 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
               (binding (index 2) (type int) (value "(value ? 1 : 0)")))))
 
     ;; profile (needs a variant targeting new extended plugin)
-    (sensor (name profile)
-            (platforms "__PROFILE_ENABLED__")
+    (sensor (name profile) (platforms symbian)
+            (cpp-condition "__PROFILE_ENABLED__")
             (sql-schema "create table profile_scan (unixtime INTEGER, value INTEGER, name TEXT);")
             (sql-statements "insert into profile_scan (unixtime, value, name) values (?, ?, ?);")
             (log-insert-api
@@ -93,8 +93,8 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
             )
     
     ;; cellid
-    (sensor (name cellid)
-            (platforms "__CELLID_ENABLED__")
+    (sensor (name cellid) (platforms symbian)
+            (cpp-condition "__CELLID_ENABLED__")
             (sql-schema "create table cellid_scan (unixtime INTEGER, country_code TEXT, network_code TEXT, area_code INTEGER, cell_id INTEGER);")
             (sql-statements "insert into cellid_scan (unixtime, country_code, network_code, area_code, cell_id) values (?, ?, ?, ?, ?);")
             (log-insert-api
@@ -115,8 +115,8 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
             )
 
     ;; btprox
-    (sensor (name btprox)
-            (platforms "__BTPROX_ENABLED__")
+    (sensor (name btprox) (platforms symbian)
+            (cpp-condition "__BTPROX_ENABLED__")
             (sql-schema "create table btprox_scan (unixtime INTEGER, scan_id INTEGER not null primary key AUTOINCREMENT);"
                         "create table btprox_item (scan_id INTEGER not null, address TEXT not null, name TEXT not null);")
             (sql-statements (Scan "insert into btprox_scan (unixtime) values (?);")
@@ -126,8 +126,8 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
             )
     
     ;; gps
-    (sensor (name gps)
-            (platforms "__GPS_ENABLED__")
+    (sensor (name gps) (platforms symbian)
+            (cpp-condition "__GPS_ENABLED__")
             (sql-schema "create table gps_scan (unixtime INTEGER, latitude REAL, longitude REAL, altitude REAL, vertical_accuracy REAL, horizontal_accuracy REAL, course TEXT, satellites TEXT);")
             (sql-statements "insert into gps_scan (unixtime, latitude, longitude, altitude, vertical_accuracy, horizontal_accuracy, course, satellites) values (?, ?, ?, ?, ?, ?, ?, ?);")
             (log-insert-api
@@ -154,8 +154,8 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
             )
     
     ;; appfocus
-    (sensor (name appfocus)
-            (platforms "__APPFOCUS_ENABLED__")
+    (sensor (name appfocus) (platforms symbian)
+            (cpp-condition "__APPFOCUS_ENABLED__")
             (sql-schema "create table appfocus_scan (unixtime INTEGER, uid INTEGER, caption TEXT);")
             (sql-statements "insert into appfocus_scan (unixtime, uid, caption) values (?, ?, ?);")
             (log-insert-api
@@ -172,8 +172,8 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
             )
 
     ;; keypress (needs a variant implemented in terms of Anim DLL)
-    (sensor (name keypress)
-            (platforms "__KEYPRESS_ENABLED__")
+    (sensor (name keypress) (platforms symbian)
+            (cpp-condition "__KEYPRESS_ENABLED__")
             (sql-schema "create table keypress_scan (unixtime INTEGER, presstimes TEXT);")
             (sql-statements "insert into keypress_scan (unixtime, presstimes) values (?, ?);")
             (log-insert-api
@@ -190,8 +190,8 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     ;; inactivity
     ;;
     ;; The value "1" indicates activity.
-    (sensor (name inactivity)
-            (platforms "__INACTIVITY_ENABLED__")
+    (sensor (name inactivity) (platforms symbian)
+            (cpp-condition "__INACTIVITY_ENABLED__")
             (sql-schema "create table inactivity_scan (unixtime INTEGER, value INTEGER);")
             (sql-statements "insert into inactivity_scan (unixtime, value) values (?, ?);")
             (log-insert-api
@@ -201,8 +201,8 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
             )
 
     ;; Symbian Standby screen indicators.
-    (sensor (name indicator)
-            (platforms "__INDICATOR_ENABLED__")
+    (sensor (name indicator) (platforms symbian)
+            (cpp-condition "__INDICATOR_ENABLED__")
             (sql-schema "create table indicator_scan (unixtime INTEGER, value INTEGER, caps INTEGER);")
             (sql-statements "insert into indicator_scan (unixtime, value, caps) values (?, ?, ?);")
             (log-insert-api
@@ -215,14 +215,15 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
               (binding (index 3) (type int) (value "(int)caps"))
             )))
     
-    (sensor (name callstatus)
-            (platforms "__CALLSTATUS_ENABLED__")
-            (sql-schema "create table callstatus_scan (unixtime INTEGER not null, value INTEGER not null, number TEXT, starttime INTEGER, osterm INTEGER, netterm INTEGER);")
-            (sql-statements "insert into callstatus_scan (unixtime, value, number, starttime, osterm, netterm) values (?, ?, ?, ?, ?, ?);")
+    (sensor (name callstatus) (platforms symbian)
+            (cpp-condition "__CALLSTATUS_ENABLED__")
+            (sql-schema "create table callstatus_scan (unixtime INTEGER not null, value INTEGER not null, number TEXT, contact_name TEXT, starttime INTEGER, osterm INTEGER, netterm INTEGER);")
+            (sql-statements "insert into callstatus_scan (unixtime, value, number, contact_name, starttime, osterm, netterm) values (?, ?, ?, ?, ?, ?, ?);")
             (log-insert-api
              (args
               ,(arg (type 'int) (name 'value))
               ,(arg (type (ptr-to (cconst 'char))) (name 'aNumber))
+              ,(arg (type (ptr-to (cconst 'char))) (name 'aContactName))
               ,(arg (type 'int) (name 'aStartTime))
               ,(arg (type 'int) (name 'aOsTerm))
               ,(arg (type 'int) (name 'aNetTerm))
@@ -230,31 +231,69 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
              (bindings 
               (binding (index 2) (type int) (value "value"))
               (binding (index 3) (type text?) (value "aNumber, strlen(aNumber)") (dispose static))
-              (binding (index 4) (type int?-neqz) (value "aStartTime"))
-              (binding (index 5) (type int?-ltez) (value "aOsTerm"))
-              (binding (index 6) (type int?-ltez) (value "aNetTerm"))
+              (binding (index 4) (type text?) (value "aContactName, strlen(aContactName)") (dispose static))
+              (binding (index 5) (type int?-neqz) (value "aStartTime"))
+              (binding (index 6) (type int?-ltez) (value "aOsTerm"))
+              (binding (index 7) (type int?-ltez) (value "aNetTerm"))
               )
              ))
     
-    (sensor (name smsevent)
-            (platforms "__SMSEVENT_ENABLED__")
-            (sql-schema "create table smsevent_scan (unixtime INTEGER, evtype TEXT, number TEXT);")
-            (sql-statements "insert into smsevent_scan (unixtime, evtype, number) values (?, ?, ?);")
+    (sensor (name smsevent) (platforms symbian)
+            (cpp-condition "__SMSEVENT_ENABLED__")
+            (sql-schema "create table smsevent_scan (unixtime INTEGER not null, evtype TEXT not null, number TEXT, contact_name TEXT);")
+            (sql-statements "insert into smsevent_scan (unixtime, evtype, number, contact_name) values (?, ?, ?, ?);")
             (log-insert-api
              (args
               ,(arg (type (ptr-to (cconst 'char))) (name 'aEvType))
               ,(arg (type (ptr-to (cconst 'char))) (name 'aNumber))
+              ,(arg (type (ptr-to (cconst 'char))) (name 'aContactName))
               )
              (bindings 
               (binding (index 2) (type text) (value "aEvType, strlen(aEvType)") (dispose static))
               (binding (index 3) (type text) (value "aNumber, strlen(aNumber)") (dispose static))
+              (binding (index 4) (type text?) (value "aContactName, strlen(aContactName)") (dispose static))
               )
             ))
     
     ))
 
+(define* FULL-SENSOR-LIST (cdr SENSORS-SPEC))
+
+(define* (get-sensor-name sensor)
+  (fget-reqd-nlist-elem-1 sensor 'name))
+
+(define* (sensor-essential? sensor)
+  (false? (fget-opt-nlist-elem sensor 'platforms)))
+
+(define* (sensor-inactive? sensor)
+  (true? (fget-opt-nlist-elem-1 sensor 'inactive)))
+
+(define* all-sensor-names
+  (map get-sensor-name FULL-SENSOR-LIST))
+
+(define* essential-sensor-names
+  (map get-sensor-name (filter sensor-essential? FULL-SENSOR-LIST)))
+
+(define* (sensor-active-on? plat sensor)
+  (and (not (sensor-inactive? sensor))
+       (alet platforms (fget-opt-nlist-elem sensor 'platforms)
+             (or (not platforms)
+                 (true? (memq plat (cdr platforms)))))))
+
+(define* (active-sensors-for plat)
+  (filter (fix sensor-active-on? plat) FULL-SENSOR-LIST))
+
+(define* (active-sensor-names-for plat)
+  (map get-sensor-name (filter (fix sensor-active-on? plat) FULL-SENSOR-LIST)))
+
+(define* (sensor-enabled-symbol name)
+  (string->symbol (format "~a-enabled" name)))
+
+(define* (sensor-enabled-method-name name)
+  (string->symbol (format "~a-enabled.attr" name)))
+
 (define* (sensor-list-main)
   (let ((dump? #f)
         (gen? #t))
-    (generate all-sensors dump? gen?)))
+    (generate SENSORS-SPEC dump? gen?)))
 

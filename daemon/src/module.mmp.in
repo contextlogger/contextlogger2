@@ -81,7 +81,7 @@ library euser.lib
 library <%= libfile %>
 <% end %>
 
-//library cntmodel.lib // CContactGroup
+library cntmodel.lib // CContactDatabase
 //library estor.lib // RReadStream
 //library etel.lib // RCall, RLine
 //library logcli.lib // CLogClient
@@ -131,7 +131,6 @@ source epoc-btprox.cpp
 source epoc-callstatus.cpp
 source epoc-cellid.cpp
 source epoc-cliapi-server.cpp
-//source epoc-flightmode.cpp // obsolete
 source epoc-gps.cpp
 source epoc-iap.cpp
 source epoc-inactivity.cpp
@@ -187,9 +186,10 @@ source ut_retry_epoc.cpp
 <% if $SMSEVENT_ENABLED %>
 source ut_sms_epoc.cpp
 <% end %>
-<% if $FLIGHTMODE_ENABLED or $CALLSTATUS_ENABLED %>
+<% if $CALLSTATUS_ENABLED %>
 source ut_telephony_epoc.cpp
 <% end %>
+source ut_telno_epoc.cpp    //xxx experimental
 //source ut_timeout_epoc.cpp   //xxx experimental
 <% if $FEATURE_REMOKON or $MARK_ENABLED %>
 source ut_timer_epoc.cpp

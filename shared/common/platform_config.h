@@ -77,6 +77,23 @@
 #define DIR_SEP "/"
 #endif
 
+// xxx Is this already included automatically by the toolchain?
+#if 0
+#ifdef __SYMBIAN32__
+#if defined(__SERIES60_30__)
+#include <symbian_os_v9.1.hrh>
+#elif defined(__SERIES60_31__)
+#include <symbian_os_v9.2.hrh>
+#elif defined(__SERIES60_32__)
+#include <symbian_os_v9.3.hrh>
+#elif defined(__SERIES60_50__)
+#include <symbian_os.hrh>
+#else
+#error unknown Symbian platform version
+#endif
+#endif
+#endif
+
 // --------------------------------------------------
 // libraries
 // --------------------------------------------------

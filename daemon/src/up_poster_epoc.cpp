@@ -424,7 +424,7 @@ void CFileDataSupplier::OpenL(const TDesC& aFileName)
   iFileName = aFileName;
 
   gchar* username = get_config_username();
-  logf("uploader using username %s", username);
+  logf("uploader using username '%s'", username);
 
   // _LIT8(KPrelude, "-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"logdata\"; filename=\"" __USERNAME__ ".db\"\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: binary\r\n\r\n");
   _LIT8(KPrelude1, "Content-Disposition: form-data; name=\"logdata\"; filename=\"");
