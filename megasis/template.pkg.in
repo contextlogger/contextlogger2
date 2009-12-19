@@ -54,23 +54,25 @@
 ;;
 <% if $KEYPRESS_ENABLED %>
 
-<% sisfile = '../keyevents/build/s60_30_%s/keyevents.sis' % $CERT_NAME
-   uid = lookup_uid sisfile
+<% sisxfile = '../keyevents/build/s60_30_%s/keyevents.sisx' % $CERT_NAME
+   uid = lookup_uid sisxfile
    uid_s = ("0x%08x" % uid)
 %>
 if not package(<%= uid_s %>)
 
 <% if $unpack_embedded %>
 <% srcdir = "keyevents_" + $CERT_NAME
-unpack_sis sisfile, srcdir
-entries = pkg_entries_for_sis srcdir, sisfile
+unpack_sis sisxfile, srcdir
+entries = pkg_entries_for_sis srcdir, sisxfile
 for entry in entries %>
 <%= entry %>
 <% end %>
 <% end %>
 
-<% unless $unpack_embedded %>
-@<%= sisfile.inspect %>, (<%= uid_s %>)
+<% unless $unpack_embedded 
+   sisfile = copy_with_sis_ext sisxfile
+%>
+@<%= sisxfile.inspect %>, (<%= uid_s %>)
 <% end %>
 
 endif ;; package not installed
@@ -80,22 +82,24 @@ endif ;; package not installed
 ;;
 ;; C++ client library.
 ;;
-<% sisfile = '../cxx-cl2-cli-lib/build/s60_30_%s/cl2cli.sis' % $CERT_NAME
-   uid = lookup_uid sisfile
+<% sisxfile = '../cxx-cl2-cli-lib/build/s60_30_%s/cl2cli.sisx' % $CERT_NAME
+   uid = lookup_uid sisxfile
    uid_s = ("0x%08x" % uid)
 %>
 if not package(<%= uid_s %>)
 
 <% if $unpack_embedded %>
 <% srcdir = "cxx_cl2_client_" + $CERT_NAME
-unpack_sis sisfile, srcdir
-entries = pkg_entries_for_sis srcdir, sisfile
+unpack_sis sisxfile, srcdir
+entries = pkg_entries_for_sis srcdir, sisxfile
 for entry in entries %>
 <%= entry %>
 <% end %>
 <% end %>
 
-<% unless $unpack_embedded %>
+<% unless $unpack_embedded 
+   sisfile = copy_with_sis_ext sisxfile
+%>
 @<%= sisfile.inspect %>, (<%= uid_s %>)
 <% end %>
 
@@ -104,22 +108,24 @@ endif ;; package not installed
 ;;
 ;; Python client library.
 ;;
-<% sisfile = '../py-cl2-cli-lib/build/s60_30_%s/py_cl2_client.sis' % $CERT_NAME
-   uid = lookup_uid sisfile
+<% sisxfile = '../py-cl2-cli-lib/build/s60_30_%s/py_cl2_client.sisx' % $CERT_NAME
+   uid = lookup_uid sisxfile
    uid_s = ("0x%08x" % uid)
 %>
 if not package(<%= uid_s %>)
 
 <% if $unpack_embedded %>
 <% srcdir = "py_cl2_client_" + $CERT_NAME
-unpack_sis sisfile, srcdir
-entries = pkg_entries_for_sis srcdir, sisfile
+unpack_sis sisxfile, srcdir
+entries = pkg_entries_for_sis srcdir, sisxfile
 for entry in entries %>
 <%= entry %>
 <% end %>
 <% end %>
 
-<% unless $unpack_embedded %>
+<% unless $unpack_embedded 
+   sisfile = copy_with_sis_ext sisxfile
+%>
 @<%= sisfile.inspect %>, (<%= uid_s %>)
 <% end %>
 

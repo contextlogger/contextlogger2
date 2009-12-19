@@ -122,21 +122,23 @@ gboolean CSensor_appfocus::StartL(GError** error)
   }
   if (!IsActive()) {
     MakeRequest();
+    log_db_log_status(iLogDb, NULL, "appfocus sensor started");
   }
   return TRUE;
 }
 
 void CSensor_appfocus::Stop()
 {
-  Cancel();
+  if (IsActive()) {
+    Cancel();
+    log_db_log_status(iLogDb, NULL, "appfocus sensor stopped");
+  }
 
   if (iFocusChangeEventsEnabled) {
     // Okay to call even if not enabled.
     iMyWindowGroup->Ref().DisableFocusChangeEvents();
     iFocusChangeEventsEnabled = EFalse;
   }
-
-  logt("appfocus sensor stopped");
 }
 
 void CSensor_appfocus::MakeRequest()
@@ -193,8 +195,7 @@ gboolean CSensor_appfocus::RunGL(GError** error)
   return TRUE;
 
  fail:
-  if (!log_db_log_status(iLogDb, error, "ERROR: failure reading appfocus sensor: %s (%d)", plat_error_strerror(errCode), errCode)) {
-    assert_error_set(error);
+  if (!log_db_log_status(iLogDb, error, "INACTIVATE: appfocus: failure reading sensor: %s (%d)", plat_error_strerror(errCode), errCode)) {
     // Logging failing is quite severe. We shall report the error
     // upwards, where the framework will hopefully take corrective
     // action, and probably then call either our StartL or dtor,
@@ -216,3 +217,34 @@ void CSensor_appfocus::DoCancel()
 }
 
 #endif // __APPFOCUS_ENABLED__
+
+/**
+
+epoc-appfocus.cpp
+
+Copyright 2009 Helsinki Institute for Information Technology (HIIT)
+and the authors. All rights reserved.
+
+Authors: Tero Hasu <tero.hasu@hut.fi>
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation files
+(the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software,
+and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+ **/

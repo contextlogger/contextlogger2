@@ -66,7 +66,8 @@ void CSensor_keypress::ConstructL()
 
 CSensor_keypress::~CSensor_keypress()
 {
-  Stop();
+  Cancel();
+  LogAndClear(NULL);
   delete iKeyEventsClient;
   SESSION_CLOSE_IF_OPEN(iProperty);
   delete iWinGroupName;
@@ -87,7 +88,7 @@ gboolean CSensor_keypress::StartL(GError** error)
 {
   if (!IsActive()) {
     MakeRequest();
-    logt("keypress sensor started");
+    log_db_log_status(iLogDb, NULL, "keypress sensor started");
   }
   return TRUE;
 }
@@ -96,7 +97,10 @@ gboolean CSensor_keypress::StartL(GError** error)
 // having succeeded.
 void CSensor_keypress::Stop()
 {
-  Cancel();
+  if (IsActive()) {
+    Cancel();
+    log_db_log_status(iLogDb, NULL, "keypress sensor stopped");
+  }
   LogAndClear(NULL); // best effort
 }
 
@@ -126,7 +130,8 @@ void CSensor_keypress::RunL()
     TInt eventCount;
     errCode = iProperty.Get(KPropertyCategory, KPropertyKey, eventCount);
     if (errCode) {
-      logf("keypress: RProperty access error: %s (%d)", plat_error_strerror(errCode), errCode);
+      log_db_log_status(iLogDb, NULL, "INACTIVATE: keypress: RProperty access error: %s (%d)", plat_error_strerror(errCode), errCode);
+      Stop();
     } else {
       //logf("keypress: eventCount is %d", eventCount);
       { // record event time
@@ -178,3 +183,34 @@ gboolean CSensor_keypress::LogAndClear(GError** error)
 }
 
 #endif // __KEYPRESS_ENABLED__ && __HAVE_ANIM__
+
+/**
+
+epoc-keypress-anim.cpp
+
+Copyright 2009 Helsinki Institute for Information Technology (HIIT)
+and the authors. All rights reserved.
+
+Authors: Tero Hasu <tero.hasu@hut.fi>
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation files
+(the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software,
+and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+ **/

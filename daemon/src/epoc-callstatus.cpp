@@ -104,7 +104,7 @@ gboolean CSensor_callstatus::StartL(GError** error)
     iRetryAo->ResetFailures();
     iFlightModeGetter->MakeRequest();
     iState = EQueryingFlightMode;
-    logt("callstatus sensor started");
+    log_db_log_status(GetLogDb(), NULL, "callstatus sensor started");
   }
   return TRUE;
 }
@@ -113,7 +113,7 @@ void CSensor_callstatus::Stop()
 {
   if ((IsActive())) {
     Cancel();
-    logt("callstatus sensor stopped");
+    log_db_log_status(GetLogDb(), NULL, "callstatus sensor stopped");
   }
 }
 
@@ -122,7 +122,7 @@ void CSensor_callstatus::HandleGotFlightMode(TInt errCode)
 {
   if (errCode) {
     log_db_log_status(GetLogDb(), NULL,
-		      "ERROR: failure getting flight mode in callstatus sensor: %s (%d)", 
+		      "INACTIVATE: callstatus: failure getting flight mode: %s (%d)", 
 		      plat_error_strerror(errCode), errCode);
     Cancel();
   } else {
@@ -143,7 +143,7 @@ void CSensor_callstatus::HandleFlightModeChange(TInt errCode)
 {
   if (errCode) {
     log_db_log_status(GetLogDb(), NULL,
-		      "ERROR: flight mode notification error in callstatus sensor: %s (%d)", 
+		      "INACTIVATE: callstatus: flight mode notification error: %s (%d)", 
 		      plat_error_strerror(errCode), errCode);
     Cancel();
   } else {
@@ -225,6 +225,22 @@ void CSensor_callstatus::HandleCallStatusChange(TInt errCode)
 	}
       }
 
+#define SET_NUMBER_AND_CONTACT { \
+	if (numberW.Length() > 0) { \
+	  numberBuf.Copy(numberW); \
+	  number = (const char*)(numberBuf.PtrZ()); \
+	  logf("call remote party number is '%s'", number); \
+	  contactName = GetContactNameByPhoneNo(numberW); \
+	  if (contactName) { \
+	    logf("call remote party name is '%s'", contactName); \
+	  } else { \
+	    logt("could not get call remote party name"); \
+	  } \
+	} else { \
+	  logt("could not get call remote party phone number"); \
+	} \
+      }
+
       // For some cases we can get some additional useful information.
       switch (callStatus)
 	{
@@ -250,9 +266,7 @@ void CSensor_callstatus::HandleCallStatusChange(TInt errCode)
 		case CTelephony::ERemoteIdentityAvailable:
 		  {
 		    TDesC& numberW = remoteInfo.iRemoteNumber.iTelNumber; // TBuf<KMaxTelNumberSize>
-		    numberBuf.Copy(numberW);
-		    number = (const char*)(numberBuf.PtrZ());
-		    contactName = GetContactNameByPhoneNo(numberW);
+		    SET_NUMBER_AND_CONTACT;
 		    break;
 		  }
 		default:
@@ -263,9 +277,7 @@ void CSensor_callstatus::HandleCallStatusChange(TInt errCode)
 		}
 	    } else { // callStatus == CTelephony::EStatusDialling
 	      TDesC& numberW = callInfo.iDialledParty.iTelNumber; // TBuf<KMaxTelNumberSize>
-	      numberBuf.Copy(numberW);
-	      number = (const char*)(numberBuf.PtrZ());
-	      contactName = GetContactNameByPhoneNo(numberW);
+	      SET_NUMBER_AND_CONTACT;
 	    }
 	    break;
 	  }
@@ -295,8 +307,6 @@ void CSensor_callstatus::HandleCallStatusChange(TInt errCode)
       
     // Log.
     {
-      //if (number) logf("remote party number is '%s'", number);
-
       GError* localError = NULL;
       if (!log_db_log_callstatus(GetLogDb(), callStatus, number, contactName, startTime, etelCode, netCode, &localError)) {
 	gx_log_free_fatal_error(localError);
@@ -317,7 +327,7 @@ void CSensor_callstatus::RetryTimerExpired(CRetryAo* src, TInt errCode)
 {
   if (errCode) {
     log_db_log_status(GetLogDb(), NULL,
-		      "ERROR: stopping callstatus sensor: timer error: %s (%d)", 
+		      "INACTIVATE: callstatus: timer error: %s (%d)", 
 		      plat_error_strerror(errCode), errCode);
     Cancel();
   } else {

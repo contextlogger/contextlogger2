@@ -64,16 +64,19 @@ void CSensor_inactivity::ConstructL()
 CSensor_inactivity::~CSensor_inactivity()
 {
   if (IS_SESSION_OPEN(iTimer)) {
-    Stop();
+    Cancel();
     iTimer.Close();
   }
 }
+
+#define iLogDb ac_LogDb(iC)
 
 gboolean CSensor_inactivity::StartL(GError** error)
 {
   if (!IsActive()) {
     GetState();
     MakeRequest();
+    log_db_log_status(iLogDb, NULL, "inactivity sensor started");
   }
   return TRUE;
 }
@@ -82,6 +85,7 @@ void CSensor_inactivity::Stop()
 {
   if ((IsActive())) {
     Cancel();
+    log_db_log_status(iLogDb, NULL, "inactivity sensor stopped");
   }
 }
 
@@ -90,7 +94,7 @@ void CSensor_inactivity::RunL()
   TInt errCode = iStatus.Int();
 
   if (errCode) {
-    logf("stopping inactivity sensor: RTimer inactivity request error %d", errCode);
+    log_db_log_status(iLogDb, NULL, "INACTIVATE: inactivity: RTimer inactivity request error %d", errCode);
     return;
   }
   

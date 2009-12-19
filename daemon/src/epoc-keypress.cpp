@@ -18,7 +18,10 @@
  */
 
 // A small amount of the code is derived from CCapturer in PyS60,
-// hence the above license applies.
+// hence the above license applies. Any changes made are Copyright
+// 2009 Helsinki Institute for Information Technology (HIIT) and Tero
+// Hasu <tero.hasu@hut.fi>, and are made available under the original
+// license.
 
 /*
  References:
@@ -130,16 +133,18 @@ gboolean CSensor_keypress::StartL(GError** error)
   if (!IsActive()) {
     RequestAllKeys();
     MakeRequest();
-    logt("keypress sensor started");
+    log_db_log_status(iLogDb, NULL, "keypress sensor started");
   }
   return TRUE;
 }
 
 void CSensor_keypress::Stop()
 {
-  Cancel();
+  if (IsActive()) {
+    Cancel();
+    log_db_log_status(iLogDb, NULL, "keypress sensor stopped");
+  }
   LogAndClear(NULL); // best effort, already being stopped
-  logt("keypress sensor stopped");
 }
 
 void CSensor_keypress::MakeRequest()
@@ -156,7 +161,8 @@ void CSensor_keypress::DoCancel()
 
 CSensor_keypress::~CSensor_keypress()
 {
-  Stop();
+  Cancel();
+  LogAndClear(NULL);
   if(iWinGroup){
     iWinGroup->Close();
     delete iWinGroup;
@@ -181,7 +187,8 @@ gboolean CSensor_keypress::RunGL(GError** error)
     // This error really should not occur, but since it has, we will
     // simply stop this one scanner. For a retry, someone just call
     // StartL.
-    goto fail;
+    log_db_log_status(iLogDb, NULL, "INACTIVATE: keypress: failure reading sensor: %s (%d)", plat_error_strerror(errCode), errCode);
+    Stop();
   } else {
     TWsEvent event;
     iSession->GetEvent(event);
@@ -195,7 +202,6 @@ gboolean CSensor_keypress::RunGL(GError** error)
       iNumCapturedKeys++;
       if (iNumCapturedKeys == MAX_NUM_CAPTURED_KEYS) {
 	if (!LogAndClear(error)) {
-	  assert_error_set(error);
 	  return FALSE;
 	}
       }
@@ -205,18 +211,6 @@ gboolean CSensor_keypress::RunGL(GError** error)
     iSession->SendEventToWindowGroup(iSession->GetFocusWindowGroup(), event);
 
     MakeRequest();
-  }
-
-  return TRUE;
-
- fail:
-  if (!log_db_log_status(iLogDb, error, "ERROR: failure reading keypress sensor: %s (%d)", plat_error_strerror(errCode), errCode)) {
-    assert_error_set(error);
-    // Logging failing is quite severe. We shall report the error
-    // upwards, where the framework will hopefully take corrective
-    // action, and probably then call either our StartL or dtor,
-    // depending on whether recovery was possible.
-    return FALSE;
   }
 
   return TRUE;
@@ -252,3 +246,4 @@ const char* CSensor_keypress::Description()
 }
 
 #endif // __KEYPRESS_ENABLED__
+

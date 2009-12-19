@@ -16,12 +16,14 @@ static CContactItem* FindContactItemByPhoneNoL(const TDesC& phoneNo)
 {
   CContactItem* item = NULL;
 
+  if (phoneNo.Length() > 0)
   {
     // This ought to (typically) be enough for a single match. If not, too bad.
     const TInt KNumberOfDigitsToMatch = 8;
 
     //CContactDatabase* database = CContactDatabase::OpenL(); // xxx use a global copy
     //CleanupStack::PushL(database);
+
     CContactDatabase& database = ac_ContactDatabase(ac_get_global_AppContext());
 
     CContactIdArray* idArray = database.MatchPhoneNumberL(phoneNo, KNumberOfDigitsToMatch);
