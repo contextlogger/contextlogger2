@@ -2,6 +2,10 @@ CURRENT_CONFIG := ../daemon/src/current_config.mk
 
 include $(CURRENT_CONFIG)
 
+# This is quite important in case we must re-sign something.
+external :
+	cd ../libs-s60 && make build
+
 # Currently we only do UDEB builds, and so we do not require UREL builds
 # of static libs yet either.
 static_libs :

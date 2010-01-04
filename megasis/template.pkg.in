@@ -18,7 +18,8 @@
 :"HIIT"
 
 ;; Platform dependency.
-[0x101f7961], 0, 0, 0, {"Series60ProductID"}
+[0x101F7961], 0, 0, 0, {"Series603rdProductID"}
+[0x1028315F], 0, 0, 0, {"Series605thProductID"}
 
 <% opts = []
    optix = {}
@@ -227,7 +228,7 @@ endif
    old_ext = $SIGNED ? "sisx" : "sis"
    kit = (($CERT_NAME == "self32") ? "s60_32" : "s60_30")
    cert_name = case $CERT_NAME when "self30", "self32" then "self" else $CERT_NAME end
-   srcname = 'miso-%s-%s_py1_%s.%s' % [misover, kit, cert_name, old_ext]
+   srcname = 'miso-%s-%s_py1_5th_%s.%s' % [misover, kit, cert_name, old_ext]
    srcfile = File.join(srcdir, srcname)
    sisfile = copy_with_sis_ext srcfile
    uid = lookup_uid sisfile
@@ -344,11 +345,28 @@ endif
 ;; Note that the @ directive pointlessly requires that
 ;; the file have .sis extension, not .sisx or anything else.
 ;;
-<% srcfile = "../libs-s60/errrd_file.sis"
-   uid = lookup_uid srcfile
-   uid_s = ("0x%08x" % uid) %>
 if option<%= optix[:errrd] %> = 1
 if not package(<%= uid_s %>)
-@<%= srcfile.inspect %>, (<%= uid_s %>)
+
+<% cert_name = $SIGNED ? $CERT_NAME : "unsigned"
+   old_ext = $SIGNED ? "sisx" : "sis"
+   srcfile = "../libs-s60/errrd-file/errrd-file-%s.%s" % [cert_name, old_ext]
+   uid = lookup_uid srcfile
+   uid_s = ("0x%08x" % uid) %>
+
+<% if $unpack_embedded %>
+<% srcdir = "errrd_file_" + $CERT_NAME
+unpack_sis srcfile, srcdir
+entries = pkg_entries_for_sis srcdir, srcfile
+for entry in entries %>
+<%= entry %>
+<% end %>
+<% end %>
+
+<% unless $unpack_embedded 
+   sisfile = copy_with_sis_ext srcfile %>
+@<%= sisfile.inspect %>, (<%= uid_s %>)
+<% end %>
+
 endif
 endif

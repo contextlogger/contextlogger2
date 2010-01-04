@@ -40,7 +40,7 @@ static void timerCallback(void* userdata, GError* timerError)
 
   // Log "sensor" event.
   {
-    logt("MARK");
+    //logt("MARK");
     GError* localError = NULL;
     if (!log_db_log_mark(self->log, "mark", &localError)) {
       gx_log_free_fatal_error(localError);
@@ -88,7 +88,7 @@ EXTERN_C void sa_Sensor_mark_destroy(sa_Sensor_mark* self)
 EXTERN_C gboolean sa_Sensor_mark_start(sa_Sensor_mark* self, GError** error)
 {
   if (!sa_Sensor_mark_is_active(self)) {
-    logt("START MARK");
+    //logt("START MARK");
     if (!log_db_log_mark(self->log, "start", error)) // begin mark
       return FALSE;
 
@@ -102,7 +102,7 @@ EXTERN_C void sa_Sensor_mark_stop(sa_Sensor_mark* self)
 {
   if (sa_Sensor_mark_is_active(self)) {
     ut_Timer_cancel(self->timer);
-    logt("END MARK");
+    //logt("END MARK");
     log_db_log_mark(self->log, "stop", NULL); // end mark
   }
 }

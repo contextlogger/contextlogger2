@@ -5,6 +5,8 @@
 
 #if __FEATURE_UPLOADER__
 
+#include "application_config.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -12,7 +14,7 @@ extern "C" {
 #ifndef __EPOC32__
 #define LOG_UPLOADS_DIR "uploads"
 #else
-#define LOG_UPLOADS_DIR "e:\\data\\cl2\\uploads"
+#define LOG_UPLOADS_DIR DATABASE_DIR "\\uploads"
 #endif
 
 gboolean getNextOldLogFile(gchar** pathname,

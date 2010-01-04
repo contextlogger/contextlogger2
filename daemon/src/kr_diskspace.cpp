@@ -20,12 +20,18 @@ void CheckLoggingMediumReadyL(RFs& fs)
   TDriveInfo& driveInfo = volumeInfo.iDrive;
 
   if (driveInfo.iType == EMediaNotPresent) {
+    logt("logging hardware not available");
     User::Leave(KErrHardwareNotAvailable);
   }
-  if (driveInfo.iType & KMediaAttWriteProtected) {
+  // The C: drive seems to have the write protected attribute set (on
+  // all the devices I have tried).
+  if ((driveLetter != 'c') && 
+      (driveInfo.iType & KMediaAttWriteProtected)) {
+    logt("logging medium write protected");
     User::Leave(KErrAccessDenied);
   }
   if (volumeInfo.iFree < DATABASE_VOLUME_THRESHOLD) {
+    logt("logging medium (almost) full");
     User::Leave(KErrDiskFull);
   }
 }

@@ -100,7 +100,7 @@ extern "C" gboolean ut_Timer_set_after(ut_Timer* self, int secs, GError** error)
   ut_Timer_cancel(self);
 
   TTimeIntervalMicroSeconds32 interval = SecsToUsecs(secs);
-  logf("interval timer set to %d secs / %d usecs", secs, interval.Int());
+  //logf("interval timer set to %d secs / %d usecs", secs, interval.Int());
 
   // Note that these timers should not complete with KErrAbort, since
   // a wait for an interval should not be affected by a system time

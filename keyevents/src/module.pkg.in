@@ -58,7 +58,8 @@
 <% end %>
 
 ;; Platform dependency.
-<%= build.target.pkg_dependency_string %>
+[0x101F7961], 0, 0, 0, {"Series603rdProductID"}
+[0x1028315F], 0, 0, 0, {"Series605thProductID"}
 
 <% c_binname = $cb["keyevents_client"].binary_file.basename 
    s_binname = $cb["keyevents_server"].binary_file.basename 

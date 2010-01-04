@@ -13,7 +13,8 @@
 <% end %>
 
 ;; Platform dependency.
-<%= build.target.pkg_dependency_string %>
+[0x101F7961], 0, 0, 0, {"Series603rdProductID"}
+[0x1028315F], 0, 0, 0, {"Series605thProductID"}
 
 <% if build.v9? %>
 "cl2cli.dll" - "!:\sys\bin\cl2cli.dll"

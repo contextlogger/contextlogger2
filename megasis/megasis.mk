@@ -17,16 +17,20 @@ PKGFILE := $(BASENAME)-$(DIST_VARIANT_NAME).pkg
 SISFILE := $(BASENAME)-$(VERSION_STRING)-$(DIST_VARIANT_NAME).sis
 SISXFILE := $(SISFILE)x
 
-default : $(if $(SIGNED), $(SISXFILE), $(SISFILE))
+default : clean $(PKGFILE) $(if $(SIGNED), $(SISXFILE), $(SISFILE))
 
 $(PKGFILE) : $(TEMPLATE) $(SCRIPT) $(CURRENT_CONFIG)
 	$(CREATE) $(FLAGS) -o $(PKGFILE) $(TEMPLATE)
 
-$(SISXFILE) : $(PKGFILE)
-	in-gnupoc-env s60_30 do-make-sign-sis --cert $(CERT_NAME) --makesis -o $@ $<
+# Best to do this even if PKG has not changed; signing key may have changed.
+clean : 
+	-rm $(PKGFILE) $(SISFILE) $(SISXFILE)
 
-$(SISFILE) : $(PKGFILE)
-	in-gnupoc-env s60_30 do-make-sign-sis --unsigned --makesis -o $@ $<
+$(SISXFILE) :
+	in-gnupoc-env s60_30 do-make-sign-sis --cert $(CERT_NAME) --makesis -o $@ $(PKGFILE)
+
+$(SISFILE) :
+	in-gnupoc-env s60_30 do-make-sign-sis --unsigned --makesis -o $@ $(PKGFILE)
 
 #
 # Copyright 2009 Helsinki Institute for Information Technology (HIIT)

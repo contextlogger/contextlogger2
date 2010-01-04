@@ -73,6 +73,13 @@ def make_file(file, data):
     finally:
         fp.close()
 
+def rm_file(file):
+    try:
+        os.unlink(file)
+    except:
+        # Assuming non-existent file.
+        pass
+
 # Cannot delete directories containing directories.
 def shallow_rmtree(dn):
     pn = dn + "\\"
@@ -330,19 +337,19 @@ end """)
         appuifw.note(u"Autostart disabled", "info")
 
     def enable_wd(self):
-        os.unlink(magic_file)
+        rm_file(magic_file)
         appuifw.note(u"Autostart enabled", "info")
 
     def delete_log_db(self):
-        os.unlink(log_db_file)
+        rm_file(log_db_file)
         appuifw.note(u"Database deleted", "info")
 
     def delete_config_db(self):
-        os.unlink(config_db_file)
+        rm_file(config_db_file)
         appuifw.note(u"Database deleted", "info")
 
     def delete_config_file(self):
-        os.unlink(config_file)
+        rm_file(config_file)
         appuifw.note(u"Config file deleted", "info")
 
     def create_config_file(self):
