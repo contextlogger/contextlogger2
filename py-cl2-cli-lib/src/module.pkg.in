@@ -9,7 +9,8 @@
 <% end %>
 
 ;; Platform dependency. Supports <%= build.target.handle %>.
-<%= build.target.pkg_dependency_string %>
+[0x101F7961], 0, 0, 0, {"Series603rdProductID"}
+[0x1028315F], 0, 0, 0, {"Series605thProductID"}
 
 <% cbuild = $cbuild_by_pbuild[build]
    dllname = cbuild.binary_file.basename.to_s 

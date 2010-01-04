@@ -36,9 +36,13 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     ;; mark
     (sensor (name mark)
             (cpp-condition "__MARK_ENABLED__")
-            (sql-schema "create table mark_log (unixtime INTEGER);")
-            (sql-statements "insert into mark_log (unixtime) values (?);")
-            (log-insert-api (args) (bindings)))
+            (sql-schema "create table mark_log (unixtime INTEGER, message TEXT);")
+            (sql-statements "insert into mark_log (unixtime, message) values (?, ?);")
+            (log-insert-api
+             (args ,(arg (type (ptr-to (cconst 'char))) (name 'msgText)))
+             (bindings
+              (binding (index 2) (type text) (value "msgText, strlen(msgText)") (dispose static))))
+            )
     
     ;; appmessage
     ;; 
@@ -297,3 +301,33 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
         (gen? #t))
     (generate SENSORS-SPEC dump? gen?)))
 
+#|
+
+sa_sensor_list_spec.ss
+
+Copyright 2009 Helsinki Institute for Information Technology (HIIT)
+and the authors. All rights reserved.
+
+Authors: Tero Hasu <tero.hasu@hut.fi>
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation files
+(the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software,
+and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+|#

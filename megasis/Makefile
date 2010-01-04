@@ -13,6 +13,7 @@ default : s60_30_dev
 define template
 $(1) :
 	cd ../daemon && $(call configure,$(1))
+	$(MAKE) -f build.mk external
 	$(MAKE) -f build.mk static_libs
 	$(MAKE) -f build.mk $(1)
 	$(MAKE) -f megasis.mk

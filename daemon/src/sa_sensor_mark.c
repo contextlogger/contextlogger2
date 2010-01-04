@@ -40,9 +40,9 @@ static void timerCallback(void* userdata, GError* timerError)
 
   // Log "sensor" event.
   {
-    logt("MARK");
+    //logt("MARK");
     GError* localError = NULL;
-    if (!log_db_log_mark(self->log, &localError)) {
+    if (!log_db_log_mark(self->log, "mark", &localError)) {
       gx_log_free_fatal_error(localError);
       return;
     }
@@ -88,8 +88,8 @@ EXTERN_C void sa_Sensor_mark_destroy(sa_Sensor_mark* self)
 EXTERN_C gboolean sa_Sensor_mark_start(sa_Sensor_mark* self, GError** error)
 {
   if (!sa_Sensor_mark_is_active(self)) {
-    logt("START MARK");
-    if (!log_db_log_mark(self->log, error)) // begin mark
+    //logt("START MARK");
+    if (!log_db_log_mark(self->log, "start", error)) // begin mark
       return FALSE;
 
     if (!setTimer(self, error))
@@ -102,8 +102,8 @@ EXTERN_C void sa_Sensor_mark_stop(sa_Sensor_mark* self)
 {
   if (sa_Sensor_mark_is_active(self)) {
     ut_Timer_cancel(self->timer);
-    logt("END MARK");
-    log_db_log_mark(self->log, NULL); // end mark
+    //logt("END MARK");
+    log_db_log_mark(self->log, "stop", NULL); // end mark
   }
 }
 
@@ -113,3 +113,34 @@ EXTERN_C gboolean sa_Sensor_mark_is_active(sa_Sensor_mark* self)
 }
 
 #endif /* __MARK_ENABLED__ */
+
+/**
+
+sa_sensor_mark.c
+
+Copyright 2009 Helsinki Institute for Information Technology (HIIT)
+and the authors. All rights reserved.
+
+Authors: Tero Hasu <tero.hasu@hut.fi>
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation files
+(the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software,
+and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+ **/

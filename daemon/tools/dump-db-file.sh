@@ -40,7 +40,7 @@ echo STATUS MESSAGES
 sqlite3 log.db "select datetime(unixtime, 'unixepoch'), message from status_log;"
 
 echo MARKS
-sqlite3 log.db "select datetime(unixtime, 'unixepoch') from mark_log;"
+sqlite3 log.db "select datetime(unixtime, 'unixepoch'), message from mark_log;"
 
 echo Notes:
 echo Text is encoded as UTF-8.

@@ -210,27 +210,31 @@ CSensor_gps::~CSensor_gps()
 
 gboolean CSensor_gps::StartL(GError** error)
 {
-  Stop(); // ensure stopped
+  if (!IsActive()) {
+    Stop(); // ensure stopped
+    
+    CreateBestPositionerL();
 
-  CreateBestPositionerL();
+    // Start observing for module status events, as such events might
+    // call for changes in the way we do or should do positioning.
+    MakeRequest();
 
-  // Start observing for module status events, as such events might
-  // call for changes in the way we do or should do positioning.
-  MakeRequest();
-
-  logt("gps sensor started");
+    log_db_log_status(iLogDb, NULL, "gps sensor started");
+  }
 
   return TRUE;
 }
 
 void CSensor_gps::Stop()
 {
-  Cancel();
+  if (IsActive()) {
+    Cancel();
+    
+    // Stop positioner, if any.
+    DELETE_Z(iPositioner);
 
-  // Stop positioner, if any.
-  DELETE_Z(iPositioner);
-
-  logt("gps sensor stopped");
+    log_db_log_status(iLogDb, NULL, "gps sensor stopped");
+  }
 }
 
 void CSensor_gps::MakeRequest() 
@@ -367,7 +371,7 @@ gboolean CSensor_gps::RunGL(GError** error)
 
   if (errCode) {
     Stop();
-    if (!log_db_log_status(iLogDb, error, "ERROR: failure observing positioning module status: %s (%d)", plat_error_strerror(errCode), errCode)) {
+    if (!log_db_log_status(iLogDb, error, "INACTIVATE: gps: failure observing positioning module status: %s (%d)", plat_error_strerror(errCode), errCode)) {
       return FALSE;
     }
   } else {
@@ -471,7 +475,7 @@ gboolean CSensor_gps::PositionerEventL(GError** error)
     switch (errCode) {
     case KErrAccessDenied: // Perhaps some capability thing.
       // Locally severe error. Give up.
-      logt("gps scanner cannot continue");
+      log_db_log_status(iLogDb, NULL, "INACTIVATE: gps: scanner cannot continue");
       break;
     case KErrArgument:
     case KErrPositionBufferOverflow:
@@ -481,7 +485,7 @@ gboolean CSensor_gps::PositionerEventL(GError** error)
       if (iNumScanFailures < 100) {
 	iPositioner->MakeRequest();
       } else {
-	logt("stopping gps scanning due to too many errors");
+	log_db_log_status(iLogDb, NULL, "INACTIVATE: gps: stopping scanning due to too many errors");
       }
     }
   } else {
@@ -674,3 +678,34 @@ void CSensor_gps::RefreshPositionUpdateIntervalSecs()
 }
 
 #endif // __GPS_ENABLED__
+
+/**
+
+epoc-gps.cpp
+
+Copyright 2009 Helsinki Institute for Information Technology (HIIT)
+and the authors. All rights reserved.
+
+Authors: Tero Hasu <tero.hasu@hut.fi>
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation files
+(the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software,
+and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+ **/

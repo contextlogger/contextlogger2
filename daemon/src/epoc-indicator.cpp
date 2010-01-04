@@ -34,12 +34,14 @@ CSensor_indicator::~CSensor_indicator()
   delete iTelephony;
 }
 
+#define iLogDb ac_LogDb(iAppContext)
+
 gboolean CSensor_indicator::StartL(GError** error)
 {
   iNumScanFailures = 0;
   if (!IsActive()) {
     MakeRequest();
-    logt("indicator sensor started");
+    log_db_log_status(iLogDb, NULL, "indicator sensor started");
   }
   return TRUE;
 }
@@ -48,7 +50,7 @@ void CSensor_indicator::Stop()
 {
   if ((IsActive())) {
     Cancel();
-    logt("indicator sensor stopped");
+    log_db_log_status(iLogDb, NULL, "indicator sensor stopped");
   }
 }
 
@@ -111,17 +113,12 @@ void CSensor_indicator::HandleRead()
     logf("%dth consecutive failure in indicator", iNumScanFailures);
 
     if (iNumScanFailures < 100) {
-      if (!log_db_log_status(logDb, &localError, 
-			     "ERROR: failure reading indicator sensor: %s (%d)", 
-			     plat_error_strerror(errCode), errCode)) {
-	// Logging failed.
-	gx_log_free_fatal_error(localError);
-	return;
-      }
+      logf("ERROR: %dth consecutive failure reading indicator sensor: %s (%d)", 
+	   iNumScanFailures, plat_error_strerror(errCode), errCode);
 
       SetTimer();
     } else {
-      logt("stopping indicator scanning due to too many errors");
+      log_db_log_status(logDb, NULL, "INACTIVATE: indicator: stopping indicator scanning due to too many consecutive errors");
     }
 
     return;
@@ -207,3 +204,34 @@ void CSensor_indicator::DoCancel()
 }
 
 #endif // __INDICATOR_ENABLED__
+
+/**
+
+epoc-indicator.cpp
+
+Copyright 2009 Helsinki Institute for Information Technology (HIIT)
+and the authors. All rights reserved.
+
+Authors: Tero Hasu <tero.hasu@hut.fi>
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation files
+(the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software,
+and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+ **/

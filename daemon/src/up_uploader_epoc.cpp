@@ -138,6 +138,7 @@ NONSHARABLE_CLASS(CUploader) :
   gchar* iFileToPost; // pathname of file to upload
   TBool iNoOldFiles; // getNextOldLogFile found nothing
   TInt iNumPostFailures; // affects retry timing
+  time_t iLastOkPost;
 
   //// snapshot taking state
   CTimerAo* iSnapshotTimerAo;
@@ -435,6 +436,13 @@ void CUploader::PosterEvent(TInt anError)
 	  logf("posted log file '%s'", iFileToPost);
 	  iNumPostFailures = 0;
 	  iFileToPost = NULL;
+	  /* // xxx make this available to Lua
+	  iLastOkPost = time(NULL);
+	  if (iLastOkPost == -1) {
+	    px_log_fatal_error();
+	    return;
+	  }
+	  */
 	  StateChanged();
 	}
         break;
@@ -674,3 +682,34 @@ EXTERN_C void up_Uploader_destroy(up_Uploader* object)
 }
 
 #endif // __FEATURE_UPLOADER__
+
+/**
+
+up_uploader_epoc.cpp
+
+Copyright 2009 Helsinki Institute for Information Technology (HIIT)
+and the authors. All rights reserved.
+
+Authors: Tero Hasu <tero.hasu@hut.fi>
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation files
+(the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software,
+and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+ **/

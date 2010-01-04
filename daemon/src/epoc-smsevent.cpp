@@ -23,11 +23,13 @@ CSensor_smsevent::~CSensor_smsevent()
   delete iSmsEventNotifier;
 }
 
+#define iLogDb ac_LogDb(iAppContext)
+
 gboolean CSensor_smsevent::StartL(GError** error)
 {
   if (!IsActive()) {
     ActivateL();
-    logt("smsevent sensor started");
+    log_db_log_status(iLogDb, NULL, "smsevent sensor started");
   }
   return TRUE;
 }
@@ -36,7 +38,7 @@ void CSensor_smsevent::Stop()
 {
   if ((IsActive())) {
     Disactivate();
-    logt("smsevent sensor stopped");
+    log_db_log_status(iLogDb, NULL, "smsevent sensor stopped");
   }
 }
 
@@ -53,15 +55,27 @@ void CSensor_smsevent::Disactivate()
 
 void CSensor_smsevent::LogEvent(const char* evType, const TDesC& aTelNoDes)
 {
-  gchar* telNo = ConvToUtf8CString(aTelNoDes);
-  if (!telNo) {
-    ex_log_fatal_error(KErrNoMemory);
-    return;
-  }
-  logf("smsevent %s, number '%s'", evType, telNo);
+  logf("sms event type: '%s'", evType);
 
-  gchar* contactName = GetContactNameByPhoneNo(aTelNoDes);
-  logf("smsevent contact name '%s'", contactName);
+  gchar* telNo = NULL;
+  gchar* contactName = NULL;
+
+  if (aTelNoDes.Length() > 0) {
+    telNo = ConvToUtf8CString(aTelNoDes);
+    if (!telNo) {
+      ex_log_fatal_error(KErrNoMemory);
+      return;
+    }
+    logf("sms remote party number is '%s'", telNo);
+    contactName = GetContactNameByPhoneNo(aTelNoDes);
+    if (contactName) {
+      logf("sms remote party name is '%s'", contactName);
+    } else {
+      logt("could not get sms remote party name");
+    }
+  } else {
+    logt("could not get sms remote party phone number");
+  }
 
   LogDb* logDb = GetLogDb();
   GError* localError = NULL;
@@ -75,17 +89,17 @@ void CSensor_smsevent::LogEvent(const char* evType, const TDesC& aTelNoDes)
   }
 }
 
-void CSensor_smsevent::handle_reception(const TMsvId& entry_id, 
-					const TMsvId& folder_id, 
-					const TDesC& senderDes, 
+void CSensor_smsevent::handle_reception(const TMsvId& entry_id,
+					const TMsvId& folder_id,
+					const TDesC& senderDes,
 					const TDesC& body)
 {
   //logt("smsevent receive");
   LogEvent("recv", senderDes);
-} 
+}
 
-void CSensor_smsevent::handle_sending(const TMsvId& entry_id, 
-				      const TDesC& senderDes, 
+void CSensor_smsevent::handle_sending(const TMsvId& entry_id,
+				      const TDesC& senderDes,
 				      const TDesC& body)
 {
   //logt("smsevent send");
@@ -100,8 +114,8 @@ void CSensor_smsevent::handle_error(TInt errCode)
 
   LogDb* logDb = GetLogDb();
   GError* localError = NULL;
-  if (!log_db_log_status(logDb, &localError, 
-			 "ERROR: stopped smsevent sensor due to error: %s (%d)", 
+  if (!log_db_log_status(logDb, &localError,
+			 "INACTIVATE: smsevent: error: %s (%d)",
 			 plat_error_strerror(errCode), errCode)) {
     gx_log_free_fatal_error(localError);
     return;
@@ -115,9 +129,8 @@ void CSensor_smsevent::handle_close()
 
   LogDb* logDb = GetLogDb();
   GError* localError = NULL;
-  if (!log_db_log_status(logDb, &localError, 
-			 "ERROR: stopped smsevent sensor "
-			 "due to session termination")) {
+  if (!log_db_log_status(logDb, &localError,
+			 "INACTIVATE: smsevent: session termination")) {
     gx_log_free_fatal_error(localError);
     return;
   }

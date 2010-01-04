@@ -4,7 +4,7 @@
 #define CL2APPAPP_H
 
 #include <aknapp.h>
-#include "sconfig.hrh"
+#include "application_config.h"
 
 const TUid KUidcl2app = { __UID__ };
 

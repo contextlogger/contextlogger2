@@ -18,8 +18,11 @@
  */
 
 // A small amount of the code is derived from CCapturer in PyS60,
-// hence the above license applies.
-// 
+// hence the above license applies. Any changes made are Copyright
+// 2009 Helsinki Institute for Information Technology (HIIT) and Tero
+// Hasu <tero.hasu@hut.fi>, and are made available under the original
+// license.
+
 // Note that this keylogging implementation may interact badly with
 // some built-in functions on some devices. If you are going to have
 // the Jaiku keyevents anim DLL available, you may use the alternative

@@ -1,3 +1,4 @@
+//
 // Copyright (c) 2007-2009 Google Inc.
 // Copyright (c) 2006-2007 Jaiku Ltd.
 // Copyright (c) 2002-2006 Mika Raento and Renaud Petit
@@ -40,8 +41,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
-//
-// This file is part of the JaikuEngine mobile client.
 
 #ifndef __AUTO_PTR_H__
 #define __AUTO_PTR_H__  
