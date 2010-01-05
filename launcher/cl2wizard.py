@@ -51,9 +51,9 @@ except ImportError:
 wd_pattern = u"*[08460006]*"
 cl2_pattern = u"*[e8460002]*"
 magic_file = u"c:\\data\\cl2\\disable_autostart.txt"
-db_dir = "e:\\data\\cl2"
 data_dir = "c:\\data\\cl2"
-log_db_file = db_dir + "\\log.db"
+log_db_file = "e:\\data\\cl2" + "\\log.db"
+alt_log_db_file = "c:\\data\\cl2" + "\\log.db"
 config_db_file = data_dir + "\\config.db"
 config_file = data_dir + "\\config.txt"
 logs_dir = u'c:\\logs\\cl2'
@@ -342,6 +342,7 @@ end """)
 
     def delete_log_db(self):
         rm_file(log_db_file)
+        rm_file(alt_log_db_file)
         appuifw.note(u"Database deleted", "info")
 
     def delete_config_db(self):
@@ -365,12 +366,18 @@ end """)
             return
         username = username.encode("utf-8")
         
+        ldt = appuifw.query(u"Disk threshold (MB):", "number", 10)
+        if ldt is None:
+            return
+        log_disk_threshold = ldt * 1e6
+        
 	text = """
 	return {
 	username = "%s";
 	iap = "%s";
+        log_disk_threshold = %d;
 	}
-	""" % (username, iap_expr)
+	""" % (username, iap_expr, log_disk_threshold)
 	make_file(config_file, str(text))
         appuifw.note(u"Config file written", "info")
 

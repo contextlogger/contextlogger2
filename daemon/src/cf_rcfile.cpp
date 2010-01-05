@@ -56,6 +56,8 @@ static gboolean ReadRcFile(cf_RcFile* self, lua_State *L, GError** error)
   }
   logt("config file evaluated OK");
 
+  self->log_disk_threshold = LOG_DISK_THRESHOLD_DEFAULT;
+
   STATE_INIT_ALL;
 
 #if defined(__DO_LOGGING__)
@@ -70,6 +72,9 @@ static gboolean ReadRcFile(cf_RcFile* self, lua_State *L, GError** error)
   }
   if (self->iap) {
     logf("IAP expr configured to '%s'", self->iap);
+  }
+  if (self->log_disk_threshold) {
+    logf("log_disk_threshold configured to %d", self->log_disk_threshold);
   }
 #endif /* __DO_LOGGING__ */
   

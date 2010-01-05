@@ -62,7 +62,7 @@
 #define CONFIG_DIR "c:\\data\\cl2"
 #define DATABASE_DIR "e:\\data\\cl2"
 #define DATABASE_DRIVE_LETTER 'e'
-#define DATABASE_VOLUME_THRESHOLD 10e6
+#define LOG_DISK_THRESHOLD_DEFAULT 10e6
 #else
 #define CONFIG_DIR "."
 #define DATABASE_DIR "."

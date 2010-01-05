@@ -1,5 +1,6 @@
 #include "kr_plat_ao.h"
 
+#include "ac_app_context.h"
 #include "er_errors.h"
 //#include "kr_controller_private.h"
 #include "kr_diskspace.h"
@@ -69,9 +70,10 @@ void CDiskObserver::ConstructL()
   User::LeaveIfError(RFs::CharToDrive(driveLetter, driveNum));
 
   LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iFs, iFs.Connect());
+  int log_disk_threshold = ac_STATIC_GET(log_disk_threshold);
   iNotifier = CDiskSpaceNotifier::NewL(iFs, driveNum,
 				       this, 
-				       (TInt64)DATABASE_VOLUME_THRESHOLD);
+				       (TInt64)log_disk_threshold);
 }
 
 CDiskObserver::~CDiskObserver()

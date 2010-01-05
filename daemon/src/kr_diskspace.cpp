@@ -2,6 +2,7 @@
 
 #if defined(__EPOC32__)
 
+#include "ac_app_context.h"
 #include "application_config.h"
 #include "er_errors.h"
 
@@ -30,7 +31,9 @@ void CheckLoggingMediumReadyL(RFs& fs)
     logt("logging medium write protected");
     User::Leave(KErrAccessDenied);
   }
-  if (volumeInfo.iFree < DATABASE_VOLUME_THRESHOLD) {
+
+  int log_disk_threshold = ac_STATIC_GET(log_disk_threshold);
+  if (volumeInfo.iFree < log_disk_threshold) {
     logt("logging medium (almost) full");
     User::Leave(KErrDiskFull);
   }

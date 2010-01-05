@@ -64,6 +64,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     (remokon_password string ,validate-non-empty-string)
     (jid string ,validate-non-empty-string)
     (iap string ,validate-non-empty-string)
+    (log_disk_threshold integer #f)
     ))
 
 ;; --------------------------------------------------
