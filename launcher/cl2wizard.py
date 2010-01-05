@@ -360,24 +360,34 @@ end """)
         iap_name = iap_name.encode("utf-8")
         iap_expr = """return cl2.iap_id_by_name('%s');""" % iap_name
 
-        import sysinfo
-        username = appuifw.query(u"Username:", "text", unicode(sysinfo.imei()))
+        #import sysinfo
+        #username = appuifw.query(u"Username:", "text", unicode(sysinfo.imei()))
+        username = appuifw.query(u"Username:", "text", u"johndoe")
         if username is None:
             return
         username = username.encode("utf-8")
         
+        db_drive = appuifw.query(u"Log drive:", "text", u"e")
+        if db_drive is None:
+            return
+        if len(db_drive) != 1:
+            appuifw.note(u"Must be one letter", "error")
+            return
+        dbdir = (db_drive + u":\\\\data\\\\cl2").encode("utf-8")
+        
         ldt = appuifw.query(u"Disk threshold (MB):", "number", 10)
         if ldt is None:
             return
-        log_disk_threshold = ldt * 1e6
+        database_disk_threshold = ldt * 1e6
         
 	text = """
 	return {
 	username = "%s";
 	iap = "%s";
-        log_disk_threshold = %d;
+        database_dir = "%s";
+        database_disk_threshold = %d;
 	}
-	""" % (username, iap_expr, log_disk_threshold)
+	""" % (username, iap_expr, dbdir, database_disk_threshold)
 	make_file(config_file, str(text))
         appuifw.note(u"Config file written", "info")
 

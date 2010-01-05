@@ -35,6 +35,10 @@ extern "C" {
 
   ConfigDb* ac_ConfigDb(ac_AppContext* self);
 
+  char* ac_get_logdb_file(ac_AppContext* self);
+  char* ac_get_logdb_dir(ac_AppContext* self);
+  char* ac_get_log_uploads_dir(ac_AppContext* self);
+
 #if __NEED_IMEI__
   // Returned buffer must not be freed.
   const char* ac_Imei(ac_AppContext* self);
@@ -47,6 +51,13 @@ extern "C" {
 #define ac_global_LogDb ac_LogDb(ac_get_global_AppContext())
 #define ac_global_RcFile ac_RcFile(ac_get_global_AppContext())
 #define ac_global_ConfigDb ac_ConfigDb(ac_get_global_AppContext())
+#define LOGDB_FILE ac_get_logdb_file(ac_get_global_AppContext())
+#define LOGDB_DIR ac_get_logdb_dir(ac_get_global_AppContext())
+#define LOG_UPLOADS_DIR ac_get_log_uploads_dir(ac_get_global_AppContext())
+
+#if defined(__SYMBIAN32__)
+#define DATABASE_DRIVE_LETTER (LOGDB_FILE [0])
+#endif /* __SYMBIAN32__ */
 
 // --------------------------------------------------
 // backwards compatibility

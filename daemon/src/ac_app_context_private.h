@@ -20,6 +20,9 @@ extern "C" {
 
   void ac_AppContext_set_controller(ac_AppContext* self, kr_Controller* kr);
 
+  // Should be called once the configuration file has been read.
+  gboolean ac_AppContext_configure(ac_AppContext* self, GError** error);
+
   void ac_AppContext_destroy(ac_AppContext* self);
 
   void ac_set_global_AppContext(ac_AppContext* ac);

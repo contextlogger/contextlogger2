@@ -91,6 +91,11 @@ kr_Controller* kr_Controller_new(GError** error)
     return NULL;
   }
 
+  if (!ac_AppContext_configure(ac, error)) {
+    kr_Controller_destroy(self);
+    return NULL;
+  }
+
 #if LOGGING_MEDIUM_CHECK_SUPPORTED
   // Must be done after config file reading, as the threshold is
   // configurable. We do want to do this as early as possible, though,

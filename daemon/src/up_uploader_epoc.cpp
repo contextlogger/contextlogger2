@@ -4,6 +4,7 @@
 
 #include "up_poster_epoc.hpp"
 
+#include "ac_app_context.h"
 #include "cf_query.h"
 #include "epoc-iap.h"
 #include "er_errors.h"

@@ -2,6 +2,8 @@
 
 #if __FEATURE_UPLOADER__
 
+#include "ac_app_context.h"
+
 #include "common/assertions.h"
 
 // --------------------------------------------------

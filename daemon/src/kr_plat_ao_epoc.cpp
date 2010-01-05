@@ -70,10 +70,10 @@ void CDiskObserver::ConstructL()
   User::LeaveIfError(RFs::CharToDrive(driveLetter, driveNum));
 
   LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iFs, iFs.Connect());
-  int log_disk_threshold = ac_STATIC_GET(log_disk_threshold);
+  int database_disk_threshold = ac_STATIC_GET(database_disk_threshold);
   iNotifier = CDiskSpaceNotifier::NewL(iFs, driveNum,
 				       this, 
-				       (TInt64)log_disk_threshold);
+				       (TInt64)database_disk_threshold);
 }
 
 CDiskObserver::~CDiskObserver()

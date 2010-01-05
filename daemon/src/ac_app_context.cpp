@@ -146,6 +146,9 @@ struct _ac_AppContext
 {
   kr_Controller* kr; // not owned
   DEFINE_FOR_SYMBIAN_CXX(CAppContext* plat); // owned
+  char* logdb_dir; // not owned
+  char* logdb_file; // owned
+  char* log_uploads_dir; // owned
 };
 
 EXTERN_C ac_AppContext* ac_AppContext_new(GError** error)
@@ -171,16 +174,55 @@ EXTERN_C ac_AppContext* ac_AppContext_new(GError** error)
   return self;
 }
 
+// The result is "static", and not to be freed.
+static gchar* get_config_database_dir(ac_AppContext* self)
+{
+  gchar* database_dir = cf_RcFile_get_database_dir(ac_RcFile(self));
+  if (!database_dir) {
+    database_dir = DATABASE_DIR_DEFAULT; // default value
+  }
+  return database_dir;
+}
+
 EXTERN_C void ac_AppContext_set_controller(ac_AppContext* self, 
 					   kr_Controller* kr)
 {
   self->kr = kr;
 }
 
+EXTERN_C gboolean ac_AppContext_configure(ac_AppContext* self, 
+					  GError** error)
+{
+  gchar* database_dir = get_config_database_dir(self);
+
+  self->logdb_dir = database_dir;
+  logf("log db stored in directory '%s'", self->logdb_dir);
+
+  self->logdb_file = g_strdup_printf("%s%s%s",
+				     self->logdb_dir,
+				     DIR_SEP, 
+				     LOGDB_BASENAME);
+  if (!self->logdb_file) goto fail;
+
+  self->log_uploads_dir = g_strdup_printf("%s%suploads",
+					  database_dir,
+					  DIR_SEP);
+  if (!self->log_uploads_dir) goto fail;
+  logf("uploads stored in directory '%s'", self->log_uploads_dir);
+
+  return TRUE;
+
+ fail:
+  if (error) *error = gx_error_no_memory;
+  return FALSE;
+}
+
 EXTERN_C void ac_AppContext_destroy(ac_AppContext* self)
 {
   if (self) {
     WHEN_SYMBIAN(delete self->plat);
+    g_free(self->logdb_file);
+    g_free(self->log_uploads_dir);
     g_free(self);
   }
 }
@@ -218,6 +260,21 @@ EXTERN_C cf_RcFile* ac_RcFile(ac_AppContext* self)
 EXTERN_C ConfigDb* ac_ConfigDb(ac_AppContext* self)
 {
   return self->kr->configDb;
+}
+
+EXTERN_C char* ac_get_logdb_file(ac_AppContext* self)
+{
+  return self->logdb_file;
+}
+
+EXTERN_C char* ac_get_logdb_dir(ac_AppContext* self)
+{
+  return self->logdb_dir;
+}
+
+EXTERN_C char* ac_get_log_uploads_dir(ac_AppContext* self)
+{
+  return self->log_uploads_dir;
 }
 
 // --------------------------------------------------

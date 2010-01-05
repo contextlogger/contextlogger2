@@ -17,12 +17,13 @@ requires 2.0.0
 #include <stdarg.h> // va_list
 #include <stdlib.h>
 #include <glib/gprintf.h>
-#include "common/platform_config.h"
+#include "ac_app_context.h"
 #include "application_config.h"
 #include "log-db-create.h"
-#include "common/logging.h"
 #include "common/assertions.h"
 #include "common/error_list.h"
+#include "common/logging.h"
+#include "common/platform_config.h"
 #include "common/threading.h"
 
   // text:: A zero-terminated string, in UTF-8. Ownership is not
