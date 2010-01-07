@@ -109,7 +109,7 @@ project must implement.
 
   (define/public (major-version.attr) 0)
   
-  (define/public (minor-version.attr) 6)
+  (define/public (minor-version.attr) 7)
   
   (define/public (version100.attr)
     (+ (* (major-version.attr) 100) (minor-version.attr)))

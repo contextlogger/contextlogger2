@@ -52,6 +52,7 @@
 ;; Key events ANIM DLLs. (OPTIONAL)
 ;;
 ;; Requires heavy permissions, so not in self-signed version.
+;; Also not included if keypress sensor not enabled.
 ;;
 <% if $KEYPRESS_ENABLED %>
 
