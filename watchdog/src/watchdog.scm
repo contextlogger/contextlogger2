@@ -186,7 +186,8 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
            (name 'StartApp) private
            (block
             (cxx-line "assert((!iProcessOpen) && \"logic error\");")
-            
+
+            #;
             (cif (call 'AreResourcesLow)
                  (block
                   (call 'HandleMinorError)
@@ -275,6 +276,13 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
           ;; actually starting the application. And if we fail to do
           ;; the check, then presumably resources are running low, and
           ;; we can just return EFalse.
+          ;; 
+          ;; This simplistic AreResourcesLow check is no longer
+          ;; appropriate now that the logging medium is configurable.
+          ;; Also, this probably returns EFalse if there is no medium
+          ;; in the E: drive.
+
+          #;
           (func
            (name 'AreResourcesLow) private
            (returns (type 'TBool))
