@@ -146,7 +146,7 @@ struct _ac_AppContext
 {
   kr_Controller* kr; // not owned
   DEFINE_FOR_SYMBIAN_CXX(CAppContext* plat); // owned
-  char* logdb_dir; // not owned
+  const char* logdb_dir; // not owned
   char* logdb_file; // owned
   char* log_uploads_dir; // owned
 };
@@ -175,9 +175,9 @@ EXTERN_C ac_AppContext* ac_AppContext_new(GError** error)
 }
 
 // The result is "static", and not to be freed.
-static gchar* get_config_database_dir(ac_AppContext* self)
+static const gchar* get_config_database_dir(ac_AppContext* self)
 {
-  gchar* database_dir = cf_RcFile_get_database_dir(ac_RcFile(self));
+  const gchar* database_dir = cf_RcFile_get_database_dir(ac_RcFile(self));
   if (!database_dir) {
     database_dir = DATABASE_DIR_DEFAULT; // default value
   }
@@ -193,7 +193,7 @@ EXTERN_C void ac_AppContext_set_controller(ac_AppContext* self,
 EXTERN_C gboolean ac_AppContext_configure(ac_AppContext* self, 
 					  GError** error)
 {
-  gchar* database_dir = get_config_database_dir(self);
+  const gchar* database_dir = get_config_database_dir(self);
 
   self->logdb_dir = database_dir;
   logf("log db stored in directory '%s'", self->logdb_dir);
@@ -262,17 +262,17 @@ EXTERN_C ConfigDb* ac_ConfigDb(ac_AppContext* self)
   return self->kr->configDb;
 }
 
-EXTERN_C char* ac_get_logdb_file(ac_AppContext* self)
+EXTERN_C const char* ac_get_logdb_file(ac_AppContext* self)
 {
   return self->logdb_file;
 }
 
-EXTERN_C char* ac_get_logdb_dir(ac_AppContext* self)
+EXTERN_C const char* ac_get_logdb_dir(ac_AppContext* self)
 {
   return self->logdb_dir;
 }
 
-EXTERN_C char* ac_get_log_uploads_dir(ac_AppContext* self)
+EXTERN_C const char* ac_get_log_uploads_dir(ac_AppContext* self)
 {
   return self->log_uploads_dir;
 }

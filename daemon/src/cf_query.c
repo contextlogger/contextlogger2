@@ -276,7 +276,7 @@ int get_config_iap_id()
 {
   int value = __IAP_ID__;
   lua_State* L = NULL;
-  gchar* expr = cf_STATIC_GET(iap); // may be NULL
+  const gchar* expr = cf_STATIC_GET(iap); // may be NULL
   if (!expr)
     expr = __IAP_ID_EXPR__; // may also be NULL
   if (get_lua_value_wd("iap", expr, &L, NULL)) {
@@ -288,9 +288,9 @@ int get_config_iap_id()
   return value;
 }
 
-gchar* get_config_username()
+const gchar* get_config_username()
 {
-  gchar* username = cf_STATIC_GET(username);
+  const gchar* username = cf_STATIC_GET(username);
 #if __USERNAME_FROM_IMEI__
   if (!username) {
     username = ac_Imei(ac_get_global_AppContext());

@@ -61,11 +61,12 @@
   // instead of assuming "C:".)
 #define CONFIG_DIR "c:\\data\\cl2"
 #define DATABASE_DIR_DEFAULT "e:\\data\\cl2"
-#define DATABASE_DISK_THRESHOLD_DEFAULT 10000000
 #else
 #define CONFIG_DIR "."
 #define DATABASE_DIR_DEFAULT "."
 #endif
+
+#define DATABASE_DISK_THRESHOLD_DEFAULT 10000000
 
 /** Log database file.
  */

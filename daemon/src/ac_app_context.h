@@ -35,9 +35,9 @@ extern "C" {
 
   ConfigDb* ac_ConfigDb(ac_AppContext* self);
 
-  char* ac_get_logdb_file(ac_AppContext* self);
-  char* ac_get_logdb_dir(ac_AppContext* self);
-  char* ac_get_log_uploads_dir(ac_AppContext* self);
+  const char* ac_get_logdb_file(ac_AppContext* self);
+  const char* ac_get_logdb_dir(ac_AppContext* self);
+  const char* ac_get_log_uploads_dir(ac_AppContext* self);
 
 #if __NEED_IMEI__
   // Returned buffer must not be freed.

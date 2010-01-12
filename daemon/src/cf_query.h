@@ -48,7 +48,7 @@ extern "C" {
   int get_config_iap_id();
 
   // The returned buffer is "static", and not to be freed.
-  gchar* get_config_username();
+  const gchar* get_config_username();
 
 #ifdef __cplusplus
 } /* extern "C" */
