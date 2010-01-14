@@ -15,6 +15,9 @@ TIMESPEC_C_FILES := moment_parser.c time_utils.c
 
 ALL_RAGEL_FILES := src/rk_jabber_session.rl
 RAGEL_C_FILES := $(patsubst %.rl, %.c, $(ALL_RAGEL_FILES))
+RAGEL_GV_FILES := $(patsubst %.rl, %.gv, $(ALL_RAGEL_FILES))
+RAGEL_PNG_FILES := $(patsubst %.rl, %.png, $(ALL_RAGEL_FILES))
+RAGEL_GEN_FILES := $(RAGEL_C_FILES) $(RAGEL_GV_FILES) $(RAGEL_PNG_FILES)
 
 IKSEMEL_INC_PATH := ../iksemel/include
 IKSEMEL_SRC_PATH := ../iksemel/src
@@ -35,7 +38,7 @@ GOB_C_FILES := $(patsubst %.gob, %.c, $(GOB_FILES))
 # We would really need --no-extern-c because of GOB's indiscriminate enclosing of almost everything in an extern "C"; this is an issue when #including a GOB-generated header into a C++ source file, as then there may end up being C++ declarations with C linkage, which will not work. But not having an --no-extern-c for all the C functions will lead to problems as well at linking time.
 GOB_FLAGS := --always-private-header --output-dir $(SRC_PATH)
 
-GEN_FILES := $(GOB_H_FILES) $(GOB_PRIV_H_FILES) $(GOB_C_FILES) $(RAGEL_C_FILES)
+GEN_FILES := $(GOB_H_FILES) $(GOB_PRIV_H_FILES) $(GOB_C_FILES) $(RAGEL_GEN_FILES)
 
 # We assume Curl built separately for each platform to avoid system incompatibility issues.
 CURL_CONFIG := $(HOME)/local/bin/curl-config
@@ -104,9 +107,15 @@ main : $(ALL_OBJ_FILES)
 src/rk_jabber_session.c : src/rk_jabber_session.rl
 	ragel -C -o $@ $<
 
+%.gv : %.rl
+	ragel -V -o $@ $<
+
+%.png : %.gv
+	dot -Tpng $< > $@
+
 epoc_codegen : src/timer_generic_epoc.h
 
-ragel : $(RAGEL_C_FILES)
+ragel : $(RAGEL_C_FILES) $(RAGEL_GV_FILES) $(RAGEL_PNG_FILES)
 
 src/sa_sensor_list_log_db.h src/sa_sensor_list_log_db.c src/sa_sensor_list_integration.cpp : src/sa_sensor_list_spec.ss src/sa_sensor_list_make.ss src/sa_sensor_list_dsl.ss
 	$(PLT_ENV) $<
