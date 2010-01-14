@@ -106,9 +106,11 @@ static int doNext(rk_JabberSession* self, letter evCode);
 // separate file appears to be the only way to make that happen.
 #include "rk_transport_event_list.h"
 
-// What we do here is we drive the protocol with Ragel. With know what
-// sort of a reply to expect based on the state we are in, and we know
-// what action to take to transition out of a state.
+// What we do here is we drive the protocol with Ragel, but unusually
+// we do the protocol parsing outside of the state machine, and drive
+// the state machine from the Iksemel based parsing actions. We know
+// what sort of a reply to expect based on the state the machine is
+// in, and we know what action to take to transition out of a state.
 // 
 // Our solution is somewhat different than the one shown in
 // http://www.zedshaw.com/essays/ragel_state_charts.html, but I

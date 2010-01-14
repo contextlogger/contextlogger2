@@ -2,6 +2,7 @@
 
 #if defined(__EPOC32__)
 
+#include "ac_app_context.h"
 #include "application_config.h"
 #include "er_errors.h"
 
@@ -26,11 +27,14 @@ void CheckLoggingMediumReadyL(RFs& fs)
   // The C: drive seems to have the write protected attribute set (on
   // all the devices I have tried).
   if ((driveLetter != 'c') && 
+      (driveLetter != 'C') && 
       (driveInfo.iType & KMediaAttWriteProtected)) {
     logt("logging medium write protected");
     User::Leave(KErrAccessDenied);
   }
-  if (volumeInfo.iFree < DATABASE_VOLUME_THRESHOLD) {
+
+  int database_disk_threshold = ac_STATIC_GET(database_disk_threshold);
+  if (volumeInfo.iFree < database_disk_threshold) {
     logt("logging medium (almost) full");
     User::Leave(KErrDiskFull);
   }

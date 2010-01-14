@@ -11,12 +11,6 @@
 extern "C" {
 #endif
 
-#ifndef __EPOC32__
-#define LOG_UPLOADS_DIR "uploads"
-#else
-#define LOG_UPLOADS_DIR DATABASE_DIR "\\uploads"
-#endif
-
 gboolean getNextOldLogFile(gchar** pathname,
 			   GError** error);
 

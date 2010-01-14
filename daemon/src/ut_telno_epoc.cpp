@@ -1,3 +1,8 @@
+/*
+ !concept {:name => "Phone number to contact name",
+   :desc => "Resolving a phone number to the name of a matching contact on Symbian."}
+*/
+
 #include "ut_telno_epoc.hpp"
 
 #include "ac_app_context.h"

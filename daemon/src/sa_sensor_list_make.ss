@@ -240,9 +240,11 @@
      (body
 
       (cxx-internal-declarations
-       "#include \"log-db-private.h\"")
+       "#include \"log-db-private.h\""
+       )
       
       (cxx-internal-declarations
+       "#include \"ac_app_context.h\""
        "#include <errno.h>"
        "#include \"common/logging.h\""
        "#include \"common/assertions.h\""

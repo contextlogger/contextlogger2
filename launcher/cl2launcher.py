@@ -69,6 +69,9 @@ def make_file(file, data):
     finally:
         fp.close()
 
+def do_nothing():
+    pass
+
 class GUI:
     def __init__(self):
         self.lock = e32.Ao_lock()
@@ -118,13 +121,8 @@ class GUI:
               (u"Set BT scan interval", self.set_btprox_interval),
               (u"Set GPS scan interval", self.set_gps_interval))),
 
-            (u"View config file", self.show_config_file),
-            (u"View log file", self.show_log),
-
             (u"Misc",
-             ((u"Create config file", self.create_config_file),
-              (u"Delete log database", self.delete_log_db),
-              (u"Delete config database", self.delete_config_db),
+             ((u"View log file", self.show_log),
               (u"Reboot device", self.reboot_device))),
 
             (u"Exit", self.abort)
@@ -412,39 +410,12 @@ end """)
         os.unlink(magic_file)
         appuifw.note(u"Autostart enabled", "info")
 
-    def delete_log_db(self):
-        os.unlink(log_db_file)
-        appuifw.note(u"Database deleted", "info")
-
-    def delete_config_db(self):
-        os.unlink(config_db_file)
-        appuifw.note(u"Database deleted", "info")
-
     def reboot_device(self):
         """
         Causes the device to reboot. Do not know how safe this is,
         though.
         """
         appuifw.e32.start_exe(u'z:\\sys\\bin\\starter.exe', '')
-
-    def create_config_file(self):
-	ret = appuifw.multi_query(u"Username", u"Upload URL")
-	if ret is None:
-	    return
-	text = """
-	return {
-	username = "%s";
-	upload_url = "%s";
-	}
-	""" % ret
-	make_file(config_file, str(text))
-        appuifw.note(u"Config file written", "info")
-
-    def show_config_file(self):
-        doc_lock = e32.Ao_lock()
-        ch = appuifw.Content_handler(doc_lock.signal)
-        ch.open(unicode(config_file))
-        doc_lock.wait()
 
     def show_log(self):
         logdir = u'c:\\logs\\cl2\\'

@@ -63,18 +63,6 @@ kr_Controller* kr_Controller_new(GError** error)
   }
   ac_set_global_AppContext(ac);
 
-#if LOGGING_MEDIUM_CHECK_SUPPORTED
-  // Don't even bother with initialization in this case, so that we do
-  // not end up doing a lot of work every time a watchdog awakens us,
-  // just to find out that no logging can be done anyway.
-  if (!check_logging_medium_ready(error)) {
-    ac_set_global_AppContext(NULL);
-    ac_AppContext_destroy(ac);
-    return NULL;
-  }
-  logt("logging medium ready");
-#endif
-
   kr_Controller* self = g_try_new0(kr_Controller, 1);
   if (!self) {
     ac_set_global_AppContext(NULL);
@@ -102,6 +90,23 @@ kr_Controller* kr_Controller_new(GError** error)
     kr_Controller_destroy(self);
     return NULL;
   }
+
+  if (!ac_AppContext_configure(ac, error)) {
+    kr_Controller_destroy(self);
+    return NULL;
+  }
+
+#if LOGGING_MEDIUM_CHECK_SUPPORTED
+  // Must be done after config file reading, as the threshold is
+  // configurable. We do want to do this as early as possible, though,
+  // to avoid doing a lot of work when the watchdog repeatedly tries
+  // to launch us.
+  if (!check_logging_medium_ready(error)) {
+    kr_Controller_destroy(self);
+    return NULL;
+  }
+  logt("logging medium ready");
+#endif
 
   self->configDb = ConfigDb_new(error);
   if (!(self->configDb)) {

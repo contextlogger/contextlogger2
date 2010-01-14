@@ -1,5 +1,6 @@
 #include "log-db-create.h"
 
+#include "ac_app_context.h"
 #include "application_config.h"
 #include "db_creation.h"
 #include "sa_sensor_list_log_db.h"

@@ -60,19 +60,17 @@
   // might want to use RFs::GetSystemDrive() to get the drive letter
   // instead of assuming "C:".)
 #define CONFIG_DIR "c:\\data\\cl2"
-#define DATABASE_DIR "e:\\data\\cl2"
-#define DATABASE_DRIVE_LETTER 'e'
-#define DATABASE_VOLUME_THRESHOLD 10e6
+#define DATABASE_DIR_DEFAULT "e:\\data\\cl2"
 #else
 #define CONFIG_DIR "."
-#define DATABASE_DIR "."
+#define DATABASE_DIR_DEFAULT "."
 #endif
+
+#define DATABASE_DISK_THRESHOLD_DEFAULT 10000000
 
 /** Log database file.
  */
 #define LOGDB_BASENAME "log.db"
-#define LOGDB_DIR DATABASE_DIR
-#define LOGDB_FILE (LOGDB_DIR DIR_SEP LOGDB_BASENAME)
 
 /** These options should generally not be enabled,
     but may be useful for testing and debugging.

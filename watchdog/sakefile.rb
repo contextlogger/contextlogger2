@@ -17,7 +17,7 @@ $basename = "cl2watchdog"
 
 $proj = Sake::Project.new(:basename => $basename,
                           :name => "CL2 Watchdog",
-                          :version => [0, 1],
+                          :version => [0, 2],
                           :uid => Sake::Uid.v9($uid_v9),
                           :vendor => "HIIT")
 

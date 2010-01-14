@@ -64,15 +64,23 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     (remokon_password string ,validate-non-empty-string)
     (jid string ,validate-non-empty-string)
     (iap string ,validate-non-empty-string)
+    (database_dir string ,validate-non-empty-string)
+    (database_disk_threshold integer #f)
     ))
 
 ;; --------------------------------------------------
 ;; 
 ;; --------------------------------------------------
 
-(define (c-return-type t)
+(define (c-declare-type t)
   (case-eq t
            ('string (ptr-to 'gchar))
+           ('integer 'gint)
+           (else (error "unsupported" t))))
+
+(define (c-return-type t)
+  (case-eq t
+           ('string (ptr-to (const 'gchar)))
            ('integer 'gint)
            (else (error "unsupported" t))))
 
@@ -115,7 +123,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     (for-each-param
      (n t v)
      (display-nl " \\")
-     (display-f "~a;" (var-type-string (var (name n) (type (c-return-type t)))))))
+     (display-f "~a;" (var-type-string (var (name n) (type (c-declare-type t)))))))
   (cxx-exported-declarations (capture-output f)))
 
 #|

@@ -90,7 +90,6 @@ void cl2GlobalInit()
        __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__,
        __GCC_VERSION__);
 #endif
-  logf("log data going to directory '%s'", DATABASE_DIR);
   logf("built on %s at %s", __DATE__, __TIME__);
   log_ctx(PRIMARY_LOG_FILENAME, "context test");
 #if __DO_LOGGING__
