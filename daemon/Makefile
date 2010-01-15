@@ -1,4 +1,6 @@
-include src/current_config.mk
+VARIANT_NAME := s60_30_dev
+
+-include src/current_config.mk
 
 CC := gcc
 
@@ -78,9 +80,15 @@ LDFLAGS := $(CURL_LSFLAGS) -lev -lpthread `pkg-config --libs gobject-2.0` -lsqli
 
 PLT_ENV := PLTCOLLECTS=`pwd`/../tools/schemelib:
 
+SAKE := ../tools/bin/sake
+
+KIT := $(or $(KIT_NAME), s60_30)
+CERT := $(or $(CERT_NAME), dev)
+
 default : epoc_codegen binary
 
-binary : $(if $(IS_SYMBIAN), symbian, posix_test)
+src/current_config.mk :
+	$(PLT_ENV) ./configure.scm $(VARIANT_NAME)
 
 config : 
 	$(PLT_ENV) ./configure.scm $(VARIANT_NAME)
@@ -94,6 +102,11 @@ deps :
 	fastdep $(DEP_FLAGS) --remakedeptarget=$@ $(ALL_C_FILES) $(ALL_CXX_FILES) > $@
 
 -include .depend
+
+symbian :
+	$(SAKE) --trace kits=$(KIT) cert=$(CERT)
+
+binary : $(if $(IS_SYMBIAN), symbian, posix_test)
 
 posix_test : main
 	./main
