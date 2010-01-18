@@ -423,7 +423,7 @@ void CFileDataSupplier::OpenL(const TDesC& aFileName)
   //logf("lens %d %d %d", KMaxFileName, iFileName.MaxLength(), aFileName.Length());
   iFileName = aFileName;
 
-  gchar* username = get_config_username();
+  const gchar* username = get_config_username();
   logf("uploader using username '%s'", username);
 
   // _LIT8(KPrelude, "-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"logdata\"; filename=\"" __USERNAME__ ".db\"\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: binary\r\n\r\n");
