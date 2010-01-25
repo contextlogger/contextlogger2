@@ -79,8 +79,10 @@ EXTERN_C sa_Sensor_mark* sa_Sensor_mark_new(LogDb* log, GError** error)
 EXTERN_C void sa_Sensor_mark_destroy(sa_Sensor_mark* self)
 {
   if (self) {
-    sa_Sensor_mark_stop(self);
-    ut_Timer_destroy(self->timer);
+    if (self->timer) {
+      sa_Sensor_mark_stop(self);
+      ut_Timer_destroy(self->timer);
+    }
     g_free(self);
   }
 }

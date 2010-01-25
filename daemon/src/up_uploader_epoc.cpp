@@ -208,7 +208,7 @@ void CUploader::RefreshSnapshotTimeExpr(TBool aNotInitial)
       // What is past is past.
       {
 	iSnapshotTimerAo->Cancel();
-	iNoNextSnapshotTime = ETrue;
+	iNoNextSnapshotTime = EFalse;
 	StateChanged();
       }
     }
@@ -233,7 +233,7 @@ void CUploader::ConstructL()
     User::Leave(KErrGeneral);
   }
 
-  CreatePosterAo();
+  //CreatePosterAo();
 
 #if 0
   // Test code with a single part post. Just to see if can actually connect somewhere.
@@ -540,6 +540,7 @@ void CUploader::StateChangedL()
     SetSnapshotTimerL();
   }
 
+ again:
   if (iFileToPost) {
     if (PosterAoIsActive() ||
 	iPostTimerAo->IsActive())
@@ -547,9 +548,17 @@ void CUploader::StateChangedL()
     PostNowL();
   } else if (!iNoOldFiles) {
     NextOldFileL();
-    StateChangedL();
+    goto again;
   } else if (iSnapshotTimePassed) {
     TakeSnapshotNowL();
+  } else {
+    // Have nothing to post for now. This will see to it that we close
+    // any connection that we do not require. With some operators,
+    // with no fixed data, merely keeping an RConnection open incurs
+    // an hourly charge (minimum charge per hour), and there is a
+    // battery hit as well, and possible interference with phone calls
+    // and such.
+    DestroyPosterAo();
   }
 }
 

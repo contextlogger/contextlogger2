@@ -74,6 +74,10 @@ int cl2RunOnceGetExitCode()
 
 #endif // __IS_DAEMON__
 
+#if defined(__SYMBIAN32__)
+#include <pipsversion.h>
+#endif /* __SYMBIAN32__ */
+
 // public interface
 void cl2GlobalInit()
 {
@@ -90,7 +94,18 @@ void cl2GlobalInit()
        __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__,
        __GCC_VERSION__);
 #endif
+#if defined(__SYMBIAN32__)
+  logf("compiled against PIPS version %03u", PIPS_VERSION);
+#endif /* __SYMBIAN32__ */
+  logf("compiled against GLib %u.%u.%u", GLIB_MAJOR_VERSION, GLIB_MINOR_VERSION, 
+       GLIB_MICRO_VERSION);
+#if !defined(__SYMBIAN32__)
+  // These are not available on Symbian, as variables cannot be exported.
+  logf("running with GLib %u.%u.%u", glib_major_version, glib_minor_version, 
+       glib_micro_version);
+#endif /* __SYMBIAN32__ */
   logf("built on %s at %s", __DATE__, __TIME__);
+
   log_ctx(PRIMARY_LOG_FILENAME, "context test");
 #if __DO_LOGGING__
   gchar* eData = g_strescape("hello", NULL);
