@@ -62,7 +62,7 @@ EXTERN_C sa_Sensor_timer* sa_Sensor_timer_new(LogDb* log, GError** error)
 {
   sa_Sensor_timer* self = g_try_new0(sa_Sensor_timer, 1);
   if (!self) {
-    if (error) *error = NULL;
+    if (error) *error = gx_error_no_memory;
     return NULL;
   }
   self->log = log;

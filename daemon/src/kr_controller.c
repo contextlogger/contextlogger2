@@ -33,7 +33,6 @@ static gboolean start_uploader(kr_Controller* self, GError** error)
   assert(!self->uploader);
   self->uploader = up_Uploader_new(self->log, error);
   if (!self->uploader) {
-    assert_error_set(error);
     return FALSE;
   }
   return TRUE;

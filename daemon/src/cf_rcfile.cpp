@@ -22,7 +22,7 @@ struct _cf_RcFile {
 #define RCFILE_FILE (RCFILE_DIR DIR_SEP RCFILE_BASENAME)
 
 #define return_with_error(s...) { if (error) *error = g_error_new(domain_cl2app, code_unspecified_error, s); return FALSE; }
-#define return_with_oom { if (error) *error = NULL; return FALSE; }
+#define return_with_oom { if (error) *error = gx_error_no_memory; return FALSE; }
 
 static gboolean ReadRcFile(cf_RcFile* self, lua_State *L, GError** error)
 {
@@ -85,7 +85,7 @@ extern "C" cf_RcFile* cf_RcFile_new(GError** error)
 {
   cf_RcFile* self = g_try_new0(cf_RcFile, 1);
   if (!self) {
-    if (error) *error = NULL;
+    if (error) *error = gx_error_no_memory;
     return NULL;
   }
 

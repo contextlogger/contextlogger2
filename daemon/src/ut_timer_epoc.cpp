@@ -70,7 +70,7 @@ void CUtTimer::RunL()
 extern "C" ut_Timer* ut_Timer_new(void* userdata, ut_TimerCallback* cb, GError** error)
 {
   ut_Timer* self = g_try_new0(ut_Timer, 1);
-  if (!self) {
+  if (G_UNLIKELY(!self)) {
     if (error) *error = gx_error_no_memory;
     return NULL;
   }
@@ -78,7 +78,7 @@ extern "C" ut_Timer* ut_Timer_new(void* userdata, ut_TimerCallback* cb, GError**
   self->cb = cb;
 
   TRAPD(errCode, self->timer = CUtTimer::NewL(*self, CActive::EPriorityStandard));
-  if (errCode) {
+  if (G_UNLIKELY(errCode)) {
     g_free(self);
     if (error) *error = make_error(errCode, "failed to create native timer instance");
     return NULL;

@@ -1,5 +1,5 @@
-#ifndef __errors_symbian_h__
-#define __errors_symbian_h__
+#ifndef __platform_error_h__
+#define __platform_error_h__
 
 #include "common/utilities.h"
 #include <glib.h>
@@ -14,9 +14,10 @@ EXTERN_C const char* symbian_error_strerror(int err);
 #define NO_MEMORY_ERROR ENOMEM
 #endif
 
+// Converts a platform-specific error code 'errCode' to a GError. If 'errCode' means "no error", just returns FALSE.
 EXTERN_C gboolean code_means_no_error(int errCode, const char* desc, GError** error);
 
-#endif /* __errors_symbian_h__ */
+#endif /* __platform_error_h__ */
 
 /**
 

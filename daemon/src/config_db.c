@@ -125,7 +125,7 @@ ConfigDb* ConfigDb_new(GError** error)
 
   ConfigDb* self = g_try_new0(ConfigDb, 1);
   if (!self) {
-    if (error) *error = NULL;
+    if (error) *error = gx_error_no_memory;
     return NULL;
   }
 

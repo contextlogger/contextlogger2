@@ -262,7 +262,7 @@ extern "C" sa_Array *sa_Array_new(ac_AppContext* ac,
 {
   sa_Array* self = g_try_new0(sa_Array, 1);
   if (!self) {
-    if (error) *error = NULL; // out of memory
+    if (error) *error = gx_error_no_memory; // out of memory
     return NULL;
   }
 

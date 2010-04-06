@@ -233,7 +233,6 @@ gboolean CSensor_keypress::LogAndClear(GError** error)
     iNumCapturedKeys = 0;
 
     if (!log_db_log_keypress(iLogDb, iKeysText->str, error)) {
-      assert_error_set(error);
       return FALSE;
     }
   }
