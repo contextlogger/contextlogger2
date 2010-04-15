@@ -1,5 +1,6 @@
 #include "er_errors.h"
 
+#include "ac_app_context.h"
 #include "application_config.h"
 
 #include "common/utilities.h"
@@ -28,18 +29,17 @@ void gx_error_free(GError* error)
   if (error) g_error_free(error);
 }
 
+// The "src" error may be NULL.
 void gx_propagate_error(GError** dest, GError* src)
 {
   if (dest) {
-    assert(!*dest);
+    assert((!*dest) && "dest error already set");
     *dest = src;
   } else {
     gx_error_free(src);
   }
 }
 
-// Caller must free the returned buffer.
-// Note that you may not pass "error" as NULL.
 gchar* gx_error_to_string(GError* error)
 {
   GString* gs = g_string_sized_new(128);

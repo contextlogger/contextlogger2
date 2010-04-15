@@ -429,7 +429,7 @@ void rk_JabberSession_destroy(rk_JabberSession* self)
 
 #define set_gerror_from_iks_error(_ret) { \
     if (error) \
-      *error = g_error_new(domain_iksemel, _ret, "Iksemel error: %d", _ret); \
+      *error = gx_error_new(domain_iksemel, _ret, "Iksemel error: %d", _ret); \
   }
 
 #if defined(__SYMBIAN32__)

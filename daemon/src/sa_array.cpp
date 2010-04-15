@@ -22,7 +22,7 @@
 
 #define sa_set_symbian_error(errCode,msg) \
     if (error) \
-      *error = g_error_new(domain_symbian, errCode, msg ": %s (%d)", plat_error_strerror(errCode), errCode);
+      *error = gx_error_new(domain_symbian, errCode, msg ": %s (%d)", plat_error_strerror(errCode), errCode);
 
 #define sa_check_symbian_error(errCode,msg,rval) \
   if (errCode) { \
@@ -216,7 +216,7 @@ extern "C" struct _sa_Array
 
 #define reconfigure_not_supported_by_component(key) { \
     if (error) \
-      *error = g_error_new(domain_cl2app, code_not_supported, "configuration key '%s' not supported by concerned component", key); \
+      *error = gx_error_new(domain_cl2app, code_not_supported, "configuration key '%s' not supported by concerned component", key); \
     success = FALSE; \
   }
 
@@ -346,7 +346,7 @@ extern "C" gboolean sa_Array_sensor_start(sa_Array* self, const gchar* name, GEr
   START_NAMED_SENSOR_OR_FAIL(name);
 
   if (error)
-    *error = g_error_new(domain_cl2app, code_not_supported, "sensor '%s' not supported", name);
+    *error = gx_error_new(domain_cl2app, code_not_supported, "sensor '%s' not supported", name);
   return FALSE;
 }
 
@@ -360,7 +360,7 @@ extern "C" gboolean sa_Array_reconfigure(sa_Array* self, const gchar* key, const
 
   /*
   if (error)
-    *error = g_error_new(domain_cl2app, code_not_supported, "configuration key '%s' does not concern any supported component", key);
+    *error = gx_error_new(domain_cl2app, code_not_supported, "configuration key '%s' does not concern any supported component", key);
   return FALSE;
   */
 

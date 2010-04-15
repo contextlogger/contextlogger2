@@ -51,6 +51,14 @@ void CCl2appAppUi::DestroyLogger()
   }
 }
 
+// This sort of thing is often required...
+static void DisplayText(TDesC const &aText)
+{
+  CAknInformationNote *informationNote;
+  (informationNote = new (ELeave) CAknInformationNote());
+  informationNote->ExecuteLD(aText);
+}
+
 void CCl2appAppUi::ConstructL()
 {
   // This renaming code would not appear to be effective, according to
@@ -68,7 +76,22 @@ void CCl2appAppUi::ConstructL()
   BaseConstructL(KEnableSkinFlag | KLayoutAwareFlag);
 #endif
 
-  cl2GlobalInit(); // initializes logging, too
+  iAppContainer = new (ELeave) CCl2appContainer;
+  iAppContainer->SetMopParent( this );
+  iAppContainer->ConstructL( ClientRect() );
+  AddToStackL( iAppContainer );
+
+#if 0
+  CCoeEnv* coeEnv = CCoeEnv::Static();
+  assert(coeEnv && "CCoeEnv not set yet");
+#endif
+
+  // initializes logging, too
+  if (cl2GlobalInit()) {
+    _LIT(KInitErrMsg, "Global init failed");
+    DisplayText(KInitErrMsg);
+    return;
+  }
   logt("global init complete");
 
   //cl_lua_eval_string("do x = \"hello world\"; return x end");
@@ -82,16 +105,6 @@ void CCl2appAppUi::ConstructL()
       User::Leave(KErrGeneral);
     }
   }
-
-  iAppContainer = new (ELeave) CCl2appContainer;
-  iAppContainer->SetMopParent( this );
-  iAppContainer->ConstructL( ClientRect() );
-  AddToStackL( iAppContainer );
-
-#if 0
-  CCoeEnv* coeEnv = CCoeEnv::Static();
-  assert(coeEnv && "CCoeEnv not set yet");
-#endif
 
   logf("scheduler running %d", (CEikonEnv::Static()->IsSchedulerRunning()) ? 1 : 0);
 
@@ -122,14 +135,6 @@ TKeyResponse CCl2appAppUi::HandleKeyEventL
 (const TKeyEvent& /*aKeyEvent*/, TEventCode /*aType*/)
 {
   return EKeyWasNotConsumed;
-}
-
-// This sort of thing is often required...
-static void DisplayText(TDesC const &aText)
-{
-  CAknInformationNote *informationNote;
-  (informationNote = new (ELeave) CAknInformationNote());
-  informationNote->ExecuteLD(aText);
 }
 
 void CCl2appAppUi::Start()

@@ -54,8 +54,8 @@ CUtTimer::CUtTimer(ut_Timer &aInterface, TInt aPriority) :
 }
 
 #define make_error(_errCode, _msg)					\
-  g_error_new(domain_symbian, _errCode, _msg ": %s (%d)",		\
-	      plat_error_strerror(_errCode), _errCode);
+  gx_error_new(domain_symbian, _errCode, _msg ": %s (%d)",		\
+	       plat_error_strerror(_errCode), _errCode);
 
 void CUtTimer::RunL()
 {

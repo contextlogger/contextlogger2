@@ -3,14 +3,12 @@
 #if __BTPROX_ENABLED__
 
 #include "cf_query.h"
+#include "er_errors.h"
 #include "kr_controller_private.h"
 #include "log-db-logging.h"
 #include "utils_cl2.h"
 
-#include "common/assertions.h"
 #include "common/epoc-time.h"
-#include "common/logging.h"
-#include "common/platform_error.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -379,13 +377,13 @@ gboolean CSensor_btprox::RunGL(GError** error)
           // The timer expired with an error. This is rather strange
           // with interval timers.
 	  if (error) {
-            // If g_error_new fails, *error will be set to NULL, which
+            // If gx_error_new fails, *error will be set to NULL, which
             // we interpret as an out-of-memory error. This is can
             // only happen with the Symbian port, as normally there
             // will be an automatic abort().
-	    *error = g_error_new(domain_cl2app, code_timer, 
-				 "timer failure in btprox sensor: %s (%d)", 
-				 plat_error_strerror(errCode), errCode);
+	    *error = gx_error_new(domain_cl2app, code_timer, 
+				  "timer failure in btprox sensor: %s (%d)", 
+				  plat_error_strerror(errCode), errCode);
 	  }
 	  return FALSE;
 	}

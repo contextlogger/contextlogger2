@@ -97,25 +97,25 @@ static void workerReadNudge(up_Uploader* object);
 // errors
 // --------------------------------------------------
 
-#define up_error_new(f...) g_error_new(up_DOMAIN, up_ERR_GENERAL, f)
+#define up_error_new(f...) gx_error_new(up_DOMAIN, up_ERR_GENERAL, f)
 
 static GError* up_error_new_CURLcode(CURLcode errCode)
 {
   // Yes, it is not documented, but looking at the curllib source we
   // can see that invoking curl_easy_strerror is safe at any time, and
   // the result need not be freed.
-  return g_error_new(up_DOMAIN, up_ERR_GENERAL, "Curl error: %s (%d)", curl_easy_strerror(errCode), errCode);
+  return gx_error_new(up_DOMAIN, up_ERR_GENERAL, "Curl error: %s (%d)", curl_easy_strerror(errCode), errCode);
 }
 
 static GError* up_error_new_CURLMcode(CURLMcode errCode)
 {
   // Not documented, hopefully result needs no freeing.
-  return g_error_new(up_DOMAIN, up_ERR_GENERAL, "Curl error: %s (%d)", curl_multi_strerror(errCode), errCode);
+  return gx_error_new(up_DOMAIN, up_ERR_GENERAL, "Curl error: %s (%d)", curl_multi_strerror(errCode), errCode);
 }
 
 static GError* up_error_new_posix(int errCode)
 {
-  return g_error_new(up_DOMAIN, up_ERR_GENERAL, "POSIX error: %s (%d)", strerror(errCode), errCode);
+  return gx_error_new(up_DOMAIN, up_ERR_GENERAL, "POSIX error: %s (%d)", strerror(errCode), errCode);
 }
 
 // --------------------------------------------------
@@ -793,7 +793,7 @@ static gboolean nudge_worker(up_Uploader* object, char msg, GError** error)
   if (ret == 1) return TRUE; // 1 byte written
   if (error) {
     if (ret == 0) {
-      *error = g_error_new(up_DOMAIN, up_ERR_GENERAL, "write function failed to write anything");
+      *error = gx_error_new(up_DOMAIN, up_ERR_GENERAL, "write function failed to write anything");
     } else {
       *error = up_error_new_posix(errno);
     }

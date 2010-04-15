@@ -1,13 +1,10 @@
 #include "db_creation.h"
 
 #include "application_config.h"
+#include "er_errors.h"
 #include "sa_sensor_list_log_db.h"
 #include "sqlite_cl2.h"
 #include "utils_cl2.h" // for mkdir_p
-
-#include "common/assertions.h"
-#include "common/error_list.h"
-#include "common/logging.h"
 
 #include <glib/gstdio.h>
 
@@ -29,7 +26,7 @@ gboolean create_database(const char* db_dir,
   int errCode = sqlite3_open(db_file, &db);
   if (errCode) {
     if (error)
-      *error = g_error_new(domain_cl2app, code_database_open, "error opening database '%s': %s (%d)", db_file, sqlite_get_error_string(db), errCode);
+      *error = gx_error_new(domain_cl2app, code_database_open, "error opening database '%s': %s (%d)", db_file, sqlite_get_error_string(db), errCode);
     goto fail;
   }
   //logf("database opened %d", errCode);
@@ -39,7 +36,7 @@ gboolean create_database(const char* db_dir,
   //logf("errCode is %d", errCode);
   if (errCode) {
     if (error)
-      *error = g_error_new(domain_cl2app, code_database_command, "error creating tables for database '%s': %s (%d)", db_file, sqlite_get_error_string(db), errCode);
+      *error = gx_error_new(domain_cl2app, code_database_command, "error creating tables for database '%s': %s (%d)", db_file, sqlite_get_error_string(db), errCode);
     goto fail;
   }
   logt("database created");
@@ -50,7 +47,7 @@ gboolean create_database(const char* db_dir,
   errCode = sqlite3_close(db);
   if (errCode) {
     if (error)
-      *error = g_error_new(domain_cl2app, code_database_close, "error closing database '%s': (%d)", db_file, errCode);
+      *error = gx_error_new(domain_cl2app, code_database_close, "error closing database '%s': (%d)", db_file, errCode);
     goto fail;
   }
   //logt("database session closed");

@@ -21,7 +21,7 @@ struct _cf_RcFile {
 #define RCFILE_DIR CONFIG_DIR
 #define RCFILE_FILE (RCFILE_DIR DIR_SEP RCFILE_BASENAME)
 
-#define return_with_error(s...) { if (error) *error = g_error_new(domain_cl2app, code_unspecified_error, s); return FALSE; }
+#define return_with_error(s...) { if (error) *error = gx_error_new(domain_cl2app, code_unspecified_error, s); return FALSE; }
 #define return_with_oom { if (error) *error = gx_error_no_memory; return FALSE; }
 
 static gboolean ReadRcFile(cf_RcFile* self, lua_State *L, GError** error)
@@ -44,14 +44,14 @@ static gboolean ReadRcFile(cf_RcFile* self, lua_State *L, GError** error)
 #endif /* __DO_LOGGING__ */
 
     if (error) 
-      *error = g_error_new(domain_cl2app, code_unspecified_error, "error parsing configuration file '%s'", RCFILE_FILE);
+      *error = gx_error_new(domain_cl2app, code_unspecified_error, "error parsing configuration file '%s'", RCFILE_FILE);
     return FALSE;
   }
   logf("config file '%s' parsed OK", RCFILE_FILE);
 
   if (lua_pcall(L, 0, 1, 0)) {
     if (error) 
-      *error = g_error_new(domain_cl2app, code_unspecified_error, "error evaluating configuration file '%s'", RCFILE_FILE);
+      *error = gx_error_new(domain_cl2app, code_unspecified_error, "error evaluating configuration file '%s'", RCFILE_FILE);
     return FALSE;
   }
   logt("config file evaluated OK");

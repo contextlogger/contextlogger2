@@ -3,8 +3,18 @@ VERSION := 0.01
 CERT := dev
 SAKE := ../tools/bin/sake
 
-symbian :
+default : symbian
+
+symbian : symbian30 symbian31 symbian32
+
+symbian30 :
 	$(SAKE) --trace kits=s60_30 udeb=true cert=$(CERT)
+
+symbian31 :
+	$(SAKE) --trace kits=s60_31 udeb=true cert=$(CERT)
+
+symbian32 :
+	$(SAKE) --trace kits=s60_32 udeb=true cert=$(CERT)
 
 makefiles :
 	$(SAKE) --trace kits=s60_30 udeb=true cert=$(CERT) makefiles

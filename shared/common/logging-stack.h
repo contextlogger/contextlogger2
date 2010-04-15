@@ -7,7 +7,7 @@
 #if __DO_LOGGING__
 
 #include "common/utilities.h" // get_stack_info_string()
-#define log_stack_info(f) { char* _s = get_stack_info_string(); log_text(f,_s); g_free(_s); }
+#define log_stack_info(f) { char* _s = get_stack_info_string(); if (_s) { log_text(f,_s); g_free(_s); } }
 
 #else
 

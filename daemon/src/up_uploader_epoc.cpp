@@ -680,7 +680,7 @@ EXTERN_C up_Uploader* up_Uploader_new(LogDb* logDb, GError** error)
   TRAPD(errCode, object = CUploader::NewL(logDb));
   if (errCode) {
     if (error)
-      *error = g_error_new(domain_symbian, errCode, "Uploader init failure: %s (%d)", plat_error_strerror(errCode), errCode);
+      *error = gx_error_new(domain_symbian, errCode, "Uploader init failure: %s (%d)", plat_error_strerror(errCode), errCode);
     return NULL;
   }
   return (up_Uploader*)object;

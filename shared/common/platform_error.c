@@ -33,8 +33,10 @@
 */
 
 #include "common/platform_error.h"
-#include "common/error_list.h"
+
 #include "common/assertions.h"
+#include "common/error_list.h"
+#include "common/gxerror.h"
 
 EXTERN_C gboolean code_means_no_error(int errCode, const char* desc, GError** error)
 {
@@ -42,7 +44,7 @@ EXTERN_C gboolean code_means_no_error(int errCode, const char* desc, GError** er
   if (!errCode)
     return TRUE;
   if (error)
-    *error = g_error_new(domain_shared, code_unspecified_error, "%s: %s (%d)", desc, plat_error_strerror(errCode), errCode);
+    *error = gx_error_new(domain_shared, code_unspecified_error, "%s: %s (%d)", desc, plat_error_strerror(errCode), errCode);
   return FALSE;
 }
 

@@ -1,8 +1,6 @@
 #include "utils_cl2.h"
 
-#include "common/assertions.h"
-#include "common/error_list.h"
-#include "common/platform_error.h"
+#include "er_errors.h"
 
 #include <glib/gprintf.h>
 #include <glib/gstdio.h>
@@ -20,7 +18,7 @@ gboolean mkdir_p(const gchar* pathname, GError** error)
     return TRUE;
   if (g_mkdir_with_parents(pathname, 0777)) {
     if (error)
-      *error = g_error_new(G_FILE_ERROR, g_file_error_from_errno(errno), "error creating directory '%s': %s (%d)", pathname, strerror(errno), errno);
+      *error = gx_error_new(G_FILE_ERROR, g_file_error_from_errno(errno), "error creating directory '%s': %s (%d)", pathname, strerror(errno), errno);
     return FALSE;
   }
   return TRUE;
@@ -31,7 +29,7 @@ gboolean rm_file(const gchar* pathname, GError** error)
   assert_error_unset(error);
   if (g_unlink(pathname)) {
     if (error)
-      *error = g_error_new(G_FILE_ERROR, g_file_error_from_errno(errno), "error deleting file '%s': %s (%d)", pathname, strerror(errno), errno);
+      *error = gx_error_new(G_FILE_ERROR, g_file_error_from_errno(errno), "error deleting file '%s': %s (%d)", pathname, strerror(errno), errno);
     return FALSE;
   }
   return TRUE;

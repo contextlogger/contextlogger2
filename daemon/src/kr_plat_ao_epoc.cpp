@@ -123,9 +123,9 @@ extern "C" kr_PlatAo* kr_PlatAo_new(GError** error)
   if (errCode) {
     kr_PlatAo_destroy(self);
     if (error)
-      *error = g_error_new(domain_symbian, errCode, 
-			   "disk observer creation failure: %s (%d)", 
-			   plat_error_strerror(errCode), errCode);
+      *error = gx_error_new(domain_symbian, errCode, 
+			    "disk observer creation failure: %s (%d)", 
+			    plat_error_strerror(errCode), errCode);
     return NULL;
   }
 

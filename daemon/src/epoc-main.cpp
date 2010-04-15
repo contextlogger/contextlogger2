@@ -69,7 +69,9 @@ static TInt MainLoop()
 static TInt SubMain()
 {
   TInt errCode = 0;
-  cl2GlobalInit();
+  errCode = cl2GlobalInit();
+  if (errCode)
+    return errCode;
   TRAPD(leaveCode, errCode = MainLoop());
   if (leaveCode) {
     assert(0 && "leave in C code");

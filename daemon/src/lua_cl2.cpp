@@ -104,7 +104,7 @@ extern "C" gboolean validate_lua_syntax(const gchar* value, GError** error)
 	success = FALSE;
 	if (error) {
 	  const char* luaErr = lua_tostring(L, -1);
-	  *error = g_error_new(domain_lua, res, "validation of Lua code failed: %s", luaErr);
+	  *error = gx_error_new(domain_lua, res, "validation of Lua code failed: %s", luaErr);
 	}
         break;
       }

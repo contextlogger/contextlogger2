@@ -164,9 +164,9 @@ EXTERN_C ac_AppContext* ac_AppContext_new(GError** error)
   if (G_UNLIKELY(errCode)) {
     ac_AppContext_destroy(self);
     if (error)
-      *error = g_error_new(domain_symbian, errCode, 
-                           "AppContext Symbian init failure: %s (%d)", 
-                           plat_error_strerror(errCode), errCode);
+      *error = gx_error_new(domain_symbian, errCode, 
+			    "AppContext Symbian init failure: %s (%d)", 
+			    plat_error_strerror(errCode), errCode);
     return NULL;
   }
 #endif /* __SYMBIAN32__ */
@@ -249,6 +249,7 @@ EXTERN_C ac_AppContext* ac_get_global_AppContext()
 
 EXTERN_C LogDb* ac_LogDb(ac_AppContext* self)
 {
+  if (!self || !(self->kr)) return NULL;
   return self->kr->log;
 }
 

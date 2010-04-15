@@ -4,13 +4,11 @@
 
 #include "local_server.h"
 
+#include "er_errors.h"
+
 #ifdef __EPOC32__
 #include "epoc-cliapi-server.hpp"
 #endif
-
-#include "common/assertions.h"
-#include "common/error_list.h"
-#include "common/platform_error.h"
 
 // I have yet to see documentation on how to stop a server other than
 // by destroying the object. So that is the hardcore solution that we
@@ -41,7 +39,7 @@ extern "C" gboolean 	LocalServer_start	(LocalServer * self,
     TRAPD(errCode, server = CCliapiServer::NewL());
     if (errCode) {
       if (error)
-	*error = g_error_new(domain_symbian, errCode, "Symbian client/server init failure: %s (%d)", plat_error_strerror(errCode), errCode);
+	*error = gx_error_new(domain_symbian, errCode, "Symbian client/server init failure: %s (%d)", plat_error_strerror(errCode), errCode);
       return NULL;
     }
 
@@ -49,7 +47,7 @@ extern "C" gboolean 	LocalServer_start	(LocalServer * self,
     if (errCode) {
       delete server;
       if (error)
-	*error = g_error_new(domain_symbian, errCode, "Symbian client/server start failure: %s (%d)", plat_error_strerror(errCode), errCode);
+	*error = gx_error_new(domain_symbian, errCode, "Symbian client/server start failure: %s (%d)", plat_error_strerror(errCode), errCode);
       return NULL;
     }
 
