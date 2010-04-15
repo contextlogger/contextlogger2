@@ -24,8 +24,15 @@
 #ifndef __glowmem_action_h__
 #define __glowmem_action_h__
 
+#if defined(__SYMBIAN32__)
+
 #include <glowmem.h>
 
+// The idea is to set up some action to deal with an OOM error.
+// You must specify an action that causes a return, non-local return, jump, or thread exit. This is because the macro assumes that its execution does not continue after the provided action (this could be changed with better understanding of the internal APIs used).
+// Yes, SET_LOW_MEMORY_TRAP_VOID() and SET_LOW_MEMORY_TRAP(failure_value) could be implemented in terms of this macro.
+// And yes, this is a bit naughty as it uses internal APIs, but if the internal ABI changes, then existing uses of SET_LOW_MEMORY_TRAP_VOID and SET_LOW_MEMORY_TRAP also require at least recompilation.
+// Does this code leak memory if _set_thread_specific_data fails?
 #define SET_LOW_MEMORY_TRAP_ACTION(action)      \
 gboolean did_i_set = FALSE;\
 {\
@@ -51,5 +58,9 @@ gboolean did_i_set = FALSE;\
                 did_i_set = TRUE;\
         }\
 }
+
+#else
+#define SET_LOW_MEMORY_TRAP_ACTION(action)
+#endif /* __SYMBIAN32__ */
 
 #endif /* __glowmem_action_h__ */

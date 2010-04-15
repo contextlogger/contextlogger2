@@ -1,32 +1,36 @@
 #ifndef __gxerror_h__
 #define __gxerror_h__
 
-// Defines gx_error_new (an allocation failure safe version of
-// g_error_new), as well as g_error_vnew (a va_list version of
-// g_error_new, which we require but is not available in GLib).
-
 #include <glib/gerror.h>
-
-#if defined(__SYMBIAN32__)
-#include <glowmem.h>
-#endif /* __SYMBIAN32__ */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-  // Returns NULL in there is no memory for allocating a new error structure.
-  //
-  // (Note: G_GNUC_PRINTF (3, 4) states that the format index is 3, and the argument start index is 4. See glib/gmacros.h for details.)
-GError* gx_error_new(GQuark         domain,
-		     gint           code,
-		     const gchar   *format,
-		     ...) G_GNUC_PRINTF (3, 4);
+  // An allocation failure safe version of g_error_new.
+  // 
+  // Returns NULL in there is no memory for allocating a new error
+  // structure.
+  // 
+  // (Note: G_GNUC_PRINTF (3, 4) states that the format index is 3,
+  // and the argument start index is 4. See glib/gmacros.h for
+  // details.)
+  GError* gx_error_new(GQuark         domain,
+		       gint           code,
+		       const gchar   *format,
+		       ...) G_GNUC_PRINTF (3, 4);
 
-GError* g_error_vnew(GQuark         domain,
-		     gint           code,
-		     const gchar   *format,
-		     va_list        args);
+  // An allocation failure safe version of g_error_new_literal.
+  GError* gx_error_new_literal (GQuark         domain,
+				gint           code,
+				const gchar   *message);
+
+  // A va_list version of gx_error_new. Note that GLib internally
+  // defines g_error_new_valist, but does not export it.
+  GError* gx_error_va_list(GQuark         domain,
+			   gint           code,
+			   const gchar   *format,
+			   va_list        args);
 
 #ifdef __cplusplus
 } /* extern "C" */

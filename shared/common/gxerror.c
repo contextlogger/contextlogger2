@@ -38,6 +38,8 @@
 
 #include "common/gxlowmem.h"
 
+#include <glib.h>
+
 GError* 
 gx_error_new_valist (GQuark         domain,
 		     gint           code,
@@ -74,4 +76,16 @@ gx_error_new (GQuark       domain,
   va_end (args);
 
   return error;
+}
+
+GError*
+gx_error_new_literal (GQuark         domain,
+		      gint           code,
+		      const gchar   *message)
+{
+  GError* err;
+  SET_LOW_MEMORY_TRAP(NULL);
+  err = g_error_new_literal(domain, code, message);
+  REMOVE_LOW_MEMORY_TRAP();
+  return err;
 }

@@ -10,5 +10,10 @@
 #define REMOVE_LOW_MEMORY_TRAP()
 #endif /* not __SYMBIAN32__ */
 
+#define IN_LOW_MEMORY_TRAP_HARNESS(failure_value, action)	\
+  SET_LOW_MEMORY_TRAP(failure_value);				\
+  { action; }							\
+  REMOVE_LOW_MEMORY_TRAP();
+
 #endif /* __gxlowmem_h__ */
 
