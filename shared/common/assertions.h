@@ -43,12 +43,12 @@ void epoc_assert_panic();
 
 #define assert_error_unset(x) assert((!(x) || !*(x)) && "error already set upon entering function")
 
-#define assert_error_set(x) assert((!(x) || *(x)) && "error not set despite error return of subroutine")
-
-// Some compilers might whine about it being statically known that the GError** is non-NULL. This version deals directly with GError*, and naturally makes no such check.
-#define assert_error_set_direct(x) assert((x) && "error not set despite error return of subroutine")
+//#define assert_error_set(x) assert((!(x) || *(x)) && "error not set despite error return of subroutine")
 
 #define assert_error_unset_direct(x) assert(!(x) && "error not set despite error return of subroutine")
+
+// Some compilers might whine about it being statically known that the GError** is non-NULL. This version deals directly with GError*, and naturally makes no such check.
+//#define assert_error_set_direct(x) assert((x) && "error not set despite error return of subroutine")
 
 #endif // __ASSERTIONS_H__
 

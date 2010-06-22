@@ -13,7 +13,7 @@
 #define SET_LUA_ERROR(_code) \
   if (error) { \
     const char* _luaErr = lua_tostring(L, -1); \
-    *error = g_error_new_literal(domain_lua, _code, _luaErr); \
+    *error = gx_error_new_literal(domain_lua, _code, _luaErr); \
   }
 
 // Evaluates the Lua expression "luaStr". If it evaluates to a nil
@@ -94,8 +94,8 @@ static gboolean get_int_from_lua(lua_State* L, int* value, GError** error)
 {
   if (!lua_isnumber(L, -1)) {
     if (error)
-      *error = g_error_new(domain_cl2app, code_type_error, 
-			   "integer type Lua value expected");
+      *error = gx_error_new(domain_cl2app, code_type_error, 
+			    "integer type Lua value expected");
     return FALSE;
   }
   //logt("lua value is a number");
@@ -161,8 +161,8 @@ static gboolean get_bool_from_lua(lua_State* L, gboolean* value, GError** error)
 {
   if (!lua_isboolean(L, -1)) {
     if (error)
-      *error = g_error_new(domain_cl2app, code_type_error, 
-			   "boolean type Lua value expected");
+      *error = gx_error_new(domain_cl2app, code_type_error, 
+			    "boolean type Lua value expected");
     return FALSE;
   }
   //logt("lua value is a boolean");
@@ -236,7 +236,7 @@ gboolean try_get_ConfigDb_str(const gchar* name, gchar** s, GError** error)
   if (L) {
     if (!lua_isstring(L, -1)) {
       if (error)
-	*error = g_error_new(domain_cl2app, code_type_error, "code for '%s' did not yield a string", name);
+	*error = gx_error_new(domain_cl2app, code_type_error, "code for '%s' did not yield a string", name);
       lua_close(L);
       return FALSE;
     }
@@ -264,7 +264,7 @@ gboolean get_ConfigDb_str(const gchar* name, gchar** s,
   }
   if (!*s && default_s) {
     *s = strdup(default_s);
-    if (!*s) {
+    if (G_UNLIKELY(!*s)) {
       if (error) *error = gx_error_no_memory;
       return FALSE;
     }

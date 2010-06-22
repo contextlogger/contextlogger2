@@ -5,16 +5,17 @@
 
 #if __FEATURE_UPLOADER__
 
-#include <glib.h>
 #include "log-db.h"
+
+#include "common/error_list.h"
+
+#include <glib.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-  GQuark up_quark();
-
-#define up_DOMAIN (up_quark())
+#define up_DOMAIN domain_cl2app
 
 #define up_ERR_GENERAL 1
 

@@ -310,9 +310,11 @@ module Sake
       list = []
       Dir[home + "/*"].each do |dir|
         next unless File.directory?(dir)
+        basename = File.basename(dir)
+        next if basename =~ /^sf_/ # not supported by sake3
         dentlist = dir_entries dir, false
         if dentlist.include?("epoc32")
-          list.push(new(:basename => File.basename(dir), :sdk_home => dir))
+          list.push(new(:basename => basename, :sdk_home => dir))
         end
       end
       return list

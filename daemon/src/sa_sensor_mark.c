@@ -63,8 +63,8 @@ static void timerCallback(void* userdata, GError* timerError)
 EXTERN_C sa_Sensor_mark* sa_Sensor_mark_new(LogDb* log, GError** error)
 {
   sa_Sensor_mark* self = g_try_new0(sa_Sensor_mark, 1);
-  if (!self) {
-    if (error) *error = NULL;
+  if (G_UNLIKELY(!self)) {
+    if (error) *error = gx_error_no_memory;
     return NULL;
   }
   self->log = log;

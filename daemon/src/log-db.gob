@@ -19,9 +19,8 @@ requires 2.0.0
 #include <glib/gprintf.h>
 #include "ac_app_context.h"
 #include "application_config.h"
+#include "er_errors.h"
 #include "log-db-create.h"
-#include "common/assertions.h"
-#include "common/error_list.h"
 #include "common/logging.h"
 #include "common/platform_config.h"
 #include "common/threading.h"
@@ -68,7 +67,7 @@ requires 2.0.0
   fail:
     rval = FALSE;
     if (error)
-      *error = g_error_new(domain_cl2app, code_database_command, errorFmt, sqlite3_errmsg(self->db), sqlite3_errcode(self->db));
+      *error = gx_error_new(domain_cl2app, code_database_command, errorFmt, sqlite3_errmsg(self->db), sqlite3_errcode(self->db));
     
   done:
     mutex_unlock(&self->mutex);
@@ -144,7 +143,7 @@ class Log:Db from G:Object {
     int errCode = sqlite3_open(LOGDB_FILE, &self->db);
     if (errCode) {
       if (error)
-	*error = g_error_new(domain_cl2app, code_database_open, "error opening database '%s': %s (%d)", LOGDB_FILE, sqlite_get_error_string(self->db), errCode);
+	*error = gx_error_new(domain_cl2app, code_database_open, "error opening database '%s': %s (%d)", LOGDB_FILE, sqlite_get_error_string(self->db), errCode);
       if (self->db) {
 	log_db_close_session(self);
       }
@@ -200,7 +199,7 @@ class Log:Db from G:Object {
     if (rename(LOGDB_FILE, pathname)) {
       mutex_unlock(&self->mutex);
       if (error)
-	*error = g_error_new(domain_posix, errno, "failed to rename '%s' as '%s': %s (%d)", LOGDB_FILE, pathname, strerror(errno), errno);
+	*error = gx_error_new(domain_posix, errno, "failed to rename '%s' as '%s': %s (%d)", LOGDB_FILE, pathname, strerror(errno), errno);
       return FALSE;
     }
     *renamed = TRUE;

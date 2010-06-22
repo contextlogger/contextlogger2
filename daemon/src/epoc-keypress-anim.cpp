@@ -37,8 +37,10 @@ void CSensor_keypress::ConstructL()
 {
   // The size chosen so that we are not wasteful with space, but
   // neither should require too many reallocations.
+  SET_LOW_MEMORY_TRAP_ACTION(User::LeaveNoMemory());
   iKeysText = g_string_sized_new(20 + MAX_NUM_CAPTURED_KEYS * 2);
-  User::LeaveIfNull(iKeysText);
+  REMOVE_LOW_MEMORY_TRAP();
+  assert(iKeysText != NULL);
 
   iSession = new (ELeave) RWsSession();
   
@@ -163,6 +165,7 @@ gboolean CSensor_keypress::LogAndClear(GError** error)
   if (iNumCapturedKeys > 0) {
     assert(iKeysText);
     time_t base = iCapturedKeys[0];
+    SET_LOW_MEMORY_TRAP_ACTION(goto nomemory);
     g_string_set_size(iKeysText, 0);
     g_string_append_printf(iKeysText, "{base: %d, times: [", base);
     int i = 0;
@@ -173,6 +176,7 @@ gboolean CSensor_keypress::LogAndClear(GError** error)
       i++;
     }
     g_string_append(iKeysText, "]}");
+    REMOVE_LOW_MEMORY_TRAP();
     iNumCapturedKeys = 0;
 
     if (!log_db_log_keypress(iLogDb, iKeysText->str, error)) {
@@ -180,6 +184,10 @@ gboolean CSensor_keypress::LogAndClear(GError** error)
     }
   }
   return TRUE;
+
+ nomemory:
+  if (error) *error = gx_error_no_memory;
+  return FALSE;
 }
 
 #endif // __KEYPRESS_ENABLED__ && __HAVE_ANIM__

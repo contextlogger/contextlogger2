@@ -13,7 +13,8 @@ gboolean cl2RunOnce(GError** error);
 int cl2RunOnceGetExitCode();
 #endif
 
-void cl2GlobalInit();
+// Returns 0 on success.
+int cl2GlobalInit();
 
 void cl2GlobalCleanup();
 

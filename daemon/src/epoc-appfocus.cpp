@@ -185,7 +185,6 @@ gboolean CSensor_appfocus::RunGL(GError** error)
     //logf("appfocus: '%s' %08x", appName, appUid);
 
     if (!log_db_log_appfocus(iLogDb, appUid64, appName, error)) {
-      assert_error_set(error);
       return FALSE;
     }
 

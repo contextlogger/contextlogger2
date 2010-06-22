@@ -1,8 +1,6 @@
 #include "utils_cl2.h"
 
-#include "common/assertions.h"
-#include "common/error_list.h"
-#include "common/platform_error.h"
+#include "er_errors.h"
 
 #include <glib/gprintf.h>
 #include <glib/gstdio.h>
@@ -16,28 +14,39 @@
 gboolean mkdir_p(const gchar* pathname, GError** error)
 {
   assert_error_unset(error);
+
   if (strlen(pathname) == 0)
     return TRUE;
-  if (g_mkdir_with_parents(pathname, 0777)) {
+
+  int hadErr;
+  // This function may throw OOM.
+  TRAP_OOM_FAIL(hadErr = g_mkdir_with_parents(pathname, 0777));
+  if (G_UNLIKELY(hadErr)) {
     if (error)
-      *error = g_error_new(G_FILE_ERROR, g_file_error_from_errno(errno), "error creating directory '%s': %s (%d)", pathname, strerror(errno), errno);
+      *error = gx_error_new(G_FILE_ERROR, g_file_error_from_errno(errno), "error creating directory '%s': %s (%d)", pathname, strerror(errno), errno);
     return FALSE;
   }
   return TRUE;
+
+ fail:
+  if (error) *error = gx_error_no_memory;
+  return FALSE;
 }
 
 gboolean rm_file(const gchar* pathname, GError** error)
 {
   assert_error_unset(error);
+  // g_unlink is OOM safe on Symbian
   if (g_unlink(pathname)) {
     if (error)
-      *error = g_error_new(G_FILE_ERROR, g_file_error_from_errno(errno), "error deleting file '%s': %s (%d)", pathname, strerror(errno), errno);
+      *error = gx_error_new(G_FILE_ERROR, g_file_error_from_errno(errno), "error deleting file '%s': %s (%d)", pathname, strerror(errno), errno);
     return FALSE;
   }
   return TRUE;
 }
 
 #if !GLIB_CHECK_VERSION(2,14,6)
+// On Symbian, reports ENOMEM by throwing a GLib OOM error.
 void g_string_vprintf(GString *string,
 		      const gchar *format,
 		      va_list args)

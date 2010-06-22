@@ -2,11 +2,9 @@
 #include "log-db-private.h"
 
 #include "application_config.h"
+#include "er_errors.h"
 #include "log-db-create.h"
 
-#include "common/assertions.h"
-#include "common/error_list.h"
-#include "common/logging.h"
 #include "common/platform_config.h"
 #include "common/threading.h"
 
@@ -20,7 +18,7 @@
 
 #if __BTPROX_ENABLED__
 
-#define SET_BTPROX_SQL_ERROR { rval = FALSE; if (error) *error = g_error_new(domain_cl2app, code_database_command, "failed to log btprox event: %s (%d)", sqlite3_errmsg(self->db), sqlite3_errcode(self->db)); }
+#define SET_BTPROX_SQL_ERROR { rval = FALSE; if (error) *error = gx_error_new(domain_cl2app, code_database_command, "failed to log btprox event: %s (%d)", sqlite3_errmsg(self->db), sqlite3_errcode(self->db)); }
 
 gboolean log_db_log_btprox(LogDb* self, 
 			   GPtrArray* items,
@@ -31,7 +29,7 @@ gboolean log_db_log_btprox(LogDb* self,
   time_t now = time(NULL);
   if (now == -1) {
     if (error)
-      *error = g_error_new(domain_cl2app, code_time_query, "failed to get current time: %s (%d)", strerror(errno), errno);
+      *error = gx_error_new(domain_cl2app, code_time_query, "failed to get current time: %s (%d)", strerror(errno), errno);
     return FALSE;
   }
 

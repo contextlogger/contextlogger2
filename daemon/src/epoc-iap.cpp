@@ -54,7 +54,7 @@ gboolean epoc_iap_by_name(const gchar* iapName,
   TInt errCode = CnvUtfConverter::ConvertToUnicodeFromUtf8(iapNameDes, iapNameDes8);
   if (errCode) {
     if (error)
-      *error = g_error_new(domain_symbian, errCode, "Unicode conversion failure on IAP name: %s (%d)", plat_error_strerror(errCode), errCode);
+      *error = gx_error_new(domain_symbian, errCode, "Unicode conversion failure on IAP name: %s (%d)", plat_error_strerror(errCode), errCode);
     return FALSE;
   }
 
@@ -62,7 +62,7 @@ gboolean epoc_iap_by_name(const gchar* iapName,
   TRAP(errCode, *found = FindIapByNameL(iapNameDes, epocIapId));
   if (errCode) {
     if (error)
-      *error = g_error_new(domain_symbian, errCode, "error resolving IAP name to ID: %s (%d)", plat_error_strerror(errCode), errCode);
+      *error = gx_error_new(domain_symbian, errCode, "error resolving IAP name to ID: %s (%d)", plat_error_strerror(errCode), errCode);
     return FALSE;
   } else if (*found) {
     *iapId = epocIapId;

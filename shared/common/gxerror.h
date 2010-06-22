@@ -1,29 +1,48 @@
-// logging utilities with stack info logging
-#ifndef __logging_stack_h__
-#define __logging_stack_h__
+#ifndef __gxerror_h__
+#define __gxerror_h__
 
-#include "common/logging.h"
+#include <glib/gerror.h>
 
-#if __DO_LOGGING__
-
-#include "common/utilities.h" // get_stack_info_string()
-#define log_stack_info(f) { char* _s = get_stack_info_string(); if (_s) { log_text(f,_s); g_free(_s); } }
-
-#else
-
-#define log_stack_info(f) ((void)0)
-
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#define logst log_stack_info(PRIMARY_LOG_FILENAME)
+  // An allocation failure safe version of g_error_new.
+  // 
+  // Returns NULL in there is no memory for allocating a new error
+  // structure.
+  // 
+  // (Note: G_GNUC_PRINTF (3, 4) states that the format index is 3,
+  // and the argument start index is 4. See glib/gmacros.h for
+  // details.)
+  GError* gx_error_new(GQuark         domain,
+		       gint           code,
+		       const gchar   *format,
+		       ...) G_GNUC_PRINTF (3, 4);
 
-#endif /* __logging_stack_h__ */
+  // An allocation failure safe version of g_error_new_literal.
+  GError* gx_error_new_literal (GQuark         domain,
+				gint           code,
+				const gchar   *message);
+
+  // A va_list version of gx_error_new. Note that GLib internally
+  // defines g_error_new_valist, but does not export it.
+  GError* gx_error_va_list(GQuark         domain,
+			   gint           code,
+			   const gchar   *format,
+			   va_list        args);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
+#endif /* __gxerror_h__ */
 
 /**
 
-logging-stack.h
+gxerror.h
 
-Copyright 2009 Helsinki Institute for Information Technology (HIIT)
+Copyright 2010 Helsinki Institute for Information Technology (HIIT)
 and the authors. All rights reserved.
 
 Authors: Tero Hasu <tero.hasu@hut.fi>

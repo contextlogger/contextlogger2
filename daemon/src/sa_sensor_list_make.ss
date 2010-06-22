@@ -130,7 +130,7 @@
                (with-cpp-condition-harness cpp-condition write-them))))
       (display-nl "return TRUE;")
       (display-nl "fail:")
-      (display-nl "if (error) *error = g_error_new(domain_cl2app, code_database_state_init, \"error preparing statements for database '%s': %s (%d)\", LOGDB_FILE, sqlite3_errmsg(self->db), sqlite3_errcode(self->db));")
+      (display-nl "if (error) *error = gx_error_new(domain_cl2app, code_database_state_init, \"error preparing statements for database '%s': %s (%d)\", LOGDB_FILE, sqlite3_errmsg(self->db), sqlite3_errcode(self->db));")
       (display "return FALSE;"))))
 
   (define sql-statement-destruction
@@ -209,8 +209,8 @@
                     (display-nl (format "if (sqlite3_step(~a) != SQLITE_DONE) goto sql_fail;" stmt-var))
                     (display-nl (format "if (sqlite3_reset(~a)) goto sql_fail;" stmt-var))
                     (display-nl "goto done;")
-                    (display-nl "posix_fail: rval = FALSE; if (error) *error = g_error_new(domain_cl2app, code_time_query, \"failed to access current time: %s (%d)\", strerror(errno), errno); goto done;")
-                    (display-nl (format "sql_fail: rval = FALSE; if (error) *error = g_error_new(domain_cl2app, code_database_command, \"failed to log ~a event: %s (%d)\", sqlite3_errmsg(self->db), sqlite3_errcode(self->db));" sensor-name))
+                    (display-nl "posix_fail: rval = FALSE; if (error) *error = gx_error_new(domain_cl2app, code_time_query, \"failed to access current time: %s (%d)\", strerror(errno), errno); goto done;")
+                    (display-nl (format "sql_fail: rval = FALSE; if (error) *error = gx_error_new(domain_cl2app, code_database_command, \"failed to log ~a event: %s (%d)\", sqlite3_errmsg(self->db), sqlite3_errcode(self->db));" sensor-name))
                     (display "done: mutex_unlock(&self->mutex); return rval;")
                     )))
                  (func-decl

@@ -211,6 +211,7 @@ sourcepath ..\..\..\shared\common
 source assertions_cxx.cpp
 source epoc-time.cpp
 source error_list.c
+source gxerror.c
 source logging.cpp
 source logging-time.c
 source platform_error.c

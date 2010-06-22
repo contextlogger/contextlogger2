@@ -1,6 +1,8 @@
 #ifndef __epoc_utilities_hpp__
 #define __epoc_utilities_hpp__
 
+// Utilities that require Symbian-specific includes in the header.
+
 #include <e32base.h> // CTrapCleanup, CActiveScheduler
 
 // Successful CTrapCleanup::New(); leads to installation as the

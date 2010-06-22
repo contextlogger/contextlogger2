@@ -2,7 +2,6 @@
 
 #include "ac_app_context.h"
 #include "er_errors.h"
-//#include "kr_controller_private.h"
 #include "kr_diskspace.h"
 #include "ut_diskspace_epoc.hpp"
 #include "utils_cl2.h"
@@ -114,18 +113,18 @@ struct _kr_PlatAo {
 extern "C" kr_PlatAo* kr_PlatAo_new(GError** error)
 {
   kr_PlatAo* self = g_try_new0(kr_PlatAo, 1);
-  if (!self) {
+  if (G_UNLIKELY(!self)) {
     if (error) *error = gx_error_no_memory;
     return NULL;
   }
 
   TRAPD(errCode, self->iDiskObserver = CDiskObserver::NewL());
-  if (errCode) {
+  if (G_UNLIKELY(errCode)) {
     kr_PlatAo_destroy(self);
     if (error)
-      *error = g_error_new(domain_symbian, errCode, 
-			   "disk observer creation failure: %s (%d)", 
-			   plat_error_strerror(errCode), errCode);
+      *error = gx_error_new(domain_symbian, errCode, 
+			    "disk observer creation failure: %s (%d)", 
+			    plat_error_strerror(errCode), errCode);
     return NULL;
   }
 

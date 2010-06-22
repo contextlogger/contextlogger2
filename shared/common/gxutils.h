@@ -1,29 +1,29 @@
-// logging utilities with stack info logging
-#ifndef __logging_stack_h__
-#define __logging_stack_h__
+#ifndef __gxutils_h__
+#define __gxutils_h__
 
-#include "common/logging.h"
+// Utilities that require a GLib include in the header.
 
-#if __DO_LOGGING__
+#include <glib.h>
 
-#include "common/utilities.h" // get_stack_info_string()
-#define log_stack_info(f) { char* _s = get_stack_info_string(); if (_s) { log_text(f,_s); g_free(_s); } }
-
-#else
-
-#define log_stack_info(f) ((void)0)
-
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#define logst log_stack_info(PRIMARY_LOG_FILENAME)
+  gchar* gx_strdup (const gchar *str);
 
-#endif /* __logging_stack_h__ */
+  //GQuark gx_quark_from_static_string (const gchar *string);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
+#endif /* __gxutils_h__ */
 
 /**
 
-logging-stack.h
+gxutils.h
 
-Copyright 2009 Helsinki Institute for Information Technology (HIIT)
+Copyright 2010 Helsinki Institute for Information Technology (HIIT)
 and the authors. All rights reserved.
 
 Authors: Tero Hasu <tero.hasu@hut.fi>

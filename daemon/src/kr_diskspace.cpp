@@ -73,7 +73,7 @@ extern "C" gboolean check_logging_medium_ready(GError** error)
 	fmt = "Logging medium full: %s (%d)";
       else
 	fmt = "Logging medium not ready: %s (%d)";
-      *error = g_error_new(domain_symbian, errCode, fmt, plat_error_strerror(errCode), errCode);
+      *error = gx_error_new(domain_symbian, errCode, fmt, plat_error_strerror(errCode), errCode);
     }
     return FALSE;
   }

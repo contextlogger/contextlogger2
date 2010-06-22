@@ -1,5 +1,9 @@
 #include "common/utilities.h"
+
 #include "platform_config.h"
+
+#include "common/gxlowmem.h"
+
 #include <glib.h>
 #include <glib/gprintf.h>
 
@@ -19,14 +23,19 @@ EXTERN_C char* get_stack_info_string()
   TUint32 cFree = sp - threadStackInfo.iLimit;
   TUint32 cUsed = threadStackInfo.iBase - sp;
   TUint32 cTotal = threadStackInfo.iBase - threadStackInfo.iLimit;
-  return g_strdup_printf("stack free:%u used:%u total:%u", 
-			 static_cast<unsigned int>(cFree), 
-			 static_cast<unsigned int>(cUsed), 
-			 static_cast<unsigned int>(cTotal)); 
+
+  gchar* s;
+  TRAP_OOM_VALUE(NULL, 
+		 s = g_strdup_printf("stack free:%u used:%u total:%u", 
+				     static_cast<unsigned int>(cFree), 
+				     static_cast<unsigned int>(cUsed), 
+				     static_cast<unsigned int>(cTotal))); 
+  return s;
+
 }
 #else
 EXTERN_C char* get_stack_info_string()
 {
-  return g_strdup("<stack info unavailable>");
+  return gx_strdup("<stack info unavailable>");
 }
 #endif

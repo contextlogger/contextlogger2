@@ -62,7 +62,7 @@ void CSensor_smsevent::LogEvent(const char* evType, const TDesC& aTelNoDes)
 
   if (aTelNoDes.Length() > 0) {
     telNo = ConvToUtf8CString(aTelNoDes);
-    if (!telNo) {
+    if (G_UNLIKELY(!telNo)) {
       ex_log_fatal_error(KErrNoMemory);
       return;
     }
@@ -83,7 +83,7 @@ void CSensor_smsevent::LogEvent(const char* evType, const TDesC& aTelNoDes)
   g_free(telNo);
   g_free(contactName);
 
-  if (!ok) {
+  if (G_UNLIKELY(!ok)) {
     gx_log_free_fatal_error(localError);
     return;
   }

@@ -2,7 +2,9 @@
 
 int main()
 {
-  cl2GlobalInit();
+  int errCode = cl2GlobalInit();
+  if (errCode)
+    return errCode;
   return cl2RunOnceGetExitCode();
 }
 

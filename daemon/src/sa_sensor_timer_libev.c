@@ -61,8 +61,8 @@ static void timerCallback(EV_P_ ev_timer* w, int revents)
 EXTERN_C sa_Sensor_timer* sa_Sensor_timer_new(LogDb* log, GError** error)
 {
   sa_Sensor_timer* self = g_try_new0(sa_Sensor_timer, 1);
-  if (!self) {
-    if (error) *error = NULL;
+  if (G_UNLIKELY(!self)) {
+    if (error) *error = gx_error_no_memory;
     return NULL;
   }
   self->log = log;

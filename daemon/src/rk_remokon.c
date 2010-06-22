@@ -203,7 +203,7 @@ static int cb_gotMsg(void* userdata, const char* fromJid, const char* luaStr)
 rk_Remokon* rk_Remokon_new(GError** error)
 {
   rk_Remokon* self = g_try_new0(rk_Remokon, 1);
-  if (!self) {
+  if (G_UNLIKELY(!self)) {
     if (error) *error = gx_error_no_memory;
     return NULL;
   }
@@ -289,7 +289,7 @@ gboolean rk_Remokon_start(rk_Remokon* self, GError** error)
     if (!self->have_config) {
       // No point in retrying.
       if (error)
-	*error = g_error_new(domain_cl2app, code_no_configuration,
+	*error = gx_error_new(domain_cl2app, code_no_configuration,
 			     "some Jabber config missing");
       return FALSE;
     }
@@ -348,7 +348,7 @@ gboolean rk_Remokon_send(rk_Remokon* self,
 {
   if (!rk_Remokon_is_connected(self)) {
     if (error)
-      *error = g_error_new(domain_cl2app, code_not_connected, "no Jabber connection");
+      *error = gx_error_new(domain_cl2app, code_not_connected, "no Jabber connection");
     return FALSE;
   }
 

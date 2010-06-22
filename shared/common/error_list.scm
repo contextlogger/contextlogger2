@@ -73,6 +73,17 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     "no configuration"
     ))
 
+(define (capture-output f)
+  (let ((output (open-output-string)))
+    (parameterize ((current-output-port output))
+      (f))
+    (get-output-string output)))
+
+(define (display-cpp-nl s)
+  (display s)
+  (display " \\")
+  (newline))
+
 (define program-1
   (unit
     (basename (path-drop-extension (path-basename program-name) ".scm"))
@@ -132,6 +143,19 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
              "#define " var-name " " (to-s var-value)))
            ))
        code-list))
+
+     (cxx-exported-declarations
+      (capture-output
+       (thunk
+        (display-cpp-nl "#define preallocate_all_quarks {")
+        (for-each
+         (lambda (s)
+           (let* ((comps (string-split-space s))
+                  (domain-name (string-join comps "-")))
+             (display-cpp-nl (format "domain_~a;" domain-name))))
+         domain-list)
+        (display "}")
+        )))
      
      ))) ; end program-1
 

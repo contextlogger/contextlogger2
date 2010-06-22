@@ -15,6 +15,8 @@
 
 gboolean create_log_db(GError** error)
 {
+  assert_error_unset(error);
+
   const char const* sql = get_create_tables_sql();
   return create_database(LOGDB_DIR,
 			 LOGDB_FILE,
@@ -28,9 +30,10 @@ gboolean ensure_log_db_created(GError** error)
 
 #if ALWAYS_RECREATE_DB
   // This may be useful during testing.
-  g_unlink(LOGDB_FILE);
+  g_unlink(LOGDB_FILE); // no GLib OOM on POSIX
 #endif
   
+   // g_file_test: no GLib OOM on POSIX
   if (!g_file_test(LOGDB_FILE, G_FILE_TEST_EXISTS)) {
     return create_log_db(error);
   }

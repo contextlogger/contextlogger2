@@ -23,7 +23,6 @@ gboolean event_loop(EventQueue* queue, GError** error)
     if (!event)
       break;
     if (!((event->callback)(event, error))) {
-      assert_error_set(error);
       return FALSE;
     }
   }
@@ -89,6 +88,8 @@ MAYBE_ERROR_RTYPE event_loop(EventQueue* queue MAYBE_ERROR_PARAM)
 
   // Use a scheduler that records errors to our error argument as appropriate.
   if (error)
+    // Here the error argument is for the scheduler to use, not for
+    // this function to report an error.
     event_scheduler_replace(error);
 #endif
 
@@ -104,6 +105,9 @@ MAYBE_ERROR_RTYPE event_loop(EventQueue* queue MAYBE_ERROR_PARAM)
 #if EVENT_CALLBACK_WITH_GERROR
   // Note that here we exceptionally ignore errors if "error" was
   // passed as NULL. That is, we never return FALSE in such a case.
+  // 
+  // We cannot distinguish between a NULL GError and no GError here,
+  // which is a design limitation.
   return !(error && *error);
 #endif
 }

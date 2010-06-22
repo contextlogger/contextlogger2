@@ -68,9 +68,9 @@ void CSensor_flightmode::RunL()
 {
 #if 0
   TInt errCode = KErrGeneral;
-  Leave(g_error_new(domain_symbian, errCode,
-		    "dummy failure: %s (%d)", 
-		    plat_error_strerror(errCode), errCode));
+  Leave(gx_error_new(domain_symbian, errCode,
+		     "dummy failure: %s (%d)", 
+		     plat_error_strerror(errCode), errCode));
 #endif
 
   GError** error = &iError;

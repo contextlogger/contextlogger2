@@ -5,6 +5,8 @@
 
 #include "common/assertions.h"
 #include "common/error_list.h"
+#include "common/gxerror.h"
+#include "common/gxlowmem.h"
 #include "common/logging.h"
 #include "common/platform_error.h"
 
@@ -12,7 +14,7 @@
 
 #include <errno.h>
 
-// xxx We probably should also have macros for creating GError objects here, should also offer some protection for our switching to a custom function for GError creation.
+// xxx We should also have macros for creating typical GError objects here.
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,6 +35,8 @@ extern "C" {
   // --------------------------------------------------
 
   // "error" must be non-NULL.
+  // Caller must free the returned buffer.
+  // Returns NULL on ENOMEM.
   gchar* gx_error_to_string(GError* error);
 
   // Frees the error.
@@ -96,14 +100,17 @@ extern "C" {
 } /* extern "C" */
 #endif
 
+// We use the GError API in a non-standard way in that we always accept a NULL ``GError`` pointer and interpret it as an out-of-memory error. This is to avoid trying to allocate a ``GError`` when there is no memory.
 #define gx_error_no_memory NULL
 
 #define gx_error_is(_errorptr, d, c) \
   ((_errorptr) && ((_errorptr)->domain == (d)) && ((_errorptr)->code == (c)))
 
-#define new_not_found_error g_error_new(domain_cl2app, code_not_found, "not found");
+#define new_not_found_error \
+  gx_error_new(domain_cl2app, code_not_found, "not found")
 
-#define is_not_found_error(_errorptr) gx_error_is(_errorptr, domain_cl2app, code_not_found)
+#define is_not_found_error(_errorptr) \
+  gx_error_is(_errorptr, domain_cl2app, code_not_found)
 
 #endif /* __er_errors_h__ */
 

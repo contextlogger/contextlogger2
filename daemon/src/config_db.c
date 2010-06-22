@@ -2,6 +2,7 @@
 
 #include "application_config.h"
 #include "db_creation.h"
+#include "er_errors.h"
 #include "kr_controller_private.h"
 #include "lua_cl2.h"
 #include "sqlite_cl2.h"
@@ -62,7 +63,7 @@ static gboolean prepare_sql_statements(ConfigDb *self, GError **error)
 
  fail:
   if (error) 
-    *error = g_error_new(domain_cl2app, code_database_state_init, "error preparing statements for database '%s': %s (%d)", CONFIGDB_FILE, sqlite3_errmsg(self->db), sqlite3_errcode(self->db));
+    *error = gx_error_new(domain_cl2app, code_database_state_init, "error preparing statements for database '%s': %s (%d)", CONFIGDB_FILE, sqlite3_errmsg(self->db), sqlite3_errcode(self->db));
   return FALSE;
 }
 
@@ -102,7 +103,7 @@ static gboolean open_config_db_session(ConfigDb* self, GError** error)
   int errCode = sqlite3_open(CONFIGDB_FILE, &self->db);
   if (errCode) {
     if (error)
-      *error = g_error_new(domain_cl2app, code_database_open, "error opening database '%s': %s (%d)", CONFIGDB_FILE, sqlite_get_error_string(self->db), errCode);
+      *error = gx_error_new(domain_cl2app, code_database_open, "error opening database '%s': %s (%d)", CONFIGDB_FILE, sqlite_get_error_string(self->db), errCode);
     close_config_db_session(self);
     return FALSE;
   }
@@ -124,8 +125,8 @@ ConfigDb* ConfigDb_new(GError** error)
   }
 
   ConfigDb* self = g_try_new0(ConfigDb, 1);
-  if (!self) {
-    if (error) *error = NULL;
+  if (G_UNLIKELY(!self)) {
+    if (error) *error = gx_error_no_memory;
     return NULL;
   }
 
@@ -152,15 +153,16 @@ void ConfigDb_destroy(ConfigDb* self)
 
 #define do_nothing ((void)0)
 
-#define handle_sql_error						\
-  {									\
-    if (error)								\
-      *error = g_error_new(domain_cl2app, code_database_command,	\
-			   "ConfigDb database access error: %s (%d)",	\
-			   sqlite3_errmsg(self->db),			\
-			   sqlite3_errcode(self->db));			\
-    goto done;								\
-  }
+#define set_sql_error							\
+  if (error)								\
+    *error = gx_error_new(domain_cl2app, code_database_command,		\
+			  "ConfigDb database access error: %s (%d)",	\
+			  sqlite3_errmsg(self->db),			\
+			  sqlite3_errcode(self->db));			
+
+#define handle_sql_error_done { set_sql_error; goto done; }
+
+#define handle_sql_error_false { set_sql_error; return FALSE; }
 
 static gchar* db_get(ConfigDb* self, 
 		     const gchar* name,
@@ -171,7 +173,7 @@ static gchar* db_get(ConfigDb* self,
   {
     if (sqlite3_bind_text(self->getStmt, 1, name, strlen(name), 
 			  SQLITE_STATIC)) {
-      handle_sql_error;
+      handle_sql_error_done;
     }
 
     // Upon success we should get either SQLITE_ROW and SQLITE_DONE.
@@ -207,7 +209,7 @@ static gchar* db_get(ConfigDb* self,
       default: // some error
 	{
 	  sqlite3_reset(self->getStmt);
-	  handle_sql_error;
+	  handle_sql_error_done;
 	}
       }
       
@@ -215,7 +217,7 @@ static gchar* db_get(ConfigDb* self,
     // need to, unless we must later use unbound parameters (which
     // are interpreted as NULL); see sqlite3_clear_bindings().
     if (sqlite3_reset(self->getStmt)) {
-      handle_sql_error;
+      handle_sql_error_done;
     }
 
   done:
@@ -269,27 +271,24 @@ static gboolean db_set(ConfigDb* self,
   {
     if (sqlite3_bind_text(self->setStmt, 1, name, strlen(name), 
 			  SQLITE_STATIC)) {
-      handle_sql_error;
+      handle_sql_error_false;
     }
 
     if (sqlite3_bind_text(self->setStmt, 2, value, strlen(value), 
 			  SQLITE_STATIC)) {
       sqlite3_reset(self->setStmt);
-      handle_sql_error;
+      handle_sql_error_false;
     }
     
     int res = sqlite3_step(self->setStmt);
     if (res != SQLITE_DONE) {
       sqlite3_reset(self->setStmt);
-      handle_sql_error;
+      handle_sql_error_false;
     }
 
     if (sqlite3_reset(self->setStmt)) {
-      handle_sql_error;
+      handle_sql_error_false;
     }
-
-  done:
-    do_nothing;
   }
     
   return TRUE;

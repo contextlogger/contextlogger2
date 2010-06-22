@@ -78,8 +78,14 @@ int cl2RunOnceGetExitCode()
 #include <pipsversion.h>
 #endif /* __SYMBIAN32__ */
 
+#define trap_oom(_x) TRAP_OOM_VALUE(ENOMEM, _x)
+
 // public interface
-void cl2GlobalInit()
+// 
+// We shall return a POSIX error code if there is an error, or -1 if
+// there is no appropriate standard value. See
+// <asm-generic/errno-base.h>.
+int cl2GlobalInit()
 {
   log_clear(PRIMARY_LOG_FILENAME);
   log_text(PRIMARY_LOG_FILENAME, "initializing");
@@ -97,22 +103,30 @@ void cl2GlobalInit()
 #if defined(__SYMBIAN32__)
   logf("compiled against PIPS version %03u", PIPS_VERSION);
 #endif /* __SYMBIAN32__ */
-  logf("compiled against GLib %u.%u.%u", GLIB_MAJOR_VERSION, GLIB_MINOR_VERSION, 
+  logf("compiled against GLib %u.%u.%u", 
+       GLIB_MAJOR_VERSION, GLIB_MINOR_VERSION, 
        GLIB_MICRO_VERSION);
 #if !defined(__SYMBIAN32__)
   // These are not available on Symbian, as variables cannot be exported.
-  logf("running with GLib %u.%u.%u", glib_major_version, glib_minor_version, 
+  logf("running with GLib %u.%u.%u", 
+       glib_major_version, glib_minor_version, 
        glib_micro_version);
 #endif /* __SYMBIAN32__ */
   logf("built on %s at %s", __DATE__, __TIME__);
 
   log_ctx(PRIMARY_LOG_FILENAME, "context test");
 #if __DO_LOGGING__
-  gchar* eData = g_strescape("hello", NULL);
-  logf("'hello' is '%s'", eData);
-  g_free(eData);
+  trap_oom({
+      gchar* eData = g_strescape("hello", NULL);
+      logf("'hello' is '%s'", eData);
+      g_free(eData);
+    });
 #endif
   logst;
+
+  // This ensures that there will be no errors allocating our standard
+  // error domains at runtime.
+  trap_oom(preallocate_all_quarks);
 
 #ifndef __EPOC32__
   // Do not want any console popping up if STDIOSERVER is installed.
@@ -120,17 +134,35 @@ void cl2GlobalInit()
 #endif
 
 #if __DO_LOGGING__
-  double td = 6.38000011;
-  logf("printf %%f %f", td);
-  logf("printf %%g %g", td);
-  logf("printf %%.6f %.6f", td);
-  char tdb[50];
-  snprintf(tdb, 50, "snprintf %%f %f", td); logt(tdb);
-  snprintf(tdb, 50, "snprintf %%g %g", td); logt(tdb);
-  snprintf(tdb, 50, "snprintf %%.6f %.6f", td); logt(tdb);
-  g_snprintf_fix(tdb, 50, "g_snprintf_fix %%f %f", td); logt(tdb);
-  g_snprintf_fix(tdb, 50, "g_snprintf_fix %%g %g", td); logt(tdb);
-  g_snprintf_fix(tdb, 50, "g_snprintf_fix %%.6f %.6f", td); logt(tdb);
+  {
+    SET_LOW_MEMORY_TRAP(ENOMEM);
+    double td = 6.38000011;
+    logf("printf %%f %f", td);
+    logf("printf %%g %g", td);
+    logf("printf %%.6f %.6f", td);
+    char tdb[50];
+    snprintf(tdb, 50, "snprintf %%f %f", td); logt(tdb);
+    snprintf(tdb, 50, "snprintf %%g %g", td); logt(tdb);
+    snprintf(tdb, 50, "snprintf %%.6f %.6f", td); logt(tdb);
+    g_snprintf_fix(tdb, 50, "g_snprintf_fix %%f %f", td); logt(tdb);
+    g_snprintf_fix(tdb, 50, "g_snprintf_fix %%g %g", td); logt(tdb);
+    g_snprintf_fix(tdb, 50, "g_snprintf_fix %%.6f %.6f", td); logt(tdb);
+    REMOVE_LOW_MEMORY_TRAP();
+  }
+#endif
+
+#if 0 // OOM testing
+  {
+    SET_LOW_MEMORY_TRAP(ENOMEM);
+    logt("invoking g_strnfill");
+    gchar* s = g_strnfill(100000000 /*gsize length*/,
+			  'a' /*gchar fill_char*/);
+    logf("s is %d", (int)s);
+    s[5] = '\0';
+    logf("s contains '%s'", s);
+    g_free(s);
+    REMOVE_LOW_MEMORY_TRAP();
+  }
 #endif
 
 #ifndef __EPOC32__
@@ -140,18 +172,21 @@ void cl2GlobalInit()
   srand(time(NULL));
 
   // Required when using the GObject object system.
-  g_type_init(); // xxx check whether always succeeds, even on symbian
+  trap_oom(g_type_init());
 
   er_global_init();
 
 #if __FEATURE_UPLOADER__
   if (!up_global_init(NULL)) {
     logf("Uploader global init failure");
-    abort();
+    return -1;
   }
 #endif
+
+  return 0;
 }
 
+// It must be okay to invoke this even if cl2GlobalInit() failed.
 void cl2GlobalCleanup()
 {
   logt("doing global cleanup");

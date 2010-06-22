@@ -42,14 +42,15 @@ GOB_FLAGS := --always-private-header --output-dir $(SRC_PATH)
 
 GEN_FILES := $(GOB_H_FILES) $(GOB_PRIV_H_FILES) $(GOB_C_FILES) $(RAGEL_GEN_FILES)
 
-# We assume Curl built separately for each platform to avoid system incompatibility issues.
-CURL_CONFIG := $(HOME)/local/bin/curl-config
+ifneq ($(UPLOAD_WITH_CURL),)
+CURL_CONFIG := curl-config
 CURL_VERSION := $(shell $(CURL_CONFIG) --version)
 CURL_CFLAGS := $(shell $(CURL_CONFIG) --cflags)
 CURL_LDFLAGS := $(shell $(CURL_CONFIG) --libs)
 CURL_LSFLAGS := $(shell $(CURL_CONFIG) --static-libs)
 CURL_FEATURES := $(shell $(CURL_CONFIG) --features)
 CURL_PREFIX := $(shell $(CURL_CONFIG) --prefix)
+endif
 
 BUILD_LUA := true
 ifeq ($(BUILD_LUA),true)

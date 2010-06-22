@@ -1,6 +1,17 @@
+// An implementation of some of the utilities. See also
+// utilities_cxx.cpp.
+
 #include "common/utilities.h"
+
+#include "common/gxlowmem.h"
+
 #include <string.h>
+
 #include <glib.h>
+
+// --------------------------------------------------
+// sh_utils.h implementation
+// --------------------------------------------------
 
 // This fixes a bug in Open C MR.
 //
@@ -20,7 +31,7 @@
 // U+001F)."
 //
 // The caller is responsible for freeing the result buffer.
-EXTERN_C char* utf8ToJsonString(const char* text)
+char* utf8ToJsonString(const char* text)
 {
     GString* gs = g_string_sized_new(strlen(text) + 8);
 
@@ -47,6 +58,29 @@ EXTERN_C char* utf8ToJsonString(const char* text)
     g_string_free(gs, FALSE);
     return res;
 }
+
+// --------------------------------------------------
+// gxutils.h implementation
+// --------------------------------------------------
+
+gchar* gx_strdup (const gchar *str)
+{
+  gchar* s;
+  TRAP_OOM_VALUE(NULL, s = g_strdup(str));
+  return s;
+}
+
+/* // Not such an attractive approach. Perhaps better to preallocate all quarks needed in an application, trapping any error at that point.
+GQuark gx_quark_from_static_string (const gchar *string)
+{
+  GQuark q;
+  // 0 might be a valid quark value, meaning that the caller cannot
+  // know there was an error, but we do not really want to crash
+  // either.
+  TRAP_OOM_VALUE(0, q = g_quark_from_static_string(string));
+  return q;
+}
+*/
 
 /**
 

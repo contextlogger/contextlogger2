@@ -1,6 +1,9 @@
 #ifndef __sh_utils_h__
 #define __sh_utils_h__
 
+// Utilities that only require standard C or C++ includes in the
+// header.
+
 #include <string.h> // memset
 
 #ifdef __cplusplus
@@ -14,6 +17,14 @@
 #ifndef MAX
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
 #endif
+
+// The caller must free the buffer.
+// Returns NULL on memory allocation failure.
+EXTERN_C char* get_stack_info_string();
+
+// Forms a JSON String text out of the given UTF-8 text.
+// The string will be quoted, and still UTF-8.
+EXTERN_C char* utf8ToJsonString(const char* text);
 
 #ifdef __cplusplus
 #define DEFINE_CLEANUP_CLASS(name,type,free) \
