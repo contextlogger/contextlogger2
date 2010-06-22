@@ -131,6 +131,9 @@ epoc_codegen : src/timer_generic_epoc.h
 
 ragel : $(RAGEL_C_FILES) $(RAGEL_GV_FILES) $(RAGEL_PNG_FILES)
 
+codegen : ragel epoc_codegen src/sa_sensor_list_log_db.h src/cf_rcfile_list.h $(SHARED_PATH)/common/error_list.h
+	cd ../time-spec && make codegen
+
 src/sa_sensor_list_log_db.h src/sa_sensor_list_log_db.c src/sa_sensor_list_integration.cpp : src/sa_sensor_list_spec.ss src/sa_sensor_list_make.ss src/sa_sensor_list_dsl.ss
 	$(PLT_ENV) $<
 

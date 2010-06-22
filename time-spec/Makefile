@@ -6,6 +6,8 @@ GNOME_CFLAGS := `pkg-config --cflags --libs glib-2.0` -DG_DISABLE_DEPRECATED=1
 RUBY_CFLAGS := -fPIC -I/usr/lib/ruby/1.8/i486-linux
 RUBY_LDFLAGS := -shared -lruby1.8
 
+codegen : moment_parser.c interval_parser.c
+
 test : moment_parser interval_parser ruby
 	./moment_parser
 	./interval_parser
