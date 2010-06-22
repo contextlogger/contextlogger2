@@ -84,14 +84,15 @@ static gboolean ReadRcFile(cf_RcFile* self, lua_State *L, GError** error)
 extern "C" cf_RcFile* cf_RcFile_new(GError** error) 
 {
   cf_RcFile* self = g_try_new0(cf_RcFile, 1);
-  if (!self) {
+  if (G_UNLIKELY(!self)) {
     if (error) *error = gx_error_no_memory;
     return NULL;
   }
 
   lua_State *L = cl_lua_new_libs();
-  if (!L) {
+  if (G_UNLIKELY(!L)) {
     g_free(self);
+    if (error) *error = gx_error_no_memory;
     return NULL;
   }
 
@@ -102,7 +103,7 @@ extern "C" cf_RcFile* cf_RcFile_new(GError** error)
   WHEN_SYMBIAN(lua_atpanic(L, atpanic_leave));
   UNLESS_SYMBIAN(lua_atpanic(L, atpanic_print));
 
-  if (!ReadRcFile(self, L, error)) {
+  if (G_UNLIKELY(!ReadRcFile(self, L, error))) {
     lua_close(L);
     cf_RcFile_destroy(self);
     return NULL;

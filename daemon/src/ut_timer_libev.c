@@ -34,7 +34,7 @@ static void evCallback(EV_P_ ev_timer* w, int revents)
 ut_Timer* ut_Timer_new(void* userdata, ut_TimerCallback* cb, GError** error)
 {
   ut_Timer* self = g_try_new0(ut_Timer, 1);
-  if (!self) {
+  if (G_UNLIKELY(!self)) {
     if (error) *error = gx_error_no_memory;
     return NULL;
   }

@@ -57,13 +57,13 @@ kr_Controller* kr_Controller_new(GError** error)
   assert_error_unset(error);
 
   ac_AppContext* ac = ac_AppContext_new(error);
-  if (!ac) {
+  if (G_UNLIKELY(!ac)) {
     return NULL;
   }
   ac_set_global_AppContext(ac);
 
   kr_Controller* self = g_try_new0(kr_Controller, 1);
-  if (!self) {
+  if (G_UNLIKELY(!self)) {
     ac_set_global_AppContext(NULL);
     ac_AppContext_destroy(ac);
     if (error) *error = gx_error_no_memory;
@@ -114,7 +114,7 @@ kr_Controller* kr_Controller_new(GError** error)
   }
   
   LogDb* log = log_db_new(error);
-  if (!log) {
+  if (G_UNLIKELY(!log)) {
     kr_Controller_destroy(self);
     return NULL;
   }

@@ -203,7 +203,7 @@ static int cb_gotMsg(void* userdata, const char* fromJid, const char* luaStr)
 rk_Remokon* rk_Remokon_new(GError** error)
 {
   rk_Remokon* self = g_try_new0(rk_Remokon, 1);
-  if (!self) {
+  if (G_UNLIKELY(!self)) {
     if (error) *error = gx_error_no_memory;
     return NULL;
   }

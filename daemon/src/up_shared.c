@@ -7,15 +7,6 @@
 #include "common/assertions.h"
 
 // --------------------------------------------------
-// errors
-// --------------------------------------------------
-
-GQuark up_quark()
-{
-  return g_quark_from_static_string("Uploader");
-}
-
-// --------------------------------------------------
 // directory scanning
 // --------------------------------------------------
 
@@ -36,16 +27,25 @@ gboolean getNextOldLogFile(gchar** pathname,
 {
   assert(pathname && !*pathname);
 
-  GDir* dir = g_dir_open(LOG_UPLOADS_DIR, 0, error);
-  if (!dir)
-    return FALSE;
-  const gchar* filename = g_dir_read_name(dir);
-  if (filename) {
-    *pathname = g_strdup_printf("%s" DIR_SEP "%s", LOG_UPLOADS_DIR, filename);
-  }
-  g_dir_close(dir);
+  GDir* dir = NULL;
 
+  TRAP_OOM_FAIL({
+      dir = g_dir_open(LOG_UPLOADS_DIR, 0, error);
+      if (!dir)
+	return FALSE;
+      const gchar* filename = g_dir_read_name(dir);
+      if (filename) {
+	*pathname = g_strdup_printf("%s" DIR_SEP "%s", LOG_UPLOADS_DIR, filename);
+      }
+    });
+
+  g_dir_close(dir);
   return TRUE;
+
+ fail:
+  if (dir) g_dir_close(dir);
+  if (error) *error = gx_error_no_memory;
+  return FALSE;
 }
 
 #endif // __FEATURE_UPLOADER__

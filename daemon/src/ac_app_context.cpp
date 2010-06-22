@@ -198,18 +198,24 @@ EXTERN_C gboolean ac_AppContext_configure(ac_AppContext* self,
   self->logdb_dir = database_dir;
   logf("log db stored in directory '%s'", self->logdb_dir);
 
-  self->logdb_file = g_strdup_printf("%s%s%s",
-				     self->logdb_dir,
-				     DIR_SEP, 
-				     LOGDB_BASENAME);
-  if (!self->logdb_file) goto fail;
+  {
+    TRAP_OOM(goto fail,
+	     self->logdb_file = g_strdup_printf("%s%s%s",
+						self->logdb_dir,
+						DIR_SEP, 
+						LOGDB_BASENAME)
+	     );
+  }
 
-  self->log_uploads_dir = g_strdup_printf("%s%suploads",
-					  database_dir,
-					  DIR_SEP);
-  if (!self->log_uploads_dir) goto fail;
+  {
+    TRAP_OOM(goto fail,
+	     self->log_uploads_dir = g_strdup_printf("%s%suploads",
+						     database_dir,
+						     DIR_SEP)
+	     );
+  }
+
   logf("uploads stored in directory '%s'", self->log_uploads_dir);
-
   return TRUE;
 
  fail:

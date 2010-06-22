@@ -36,6 +36,7 @@ extern "C" {
 
   // "error" must be non-NULL.
   // Caller must free the returned buffer.
+  // Returns NULL on ENOMEM.
   gchar* gx_error_to_string(GError* error);
 
   // Frees the error.

@@ -264,7 +264,7 @@ gboolean get_ConfigDb_str(const gchar* name, gchar** s,
   }
   if (!*s && default_s) {
     *s = strdup(default_s);
-    if (!*s) {
+    if (G_UNLIKELY(!*s)) {
       if (error) *error = gx_error_no_memory;
       return FALSE;
     }

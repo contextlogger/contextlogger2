@@ -10,6 +10,7 @@
 #include "lua_cl2.h"
 #include "utils_cl2.h" // for string conversions
 
+#include "common/gxlowmem.h"
 #include "common/logging.h"
 #include "common/platform_error.h"
 #include "common/sh_utils.h"
@@ -376,10 +377,15 @@ void CCliapiSession::ServiceL(const RMessage2& aMessage)
 		}
 	      default: 
 		{
-		  g_snprintf(luaResultBuf, luaResultBuf_size,
-			     "Symbian error in eval: %s (%d)",
-			     symbian_error_strerror(evalErr), evalErr);
+		  TRAP_OOM_FAIL({
+		      g_snprintf(luaResultBuf, luaResultBuf_size,
+				 "Symbian error in eval: %s (%d)",
+				 symbian_error_strerror(evalErr), evalErr);
+		    });
 		  luaResult = luaResultBuf;
+		  break;
+		fail: 
+		  luaResult = "<out of memory>";
 		  break;
 		}
 	      }

@@ -63,7 +63,7 @@ gchar* ConvToUtf8CStringL(const TDesC& name16)
   char* str = (char*)(g_try_malloc(strLen));
   if (!str) {
     delete des;
-    User::Leave(KErrNoMemory);
+    User::LeaveNoMemory();
   }
   memcpy(str, des->Ptr(), strLen);
   delete des;
@@ -135,6 +135,7 @@ extern "C" void g_string_append_printf_fix(GString *gs,
   TPtrC8 fmt((TUint8*)format); // like strlen for length
   buf.FormatList(fmt, argp);
 
+  // may throw a GLib OOM error on Symbian
   g_string_append(gs, (gchar*)buf.PtrZ());
 
 #if 0

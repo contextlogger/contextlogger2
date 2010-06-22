@@ -552,7 +552,10 @@ gboolean CSensor_gps::PositionerEventL(GError** error)
 	  // "satellites": {"horizontal_dop": 2.20000004768372,
 	  // "used_satellites": 4, "vertical_dop": 1.0, "time":
 	  // 1225980390.097, "satellites": 10, "time_dop": 1.0}
-	  GString* gs = g_string_sized_new(128);
+	  GString* gs = NULL;
+	  SET_LOW_MEMORY_TRAP_ACTION(if (gs) g_string_free(gs, TRUE);
+				     User::LeaveNoMemory());
+	  gs = g_string_sized_new(128);
 	  g_string_printf(gs, "{time: %d", (int)satUnixTime);
 	  if (!Math::IsNaN(satellites))
 	    g_string_append_printf(gs, ", satellites: %d", satellites);
@@ -572,6 +575,7 @@ gboolean CSensor_gps::PositionerEventL(GError** error)
 	  if (!Math::IsNaN(time_dop))
 	    g_string_append_printf_fix(gs, ", time_dop: %.6f", (double)time_dop);
 	  g_string_append_c(gs, '}');
+	  REMOVE_LOW_MEMORY_TRAP();
 
 	  if (gs->len < SAT_STRING_MAX)
 	    // For easier memory management.

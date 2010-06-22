@@ -30,6 +30,7 @@ void g_string_vprintf(GString *string,
 #endif
 
 #if PRINTF_DOUBLE_BUGGY
+// This may produce a GLib OOM error on Symbian.
 void g_string_append_printf_fix(GString *gs,
 				const gchar *fmt,
 				...);

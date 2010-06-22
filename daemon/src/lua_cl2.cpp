@@ -50,7 +50,7 @@ extern "C" lua_State* cl_lua_new()
 {
   // Second arg is "ud" as passed to l_alloc.
   lua_State *L = lua_newstate(l_alloc, NULL);
-  if (!L) {
+  if (G_UNLIKELY(!L)) {
     return NULL;
   }
 
@@ -67,7 +67,7 @@ extern "C" lua_State* cl_lua_new()
 extern "C" lua_State* cl_lua_new_libs()
 {
   lua_State *L = cl_lua_new();
-  if (L) {
+  if (G_LIKELY(L)) {
     luaL_openlibs(L);
     my_openlibs(L);
   }
@@ -77,7 +77,7 @@ extern "C" lua_State* cl_lua_new_libs()
 extern "C" gboolean validate_lua_syntax(const gchar* value, GError** error)
 {
   lua_State* L = cl_lua_new();
-  if (!L) {
+  if (G_UNLIKELY(!L)) {
     if (error) 
       *error = gx_error_no_memory;
     return FALSE;
@@ -120,8 +120,12 @@ extern "C" int lua_raise_gerror(lua_State* L, GError* error)
   if (error) {
     gchar* s = gx_error_to_string(error);
     g_error_free(error);
-    lua_pushstring(L, s); // Lua makes its own copy of "s"
-    g_free(s);
+    if (G_UNLIKELY(!s)) {
+      lua_pushstring(L, "out of memory");
+    } else {
+      lua_pushstring(L, s); // Lua makes its own copy of "s"
+      g_free(s);
+    }
   } else {
     lua_pushstring(L, "out of memory");
   }

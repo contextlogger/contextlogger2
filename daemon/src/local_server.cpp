@@ -23,7 +23,10 @@ struct _LocalServer {
 extern "C" LocalServer *LocalServer_new	(GError ** error)
 {
 #ifdef __EPOC32__
-  LocalServer* self = (LocalServer*)g_malloc0(sizeof(LocalServer));
+  LocalServer* self = (LocalServer*)g_try_malloc0(sizeof(LocalServer));
+  if (G_UNLIKELY(!self)) {
+    if (error) *error = gx_error_no_memory;
+  }
   return self;
 #else
   return (LocalServer*)1; // dummy

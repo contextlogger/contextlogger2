@@ -39,7 +39,7 @@ NONSHARABLE_CLASS(CSensor_btprox) : public CActiveRunG
   void TryBtInitL();
   void BtClose();
   void TryStartScanning();
-  gboolean HandleScanEvent(TInt errCode, GError** error);
+  gboolean HandleScanEventL(TInt errCode, GError** error);
 
   void RefreshBaseScanIntervalSecs();
 

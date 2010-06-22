@@ -42,7 +42,8 @@ void gx_propagate_error(GError** dest, GError* src)
 
 gchar* gx_error_to_string(GError* error)
 {
-  GString* gs = g_string_sized_new(128);
+  GString* gs;
+  TRAP_OOM_NULL(gs = g_string_sized_new(128));
   g_string_printf(gs, "%s (%s: %d)",
 		  error->message, 
 		  g_quark_to_string(error->domain), 
@@ -56,9 +57,13 @@ void gx_error_log(GError* error)
 {
   if (error) {
     gchar* s = gx_error_to_string(error);
-    logt(s);
-    g_free(s);
-  } else {
+    if (G_LIKELY(s)) {
+      logt(s);
+      g_free(s);
+    } else {
+      logt("out of memory error");
+    }
+  } else { // error == gx_error_no_memory
     logt("out of memory error");
   }
 }

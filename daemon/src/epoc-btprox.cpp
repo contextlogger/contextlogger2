@@ -178,10 +178,10 @@ void CSensor_btprox::ConstructL()
 {
   RefreshBaseScanIntervalSecs();
 
+  SET_LOW_MEMORY_TRAP_ACTION(User::LeaveNoMemory());
   iResult = g_ptr_array_sized_new(15); 
-  User::LeaveIfNull(iResult);
   iOldResult = g_ptr_array_sized_new(15);
-  User::LeaveIfNull(iOldResult);
+  REMOVE_LOW_MEMORY_TRAP();
 
   LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iTimer, iTimer.CreateLocal()); 
 
@@ -288,7 +288,7 @@ static void BtDevAddrToString(TDes8& aString, const TBTDevAddr& addr)
   }
 }
 
-gboolean CSensor_btprox::HandleScanEvent(TInt errCode, GError** error)
+gboolean CSensor_btprox::HandleScanEventL(TInt errCode, GError** error)
 {
   if (errCode == KErrEof) // no more devices
     {
@@ -344,14 +344,13 @@ gboolean CSensor_btprox::HandleScanEvent(TInt errCode, GError** error)
 	
 	btprox_item* item = g_try_new0(btprox_item, 1);
 	User::LeaveIfNull(item);
-        // Note that this might fail due to an out-of-memory error,
-        // but there is no return value to check. And anyway, looking
-        // at the implementation this would seem to already crash and
-        // burn before it returns. Nokia's fault, not ours.
-	g_ptr_array_add(iResult, item);
+#define free_item_action FreeElement(item, NULL); User::Leave(KErrNoMemory);
+	item->name = ConvToUtf8CString(hostName);
+	if (!item->name) { free_item_action; }
+	SET_LOW_MEMORY_TRAP_ACTION(free_item_action);
 	item->address = g_strdup((gchar*)(addrBuf8.PtrZ()));
-	User::LeaveIfNull(item->address);
-	item->name = ConvToUtf8CStringL(hostName);
+	g_ptr_array_add(iResult, item);
+	REMOVE_LOW_MEMORY_TRAP();
 	logf("discovered bt device '%s' '%s'", item->address, item->name);
       }
       BtNext();
@@ -398,7 +397,7 @@ gboolean CSensor_btprox::RunGL(GError** error)
       }
     case EDiscovering:
       {
-	if (!HandleScanEvent(errCode, error))
+	if (!HandleScanEventL(errCode, error))
 	  return FALSE;
         break;
       }

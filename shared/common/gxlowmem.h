@@ -5,8 +5,10 @@
 // there can be no nesting. One thread, one trap set at a time, as
 // there is only one jmp_buf (as filled in by setjmp()).
 // 
-// This mechanism may also not mesh well with C++ exception. Better
+// This mechanism may also not mesh well with C++ exceptions. Better
 // not to have overlap between the extents of the two.
+//
+// For an "Introduction to Glib low memory handler", see http://library.forum.nokia.com/topic/S60_5th_Edition_Cpp_Developers_Library/GUID-FE27AB35-C6FD-4F11-802D-0D5FCFFC2976/html/mrt/s60_openc_using_glib8.html#topic7
 
 #if defined(__SYMBIAN32__)
 #include "common/glowmem_action.h"
@@ -26,8 +28,14 @@
 #define TRAP_OOM_VALUE(_err_val, _do_act) \
   TRAP_OOM(return _err_val, _do_act)
 
-#define TRAP_OOM_RETURN(_err_val, _do_act) \
+#define TRAP_OOM_NULL(_do_act) \
+  TRAP_OOM(return NULL, _do_act)
+
+#define TRAP_OOM_RETURN(_do_act) \
   TRAP_OOM(return, _do_act)
+
+#define TRAP_OOM_FAIL(_do_act) \
+  TRAP_OOM(goto fail, _do_act)
 
 #endif /* __gxlowmem_h__ */
 
