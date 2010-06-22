@@ -11,19 +11,25 @@
 // For an "Introduction to Glib low memory handler", see http://library.forum.nokia.com/topic/S60_5th_Edition_Cpp_Developers_Library/GUID-FE27AB35-C6FD-4F11-802D-0D5FCFFC2976/html/mrt/s60_openc_using_glib8.html#topic7
 
 #if defined(__SYMBIAN32__)
+
 #include "common/glowmem_action.h"
-#else
-#define SET_LOW_MEMORY_TRAP_VOID()
-#define SET_LOW_MEMORY_TRAP(failure_value)
-#define SET_LOW_MEMORY_TRAP_ACTION(action)
-#define REMOVE_LOW_MEMORY_TRAP()
-#endif /* not __SYMBIAN32__ */
 
 #define TRAP_OOM(_err_act, _do_act) {		\
     SET_LOW_MEMORY_TRAP_ACTION(_err_act);	\
     { _do_act; }				\
     REMOVE_LOW_MEMORY_TRAP();			\
   }
+
+#else
+
+#define SET_LOW_MEMORY_TRAP_VOID()
+#define SET_LOW_MEMORY_TRAP(failure_value)
+#define SET_LOW_MEMORY_TRAP_ACTION(action)
+#define REMOVE_LOW_MEMORY_TRAP()
+
+#define TRAP_OOM(_err_act, _do_act) { _do_act; }
+
+#endif /* not __SYMBIAN32__ */
 
 #define TRAP_OOM_VALUE(_err_val, _do_act) \
   TRAP_OOM(return _err_val, _do_act)

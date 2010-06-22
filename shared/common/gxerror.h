@@ -3,6 +3,8 @@
 
 #include <glib/gerror.h>
 
+#include <stdarg.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -27,10 +29,10 @@ extern "C" {
 
   // A va_list version of gx_error_new. Note that GLib internally
   // defines g_error_new_valist, but does not export it.
-  GError* gx_error_va_list(GQuark         domain,
-			   gint           code,
-			   const gchar   *format,
-			   va_list        args);
+  GError* gx_error_new_valist(GQuark         domain,
+			      gint           code,
+			      const gchar   *format,
+			      va_list        args);
 
 #ifdef __cplusplus
 } /* extern "C" */

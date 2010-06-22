@@ -28,9 +28,11 @@ gboolean mkdir_p(const gchar* pathname, GError** error)
   }
   return TRUE;
 
+#if defined(__SYMBIAN32__)
  fail:
   if (error) *error = gx_error_no_memory;
   return FALSE;
+#endif /* __SYMBIAN32__ */
 }
 
 gboolean rm_file(const gchar* pathname, GError** error)

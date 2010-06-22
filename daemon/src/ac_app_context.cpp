@@ -218,9 +218,11 @@ EXTERN_C gboolean ac_AppContext_configure(ac_AppContext* self,
   logf("uploads stored in directory '%s'", self->log_uploads_dir);
   return TRUE;
 
+#if defined(__SYMBIAN32__)
  fail:
   if (error) *error = gx_error_no_memory;
   return FALSE;
+#endif /* __SYMBIAN32__ */
 }
 
 EXTERN_C void ac_AppContext_destroy(ac_AppContext* self)
