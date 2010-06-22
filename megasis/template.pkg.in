@@ -76,7 +76,7 @@ for entry in entries %>
 <% unless $unpack_embedded 
    sisfile = copy_with_sis_ext sisxfile
 %>
-@<%= sisxfile.inspect %>, (<%= uid_s %>)
+@<%= sisfile.inspect %>, (<%= uid_s %>)
 <% end %>
 
 endif ;; package not installed
