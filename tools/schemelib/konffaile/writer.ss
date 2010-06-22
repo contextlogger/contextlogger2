@@ -194,7 +194,7 @@
 (define* (display/gmake value)
   (cond
    ((or (attr-defined? value) (eqv? value #t))
-    (display "1"))
+    (display "true"))
    ((number? value)
     (write value))
    ((string? value)
@@ -211,11 +211,11 @@
    ((attr-undefined? value)
     (void))
    ((eqv? value #t)
-    (begin (disp-nl "~a := 1" name)
+    (begin (disp-nl "~a := true" name)
            (disp-nl "NOT__~a :=" name)))
    ((eqv? value #f)
     (begin (disp-nl "~a :=" name)
-           (disp-nl "NOT__~a := 1" name)))
+           (disp-nl "NOT__~a := true" name)))
    ((hexnum? value)
     (begin
       (disp-nl "~a__DEC := ~s" name (hexnum-num value))
