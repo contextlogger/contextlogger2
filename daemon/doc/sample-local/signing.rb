@@ -6,7 +6,6 @@ $builds = $builds.map do |build|
   else
     build.sign = $SIGNED
     if $SIGNED
-      build.max_caps = %w{LocalServices NetworkServices ReadUserData UserEnvironment WriteUserData}
       build.cert_file = File.join(this_dir, "selfsigned.cer")
       build.key_file = File.join(this_dir, "selfsigned.key")
     end

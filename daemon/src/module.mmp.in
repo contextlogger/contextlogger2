@@ -465,7 +465,11 @@ AIF cl2app.aif ..\..\src cl2appaif.rss c8 context_pane_icon.bmp context_pane_ico
 
 <% if build.v9? %>
 VENDORID 0
-CAPABILITY <%= $CAPABILITIES %>
+<% if $CAPABILITIES.empty? %>
+CAPABILITY NONE
+<% else %>
+CAPABILITY <%= $CAPABILITIES.join(" ") %>
+<% end %>
 <% end %>
 
 // No using the old client-server API.

@@ -236,7 +236,7 @@ project must implement.
     DEV-CAPS)
 
   (define/public (capabilities.attr)
-    (symbol-sjoin (capabilities)))
+    (capabilities))
 
   (define/public (s60-vernum.attr) 30)
 

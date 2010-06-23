@@ -494,7 +494,7 @@ class Sake::CompBuild
     make_delegating_methods(@proj_build,
                             :exclude => self.class.instance_methods)
 
-    if sign and (not @caps)
+    if sign and max_caps and (not @caps)
       # Derive actual caps from desired caps and maximum allowed caps.
       @caps = (@component.caps & max_caps)
     end

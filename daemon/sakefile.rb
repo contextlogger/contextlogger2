@@ -43,11 +43,7 @@ end
 
 $comp_list = [$app].compact
 
-if $sake_op[:kits]
-  $kits = Sake::DevKits::get_exact_set($sake_op[:kits].strip.split(/,/))
-else
-  $kits = Sake::DevKits::get_all
-end
+$kits = Sake::DevKits::get_exact_set([$KIT_NAME])
 
 if $sake_op[:comps]
   comps = $sake_op[:comps].strip.split(/,/)

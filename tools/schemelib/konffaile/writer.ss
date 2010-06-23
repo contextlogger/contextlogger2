@@ -138,6 +138,8 @@
     (display (format "0x~a" (number->string (hexnum-num value) 16))))
    ((string? value)
     (write value))
+   ((symbol? value)
+    (display/c (symbol->string value)))
    ((list? value)
     (begin
       (display "{")
@@ -170,6 +172,8 @@
     (disp "0x~a" (number->string (hexnum-num value) 16)))
    ((string? value)
     (write value))
+   ((symbol? value)
+    (display/ruby (symbol->string value)))
    ((list? value)
     (begin
       (display "[")
@@ -199,6 +203,8 @@
     (write value))
    ((string? value)
     (display value))
+   ((symbol? value)
+    (display/gmake (symbol->string value)))
    ((list? value)
     (for-each-sep display/gmake (thunk (display " ")) value))
    (else
