@@ -69,11 +69,22 @@ def try_load file
 end
 
 # For any v9 builds, configure certificate info for signing.
-try_load('local/signing.rb')
+begin
+  load 'local/signing.rb'
+rescue LoadError
+  # Default signing configuration.
+  $builds = $builds.map do |build|
+    build.set_epoclocalrb_cert_info($CERT_NAME || raise)
+    build.sign = $SIGNED
+    if build.sign
+      build.max_caps = (build.max_caps & $CAPABILITIES).sort
+    end
+    build
+  end
+end
 
 $builds.delete_if do |build|
   (build.sign and !build.cert_file)
-#  (build.sign and !build.cert_file) or (not build.v9?)
 end
 
 # This option will eventually move from here to cl2embed.

@@ -368,6 +368,26 @@ class Sake::ProjBuild
     make_delegating_methods(@project, :exclude => self.class.instance_methods)
   end
 
+  # This allows for setting the signing information based on the
+  # EPOCLOCALRB settings. You just need to provide a certificate name,
+  # possibly passed in via $sake_op[:cert], for instance.
+  def set_epoclocalrb_cert_info name
+    if target.symbian_platform.major_version < 9
+      sign = false
+    else
+      epoclocalrb = ENV['EPOCLOCALRB'] or raise "EPOCLOCALRB not set"
+      require ENV['EPOCLOCALRB']
+      ci = epoc_cert_info name, @devkit.handle
+      self.max_caps = ci.max_caps
+      self.sign = ci.sign
+      if ci.sign
+        self.cert_file = ci.cert_file
+        self.key_file = ci.key_file
+        self.passphrase = ci.passphrase
+      end
+    end
+  end
+
   def basename
     @handle
   end
@@ -494,7 +514,7 @@ class Sake::CompBuild
     make_delegating_methods(@proj_build,
                             :exclude => self.class.instance_methods)
 
-    if sign and max_caps and (not @caps)
+    if max_caps and (not @caps)
       # Derive actual caps from desired caps and maximum allowed caps.
       @caps = (@component.caps & max_caps)
     end

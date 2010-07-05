@@ -105,7 +105,17 @@ $builds = $kits.map do |kit|
 end
 
 # For any v9 builds, configure certificate info for signing.
-try_load('local/signing.rb')
+begin
+  load 'local/signing.rb'
+rescue LoadError
+  # Default signing configuration.
+  $builds = $builds.map do |build|
+    cert_name = ($sake_op[:cert] || raise)
+    build.set_epoclocalrb_cert_info(cert_name)
+    build.handle = (build.handle + "_" + cert_name)
+    build
+  end
+end
 
 $builds.delete_if do |build|
   (build.sign and !build.cert_file)
