@@ -32,6 +32,7 @@ import subprocess
 
 opensslcommand = None   # Path to OpenSSL command line tool
 openssldebug   = False  # True for extra debug output
+tempdebug      = False  # True to leave temporary files
 
 
 ##############################################################################
@@ -124,15 +125,16 @@ def signstring(privkey, passphrase, string):
             # OpenSSL did not create output, something went wrong.
             raise ValueError("unspecified error during signing")
     finally:
-        # Delete temporary files.
-        for fname in (keyfilename, sigfilename, stringfilename):
-            try:
-                os.remove(fname)
-            except OSError:
-               pass
+        if not tempdebug:
+            # Delete temporary files.
+            for fname in (keyfilename, sigfilename, stringfilename):
+                try:
+                    os.remove(fname)
+                except OSError:
+                   pass
 
-        # Remove temporary directory.
-        os.rmdir(tempdir)
+            # Remove temporary directory.
+            os.rmdir(tempdir)
 
     return (signature, keytype)
 
@@ -288,9 +290,11 @@ def decryptkey(tempdir, privkey, passphrase):
 
         # Decrypt the private key. Older versions of OpenSSL do not
         # accept the "-passin" parameter for the "dgst" command.
-        runopenssl("%s -in %s -out %s -passin stdin" %
-                   (convcmd, quote(keyinfilename),
-                    quote(keyoutfilename)), passphrase)
+        cmd = ("%s -in %s -out %s -passin stdin" %
+               (convcmd, quote(keyinfilename),
+                quote(keyoutfilename)))
+        #print cmd
+        runopenssl(cmd, passphrase)
 
         privkey = ""
         if os.path.isfile(keyoutfilename):
@@ -298,6 +302,8 @@ def decryptkey(tempdir, privkey, passphrase):
             keyoutfile = file(keyoutfilename, "rb")
             privkey = keyoutfile.read()
             keyoutfile.close()
+        else:
+            raise IOError("openssl did not produce an output file")
 
         if privkey.strip() == "":
             # OpenSSL did not create output. Probably a wrong pass phrase.
@@ -308,7 +314,7 @@ def decryptkey(tempdir, privkey, passphrase):
             try:
                 os.remove(fname)
             except OSError:
-               pass
+                pass
 
     return (privkey, keytype)
 
@@ -358,20 +364,21 @@ def runopenssl(command, datain = ""):
         # Find path to the OpenSSL command.
         findopenssl()
 
-    # Construct a command line for subprocess.Popen()
-    cmdline = (opensslcommand, command)
+    # Construct a command line for os.popen3().
+    cmdline = '%s %s' % (opensslcommand, command)
 
     if openssldebug:
         # Print command line.
-        print "DEBUG: Popen(%s)" % repr(cmdline)
+        print "DEBUG: os.popen3(%s)" % repr(cmdline)
 
-    # Run command.
-    p = subprocess.Popen(cmdline, stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
-    (pipein, pipeout, pipeerr) = (p.stdin, p.stdout, p.stderr)
+    # Run command. Use os.popen3() to capture stdout and stderr.
+    pipein, pipeout, pipeerr = os.popen3(cmdline)
     pipein.write(datain)
+    pipein.close()
     dataout = pipeout.read()
+    pipeout.close()
     errout = pipeerr.read()
+    pipeerr.close()
 
     if openssldebug:
         # Print standard error output.
