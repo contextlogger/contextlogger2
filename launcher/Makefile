@@ -16,7 +16,7 @@ VERSION := 0.51
 #       You can either implement a script with the same interface, or pass 
 #       a suitable SIGNSPEC to "make" when invoking it.
 ENSYMBLE := ../tools/ensymble-0.29/ensymble.py
-SIGNSPEC := `symbian-config -eE $(CERT)`
+SIGNSPEC := `../tools/bin/symbian-config-ensymble-cert -eE -c $(CERT)`
 
 DIST_HOME := ../download
 

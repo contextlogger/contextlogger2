@@ -61,35 +61,6 @@ def epoc_in_plat_env plat # block
   yield
 end
 
-# This function must be defined.
-def epoc_make_sis pkg, sis
-  epocroot = ENV['EPOCROOT']
-  raise "EPOCROOT not set" unless epocroot
-  EpocLocalRb::sh("makesis -d#{epocroot} #{pkg} #{sis}")
-  puts sis
-end
-
-# This function must be defined.
-def epoc_sign_sis cert, plat, sis, sisx
-  ci = epoc_cert_info cert, plat
-  keyfile = ci[0]
-  certfile = ci[1]
-  passwd = ci[2]
-  cmd = "signsis -v -s #{sis} #{sisx} #{certfile} #{keyfile}"
-  cmd << " #{passwd.inspect}" if passwd
-  EpocLocalRb::sh(cmd)
-  puts sisx
-end
-
-# This function must be defined.
-def epoc_make_sign_sis cert, plat, pkg, sisx
-  pkg =~ /[.]pkg$/i or raise
-  base = $`
-  sis = base + ".sis"
-  epoc_make_sis pkg, sis
-  epoc_sign_sis cert, plat, sis, sisx
-end
-
 #
 # Copyright 2010 Helsinki Institute for Information Technology (HIIT)
 # and the authors. All rights reserved.
