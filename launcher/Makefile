@@ -7,14 +7,15 @@ LONGCAPTION := CL2 Launcher,CL2 Launcher
 
 VERSION := 0.51
 
-# Note: We are using a modified version of ensymble, hacked not to self-sign by default.
-#       See tools/ensymble/ for a patch.
+# Note: We are using a modified version of ensymble, hacked to include
+#       an --unsigned option. Shame that we must do this, as there already
+#       is a Debian package even.
 #
 # Note: We are using a custom tool here to get the certificate paths and such.
 #       Such a tool is site-specific in nature, and not included in the distribution.
 #       You can either implement a script with the same interface, or pass 
 #       a suitable SIGNSPEC to "make" when invoking it.
-ENSYMBLE := ensymble
+ENSYMBLE := ../tools/ensymble-0.29/ensymble.py
 SIGNSPEC := `symbian-config -eE $(CERT)`
 
 DIST_HOME := ../download
@@ -23,6 +24,7 @@ ifeq ($(CERT),unsigned)
 DIST_EXT := sis
 DIST_CERT := dev
 BUILT_SIS := $(BASENAME)_$(CERT).sis
+SIGNSPEC := $(SIGNSPEC) --unsigned
 else
 DIST_EXT := sisx
 DIST_CERT := $(CERT)
