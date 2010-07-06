@@ -33,7 +33,7 @@ supporting Symbian OS versions 9.1 and later.
 SIS files made with Ensymble work from S60 3rd Edition phones onwards. For 1st
 and 2nd Edition phones there's py2sisng.
 """
-__version__ = '0.29'
+__version__ = '0.29u'
 __license__ = 'GPLv2'
 
 __author__  = 'Jussi Ylänen'

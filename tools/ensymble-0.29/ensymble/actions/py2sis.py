@@ -49,7 +49,7 @@ longhelp  = '''py2sis
     [--textfile=mytext_%C.txt] [--cert=mycert.cer] [--privkey=mykey.key]
     [--passphrase=12345] [--heapsize=min,max] [--caps=Cap1+Cap2+...]
     [--vendor="Vendor Name",...] [--autostart] [--runinstall]
-    [--encoding=terminal,filesystem] [--verbose]
+    [--encoding=terminal,filesystem] [--verbose] [--unsigned]
     <src> [sisfile]
 
 Create a SIS package for a "Python for S60" application.
@@ -71,6 +71,7 @@ Options:
     privkey      - Private key of the certificate (PEM format)
     passphrase   - Pass phrase of the private key (insecure, use stdin instead)
     caps         - Capability names, separated by "+" (none by default)
+    unsigned     - Leave unsigned
     vendor       - Vendor name or a comma separated list of names in all lang.
     autostart    - Application is registered to start on each device boot
     runinstall   - Application is automatically started after installation
@@ -153,7 +154,7 @@ def run(pgmname, argv):
     long_opts = [
         "uid=", "appname=", "version=", "lang=", "icon=",
         "shortcaption=", "caption=", "drive=", "extrasdir=", "textfile=",
-        "cert=", "privkey=", "passphrase=", "caps=", "vendor=",
+        "cert=", "privkey=", "passphrase=", "unsigned", "caps=", "vendor=",
         "autostart", "runinstall", "heapsize=",
         "encoding=", "verbose", "debug", "help"
     ]
@@ -270,9 +271,9 @@ def run(pgmname, argv):
             raise ValueError("invalid UID string '%s'" % uid3)
 
     # Warn against specifying a test-range UID manually.
-    if uid3 & 0xf0000000L == 0xe0000000L and uid3 != autouid:
-        print ("%s: warning: manually specifying a test-range UID is "
-               "not recommended" % pgmname)
+    #if uid3 & 0xf0000000L == 0xe0000000L and uid3 != autouid:
+    #    print ("%s: warning: manually specifying a test-range UID is "
+    #           "not recommended" % pgmname)
 
     # Determine application language(s), use "EN" by default.
     lang = opts.get("--lang", opts.get("-l", "EN")).split(",")
@@ -359,7 +360,11 @@ def run(pgmname, argv):
     # Get certificate and its private key file names.
     cert = opts.get("--cert", opts.get("-a", None))
     privkey = opts.get("--privkey", opts.get("-k", None))
-    if cert != None and privkey != None:
+    unsign = ("--unsigned" in opts)
+    if unsign:
+        certdata = None
+        privkeydata = None
+    elif cert != None and privkey != None:
         # Convert file names from terminal encoding to filesystem encoding.
         cert = cert.decode(terminalenc).encode(filesystemenc)
         privkey = privkey.decode(terminalenc).encode(filesystemenc)
@@ -513,6 +518,7 @@ def run(pgmname, argv):
             extrasdir.decode(filesystemenc).encode(terminalenc)) or "<none>")
         print "Text file(s)        %s"      % ((textfile and
             textfile.decode(filesystemenc).encode(terminalenc)) or "<none>")
+        print "Sign?               %s"      % (unsign and "no" or "yes")
         print "Certificate         %s"      % ((cert and
             cert.decode(filesystemenc).encode(terminalenc)) or "<default>")
         print "Private key         %s"      % ((privkey and
@@ -683,7 +689,9 @@ def run(pgmname, argv):
                      ["Python for S60"] * numlang)
 
     # Add certificate.
-    sw.addcertificate(privkeydata, certdata, passphrase)
+    if certdata is not None:
+        #print (privkeydata, certdata, passphrase)
+        sw.addcertificate(privkeydata, certdata, passphrase)
 
     # Generate an EXE stub and add it to the SIS object.
     string = execstubdata.decode("base-64")
