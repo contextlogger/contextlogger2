@@ -2,14 +2,13 @@ CURRENT_CONFIG := ../daemon/src/current_config.mk
 
 include $(CURRENT_CONFIG)
 
-SCRIPT := create-megasis.rb
-CREATE := ruby $(SCRIPT)
+PKG_SCRIPT := create-megasis.rb
 BASENAME := cl2_megasis
 TEMPLATE := template.pkg.in
 
-# For internal trials, include non-releasable SIS files as well.
-# If the SIS is unsigned, unpack the contents, as signing embedded
-# SIS files is not really possible anyway.
+# For internal trials, include non-releasable SIS files as well. If
+# the SIS is unsigned, unpack the contents, as signing embedded SIS
+# files is not really possible anyway.
 FLAGS := $(and $(IS_TRIAL), --nr) $(and $(NOT__SIGNED), --unpack)
 
 # Note that $(DIST_VARIANT_NAME) is defined only for release variants.
@@ -19,18 +18,19 @@ SISXFILE := $(SISFILE)x
 
 default : clean $(PKGFILE) $(if $(SIGNED), $(SISXFILE), $(SISFILE))
 
-$(PKGFILE) : $(TEMPLATE) $(SCRIPT) $(CURRENT_CONFIG)
-	$(CREATE) $(FLAGS) -o $(PKGFILE) $(TEMPLATE)
+$(PKGFILE) : $(TEMPLATE) $(PKG_SCRIPT) $(CURRENT_CONFIG)
+	ruby $(PKG_SCRIPT) $(FLAGS) -o $(PKGFILE) $(TEMPLATE)
 
-# Best to do this even if PKG has not changed; signing key may have changed.
+# Best to do this even if PKG has not changed; signing key may have
+# changed.
 clean : 
 	-rm $(PKGFILE) $(SISFILE) $(SISXFILE)
 
 $(SISXFILE) :
-	in-gnupoc-env s60_30 do-make-sign-sis --cert $(CERT_NAME) --makesis -o $@ $(PKGFILE)
+	ruby do-sis-signing.rb --kit s60_30 --makesis --signsis --cert $(CERT_NAME) -o $@ -i $(PKGFILE)
 
 $(SISFILE) :
-	in-gnupoc-env s60_30 do-make-sign-sis --unsigned --makesis -o $@ $(PKGFILE)
+	ruby do-sis-signing.rb --kit s60_30 --makesis -o $@ -i $(PKGFILE)
 
 #
 # Copyright 2009 Helsinki Institute for Information Technology (HIIT)

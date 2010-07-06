@@ -4,16 +4,20 @@ CURRENT_CONFIG := ../daemon/src/current_config.mk
 
 include $(CURRENT_CONFIG)
 
-# This is quite important in case we must re-sign something.
 # Note that the libs-s60 directory is not a part of the distribution.
-# It should contain all the embedded third-party SIS files for the megaSIS.
+# It should contain all the embedded third-party SIS files for the
+# megaSIS. It must also contain a makefile with a "build" rule, which
+# can do anything you like in order to make the files ready for
+# packaging in the megaSIS. We use the rule (among other things) for
+# re-signing the embedded SIS files with the same cert as we use for
+# the megaSIS itself.
 external :
 	cd ../libs-s60 && $(MAKE) build
 
-# Currently we only do UDEB builds, and so we do not require UREL builds
-# of static libs yet either.
+# Currently we only do UDEB builds, and so we do not require UREL
+# builds of static libs yet either.
 static_libs :
-	cd ../sqlite3h && $(SAKE) static=true kits=$(KIT_NAME) udeb=true cert=dev
+	cd ../sqlite3h && $(SAKE) static=true kits=$(KIT_NAME) udeb=true
 
 s60_30_self30 :
 	cd ../daemon && $(MAKE)

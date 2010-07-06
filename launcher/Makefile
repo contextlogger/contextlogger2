@@ -8,13 +8,9 @@ LONGCAPTION := CL2 Launcher,CL2 Launcher
 VERSION := 0.51
 
 # Note: We are using a modified version of ensymble, hacked to include
-#       an --unsigned option. Shame that we must do this, as there already
-#       is a Debian package even.
-#
-# Note: We are using a custom tool here to get the certificate paths and such.
-#       Such a tool is site-specific in nature, and not included in the distribution.
-#       You can either implement a script with the same interface, or pass 
-#       a suitable SIGNSPEC to "make" when invoking it.
+#       an --unsigned option. An alternative would be to let ensymble
+#       sign the package with its built-in cert, and then use signsis -u
+#       to unsign.
 ENSYMBLE := ../tools/ensymble-0.29/ensymble.py
 SIGNSPEC := `../tools/bin/symbian-config-ensymble-cert -eE -c $(CERT)`
 
