@@ -348,7 +348,7 @@ class Sake::ProjBuild
 
   trait :cert_file, 'cast' => Sake::method(:ensure_pathname).to_proc
   trait :key_file, 'cast' => Sake::method(:ensure_pathname).to_proc
-  trait :passphrase, 'munge' => :to_str
+  trait :passphrase, 'validate' => proc {|x| x.nil? || x.respond_to?(:to_str)}
 
   # There is no hurry in initializing this.
   trait :comp_builds, 'cast' => proc {|x| Array(x)}
@@ -514,9 +514,9 @@ class Sake::CompBuild
     make_delegating_methods(@proj_build,
                             :exclude => self.class.instance_methods)
 
-    if max_caps and (not @caps)
+    if max_caps and (not self.caps)
       # Derive actual caps from desired caps and maximum allowed caps.
-      @caps = (@component.caps & max_caps)
+      self.caps = (@component.caps & max_caps)
     end
   end
 

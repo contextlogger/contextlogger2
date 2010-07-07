@@ -31,7 +31,7 @@ SOFTWARE.
 
 =end
 
-$LOAD_PATH.push(File.expand_path("..", File.dirname(__FILE__)))
+$LOAD_PATH.unshift(File.expand_path("..", File.dirname(__FILE__)))
 
 SAKEFILES = %w{sakefile sakefile.rb Sakefile Sakefile.rb}
 for file in SAKEFILES
