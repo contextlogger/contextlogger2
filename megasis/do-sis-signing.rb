@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# -*- coding: utf-8 -*-
 
 PROG_NAME = File.basename(__FILE__)
 
@@ -32,9 +33,11 @@ USAGE: #{PROG_NAME} option...
 Usage examples:
 
   KITNAME=s60_30 #{PROG_NAME} --makesis -i file.pkg -o file.sis
+  #{PROG_NAME} -k s60_30 --unsign -i file.sisx -o file.sis
   #{PROG_NAME} -k s60_31 --makesis -i file.pkg -o file.sis
   #{PROG_NAME} -k s60_32 --signsis -c dev -i file.sis -o file.sisx
   #{PROG_NAME} -k s60_50 --makesis --signsis -c dev -i file.pkg -o file.sisx
+  #{PROG_NAME} -k s60_32 --resign -c new -i file.sisx -o file.sisx
 
 }
   opts.separator ""
@@ -59,8 +62,14 @@ Usage examples:
   opts.on("-o", "--out FILE", "specifies output file") do |name|
     $op.outfile = name
   end
+  opts.on("--resign", "resign SIS") do
+    $op.resign = true
+  end
   opts.on("--signsis", "sign SIS") do
     $op.signsis = true
+  end
+  opts.on("--unsign", "unsign SIS") do
+    $op.unsign = true
   end
 end
 
@@ -110,6 +119,12 @@ def sign_sis cert, plat, sis, sisx
   puts sisx
 end
 
+def unsign_sis plat, sisx, sis
+  cmd = "signsis -v -u #{sisx} #{sis}"
+  sh(cmd)
+  puts sis
+end
+
 def make_sign_sis cert, plat, pkg, sisx
   pkg =~ /[.]pkg$/i or raise
   base = $`
@@ -150,6 +165,17 @@ elsif $op.signsis
   in_env kit_name do
     sign_sis cert_name, kit_name, $op.infile, $op.outfile
   end
+elsif $op.unsign
+  in_env kit_name do
+    unsign_sis kit_name, $op.infile, $op.outfile
+  end
+elsif $op.resign
+  in_env kit_name do
+    require 'tempfile'
+    sisfile = Tempfile.new("sisfile").path
+    unsign_sis kit_name, $op.infile, sisfile
+    sign_sis cert_name, kit_name, sisfile, $op.outfile
+  end
 end
 
 #
@@ -157,6 +183,7 @@ end
 # and the authors. All rights reserved.
 #
 # Authors: Tero Hasu <tero.hasu@hut.fi>
+#          Taneli Vähäkangas <taneli.vahakangas@hiit.fi>
 #
 # Permission is hereby granted, free of charge, to any person
 # obtaining a copy of this software and associated documentation files
