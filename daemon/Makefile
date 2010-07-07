@@ -127,7 +127,7 @@ src/rk_jabber_session.c : src/rk_jabber_session.rl
 %.png : %.gv
 	dot -Tpng $< > $@
 
-epoc_codegen : src/timer_generic_epoc.h
+epoc_codegen : src/timer_generic_epoc.h src/ut_telephony_epoc.h
 
 ragel : $(RAGEL_C_FILES) $(RAGEL_GV_FILES) $(RAGEL_PNG_FILES)
 
