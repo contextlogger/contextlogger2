@@ -346,21 +346,21 @@ endif
 ;; ErrRd file. (OPTIONAL)
 ;;
 ;; Self-signed by us, and that is always okay.
+;; We should also never need to unpack this.
 ;;
 ;; Note that the @ directive pointlessly requires that
-;; the file have .sis extension, not .sisx or anything else.
+;; the file have a .sis extension, not .sisx or anything else.
 ;;
+<% $unpack_errrd = false %>
 if option<%= optix[:errrd] %> = 1
 if not package(<%= uid_s %>)
 
-<% cert_name = $SIGNED ? $CERT_NAME : "unsigned"
-   old_ext = $SIGNED ? "sisx" : "sis"
-   srcfile = "../libs-s60/errrd-file/errrd-file-%s.%s" % [cert_name, old_ext]
+<% srcfile = "../libs-s60/errrd-file/errrd-file-self.sisx"
    uid = lookup_uid srcfile
    uid_s = ("0x%08x" % uid) %>
 
-<% if $unpack_embedded %>
-<% srcdir = "errrd_file_" + $CERT_NAME
+<% if $unpack_errrd %>
+<% srcdir = "errrd_file_self"
 unpack_sis srcfile, srcdir
 entries = pkg_entries_for_sis srcdir, srcfile
 for entry in entries %>
@@ -368,7 +368,7 @@ for entry in entries %>
 <% end %>
 <% end %>
 
-<% unless $unpack_embedded 
+<% unless $unpack_errrd
    sisfile = copy_with_sis_ext srcfile %>
 @<%= sisfile.inspect %>, (<%= uid_s %>)
 <% end %>
