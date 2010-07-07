@@ -86,10 +86,11 @@ end
 
 ci = epoc_cert_info $cert_name, $kit_name
 
-if $op.ensymble_cert
-  w("--cert=%s" % ci.cert_file) if ci.cert_file
-  w("--privkey=%s" % ci.key_file) if ci.key_file
-  w("--passphrase=%s" % ci.passphrase) if ci.passphrase
+if $op.ensymble_cert and ci.cert_file
+  raise unless ci.key_file
+  w("--cert=%s" % ci.cert_file)
+  w("--privkey=%s" % ci.key_file)
+  w("--passphrase=%s" % (ci.passphrase || ""))
 end
 
 if $op.ensymble_caps
