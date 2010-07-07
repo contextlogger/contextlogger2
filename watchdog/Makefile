@@ -17,7 +17,7 @@ CERT := dev
 VERSION := 0.51
 
 PLT_ENV := PLTCOLLECTS=`pwd`/../tools/schemelib:
-SAKE := ../tools/bin/sake
+SAKE := ../tools/bin/sake --trace
 
 DIST_HOME := ../download
 
@@ -33,7 +33,7 @@ DIST_COPY := cp $(BUILT_SIS) $(DIST_HOME)/$(BASENAME)-$(VERSION)-$(KIT)_$(CERT).
 default : symbian
 
 symbian : codegen
-	sake kits=s60_30 udeb=true logging=true cert=$(CERT)
+	$(SAKE) kits=s60_30 udeb=true logging=true cert=$(CERT)
 
 symbian_all : autostart.rsc symbian
 
