@@ -6,8 +6,6 @@ This simple example uses the included self-signed cert, and assumes that one is 
 
 =end
 
-this_dir = File.dirname(File.expand_path(__FILE__))
-
 # Internally used utilities, isolated in their own namespace.
 module EpocLocalRb
   class CertInfo
@@ -37,6 +35,7 @@ SELF32_CAPS = (SELF30_CAPS + %w{Location})
 #
 # Takes the nickname of a cert and the nickname of a target platform, and returns an object containing [key_file, cert_file, passphrase or nil, max_caps] attributes. Note that the set of maximum capabilities that are allowed self-signed depends on the target platform.
 def epoc_cert_info cert, plat
+  this_dir = File.dirname(File.expand_path(__FILE__))
   caps = case plat
          when /_3[01]_/
            SELF30_CAPS
