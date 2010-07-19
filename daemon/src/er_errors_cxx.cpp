@@ -28,6 +28,11 @@ extern "C" void ex_show_default_error()
   ex_show_error(KErrGeneral);
 }
 
+extern "C" void ex_show_nomem_error()
+{
+  ex_show_error(KErrNoMemory);
+}
+
 #endif /* __SYMBIAN32__ */
 
 /**

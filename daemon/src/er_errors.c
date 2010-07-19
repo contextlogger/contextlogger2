@@ -106,14 +106,14 @@ gboolean gx_dblog_error_clear_check(LogDb* logDb, GError** errorToLog, GError** 
 // Best effort. Invokes EXIT_APPLICATION as the last thing.
 void gx_dblog_fatal_error_free(LogDb* logDb, GError* errorToLog)
 {
-  gx_dblog_error_free_check(logDb, errorToLog, NULL);
+  gx_dblog_error_free(logDb, errorToLog);
   er_fatal();
 }
 
 // Best effort. Invokes EXIT_APPLICATION as the last thing.
 void gx_dblog_fatal_error_clear(LogDb* logDb, GError** errorToLog)
 {
-  gx_dblog_error_clear_check(logDb, errorToLog, NULL);
+  gx_dblog_error_clear(logDb, errorToLog);
   er_fatal();
 }
 

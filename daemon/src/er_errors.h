@@ -57,6 +57,9 @@ extern "C" {
   // Clears any "errorToLog" even if fails.
   gboolean gx_dblog_error_clear_check(LogDb* logDb, GError** errorToLog, GError** error);
 
+#define gx_dblog_error_free(_db, _err) gx_dblog_error_free_check(_db, _err, NULL)
+#define gx_dblog_error_clear(_db, _err) gx_dblog_error_clear_check(_db, _err, NULL)
+
   // Best effort. Invokes EXIT_APPLICATION as the last thing.
   void gx_dblog_fatal_error_free(LogDb* logDb, GError* errorToLog);
 
@@ -98,6 +101,8 @@ extern "C" {
   // Displays the specified Symbian error code in a briefly displayed
   // global dialog.
   void ex_show_error(int errCode);
+
+  void ex_show_nomem_error();
 
   // Like ex_show_error(KErrGeneral).
   void ex_show_default_error();
