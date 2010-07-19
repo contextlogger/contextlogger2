@@ -74,7 +74,9 @@ extern "C" {
 
   void px_db_log_fatal_errno(LogDb* logDb);
 
-  void px_log_fatal_error();
+  void px_log_fatal_error(int errCode);
+
+  void px_log_fatal_errno();
 
   // --------------------------------------------------
   // Symbian extras

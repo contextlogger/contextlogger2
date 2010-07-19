@@ -134,11 +134,16 @@ void px_db_log_fatal_errno(LogDb* logDb)
   px_db_log_fatal_error(logDb, errno);
 }
 
-void px_log_fatal_error()
+void px_log_fatal_error(int errCode)
 {
-  logf("FATAL: POSIX error: %s (%d)", strerror(errno), errno);
+  logf("FATAL: POSIX error: %s (%d)", strerror(errCode), errCode);
   WHEN_SYMBIAN(ex_show_default_error());
   EXIT_APPLICATION;
+}
+
+void px_log_fatal_errno()
+{
+  px_log_fatal_error(errno);
 }
 
 #if defined(__SYMBIAN32__)
