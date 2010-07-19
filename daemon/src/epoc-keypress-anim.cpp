@@ -147,7 +147,7 @@ void CSensor_keypress::RunL()
 	  if (iNumCapturedKeys == MAX_NUM_CAPTURED_KEYS) {
 	    GError* localError = NULL;
 	    if (!LogAndClear(&localError)) {
-	      gx_dblog_clear_fatal_error(iLogDb, &localError);
+	      gx_dblog_fatal_error_clear(iLogDb, &localError);
 	      return;
 	    }
 	  }

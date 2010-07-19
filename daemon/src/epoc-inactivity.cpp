@@ -107,7 +107,7 @@ void CSensor_inactivity::RunL()
   LogDb* logDb = ac_LogDb(iC);
   GError* localError = NULL;
   if (!log_db_log_inactivity(logDb, (iCurrentState == EActive), &localError)) {
-    gx_txtlog_free_fatal_error(localError);
+    gx_txtlog_fatal_error_free(localError);
     return;
   }
 

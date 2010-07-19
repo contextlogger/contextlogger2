@@ -55,7 +55,7 @@ struct _rk_Remokon {
 static void handleTimerError(rk_Remokon* self, GError* timerError)
 {
   logt("timer error in Remokon");
-  gx_dblog_free_fatal_error(getGlobalClient()->log, timerError);
+  gx_dblog_fatal_error_free(getGlobalClient()->log, timerError);
 }
 
 static void setRetryTimer(rk_Remokon* self)

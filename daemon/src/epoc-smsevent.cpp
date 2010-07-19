@@ -84,7 +84,7 @@ void CSensor_smsevent::LogEvent(const char* evType, const TDesC& aTelNoDes)
   g_free(contactName);
 
   if (G_UNLIKELY(!ok)) {
-    gx_txtlog_free_fatal_error(localError);
+    gx_txtlog_fatal_error_free(localError);
     return;
   }
 }
@@ -117,7 +117,7 @@ void CSensor_smsevent::handle_error(TInt errCode)
   if (!log_db_log_status(logDb, &localError,
 			 "INACTIVATE: smsevent: error: %s (%d)",
 			 plat_error_strerror(errCode), errCode)) {
-    gx_txtlog_free_fatal_error(localError);
+    gx_txtlog_fatal_error_free(localError);
     return;
   }
 }
@@ -131,7 +131,7 @@ void CSensor_smsevent::handle_close()
   GError* localError = NULL;
   if (!log_db_log_status(logDb, &localError,
 			 "INACTIVATE: smsevent: session termination")) {
-    gx_txtlog_free_fatal_error(localError);
+    gx_txtlog_fatal_error_free(localError);
     return;
   }
 }

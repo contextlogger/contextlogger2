@@ -348,7 +348,7 @@ void CSensor_callstatus::HandleCallStatusChange(TInt errCode)
     {
       GError* localError = NULL;
       if (!log_db_log_callstatus(GetLogDb(), callStatus, number, contactName, startTime, etelCode, netCode, &localError)) {
-	gx_txtlog_free_fatal_error(localError);
+	gx_txtlog_fatal_error_free(localError);
 	goto cleanup;
       }
     }

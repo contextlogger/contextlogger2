@@ -139,7 +139,7 @@ void CSensor_indicator::HandleRead()
       if (!log_db_log_indicator(logDb, iIndicator.iIndicator, 
 				iIndicator.iCapabilities,
 				&localError)) {
-	gx_txtlog_free_fatal_error(localError);
+	gx_txtlog_fatal_error_free(localError);
 	return;
       }
       

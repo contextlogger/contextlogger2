@@ -169,7 +169,7 @@ void CUploader::RefreshIap(TBool aNotInitial)
   int newId = 0;
   if (!try_get_ConfigDb_int("iap", &newId, &found, &localError)) {
     if (aNotInitial)
-      gx_dblog_free_error(iLogDb, localError, NULL);
+      gx_dblog_error_free_check(iLogDb, localError, NULL);
     else
       gx_error_free(localError);
   } else {
@@ -189,7 +189,7 @@ void CUploader::RefreshSnapshotTimeExpr(TBool aNotInitial)
 			&newOne, __UPLOAD_TIME_EXPR__, 
 			&localError)) {
     if (aNotInitial)
-      gx_dblog_free_error(iLogDb, localError, NULL);
+      gx_dblog_error_free_check(iLogDb, localError, NULL);
     else
       gx_error_free(localError);
   } else {

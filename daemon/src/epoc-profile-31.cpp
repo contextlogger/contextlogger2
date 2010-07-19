@@ -104,7 +104,7 @@ void CSensor_profile::HandleProfileActivatedL(TInt aProfileId)
   gboolean ok = log_db_log_profile(iLogDb, aProfileId, profileName, &localError);
   delete pnDes;
   if (!ok) {
-    gx_dblog_free_fatal_error(iLogDb, localError);
+    gx_dblog_fatal_error_free(iLogDb, localError);
     return;
   }
 }

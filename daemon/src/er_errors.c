@@ -88,7 +88,7 @@ void gx_txtlog_error_clear(GError** error)
 }
 
 // Takes ownership of "errorToLog" even if fails.
-gboolean gx_dblog_free_error(LogDb* logDb, GError* errorToLog, GError** error)
+gboolean gx_dblog_error_free_check(LogDb* logDb, GError* errorToLog, GError** error)
 {
   gboolean success = log_db_log_exception(logDb, errorToLog, error);
   gx_error_free(errorToLog);
@@ -96,7 +96,7 @@ gboolean gx_dblog_free_error(LogDb* logDb, GError* errorToLog, GError** error)
 }
 
 // Takes ownership of "errorToLog" even if fails.
-gboolean gx_dblog_clear_error(LogDb* logDb, GError** errorToLog, GError** error)
+gboolean gx_dblog_error_clear_check(LogDb* logDb, GError** errorToLog, GError** error)
 {
   gboolean success = log_db_log_exception(logDb, *errorToLog, error);
   g_clear_error(errorToLog);
@@ -104,21 +104,21 @@ gboolean gx_dblog_clear_error(LogDb* logDb, GError** errorToLog, GError** error)
 }
 
 // Best effort. Invokes EXIT_APPLICATION as the last thing.
-void gx_dblog_free_fatal_error(LogDb* logDb, GError* errorToLog)
+void gx_dblog_fatal_error_free(LogDb* logDb, GError* errorToLog)
 {
-  gx_dblog_free_error(logDb, errorToLog, NULL);
+  gx_dblog_error_free_check(logDb, errorToLog, NULL);
   er_fatal();
 }
 
 // Best effort. Invokes EXIT_APPLICATION as the last thing.
-void gx_dblog_clear_fatal_error(LogDb* logDb, GError** errorToLog)
+void gx_dblog_fatal_error_clear(LogDb* logDb, GError** errorToLog)
 {
-  gx_dblog_clear_error(logDb, errorToLog, NULL);
+  gx_dblog_error_clear_check(logDb, errorToLog, NULL);
   er_fatal();
 }
 
 // Invokes EXIT_APPLICATION as the last thing.
-void gx_txtlog_free_fatal_error(GError* errorToLog)
+void gx_txtlog_fatal_error_free(GError* errorToLog)
 {
   gx_txtlog_error_free(errorToLog);
   er_fatal();

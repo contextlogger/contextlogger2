@@ -43,7 +43,7 @@ static void timerCallback(void* userdata, GError* timerError)
     //logt("MARK");
     GError* localError = NULL;
     if (!log_db_log_mark(self->log, "mark", &localError)) {
-      gx_txtlog_free_fatal_error(localError);
+      gx_txtlog_fatal_error_free(localError);
       return;
     }
   }
@@ -56,7 +56,7 @@ static void timerCallback(void* userdata, GError* timerError)
 
  fail:
   {
-    gx_dblog_free_fatal_error(self->log, timerError);
+    gx_dblog_fatal_error_free(self->log, timerError);
   }
 }
 

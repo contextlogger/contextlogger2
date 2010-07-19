@@ -52,21 +52,21 @@ extern "C" {
   void gx_txtlog_error_clear(GError** error);
 
   // Frees any "errorToLog" even if fails.
-  gboolean gx_dblog_free_error(LogDb* logDb, GError* errorToLog, GError** error);
+  gboolean gx_dblog_error_free_check(LogDb* logDb, GError* errorToLog, GError** error);
 
   // Clears any "errorToLog" even if fails.
-  gboolean gx_dblog_clear_error(LogDb* logDb, GError** errorToLog, GError** error);
+  gboolean gx_dblog_error_clear_check(LogDb* logDb, GError** errorToLog, GError** error);
 
   // Best effort. Invokes EXIT_APPLICATION as the last thing.
-  void gx_dblog_free_fatal_error(LogDb* logDb, GError* errorToLog);
+  void gx_dblog_fatal_error_free(LogDb* logDb, GError* errorToLog);
 
   // Best effort. Invokes EXIT_APPLICATION as the last thing.
-  void gx_dblog_clear_fatal_error(LogDb* logDb, GError** errorToLog);
+  void gx_dblog_fatal_error_clear(LogDb* logDb, GError** errorToLog);
 
   void gx_propagate_error(GError** dest, GError* src);
 
   // Invokes EXIT_APPLICATION as the last thing.
-  void gx_txtlog_free_fatal_error(GError* errorToLog);
+  void gx_txtlog_fatal_error_free(GError* errorToLog);
 
   // --------------------------------------------------
   // POSIX extras
