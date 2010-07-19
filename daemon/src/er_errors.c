@@ -15,11 +15,16 @@ void er_global_cleanup()
 {
 }
 
+void er_fatal()
+{
+  WHEN_SYMBIAN(ex_show_default_error());
+  EXIT_APPLICATION;
+}
+
 void er_log_fatal()
 {
   logt("fatal error");
-  WHEN_SYMBIAN(ex_show_default_error());
-  EXIT_APPLICATION;
+  er_fatal();
 }
 
 // The docs of g_error_free do not say if the error may be NULL. Well
@@ -102,31 +107,27 @@ gboolean gx_db_log_clear_error(LogDb* logDb, GError** errorToLog, GError** error
 void gx_db_log_free_fatal_error(LogDb* logDb, GError* errorToLog)
 {
   gx_db_log_free_error(logDb, errorToLog, NULL);
-  WHEN_SYMBIAN(ex_show_default_error());
-  EXIT_APPLICATION;
+  er_fatal();
 }
 
 // Best effort. Invokes EXIT_APPLICATION as the last thing.
 void gx_db_log_clear_fatal_error(LogDb* logDb, GError** errorToLog)
 {
   gx_db_log_clear_error(logDb, errorToLog, NULL);
-  WHEN_SYMBIAN(ex_show_default_error());
-  EXIT_APPLICATION;
+  er_fatal();
 }
 
 // Invokes EXIT_APPLICATION as the last thing.
 void gx_log_free_fatal_error(GError* errorToLog)
 {
   gx_error_log_free(errorToLog);
-  WHEN_SYMBIAN(ex_show_default_error());
-  EXIT_APPLICATION;
+  er_fatal();
 }
 
 void px_db_log_fatal_error(LogDb* logDb, int errCode)
 {
   log_db_log_status(logDb, NULL, "FATAL: POSIX error: %s (%d)", strerror(errCode), errCode);
-  WHEN_SYMBIAN(ex_show_default_error());
-  EXIT_APPLICATION;
+  er_fatal();
 }
 
 void px_db_log_fatal_errno(LogDb* logDb)
@@ -137,8 +138,7 @@ void px_db_log_fatal_errno(LogDb* logDb)
 void px_log_fatal_error(int errCode)
 {
   logf("FATAL: POSIX error: %s (%d)", strerror(errCode), errCode);
-  WHEN_SYMBIAN(ex_show_default_error());
-  EXIT_APPLICATION;
+  er_fatal();
 }
 
 void px_log_fatal_errno()
@@ -147,6 +147,12 @@ void px_log_fatal_errno()
 }
 
 #if defined(__SYMBIAN32__)
+
+void ex_fatal_error(int errCode)
+{
+  ex_show_error(errCode);
+  EXIT_APPLICATION;
+}
 
 void ex_log_error(int errCode)
 {
@@ -161,15 +167,13 @@ gboolean ex_db_log_error(LogDb* logDb, int errCode, GError** error)
 void ex_log_fatal_error(int errCode)
 {
   logf("FATAL: Symbian error: %s (%d)", plat_error_strerror(errCode), errCode);
-  ex_show_error(errCode);
-  EXIT_APPLICATION;
+  ex_fatal_error(errCode);
 }
 
 void ex_db_log_fatal_error(LogDb* logDb, int errCode)
 {
   log_db_log_status(logDb, NULL, "FATAL: Symbian error: %s (%d)", plat_error_strerror(errCode), errCode);
-  ex_show_error(errCode);
-  EXIT_APPLICATION;
+  ex_fatal_error(errCode);
 }
 
 #endif /* __SYMBIAN32__ */

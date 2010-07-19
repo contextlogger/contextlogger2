@@ -28,6 +28,8 @@ extern "C" {
   // general error reporting
   // --------------------------------------------------
 
+  void er_fatal();
+
   void er_log_fatal();
 
   // --------------------------------------------------
@@ -83,6 +85,8 @@ extern "C" {
   // --------------------------------------------------
 
 #if defined(__SYMBIAN32__)
+  void ex_fatal_error(int errCode);
+
   void ex_log_error(int errCode);
 
   gboolean ex_db_log_error(LogDb* logDb, int errCode, GError** error);
@@ -95,6 +99,7 @@ extern "C" {
   // global dialog.
   void ex_show_error(int errCode);
 
+  // Like ex_show_error(KErrGeneral).
   void ex_show_default_error();
 #endif /* __SYMBIAN32__ */
 
