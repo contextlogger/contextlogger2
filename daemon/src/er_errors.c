@@ -15,7 +15,7 @@ void er_global_cleanup()
 {
 }
 
-void er_fatal_error()
+void er_log_fatal()
 {
   logt("fatal error");
   WHEN_SYMBIAN(ex_show_default_error());

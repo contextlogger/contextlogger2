@@ -28,7 +28,7 @@ extern "C" {
   // general error reporting
   // --------------------------------------------------
 
-  void er_fatal_error();
+  void er_log_fatal();
 
   // --------------------------------------------------
   // GLib extras
