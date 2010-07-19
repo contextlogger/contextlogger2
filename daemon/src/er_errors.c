@@ -90,10 +90,29 @@ void gx_txtlog_error_clear(GError** error)
   }
 }
 
+gboolean gx_dblog_error_check(LogDb* logDb, GError* errorToLog, GError** error)
+{
+  gchar* s = NULL;
+  gboolean free_s = FALSE;
+
+  if (errorToLog) {
+    s = gx_error_to_string(error);
+    if (G_LIKELY(s)) {
+      free_s = TRUE;
+    }
+  }
+  if (!s)
+    s = "out of memory error";
+
+  gboolean r = log_db_log_status(logDb, error, s);
+  if (free_s) g_free(s);
+  return r;
+}
+
 // Takes ownership of "errorToLog" even if fails.
 gboolean gx_dblog_error_free_check(LogDb* logDb, GError* errorToLog, GError** error)
 {
-  gboolean success = log_db_log_exception(logDb, errorToLog, error);
+  gboolean success = gx_dblog_error_check(logDb, errorToLog, error);
   gx_error_free(errorToLog);
   return success;
 }
@@ -101,8 +120,10 @@ gboolean gx_dblog_error_free_check(LogDb* logDb, GError* errorToLog, GError** er
 // Takes ownership of "errorToLog" even if fails.
 gboolean gx_dblog_error_clear_check(LogDb* logDb, GError** errorToLog, GError** error)
 {
-  gboolean success = log_db_log_exception(logDb, *errorToLog, error);
-  g_clear_error(errorToLog);
+  if (!errorToLog)
+    return TRUE; // nothing to log
+  gboolean success = gx_dblog_error_free_check(logDb, *errorToLog, error);
+  *errorToLog = NULL;
   return success;
 }
 

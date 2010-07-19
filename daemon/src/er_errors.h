@@ -51,6 +51,8 @@ extern "C" {
 
   void gx_txtlog_error_clear(GError** error);
 
+  gboolean gx_dblog_error_check(LogDb* logDb, GError* errorToLog, GError** error);
+
   // Frees any "errorToLog" even if fails.
   gboolean gx_dblog_error_free_check(LogDb* logDb, GError* errorToLog, GError** error);
 
