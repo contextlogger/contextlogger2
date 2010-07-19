@@ -59,6 +59,7 @@ extern "C" {
   // Clears any "errorToLog" even if fails.
   gboolean gx_dblog_error_clear_check(LogDb* logDb, GError** errorToLog, GError** error);
 
+#define gx_dblog_error(_db, _err) gx_dblog_error_check(_db, _err, NULL)
 #define gx_dblog_error_free(_db, _err) gx_dblog_error_free_check(_db, _err, NULL)
 #define gx_dblog_error_clear(_db, _err) gx_dblog_error_clear_check(_db, _err, NULL)
 

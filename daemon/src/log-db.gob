@@ -222,26 +222,6 @@ class Log:Db from G:Object {
     return TRUE;
   }
 
-  // Note that this method does not free the logged error, so do a
-  // g_error_free(errorToLog) or g_clear_error(errorToLog) as required.
-  public gboolean log_exception(self, GError* errorToLog, GError** error)
-  {
-    assert_error_unset(error);
-    if (errorToLog) {
-      GString* text = g_string_sized_new(128);
-      g_string_printf(text, "EXCEPTION: %s (%s: %d)",
-		      errorToLog->message, 
-		      g_quark_to_string(errorToLog->domain), 
-		      errorToLog->code);
-      gboolean r = log_db_log_status(self, error, text->str);
-      g_string_free(text, TRUE);
-      return r;
-    } else {
-      return log_db_log_status(self, error, "EXCEPTION: out of memory");
-    }
-    return TRUE;
-  }
-
   // fmt:: A zero-terminated string, in UTF-8.
   public gboolean log_status(self, GError** error, const char* fmt, ...)
   {

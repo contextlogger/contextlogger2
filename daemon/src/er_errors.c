@@ -96,7 +96,7 @@ gboolean gx_dblog_error_check(LogDb* logDb, GError* errorToLog, GError** error)
   gboolean free_s = FALSE;
 
   if (errorToLog) {
-    s = gx_error_to_string(error);
+    s = gx_error_to_string(errorToLog);
     if (G_LIKELY(s)) {
       free_s = TRUE;
     }

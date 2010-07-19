@@ -233,10 +233,9 @@ extern "C" struct _sa_Array
 #define SENSOR_TIMER_RECONFIGURE(key,value) sa_reconfigure_ignore_all_keys
 #define SENSOR_MARK_RECONFIGURE(key,value) sa_reconfigure_ignore_all_keys
 
-#define gerror_try_log_and_clear { \
-    if (!success) {				     \
-      log_db_log_exception(self->logDb, *error, NULL);	\
-      g_clear_error(error);				\
+#define gerror_try_log_and_clear {			\
+    if (!success) {					\
+      gx_dblog_error_clear(self->logDb, error);		\
     }							\
   }
 
