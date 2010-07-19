@@ -37,11 +37,17 @@
 #define TRAP_OOM_NULL(_do_act) \
   TRAP_OOM(return NULL, _do_act)
 
-#define TRAP_OOM_RETURN(_do_act) \
+#define TRAP_OOM_VOID(_do_act) \
   TRAP_OOM(return, _do_act)
 
 #define TRAP_OOM_FAIL(_do_act) \
   TRAP_OOM(goto fail, _do_act)
+
+// These aliases are just to make it easy to grep for "TRAP_OOM".
+#define SET_TRAP_OOM_VOID() SET_LOW_MEMORY_TRAP_VOID()
+#define SET_TRAP_OOM_VALUE(_val) SET_LOW_MEMORY_TRAP(_val)
+#define SET_TRAP_OOM(_act) SET_LOW_MEMORY_TRAP_ACTION(_act)
+#define UNSET_TRAP_OOM() REMOVE_LOW_MEMORY_TRAP()
 
 #endif /* __gxlowmem_h__ */
 

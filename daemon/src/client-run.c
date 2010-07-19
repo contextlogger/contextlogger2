@@ -135,7 +135,7 @@ int cl2GlobalInit()
 
 #if __DO_LOGGING__
   {
-    SET_LOW_MEMORY_TRAP(ENOMEM);
+    SET_TRAP_OOM_VALUE(ENOMEM);
     double td = 6.38000011;
     logf("printf %%f %f", td);
     logf("printf %%g %g", td);
@@ -147,13 +147,13 @@ int cl2GlobalInit()
     g_snprintf_fix(tdb, 50, "g_snprintf_fix %%f %f", td); logt(tdb);
     g_snprintf_fix(tdb, 50, "g_snprintf_fix %%g %g", td); logt(tdb);
     g_snprintf_fix(tdb, 50, "g_snprintf_fix %%.6f %.6f", td); logt(tdb);
-    REMOVE_LOW_MEMORY_TRAP();
+    UNSET_TRAP_OOM();
   }
 #endif
 
 #if 0 // OOM testing
   {
-    SET_LOW_MEMORY_TRAP(ENOMEM);
+    SET_TRAP_OOM_VALUE(ENOMEM);
     logt("invoking g_strnfill");
     gchar* s = g_strnfill(100000000 /*gsize length*/,
 			  'a' /*gchar fill_char*/);
@@ -161,7 +161,7 @@ int cl2GlobalInit()
     s[5] = '\0';
     logf("s contains '%s'", s);
     g_free(s);
-    REMOVE_LOW_MEMORY_TRAP();
+    UNSET_TRAP_OOM();
   }
 #endif
 

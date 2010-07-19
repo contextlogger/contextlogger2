@@ -47,7 +47,7 @@ gx_error_new_valist (GQuark         domain,
 		     va_list        args)
 {
   GError *error;
-  SET_LOW_MEMORY_TRAP(NULL);
+  SET_TRAP_OOM_VALUE(NULL);
 
   error = g_new (GError, 1);
   
@@ -55,7 +55,7 @@ gx_error_new_valist (GQuark         domain,
   error->code = code;
   error->message = g_strdup_vprintf (format, args);
   
-  REMOVE_LOW_MEMORY_TRAP();
+  UNSET_TRAP_OOM();
   return error;
 }
 
@@ -84,8 +84,8 @@ gx_error_new_literal (GQuark         domain,
 		      const gchar   *message)
 {
   GError* err;
-  SET_LOW_MEMORY_TRAP(NULL);
+  SET_TRAP_OOM_VALUE(NULL);
   err = g_error_new_literal(domain, code, message);
-  REMOVE_LOW_MEMORY_TRAP();
+  UNSET_TRAP_OOM();
   return err;
 }

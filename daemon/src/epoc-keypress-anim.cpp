@@ -37,9 +37,9 @@ void CSensor_keypress::ConstructL()
 {
   // The size chosen so that we are not wasteful with space, but
   // neither should require too many reallocations.
-  SET_LOW_MEMORY_TRAP_ACTION(User::LeaveNoMemory());
+  SET_TRAP_OOM(User::LeaveNoMemory());
   iKeysText = g_string_sized_new(20 + MAX_NUM_CAPTURED_KEYS * 2);
-  REMOVE_LOW_MEMORY_TRAP();
+  UNSET_TRAP_OOM();
   assert(iKeysText != NULL);
 
   iSession = new (ELeave) RWsSession();
@@ -165,7 +165,7 @@ gboolean CSensor_keypress::LogAndClear(GError** error)
   if (iNumCapturedKeys > 0) {
     assert(iKeysText);
     time_t base = iCapturedKeys[0];
-    SET_LOW_MEMORY_TRAP_ACTION(goto nomemory);
+    SET_TRAP_OOM(goto nomemory);
     g_string_set_size(iKeysText, 0);
     g_string_append_printf(iKeysText, "{base: %d, times: [", base);
     int i = 0;
@@ -176,7 +176,7 @@ gboolean CSensor_keypress::LogAndClear(GError** error)
       i++;
     }
     g_string_append(iKeysText, "]}");
-    REMOVE_LOW_MEMORY_TRAP();
+    UNSET_TRAP_OOM();
     iNumCapturedKeys = 0;
 
     if (!log_db_log_keypress(iLogDb, iKeysText->str, error)) {

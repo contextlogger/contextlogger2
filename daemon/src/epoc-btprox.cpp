@@ -178,10 +178,10 @@ void CSensor_btprox::ConstructL()
 {
   RefreshBaseScanIntervalSecs();
 
-  SET_LOW_MEMORY_TRAP_ACTION(User::LeaveNoMemory());
+  SET_TRAP_OOM(User::LeaveNoMemory());
   iResult = g_ptr_array_sized_new(15); 
   iOldResult = g_ptr_array_sized_new(15);
-  REMOVE_LOW_MEMORY_TRAP();
+  UNSET_TRAP_OOM();
 
   LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iTimer, iTimer.CreateLocal()); 
 
@@ -347,10 +347,10 @@ gboolean CSensor_btprox::HandleScanEventL(TInt errCode, GError** error)
 #define free_item_action FreeElement(item, NULL); User::Leave(KErrNoMemory);
 	item->name = ConvToUtf8CString(hostName);
 	if (!item->name) { free_item_action; }
-	SET_LOW_MEMORY_TRAP_ACTION(free_item_action);
+	SET_TRAP_OOM(free_item_action);
 	item->address = g_strdup((gchar*)(addrBuf8.PtrZ()));
 	g_ptr_array_add(iResult, item);
-	REMOVE_LOW_MEMORY_TRAP();
+	UNSET_TRAP_OOM();
 	logf("discovered bt device '%s' '%s'", item->address, item->name);
       }
       BtNext();
