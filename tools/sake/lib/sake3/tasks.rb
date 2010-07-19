@@ -287,6 +287,20 @@ module Sake::Tasks
     raise "module init not found in freeze file"
   end
 
+  def sh_check_build_errors cmd
+    raise unless cmd.respond_to? :to_str
+    sh_pipe(cmd.to_str + ' 2>&1') do |input|
+      input.each_line do |line|
+        puts line
+        if line =~ /fatal error/i or
+            line =~ /^make.*Error/ or
+            line =~ /error: /
+          raise "build error"
+        end
+      end
+    end
+  end
+
   def def_binary_tasks op = {}
     builds = op[:builds] || raise
 
@@ -355,7 +369,8 @@ EOF
                   may_fail do; rm built_file; end
                 end
 
-                sh("abld", "build", "-v", aplat, abuild)
+                cmd = "abld build -v #{aplat} #{abuild}"
+                sh_check_build_errors cmd
 
                 # One should note that the that the path is not
                 # specific enough: if we do two or more variant builds
@@ -382,7 +397,7 @@ EOF
                 end
               end
 
-              sh("bldmake bldfiles")
+              sh_check_build_errors "bldmake bldfiles"
               do_abld.call(build.abld_platform, build.abld_build)
             end
           end
