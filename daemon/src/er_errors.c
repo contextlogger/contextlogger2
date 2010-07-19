@@ -47,15 +47,18 @@ void gx_propagate_error(GError** dest, GError* src)
 
 gchar* gx_error_to_string(GError* error)
 {
-  GString* gs;
-  TRAP_OOM_NULL(gs = g_string_sized_new(128));
-  g_string_printf(gs, "%s (%s: %d)",
-		  error->message, 
-		  g_quark_to_string(error->domain), 
-		  error->code);
+  GString* gs = NULL;
+  TRAP_OOM_FAIL(gs = g_string_sized_new(128);
+		g_string_printf(gs, "%s (%s: %d)",
+				error->message, 
+				g_quark_to_string(error->domain), 
+				error->code));
   gchar* ret = gs->str;
   g_string_free(gs, FALSE);
   return ret;
+ fail:
+  if (gs) g_string_free(gs, TRUE);
+  return NULL;
 }
 
 void gx_txtlog_error(GError* error)
