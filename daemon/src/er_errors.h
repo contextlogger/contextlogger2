@@ -30,7 +30,7 @@ extern "C" {
 
   void er_fatal();
 
-  void er_log_fatal();
+  void er_txtlog_fatal();
 
   // --------------------------------------------------
   // GLib extras
@@ -45,40 +45,40 @@ extern "C" {
   void gx_error_free(GError* error);
 
   // Does not free the error.
-  void gx_error_log(GError* error);
+  void gx_txtlog_error(GError* error);
 
-  void gx_error_log_free(GError* error);
+  void gx_txtlog_error_free(GError* error);
 
-  void gx_error_log_clear(GError** error);
+  void gx_txtlog_error_clear(GError** error);
 
   // Frees any "errorToLog" even if fails.
-  gboolean gx_db_log_free_error(LogDb* logDb, GError* errorToLog, GError** error);
+  gboolean gx_dblog_free_error(LogDb* logDb, GError* errorToLog, GError** error);
 
   // Clears any "errorToLog" even if fails.
-  gboolean gx_db_log_clear_error(LogDb* logDb, GError** errorToLog, GError** error);
+  gboolean gx_dblog_clear_error(LogDb* logDb, GError** errorToLog, GError** error);
 
   // Best effort. Invokes EXIT_APPLICATION as the last thing.
-  void gx_db_log_free_fatal_error(LogDb* logDb, GError* errorToLog);
+  void gx_dblog_free_fatal_error(LogDb* logDb, GError* errorToLog);
 
   // Best effort. Invokes EXIT_APPLICATION as the last thing.
-  void gx_db_log_clear_fatal_error(LogDb* logDb, GError** errorToLog);
+  void gx_dblog_clear_fatal_error(LogDb* logDb, GError** errorToLog);
 
   void gx_propagate_error(GError** dest, GError* src);
 
   // Invokes EXIT_APPLICATION as the last thing.
-  void gx_log_free_fatal_error(GError* errorToLog);
+  void gx_txtlog_free_fatal_error(GError* errorToLog);
 
   // --------------------------------------------------
   // POSIX extras
   // --------------------------------------------------
 
-  void px_db_log_fatal_error(LogDb* logDb, int errCode);
+  void px_dblog_fatal_error(LogDb* logDb, int errCode);
 
-  void px_db_log_fatal_errno(LogDb* logDb);
+  void px_dblog_fatal_errno(LogDb* logDb);
 
-  void px_log_fatal_error(int errCode);
+  void px_txtlog_fatal_error(int errCode);
 
-  void px_log_fatal_errno();
+  void px_txtlog_fatal_errno();
 
   // --------------------------------------------------
   // Symbian extras
@@ -87,13 +87,13 @@ extern "C" {
 #if defined(__SYMBIAN32__)
   void ex_fatal_error(int errCode);
 
-  void ex_log_error(int errCode);
+  void ex_txtlog_error(int errCode);
 
-  gboolean ex_db_log_error(LogDb* logDb, int errCode, GError** error);
+  gboolean ex_dblog_error(LogDb* logDb, int errCode, GError** error);
 
-  void ex_log_fatal_error(int errCode);
+  void ex_txtlog_fatal_error(int errCode);
 
-  void ex_db_log_fatal_error(LogDb* logDb, int errCode);
+  void ex_dblog_fatal_error(LogDb* logDb, int errCode);
 
   // Displays the specified Symbian error code in a briefly displayed
   // global dialog.

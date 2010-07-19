@@ -63,7 +63,7 @@ void CSensor_smsevent::LogEvent(const char* evType, const TDesC& aTelNoDes)
   if (aTelNoDes.Length() > 0) {
     telNo = ConvToUtf8CString(aTelNoDes);
     if (G_UNLIKELY(!telNo)) {
-      ex_log_fatal_error(KErrNoMemory);
+      ex_txtlog_fatal_error(KErrNoMemory);
       return;
     }
     logf("sms remote party number is '%s'", telNo);
@@ -84,7 +84,7 @@ void CSensor_smsevent::LogEvent(const char* evType, const TDesC& aTelNoDes)
   g_free(contactName);
 
   if (G_UNLIKELY(!ok)) {
-    gx_log_free_fatal_error(localError);
+    gx_txtlog_free_fatal_error(localError);
     return;
   }
 }
@@ -117,7 +117,7 @@ void CSensor_smsevent::handle_error(TInt errCode)
   if (!log_db_log_status(logDb, &localError,
 			 "INACTIVATE: smsevent: error: %s (%d)",
 			 plat_error_strerror(errCode), errCode)) {
-    gx_log_free_fatal_error(localError);
+    gx_txtlog_free_fatal_error(localError);
     return;
   }
 }
@@ -131,7 +131,7 @@ void CSensor_smsevent::handle_close()
   GError* localError = NULL;
   if (!log_db_log_status(logDb, &localError,
 			 "INACTIVATE: smsevent: session termination")) {
-    gx_log_free_fatal_error(localError);
+    gx_txtlog_free_fatal_error(localError);
     return;
   }
 }

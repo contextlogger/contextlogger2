@@ -101,7 +101,7 @@ void CCl2appAppUi::ConstructL()
     iClient = kr_Controller_new(&localError);
     logf("client init %s", iClient ? "ok" : "failed");
     if (!iClient) {
-      gx_error_log_free(localError);
+      gx_txtlog_error_free(localError);
       User::Leave(KErrGeneral);
     }
   }
@@ -143,7 +143,7 @@ void CCl2appAppUi::Start()
 
   GError* localError = NULL;
   if (!kr_Controller_start(iClient, &localError)) {
-    gx_error_log_free(localError);
+    gx_txtlog_error_free(localError);
     _LIT(msg, "failed to start");
     DisplayText(msg);
   } else {

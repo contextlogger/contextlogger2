@@ -169,7 +169,7 @@ void CUploader::RefreshIap(TBool aNotInitial)
   int newId = 0;
   if (!try_get_ConfigDb_int("iap", &newId, &found, &localError)) {
     if (aNotInitial)
-      gx_db_log_free_error(iLogDb, localError, NULL);
+      gx_dblog_free_error(iLogDb, localError, NULL);
     else
       gx_error_free(localError);
   } else {
@@ -189,7 +189,7 @@ void CUploader::RefreshSnapshotTimeExpr(TBool aNotInitial)
 			&newOne, __UPLOAD_TIME_EXPR__, 
 			&localError)) {
     if (aNotInitial)
-      gx_db_log_free_error(iLogDb, localError, NULL);
+      gx_dblog_free_error(iLogDb, localError, NULL);
     else
       gx_error_free(localError);
   } else {
@@ -229,7 +229,7 @@ void CUploader::ConstructL()
   // Ensure that uploads directory exists.
   GError* mdError = NULL;
   if (!mkdir_p(LOG_UPLOADS_DIR, &mdError)) {
-    gx_error_log_free(mdError);
+    gx_txtlog_error_free(mdError);
     User::Leave(KErrGeneral);
   }
 
@@ -286,7 +286,7 @@ void CUploader::Inactivate()
 void CUploader::FatalError(TInt errCode)
 {
   Inactivate();
-  ex_db_log_fatal_error(iLogDb, errCode);
+  ex_dblog_fatal_error(iLogDb, errCode);
 }
 
 void CUploader::StateChanged()
@@ -337,7 +337,7 @@ void CUploader::SetSnapshotTimerL()
   time_t snaptime;
   GError* parseError = NULL;
   if (!parse_moment(iSnapshotTimeExpr, ctx, now, &snaptime, &parseError)) {
-    gx_error_log_free(parseError);
+    gx_txtlog_error_free(parseError);
     iNoNextSnapshotTime = ETrue;
     return;
   }
@@ -431,7 +431,7 @@ void CUploader::PosterEvent(TInt anError)
       {
 	GError* localError = NULL;
 	if (!rm_file(iFileToPost, &localError)) {
-	  gx_error_log_free(localError);
+	  gx_txtlog_error_free(localError);
 	  FatalError(KErrGeneral);
 	} else {
 	  logf("posted log file '%s'", iFileToPost);
@@ -440,7 +440,7 @@ void CUploader::PosterEvent(TInt anError)
 	  /* // xxx make this available to Lua
 	  iLastOkPost = time(NULL);
 	  if (iLastOkPost == -1) {
-	    px_log_fatal_error();
+	    px_txtlog_fatal_error();
 	    return;
 	  }
 	  */
@@ -627,7 +627,7 @@ void CUploader::TakeSnapshotNowL()
     logf("failure taking snapshot to file '%s'", pathname);
     free(pathname);
     logf("snapshot file was%s created", wasRenamed ? "" : " not");
-    gx_error_log_free(snapError);
+    gx_txtlog_error_free(snapError);
     User::Leave(KErrGeneral);
   }
 

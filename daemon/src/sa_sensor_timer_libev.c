@@ -49,7 +49,7 @@ static void timerCallback(EV_P_ ev_timer* w, int revents)
   // Log "sensor" event.
   GError* localError = NULL;
   if (!log_db_log_timer(self->log, &localError)) {
-    gx_error_log_free(localError);
+    gx_txtlog_error_free(localError);
     EXIT_APPLICATION;
     return;
   }

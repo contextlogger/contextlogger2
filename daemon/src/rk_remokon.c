@@ -55,7 +55,7 @@ struct _rk_Remokon {
 static void handleTimerError(rk_Remokon* self, GError* timerError)
 {
   logt("timer error in Remokon");
-  gx_db_log_free_fatal_error(getGlobalClient()->log, timerError);
+  gx_dblog_free_fatal_error(getGlobalClient()->log, timerError);
 }
 
 static void setRetryTimer(rk_Remokon* self)
@@ -81,7 +81,7 @@ static void startSessionOrRetry(rk_Remokon* self)
 {
   GError* localError = NULL;
   if (!rk_JabberSession_start(self->session, &localError)) {
-    gx_error_log_free(localError);
+    gx_txtlog_error_free(localError);
     setRetryTimer(self);
   }
 }
@@ -132,7 +132,7 @@ static int cb_severeError(void* userdata, const char* msg)
 static int cb_fatalError(void* userdata, const char* msg)
 {
   logf("fatal Jabber error: %s", msg);
-  er_log_fatal();
+  er_txtlog_fatal();
   return rk_HALT;
 }
 
@@ -190,7 +190,7 @@ static int cb_gotMsg(void* userdata, const char* fromJid, const char* luaStr)
 			       fromJid,
 			       replyText,
 			       &localError)) {
-      gx_error_log_free(localError);
+      gx_txtlog_error_free(localError);
       if (pop) lua_pop(L, pop);
       cb_severeError(self, "failed to send Jabber reply");
       return rk_HALT;

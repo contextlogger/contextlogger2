@@ -39,10 +39,9 @@ TInt CActiveLogErrG::RunError(TInt aError)
     return CActiveLogErr::RunError(aError);
   } else {
     logf("FATAL: error in the RunL of %s", Description());
-    gx_error_log_clear(&iError);
+    gx_txtlog_error_clear(&iError);
     assert(iError == NULL);
-    ex_show_default_error();
-    EXIT_APPLICATION;
+    er_fatal();
     return 0;
   }
 }

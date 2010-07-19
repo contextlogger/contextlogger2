@@ -139,7 +139,7 @@ void CSensor_keypress::RunL()
       { // record event time
 	time_t now = time(NULL);
 	if (now == -1) {
-	  px_db_log_fatal_errno(iLogDb);
+	  px_dblog_fatal_errno(iLogDb);
 	  return;
 	} else {
 	  iCapturedKeys[iNumCapturedKeys] = now;
@@ -147,7 +147,7 @@ void CSensor_keypress::RunL()
 	  if (iNumCapturedKeys == MAX_NUM_CAPTURED_KEYS) {
 	    GError* localError = NULL;
 	    if (!LogAndClear(&localError)) {
-	      gx_db_log_clear_fatal_error(iLogDb, &localError);
+	      gx_dblog_clear_fatal_error(iLogDb, &localError);
 	      return;
 	    }
 	  }

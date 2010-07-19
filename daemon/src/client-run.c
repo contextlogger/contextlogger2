@@ -64,7 +64,7 @@ int cl2RunOnceGetExitCode()
   int exitCode = 0;
 
   if (!cl2RunOnce(error)) {
-    gx_error_log_clear(error);
+    gx_txtlog_error_clear(error);
     exitCode = 1;
   }
 

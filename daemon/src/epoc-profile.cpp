@@ -85,7 +85,7 @@ void CSensor_profile::HandleActiveProfileEventL(TProfileEvent aProfileEvent,
 {
 #if 0
   { // test code...
-    ex_log_fatal_error(KErrGeneral);
+    ex_txtlog_fatal_error(KErrGeneral);
   }
 #endif
 
@@ -110,7 +110,7 @@ void CSensor_profile::HandleActiveProfileEventL(TProfileEvent aProfileEvent,
     gboolean ok = log_db_log_profile(iLogDb, aProfileId, profileName, &error);
     delete pnDes;
     if (!ok) {
-      gx_error_log_clear(&error);
+      gx_txtlog_error_clear(&error);
       User::Leave(KErrWrite);
     }
   }

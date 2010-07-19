@@ -79,7 +79,7 @@ void CSensor_indicator::HandleTimer()
   if (errCode) {
     // unexpected with an interval timer
     logt("retry timer error in indicator");
-    ex_log_fatal_error(errCode);
+    ex_txtlog_fatal_error(errCode);
     return;
   }
   MakeRequest();
@@ -139,7 +139,7 @@ void CSensor_indicator::HandleRead()
       if (!log_db_log_indicator(logDb, iIndicator.iIndicator, 
 				iIndicator.iCapabilities,
 				&localError)) {
-	gx_log_free_fatal_error(localError);
+	gx_txtlog_free_fatal_error(localError);
 	return;
       }
       

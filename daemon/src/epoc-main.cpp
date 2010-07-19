@@ -41,14 +41,14 @@ static TInt MainLoop()
   kr_Controller* client = kr_Controller_new(error);
   if (!client) {
     logt("error in client creation");
-    gx_error_log_clear(error);
+    gx_txtlog_error_clear(error);
     DELETE_GLOBAL_LOOP;
     return KGError;
   }
     
   if (!kr_Controller_start(client, error)) {
     logt("error starting client");
-    gx_error_log_clear(error);
+    gx_txtlog_error_clear(error);
     kr_Controller_destroy(client);
     DELETE_GLOBAL_LOOP;
     return KGError;

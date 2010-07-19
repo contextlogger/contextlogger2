@@ -21,7 +21,7 @@ void er_fatal()
   EXIT_APPLICATION;
 }
 
-void er_log_fatal()
+void er_txtlog_fatal()
 {
   logt("fatal error");
   er_fatal();
@@ -58,7 +58,7 @@ gchar* gx_error_to_string(GError* error)
   return ret;
 }
 
-void gx_error_log(GError* error)
+void gx_txtlog_error(GError* error)
 {
   if (error) {
     gchar* s = gx_error_to_string(error);
@@ -73,22 +73,22 @@ void gx_error_log(GError* error)
   }
 }
 
-void gx_error_log_free(GError* error)
+void gx_txtlog_error_free(GError* error)
 {
-  gx_error_log(error);
+  gx_txtlog_error(error);
   if (error) g_error_free(error);
 }
 
-void gx_error_log_clear(GError** error)
+void gx_txtlog_error_clear(GError** error)
 {
   if (error) {
-    gx_error_log_free(*error);
+    gx_txtlog_error_free(*error);
     *error = NULL;
   }
 }
 
 // Takes ownership of "errorToLog" even if fails.
-gboolean gx_db_log_free_error(LogDb* logDb, GError* errorToLog, GError** error)
+gboolean gx_dblog_free_error(LogDb* logDb, GError* errorToLog, GError** error)
 {
   gboolean success = log_db_log_exception(logDb, errorToLog, error);
   gx_error_free(errorToLog);
@@ -96,7 +96,7 @@ gboolean gx_db_log_free_error(LogDb* logDb, GError* errorToLog, GError** error)
 }
 
 // Takes ownership of "errorToLog" even if fails.
-gboolean gx_db_log_clear_error(LogDb* logDb, GError** errorToLog, GError** error)
+gboolean gx_dblog_clear_error(LogDb* logDb, GError** errorToLog, GError** error)
 {
   gboolean success = log_db_log_exception(logDb, *errorToLog, error);
   g_clear_error(errorToLog);
@@ -104,46 +104,46 @@ gboolean gx_db_log_clear_error(LogDb* logDb, GError** errorToLog, GError** error
 }
 
 // Best effort. Invokes EXIT_APPLICATION as the last thing.
-void gx_db_log_free_fatal_error(LogDb* logDb, GError* errorToLog)
+void gx_dblog_free_fatal_error(LogDb* logDb, GError* errorToLog)
 {
-  gx_db_log_free_error(logDb, errorToLog, NULL);
+  gx_dblog_free_error(logDb, errorToLog, NULL);
   er_fatal();
 }
 
 // Best effort. Invokes EXIT_APPLICATION as the last thing.
-void gx_db_log_clear_fatal_error(LogDb* logDb, GError** errorToLog)
+void gx_dblog_clear_fatal_error(LogDb* logDb, GError** errorToLog)
 {
-  gx_db_log_clear_error(logDb, errorToLog, NULL);
+  gx_dblog_clear_error(logDb, errorToLog, NULL);
   er_fatal();
 }
 
 // Invokes EXIT_APPLICATION as the last thing.
-void gx_log_free_fatal_error(GError* errorToLog)
+void gx_txtlog_free_fatal_error(GError* errorToLog)
 {
-  gx_error_log_free(errorToLog);
+  gx_txtlog_error_free(errorToLog);
   er_fatal();
 }
 
-void px_db_log_fatal_error(LogDb* logDb, int errCode)
+void px_dblog_fatal_error(LogDb* logDb, int errCode)
 {
   log_db_log_status(logDb, NULL, "FATAL: POSIX error: %s (%d)", strerror(errCode), errCode);
   er_fatal();
 }
 
-void px_db_log_fatal_errno(LogDb* logDb)
+void px_dblog_fatal_errno(LogDb* logDb)
 {
-  px_db_log_fatal_error(logDb, errno);
+  px_dblog_fatal_error(logDb, errno);
 }
 
-void px_log_fatal_error(int errCode)
+void px_txtlog_fatal_error(int errCode)
 {
   logf("FATAL: POSIX error: %s (%d)", strerror(errCode), errCode);
   er_fatal();
 }
 
-void px_log_fatal_errno()
+void px_txtlog_fatal_errno()
 {
-  px_log_fatal_error(errno);
+  px_txtlog_fatal_error(errno);
 }
 
 #if defined(__SYMBIAN32__)
@@ -154,23 +154,23 @@ void ex_fatal_error(int errCode)
   EXIT_APPLICATION;
 }
 
-void ex_log_error(int errCode)
+void ex_txtlog_error(int errCode)
 {
   logf("ERROR: Symbian error: %s (%d)", plat_error_strerror(errCode), errCode);
 }
 
-gboolean ex_db_log_error(LogDb* logDb, int errCode, GError** error)
+gboolean ex_dblog_error(LogDb* logDb, int errCode, GError** error)
 {
   return log_db_log_status(logDb, error, "ERROR: Symbian error: %s (%d)", plat_error_strerror(errCode), errCode);
 }
 
-void ex_log_fatal_error(int errCode)
+void ex_txtlog_fatal_error(int errCode)
 {
   logf("FATAL: Symbian error: %s (%d)", plat_error_strerror(errCode), errCode);
   ex_fatal_error(errCode);
 }
 
-void ex_db_log_fatal_error(LogDb* logDb, int errCode)
+void ex_dblog_fatal_error(LogDb* logDb, int errCode)
 {
   log_db_log_status(logDb, NULL, "FATAL: Symbian error: %s (%d)", plat_error_strerror(errCode), errCode);
   ex_fatal_error(errCode);
