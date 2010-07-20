@@ -58,11 +58,13 @@ gx_error_new_valist (GQuark         domain,
   UNSET_TRAP_OOM();
   return error;
 
+#if HAVE_TRAP_OOM
  fail:
   if (error) {
     g_free(error);
   }
   return NULL;
+#endif
 }
 
 GError*

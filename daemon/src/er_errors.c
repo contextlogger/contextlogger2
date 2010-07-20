@@ -56,9 +56,11 @@ gchar* gx_error_to_string(GError* error)
   gchar* ret = gs->str;
   g_string_free(gs, FALSE);
   return ret;
+#if HAVE_TRAP_OOM
  fail:
   if (gs) g_string_free(gs, TRUE);
   return NULL;
+#endif
 }
 
 void gx_txtlog_error(GError* error)

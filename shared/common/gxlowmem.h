@@ -20,6 +20,9 @@
     REMOVE_LOW_MEMORY_TRAP();			\
   }
 
+#define HAVE_TRAP_OOM 1
+#define WHEN_TRAP_OOM(_do_act) { _do_act; }
+
 #else
 
 #define SET_LOW_MEMORY_TRAP_VOID()
@@ -28,6 +31,9 @@
 #define REMOVE_LOW_MEMORY_TRAP()
 
 #define TRAP_OOM(_err_act, _do_act) { _do_act; }
+
+#define HAVE_TRAP_OOM 0
+#define WHEN_TRAP_OOM(_do_act)
 
 #endif /* not __SYMBIAN32__ */
 

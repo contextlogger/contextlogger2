@@ -27,6 +27,16 @@ IKSEMEL_C_FILES := base64.c dom.c filter.c iks.c ikss_stream.c ikst_transport_li
 FULL_IKSEMEL_C_FILES := $(patsubst %, $(IKSEMEL_SRC_PATH)/%, $(IKSEMEL_C_FILES))
 IKSEMEL_DEP_FLAGS := -I$(IKSEMEL_INC_PATH) -I$(IKSEMEL_SRC_PATH)
 
+ifeq ($(UPLOAD_WITH_CURL),true)
+CURL_CONFIG := curl-config
+CURL_VERSION := $(shell $(CURL_CONFIG) --version)
+CURL_CFLAGS := $(shell $(CURL_CONFIG) --cflags)
+CURL_LDFLAGS := $(shell $(CURL_CONFIG) --libs)
+CURL_LSFLAGS := $(shell $(CURL_CONFIG) --static-libs)
+CURL_FEATURES := $(shell $(CURL_CONFIG) --features)
+CURL_PREFIX := $(shell $(CURL_CONFIG) --prefix)
+endif
+
 C_FILES := $(patsubst %, $(SRC_PATH)/%, $(APP_C_FILES)) $(patsubst %, $(SHARED_PATH)/common/%, $(SHARED_C_FILES)) $(patsubst %, $(TIMESPEC_PATH)/%, $(TIMESPEC_C_FILES)) $(FULL_IKSEMEL_C_FILES)
 CXX_FILES := $(patsubst %, $(SRC_PATH)/%, $(APP_CXX_FILES)) $(patsubst %, $(SHARED_PATH)/common/%, $(SHARED_CXX_FILES))
 
@@ -41,16 +51,6 @@ GOB_C_FILES := $(patsubst %.gob, %.c, $(GOB_FILES))
 GOB_FLAGS := --always-private-header --output-dir $(SRC_PATH)
 
 GEN_FILES := $(GOB_H_FILES) $(GOB_PRIV_H_FILES) $(GOB_C_FILES) $(RAGEL_GEN_FILES)
-
-ifneq ($(UPLOAD_WITH_CURL),)
-CURL_CONFIG := curl-config
-CURL_VERSION := $(shell $(CURL_CONFIG) --version)
-CURL_CFLAGS := $(shell $(CURL_CONFIG) --cflags)
-CURL_LDFLAGS := $(shell $(CURL_CONFIG) --libs)
-CURL_LSFLAGS := $(shell $(CURL_CONFIG) --static-libs)
-CURL_FEATURES := $(shell $(CURL_CONFIG) --features)
-CURL_PREFIX := $(shell $(CURL_CONFIG) --prefix)
-endif
 
 BUILD_LUA := true
 ifeq ($(BUILD_LUA),true)
