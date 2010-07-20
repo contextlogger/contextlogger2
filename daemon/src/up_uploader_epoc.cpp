@@ -303,7 +303,8 @@ void CUploader::NextOldFileL()
   g_free(iFileToPost); // safe when NULL
   iFileToPost = NULL;
 
-  if (getNextOldLogFile(&iFileToPost, NULL)) {
+  GError* error = NULL;
+  if (getNextOldLogFile(&iFileToPost, &error)) {
     if (iFileToPost) {
       return;
     } else {
@@ -311,6 +312,8 @@ void CUploader::NextOldFileL()
       logt("no more old files to upload");
     }
   } else {
+    // A leave here is considered fatal regardless of the error.
+    gx_dblog_error_free(iLogDb, error);
     User::Leave(KErrGeneral);
   }
 }
