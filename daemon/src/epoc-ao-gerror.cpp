@@ -1,9 +1,11 @@
 #include "epoc-ao-gerror.hpp"
 
+#include "ac_app_context.h"
+#include "er_errors.h"
+
 #include "common/assertions.h"
 #include "common/error_list.h"
 #include "common/platform_error.h"
-#include "er_errors.h"
 #include "common/logging.h"
 
 #if __IS_APPLICATION__
@@ -16,9 +18,8 @@
 
 TInt CActiveLogErr::RunError(TInt errCode)
 {
-  // [xxx use log db]
-  logf("FATAL: error in the RunL of %s: %s (%d)", Description(), plat_error_strerror(errCode), errCode);
-  ex_fatal_error(errCode);
+  log_db_log_status(ac_global_LogDb, NULL, "FATAL: error in the RunL of %s", Description());
+  ex_dblog_fatal_error(ac_global_LogDb, errCode);
   return 0;
 }
 
@@ -38,11 +39,8 @@ TInt CActiveLogErrG::RunError(TInt aError)
   if (aError != KGError) { // Symbian error code
     return CActiveLogErr::RunError(aError);
   } else { // GError object
-    // [xxx use log db]
-    logf("FATAL: error in the RunL of %s", Description());
-    gx_txtlog_error_clear(&iError);
-    assert(iError == NULL);
-    er_fatal();
+    log_db_log_status(ac_global_LogDb, NULL, "FATAL: error in the RunL of %s", Description());
+    gx_dblog_fatal_error_clear(ac_global_LogDb, &iError);
     return 0;
   }
 }

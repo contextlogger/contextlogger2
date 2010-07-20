@@ -158,6 +158,8 @@ gboolean CSensor_appfocus::RunGL(GError** error)
 
   //logf("appfocus event %d", errCode);
 
+  //Leave(gx_error_no_memory); // test
+
   if (errCode) {
     // This error really should not occur, but since it has, we will
     // simply stop this one scanner. For a retry, someone just call
