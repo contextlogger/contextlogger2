@@ -89,12 +89,13 @@ extern "C" {
 // (or take some application-specific action), and leave the actual
 // application running; in this case it is the responsibility of the
 // application to attempt restarting as desired. In any case, you
-// should define EXIT_APPLICATION to map to the desired behavior. Note that
-// you should not assume that EXIT_APPLICATION will not return, rather
-// consider it as making a request to get CL2 stopped soon.
+// should define EXIT_APPLICATION to map to the desired behavior. Note
+// that you should not assume that EXIT_APPLICATION will not return,
+// rather consider it as making a request to get CL2 stopped soon.
 // 
 // Note that ExitApplication() is implemented differently on Symbian
-// depending on whether __IS_APPLICATION__ is true.
+// depending on whether __IS_APPLICATION__ is true. See epoc-main.cpp
+// and cl2appappui.cpp for the Symbian implementations.
 #ifdef __SYMBIAN32__
   void ExitApplication();
 #define EXIT_APPLICATION ExitApplication()

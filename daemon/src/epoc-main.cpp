@@ -18,12 +18,18 @@ static CActiveSchedulerWait* globalLoop = NULL;
 extern "C" void ExitApplication()
 {
   logt("ExitApplication");
+#if 1
+  // This should make sure that the process gets killed, assuming it
+  // is the main process that calls this.
+  User::Exit(KErrGeneral);
+#else
   if (globalLoop) {
     globalLoop->AsyncStop();
   } else {
     logt("error, no scheduler");
     abort();
   }
+#endif
 }
 
 #define DELETE_GLOBAL_LOOP { delete globalLoop; globalLoop = NULL; }

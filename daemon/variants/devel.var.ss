@@ -10,14 +10,15 @@ For development and testing.
 (require common/usual-4)
 (require konffaile/variant)
 
-(define* (info)
-  (new 
+(define* klass%
    (variant-class
-    devel-variant%
+    symbian-variant%
     (super-new)
     
-    ;;(define/override (binary-type) 'daemon)
-  
+    (define/override (binary-type) 'application)
+    (define/override (s60-vernum.attr) 31)
+    (define/override (kit-name) 's60_31)
+    
     (define/override (appfocus-enabled.attr) #t)
     (define/override (appmessage-enabled.attr) #t)
     (define/override (indicator-enabled.attr) #t)
@@ -34,6 +35,7 @@ For development and testing.
 
     (define/override (username.attr) "developer")
 
-    ) ;; end class
-   (s60-vernum/o 31)
-   (kit/o 's60_31)))
+    )) ;; end class
+
+(define* (info)
+  (new klass%)) 
