@@ -72,6 +72,11 @@ def make_file(file, data):
 def do_nothing():
     pass
 
+def choose_execute_action(strings, actions, title = u'Select action'):
+    index = appuifw.popup_menu(strings, title)
+    if index is not None:
+        actions[index]()
+
 class GUI:
     def __init__(self):
         self.lock = e32.Ao_lock()
@@ -82,9 +87,7 @@ class GUI:
         app_path = os.path.split(appuifw.app.full_name())[0]
         self.app_drive = app_path[:2]
 
-        # 30 seems to be the max number of menu items, but this is
-        # fine since there can be that menu submenus as well, which in
-        # turn can also have that many items.
+        # 30 seems to be the max number of menu items one can have.
         main_menu = [
             (u"Status overview", self.status_overview),
             
@@ -107,12 +110,7 @@ class GUI:
 
             (u"Sensors",
              ((u"Select sensor", self.select_sensor),
-              (u"Sensor supported?", self.sensor_is_supported),
-              (u"Sensor running?", self.sensor_is_running),
-              (u"Start sensor", self.sensor_start),
-              (u"Stop sensor", self.sensor_stop),
-              (u"Allow sensor", lambda: self.sensor_allow(True)),
-              (u"Forbid sensor", lambda: self.sensor_allow(False)))),
+              (u"Sensor operation...", self.operate_sensor))),
 
 	    (u"Parameters",
              ((u"Select IAP", self.select_iap),
@@ -136,6 +134,9 @@ class GUI:
         self.app_info = None
 
 	print "Welcome."
+        b2s = lambda v: v and "available" or "not installed"
+        print "Miso library: %s" % b2s(have_miso)
+        print "CL2 library: %s" % b2s(have_cl2)
 
     def is_wd_running(self):
         return miso.have_process(wd_pattern)
@@ -254,7 +255,7 @@ class GUI:
                 res = session.eval(lua_s)
 		return res
             except:
-		pass
+		return
         return self.with_daemon_session(f)
 
     def status_overview(self):
@@ -290,6 +291,7 @@ local function kjoin (lst)
 end
 return kjoin(cl2.all_sensor_names())
 end """)
+            if res is None: return
             self.sensor_list = res.split(",")
         choices = [ unicode(x) for x in self.sensor_list ]
         index = appuifw.popup_menu(choices, u'Select sensor')
@@ -300,6 +302,24 @@ end """)
 
     def upload_now(self):
         self.daemon_exec_ok(""" cl2.upload_now(); return "ok" """, u"Upload requested", u"Failed to request upload")
+
+    def operate_sensor(self):
+	if self.current_sensor is None:
+            self.select_sensor()
+	if self.current_sensor is None:
+            return
+        pairs = [
+            (u"Sensor supported?", self.sensor_is_supported),
+            (u"Sensor running?", self.sensor_is_running),
+            (u"Start sensor", self.sensor_start),
+            (u"Stop sensor", self.sensor_stop),
+            (u"Allow sensor", lambda: self.sensor_allow(True)),
+            (u"Forbid sensor", lambda: self.sensor_allow(False))
+            ]
+        strings = [ x[0] for x in pairs ]
+        actions = [ x[1] for x in pairs ]
+        choose_execute_action(strings, actions,
+                              u"%s:" % self.current_sensor.capitalize())
 
     def sensor_is_supported(self):
 	if self.current_sensor is None:
