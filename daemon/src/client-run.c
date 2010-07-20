@@ -78,7 +78,7 @@ int cl2RunOnceGetExitCode()
 #include <pipsversion.h>
 #endif /* __SYMBIAN32__ */
 
-#define trap_oom(_x) TRAP_OOM_VALUE(ENOMEM, _x)
+#define TRAP_OOM_ENOMEM(_x) TRAP_OOM_VALUE(ENOMEM, _x)
 
 // public interface
 // 
@@ -116,7 +116,7 @@ int cl2GlobalInit()
 
   log_ctx(PRIMARY_LOG_FILENAME, "context test");
 #if __DO_LOGGING__
-  trap_oom({
+  TRAP_OOM_ENOMEM({
       gchar* eData = g_strescape("hello", NULL);
       logf("'hello' is '%s'", eData);
       g_free(eData);
@@ -126,7 +126,7 @@ int cl2GlobalInit()
 
   // This ensures that there will be no errors allocating our standard
   // error domains at runtime.
-  trap_oom(preallocate_all_quarks);
+  TRAP_OOM_ENOMEM(preallocate_all_quarks);
 
 #ifndef __EPOC32__
   // Do not want any console popping up if STDIOSERVER is installed.
@@ -172,7 +172,7 @@ int cl2GlobalInit()
   srand(time(NULL));
 
   // Required when using the GObject object system.
-  trap_oom(g_type_init());
+  TRAP_OOM_ENOMEM(g_type_init());
 
   er_global_init();
 

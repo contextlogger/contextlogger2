@@ -46,8 +46,8 @@ gx_error_new_valist (GQuark         domain,
 		     const gchar   *format,
 		     va_list        args)
 {
-  GError *error;
-  SET_TRAP_OOM_VALUE(NULL);
+  GError *error = NULL;
+  SET_TRAP_OOM_FAIL();
 
   error = g_new (GError, 1);
   
@@ -57,6 +57,12 @@ gx_error_new_valist (GQuark         domain,
   
   UNSET_TRAP_OOM();
   return error;
+
+ fail:
+  if (error) {
+    g_free(error);
+  }
+  return NULL;
 }
 
 GError*

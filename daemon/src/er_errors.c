@@ -148,6 +148,12 @@ void gx_txtlog_fatal_error_free(GError* errorToLog)
   er_fatal();
 }
 
+void gx_txtlog_fatal_error_clear(GError** errorToLog)
+{
+  gx_txtlog_error_clear(errorToLog);
+  er_fatal();
+}
+
 void px_dblog_fatal_error(LogDb* logDb, int errCode)
 {
   log_db_log_status(logDb, NULL, "FATAL: POSIX error: %s (%d)", strerror(errCode), errCode);

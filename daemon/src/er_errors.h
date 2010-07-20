@@ -74,6 +74,9 @@ extern "C" {
   // Invokes EXIT_APPLICATION as the last thing.
   void gx_txtlog_fatal_error_free(GError* errorToLog);
 
+  // Invokes EXIT_APPLICATION as the last thing.
+  void gx_txtlog_fatal_error_clear(GError** errorToLog);
+
   // --------------------------------------------------
   // POSIX extras
   // --------------------------------------------------

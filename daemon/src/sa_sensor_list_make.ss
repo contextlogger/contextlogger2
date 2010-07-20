@@ -466,7 +466,7 @@
          (let* ((sensor-name (fget-reqd-nlist-elem-1 sensor 'name))
                 (upcase-name (symbol-upcase sensor-name)))
            (display-nl " \\")
-           (display (format "WHEN_SENSOR_~a_SUPPORTED_NOTHING({if (!(SENSOR_~a_IS_RUNNING) && SENSOR_AUTOSTART_IS_ALLOWED(~a)) { SENSOR_~a_START; gerror_try_log_and_clear; }})" (symbol-upcase sensor-name) upcase-name sensor-name upcase-name))
+           (display (format "WHEN_SENSOR_~a_SUPPORTED_NOTHING({if (!(SENSOR_~a_IS_RUNNING) && SENSOR_AUTOSTART_IS_ALLOWED(~a)) { SENSOR_~a_START; handle_any_sensor_start_failure; }})" (symbol-upcase sensor-name) upcase-name sensor-name upcase-name))
            ))
        active-sensors)
       (display-nl " \\")

@@ -17,8 +17,7 @@
 TInt CActiveLogErr::RunError(TInt errCode)
 {
   logf("FATAL: error in the RunL of %s: %s (%d)", Description(), plat_error_strerror(errCode), errCode);
-  ex_show_error(errCode);
-  EXIT_APPLICATION;
+  ex_fatal_error(errCode);
   return 0;
 }
 
@@ -35,9 +34,9 @@ CActiveLogErrG::~CActiveLogErrG()
 
 TInt CActiveLogErrG::RunError(TInt aError)
 {
-  if (aError != KGError) {
+  if (aError != KGError) { // Symbian error code
     return CActiveLogErr::RunError(aError);
-  } else {
+  } else { // GError object
     logf("FATAL: error in the RunL of %s", Description());
     gx_txtlog_error_clear(&iError);
     assert(iError == NULL);

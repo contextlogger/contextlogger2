@@ -22,13 +22,7 @@
 
 #define sa_set_symbian_error(errCode,msg) \
     if (error) \
-      *error = gx_error_new(domain_symbian, errCode, msg ": %s (%d)", plat_error_strerror(errCode), errCode);
-
-#define sa_check_symbian_error(errCode,msg,rval) \
-  if (errCode) { \
-    sa_set_symbian_error(errCode,msg); \
-    return (rval); \
-  }
+      *error = ((errCode == KErrNoMemory) ? gx_error_no_memory : gx_error_new(domain_symbian, errCode, msg ": %s (%d)", plat_error_strerror(errCode), errCode));
 
 #define sa_typical_symbian_sensor_start(object,msg) { \
   success = TRUE; \
@@ -233,9 +227,14 @@ extern "C" struct _sa_Array
 #define SENSOR_TIMER_RECONFIGURE(key,value) sa_reconfigure_ignore_all_keys
 #define SENSOR_MARK_RECONFIGURE(key,value) sa_reconfigure_ignore_all_keys
 
-#define gerror_try_log_and_clear {			\
-    if (!success) {					\
-      gx_dblog_error_clear(self->logDb, error);		\
+// Defined for sa_sensor_list_integration.h.
+// We only consider OOM errors as fatal.
+#define handle_any_sensor_start_failure {		\
+    if ((!success) && error) {				\
+      if (*error == gx_error_no_memory)			\
+	gx_dblog_fatal_error_clear(self->logDb, error);	\
+      else						\
+	gx_dblog_error_clear(self->logDb, error);	\
     }							\
   }
 
@@ -269,6 +268,9 @@ extern "C" sa_Array *sa_Array_new(ac_AppContext* ac,
   self->logDb = ac_LogDb(ac);
 
   gboolean success; // for the macro
+
+  // We indeed require that it be possible to instantiate every single
+  // sensor that is supported. Starting them up is another matter.
   CREATE_ALL_SENSORS_OR_FAIL;
 
   return self;
