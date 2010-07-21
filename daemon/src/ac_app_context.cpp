@@ -149,6 +149,7 @@ struct _ac_AppContext
   const char* logdb_dir; // not owned
   char* logdb_file; // owned
   char* log_uploads_dir; // owned
+  ac_Registry registry; // initially zeroed
 };
 
 EXTERN_C ac_AppContext* ac_AppContext_new(GError** error)
@@ -269,6 +270,11 @@ EXTERN_C cf_RcFile* ac_RcFile(ac_AppContext* self)
 EXTERN_C ConfigDb* ac_ConfigDb(ac_AppContext* self)
 {
   return self->kr->configDb;
+}
+
+EXTERN_C ac_Registry* ac_get_Registry(ac_AppContext* self)
+{
+  return &self->registry;
 }
 
 EXTERN_C const char* ac_get_logdb_file(ac_AppContext* self)

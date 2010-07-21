@@ -139,7 +139,6 @@ NONSHARABLE_CLASS(CUploader) :
   gchar* iFileToPost; // pathname of file to upload
   TBool iNoOldFiles; // getNextOldLogFile found nothing
   TInt iNumPostFailures; // affects retry timing
-  time_t iLastOkPost;
 
   //// snapshot taking state
   CTimerAo* iSnapshotTimerAo;
@@ -440,13 +439,16 @@ void CUploader::PosterEvent(TInt anError)
 	  logf("posted log file '%s'", iFileToPost);
 	  iNumPostFailures = 0;
 	  iFileToPost = NULL;
-	  /* // xxx make this available to Lua
-	  iLastOkPost = time(NULL);
-	  if (iLastOkPost == -1) {
-	    px_txtlog_fatal_error();
-	    return;
+
+	  {
+	    time_t t = time(NULL);
+	    if (t == -1) {
+	      px_dblog_fatal_errno(iLogDb);
+	      return;
+	    }
+	    ac_global_Registry->last_upload_time = t;
 	  }
-	  */
+
 	  StateChanged();
 	}
         break;

@@ -187,6 +187,19 @@ static int f_upload_now(lua_State* L)
   return 0;
 }
 
+/***koog (lua-func get_upload_time) ***/
+static int f_get_upload_time(lua_State* L)
+/***end***/
+{
+  time_t t = ac_global_Registry->last_upload_time;
+  if (t == 0) {
+    lua_pushnil(L);
+  } else {
+    lua_pushinteger(L, t);
+  }
+  return 1;
+}
+
 /***koog (lua-func remokon_start) ***/
 static int f_remokon_start(lua_State* L)
 /***end***/
@@ -237,6 +250,7 @@ static const luaL_Reg function_table[] = {
   {"log_message", f_log_message},
   {"remokon_stop", f_remokon_stop},
   {"remokon_start", f_remokon_start},
+  {"get_upload_time", f_get_upload_time},
   {"upload_now", f_upload_now},
   {"sensor_start", f_sensor_start},
   {"sensor_stop", f_sensor_stop},
