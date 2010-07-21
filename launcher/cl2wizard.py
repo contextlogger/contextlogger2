@@ -123,15 +123,16 @@ class GUI:
         self.app_drive = app_path[:2]
 
         main_menu = [
-            (u"WD running?", self.show_is_wd_running),
-            (u"Logger running?", self.show_is_cl2_running),
             (u"Status overview", self.status_overview),
-	    (u"Upload now", self.upload_now),
                            
             (u"(1) List IAPs", print_iap_list),
             (u"(2) Create config file", self.create_config_file),
-            (u"(3) Install SSL cert", self.install_cert), #xxx
+            (u"(3) Install SSL cert", self.install_cert),
             (u"(4) Start WD", self.start_wd_daemon),
+            (u"(5) WD running?", self.show_is_wd_running),
+            (u"(6) Logger running?", self.show_is_cl2_running),
+	    (u"(7) Upload now", self.upload_now),
+	    (u"(8) Last upload when?", self.show_upload_time),
 
             (u"Logger",
              ((u"Start Logger", self.start_cl2_daemon),
@@ -310,6 +311,22 @@ end """)
     def upload_now(self):
         self.daemon_exec_ok(""" cl2.upload_now(); return "ok" """, u"Upload requested", u"Failed to request upload")
 
+    def show_upload_time(self):
+        v = self.daemon_query("return cl2.get_upload_time()")
+        if v is None:
+            return
+        if v == "nil":
+            appuifw.note(u"No uploads", "info")
+        else:
+            try:
+                t = int(v)
+            except ValueError:
+                appuifw.note(u"Failed to query time", "error")
+                return
+            tm = time.gmtime(t)
+            ts = time.strftime("%F %T UTC", tm)
+            appuifw.note(u"Last upload at %s" % ts, "info")
+                
     def stop_cl2_daemon(self):
         """
         Asks the daemon to stop by sending it a request.
