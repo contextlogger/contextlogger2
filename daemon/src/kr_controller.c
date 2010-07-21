@@ -237,9 +237,9 @@ gboolean kr_Controller_start(kr_Controller* self, GError** error)
   return TRUE;
 }
 
-// Stops the client "active object". Stops all the activities of
-// this component, but does not affect event handling, which is
-// handled separately.
+// Stops the client "active object". Stops the activities of this
+// component (apart from Uploader and any PlatAo), but does not affect
+// event handling, which is handled separately.
 void kr_Controller_stop(kr_Controller* self)
 {
 #if __FEATURE_REMOKON__

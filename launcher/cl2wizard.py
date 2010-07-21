@@ -112,6 +112,13 @@ def ask_iap_name():
         return None
     return name_list[index]
 
+def format_time(tm):
+    if e32.pys60_version_info[0] >= 2:
+        fmt = "%F %T UTC"
+    else:
+        fmt = "%Y-%m-%d %H:%M:%S UTC"
+    return time.strftime(fmt, tm)
+
 class GUI:
     def __init__(self):
         self.lock = e32.Ao_lock()
@@ -312,7 +319,7 @@ end """)
         self.daemon_exec_ok(""" cl2.upload_now(); return "ok" """, u"Upload requested", u"Failed to request upload")
 
     def show_upload_time(self):
-        v = self.daemon_query("return cl2.get_upload_time()")
+        v = self.daemon_query("""do local t = cl2.get_upload_time(); if t then return t else return "nil" end; end""")
         if v is None:
             return
         if v == "nil":
@@ -324,7 +331,7 @@ end """)
                 appuifw.note(u"Failed to query time", "error")
                 return
             tm = time.gmtime(t)
-            ts = time.strftime("%F %T UTC", tm)
+            ts = format_time(tm)
             appuifw.note(u"Last upload at %s" % ts, "info")
                 
     def stop_cl2_daemon(self):
