@@ -96,12 +96,24 @@ extern "C" {
 // Note that ExitApplication() is implemented differently on Symbian
 // depending on whether __IS_APPLICATION__ is true. See epoc-main.cpp
 // and cl2appappui.cpp for the Symbian implementations.
+// 
+// You may optionally also define a "nicer" variant of
+// EXIT_APPLICATION by defining SHUTDOWN_APPLICATION. The nicer
+// variant may be used in cases where immediate exit is undesirable.
 #ifdef __SYMBIAN32__
   void ExitApplication();
 #define EXIT_APPLICATION ExitApplication()
+#if __IS_DAEMON__
+  void ShutdownApplication();
+#define SHUTDOWN_APPLICATION ShutdownApplication()
+#endif
 #else
 #include <stdlib.h>
 #define EXIT_APPLICATION abort()
+#endif
+
+#ifndef SHUTDOWN_APPLICATION
+#define SHUTDOWN_APPLICATION EXIT_APPLICATION
 #endif
 
 #ifdef __cplusplus

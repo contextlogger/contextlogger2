@@ -21,11 +21,19 @@
 
 /***koog (require codegen/lua-c) ***//***end***/
 
+/***koog (lua-func die_now) ***/
+static int f_die_now(lua_State* L)
+/***end***/
+{
+  EXIT_APPLICATION;
+  return 0;
+}
+
 /***koog (lua-func shutdown) ***/
 static int f_shutdown(lua_State* L)
 /***end***/
 {
-  EXIT_APPLICATION;
+  SHUTDOWN_APPLICATION;
   return 0;
 }
 
@@ -261,6 +269,7 @@ static const luaL_Reg function_table[] = {
   {"config_get", f_config_get},
   {"iap_id_by_name", f_iap_id_by_name},
   {"shutdown", f_shutdown},
+  {"die_now", f_die_now},
 /***end***/
   {NULL, NULL}
 };
