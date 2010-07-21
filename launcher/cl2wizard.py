@@ -155,8 +155,7 @@ class GUI:
              ((u"Delete log database", self.delete_log_db),
               (u"Delete config database", self.delete_config_db),
               (u"View config file", self.show_config_file),
-              (u"Delete config file", self.delete_config_file),
-              (u"Reboot device", self.reboot_device))),
+              (u"Delete config file", self.delete_config_file))),
 
             (u"Exit", self.abort)
             ]
@@ -411,13 +410,6 @@ end """)
         ch = appuifw.Content_handler(doc_lock.signal)
         ch.open(certfile)
         doc_lock.wait()
-
-    def reboot_device(self):
-        """
-        Causes the device to reboot. Do not know how safe this is,
-        though.
-        """
-        appuifw.e32.start_exe(u'z:\\sys\\bin\\starter.exe', '')
 
     def show_log(self):
         logdir = logs_dir + "\\"
