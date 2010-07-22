@@ -9,7 +9,8 @@
 #include "utils_cl2.h"
 
 struct _cf_RcFile {
-  DECLARE_STATE_ALL;
+  // Contains the named configuration values as global variables.
+  lua_State *L;
 };
 
 #ifdef __EPOC32__
@@ -24,6 +25,61 @@ struct _cf_RcFile {
 #define return_with_error(s...) { if (error) *error = gx_error_new(domain_cl2app, code_unspecified_error, s); return FALSE; }
 #define return_with_oom { if (error) *error = gx_error_no_memory; return FALSE; }
 
+// See also boost/preprocessor/stringize.hpp for similar definitions.
+#define STRINGIZE_DETAIL(x) #x
+#define STRINGIZE(x) STRINGIZE_DETAIL(x)
+
+#define EVAL(_s) { if (luaL_dostring(L, _s)) throw LuaException; }
+
+/***koog 
+    (require codegen/cpp-include) 
+    (newline)
+    (display "#define CF_VALIDATE_IN_LUA \\") (newline)
+    (display-file-as-cpp-string "cf_validate.lua") (newline)
+***/
+#define CF_VALIDATE_IN_LUA \
+"function is_non_empty_string (s)\n" \
+"   return (s ~= '')\n" \
+"end\n" \
+"function validate (n, rt, chk)\n" \
+"   v = _G[n]\n" \
+"   if v then\n" \
+"      t = type(v)\n" \
+"      if t ~= 'function' and t ~= rt then\n" \
+"         error(string.format('value %q not of required type %q', n, rt))\n" \
+"      end\n" \
+"      if chk then\n" \
+"         if not chk(v) then\n" \
+"            error(string.format('value %q is not valid', n))\n" \
+"         end\n" \
+"      end\n" \
+"   end\n" \
+"end\n" \
+"validate('username', 'string', cl2.is_ascii_ident)\n" \
+"validate('upload_url', 'string', is_non_empty_string)\n" \
+"validate('remokon_host', 'string', is_non_empty_string)\n" \
+"validate('remokon_port', 'number', nil)\n" \
+"validate('remokon_password', 'string', is_non_empty_string)\n" \
+"validate('jid', 'string', is_non_empty_string)\n" \
+"validate('iap', 'number', nil)\n" \
+"validate('database_dir_string', 'string', is_non_empty_string)\n" \
+"validate('database_disk_threshold', 'number', nil)\n" \
+"if database_disk_threshold == nil then\n" \
+"   database_disk_threshold = DATABASE_DISK_THRESHOLD_DEFAULT\n" \
+"end\n"
+/***end***/
+
+// This function validates the configuration, checking the types of
+// the configured values and such. Any defaults can also be set here
+// for values that are not present.
+static void ValidateAdjustConfig(lua_State *L)
+{
+  // We first make defaults available to Lua by defining them as globals.
+  // Then we invoke the generated Lua code that does the validation etc.
+  EVAL("DATABASE_DISK_THRESHOLD_DEFAULT = " STRINGIZE(DATABASE_DISK_THRESHOLD_DEFAULT) ";"
+       CF_VALIDATE_IN_LUA);
+}
+
 static gboolean ReadRcFile(cf_RcFile* self, lua_State *L, GError** error)
 {
   int errCode;
@@ -33,10 +89,12 @@ static gboolean ReadRcFile(cf_RcFile* self, lua_State *L, GError** error)
       // Could not open or read the file. This is okay since a
       // configuration file is not compulsory.
       logf("no (readable) configuration file '%s'", RCFILE_FILE);
+      ValidateAdjustConfig(L);
       return TRUE;
     }
 
 #if defined(__DO_LOGGING__)
+    // An error occurred, and hence an error message should have been pushed by Lua.
     if (!lua_isnone(L, -1)) {
       const char* s = lua_tostring(L, -1);
       if (s) logt(s);
@@ -50,32 +108,21 @@ static gboolean ReadRcFile(cf_RcFile* self, lua_State *L, GError** error)
   logf("config file '%s' parsed OK", RCFILE_FILE);
 
   if (lua_pcall(L, 0, 1, 0)) {
-    if (error) 
+    if (error)
       *error = gx_error_new(domain_cl2app, code_unspecified_error, "error evaluating configuration file '%s'", RCFILE_FILE);
     return FALSE;
   }
   logt("config file evaluated OK");
 
-  self->database_disk_threshold = DATABASE_DISK_THRESHOLD_DEFAULT;
-
-  STATE_INIT_ALL;
+  ValidateAdjustConfig(L);
 
 #if defined(__DO_LOGGING__)
-  if (self->username) {
-    logf("username configured to '%s'", self->username);
-  }
-  if (self->upload_url) {
-    logf("upload_url configured to '%s'", self->upload_url);
-  }
-  if (self->remokon_host) {
-    logf("remokon_host configured to '%s'", self->remokon_host);
-  }
-  if (self->iap) {
-    logf("IAP expr configured to '%s'", self->iap);
-  }
-  if (self->database_disk_threshold) {
-    logf("database_disk_threshold configured to %d", self->database_disk_threshold);
-  }
+  EVAL("do local function f (k, t); v = _G[n]; if v ~= nil then cl2.log(string.format('%s configured to ' .. t, n, v)); end; end;"
+       " f('username', '%q');"
+       " f('upload_url', '%q');"
+       " f('remokon_host', '%q');"
+       " f('database_disk_threshold', '%q');"
+       " end");
 #endif /* __DO_LOGGING__ */
   
   return TRUE;
@@ -89,35 +136,47 @@ extern "C" cf_RcFile* cf_RcFile_new(GError** error)
     return NULL;
   }
 
-  lua_State *L = cl_lua_new_libs();
-  if (G_UNLIKELY(!L)) {
-    g_free(self);
+  self->L = cl_lua_new_libs();
+  if (G_UNLIKELY(!self->L)) {
     if (error) *error = gx_error_no_memory;
-    return NULL;
+    goto fail;
   }
 
-  // On Symbian Lua shall recover from errors by doing a leave, and
-  // lua_pcall should actually return in the case of an error. On
-  // other platforms Lua will simply exit() as there is no panic
-  // handler installed that would do a non-local return.
-  WHEN_SYMBIAN(lua_atpanic(L, atpanic_leave));
-  UNLESS_SYMBIAN(lua_atpanic(L, atpanic_print));
+  // If an error occurs in this VM instance, then either: (1) if the
+  // Lua operation was done inside a protected environment (e.g.,
+  // within lua_pcall), then the system-wide default non-local return
+  // is done to return execution back to the pcall); or (2) if the
+  // operation was done outside a pcall, then the handler we set here
+  // is invoked.
+  // 
+  // Note that as RcFile is initialized before LogDb, we cannot log
+  // any panics into the database at this point.
+  lua_atpanic(self->L, atpanic_throw);
 
-  if (G_UNLIKELY(!ReadRcFile(self, L, error))) {
-    lua_close(L);
-    cf_RcFile_destroy(self);
-    return NULL;
+  try {
+    if (G_UNLIKELY(!ReadRcFile(self, self->L, error))) {
+      goto fail;
+    }
+  } catch(const LuaException&) {
+    lua_set_gerror(L, error);
+    goto fail;
   }
 
-  lua_close(L);
+  // xxx if we leave in atpanic_throw, will have to provide wrappers for catching any exceptions (they can be type specific)
+  lua_atpanic(self->L, atpanic_txtlog_exit);
 
   return self;
+
+ fail:
+  cf_RcFile_destroy(self);
+  return NULL;
 }
   
 extern "C" void cf_RcFile_destroy(cf_RcFile* self)
 {
   if (self) {
-    CLEANUP_ALL;
+    if (self->L)
+      lua_close(self->L);
     g_free(self);
   }
 }

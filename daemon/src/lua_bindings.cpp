@@ -19,6 +19,15 @@
 #define luai_check(L, cond) { if (!(cond)) {  } } // xxx how to report
 #define luai_checknelems(L, n) luai_check(L, (n) <= (L->top - L->base))
 
+static int lua_error_unsupported(lua_State* L)
+{
+  lua_pushstring(L, "unsupported");
+  lua_error(L); // will not return
+  return 0; // to avoid warnings
+}
+
+#define throw_error_unsupported { return lua_error_unsupported(L); }
+
 /***koog (require codegen/lua-c) ***//***end***/
 
 /***koog (lua-func die_now) ***/
@@ -37,14 +46,27 @@ static int f_shutdown(lua_State* L)
   return 0;
 }
 
-static int lua_error_unsupported(lua_State* L)
+/***koog (lua-func log) ***/
+static int f_log(lua_State* L)
+/***end***/
 {
-  lua_pushstring(L, "unsupported");
-  lua_error(L); // will not return
-  return 0; // to avoid warnings
+  (void)L;
+#if __DO_LOGGING__
+  const char* text = luaL_checklstring(L, 1, NULL);
+  logt(text);
+#endif
+  return 0;
 }
 
-#define throw_error_unsupported { return lua_error_unsupported(L); }
+/***koog (lua-func is_ascii_ident) ***/
+static int f_is_ascii_ident(lua_State* L)
+/***end***/
+{
+  const char* s = luaL_checklstring(L, 1, NULL);
+  gboolean is_so = is_ascii_ident(s);
+  lua_pushboolean(L, is_so);
+  return 1;
+}
 
 /***koog (lua-func iap_id_by_name) ***/
 static int f_iap_id_by_name(lua_State* L)
@@ -268,6 +290,8 @@ static const luaL_Reg function_table[] = {
   {"config_set", f_config_set},
   {"config_get", f_config_get},
   {"iap_id_by_name", f_iap_id_by_name},
+  {"is_ascii_ident", f_is_ascii_ident},
+  {"log", f_log},
   {"shutdown", f_shutdown},
   {"die_now", f_die_now},
 /***end***/

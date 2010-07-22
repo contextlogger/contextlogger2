@@ -53,19 +53,19 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
 (define (validate-non-empty-string n vn)
   (display-f-nl-bs "if (!*~a) return_with_error(\"value '~a' may not be an empty string\");" vn n))
 
-;; Each entry is of the form (name type validator-func), where
-;; validator-func may be #f.
+;; Each entry is of the form (name type validator-func default-val), where
+;; validator-func and default-val may be #f.
 (define config-param-list
   `(
-    (username string ,validate-ascii-ident-string)
-    (upload_url string ,validate-non-empty-string)
-    (remokon_host string ,validate-non-empty-string)
-    (remokon_port integer #f)
-    (remokon_password string ,validate-non-empty-string)
-    (jid string ,validate-non-empty-string)
-    (iap string ,validate-non-empty-string)
-    (database_dir string ,validate-non-empty-string)
-    (database_disk_threshold integer #f)
+    (username string ,validate-ascii-ident-string #f)
+    (upload_url string ,validate-non-empty-string #f)
+    (remokon_host string ,validate-non-empty-string #f)
+    (remokon_port integer ,validate-number #f)
+    (remokon_password string ,validate-non-empty-string #f)
+    (jid string ,validate-non-empty-string #f)
+    (iap integer ,validate-non-empty-string #f)
+    (database_dir string ,validate-non-empty-string #f)
+    (database_disk_threshold integer ,validate-number "DATABASE_DISK_THRESHOLD_DEFAULT")
     ))
 
 ;; --------------------------------------------------
@@ -102,48 +102,13 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
           body ...))
       config-param-list))))
 
-(define (make-cleanup-all)
-  (define (f)
-    (display "#define CLEANUP_ALL {")
-    (for-each-param
-     (n t v)
-     (case-eq t
-              ('string
-               (begin
-                 (display-nl " \\")
-                 (display-f "g_free(self->~a);" n)))
-              ))
-    (display-nl " \\")
-    (display "}"))
-  (cxx-exported-declarations (capture-output f)))
-
-(define (make-declare-state-all)
-  (define (f)
-    (display "#define DECLARE_STATE_ALL")
-    (for-each-param
-     (n t v)
-     (display-nl " \\")
-     (display-f "~a;" (var-type-string (var (name n) (type (c-declare-type t)))))))
-  (cxx-exported-declarations (capture-output f)))
-
-#|
-  {
-    lua_getfield(L, -1, "username");
-    if (!lua_isnil(L, -1)) {
-      const char* s = lua_tostring(L, -1);
-      if (!s) return_with_error("value 'username' is not a string");
-      if (!is_ascii_ident(s)) return_with_error("value 'username' is not a valid ident string");
-      self->username = strdup(s);
-      if (!self->username) return_with_oom;
-    }
-    lua_pop(L, 1);
-  }
-|#
-
 ;; Note that here we assume that any required #includes are still
 ;; manually inserted.
 (define (make-state-init-all)
   (define (f)
+    ;; xxx STATE_INIT_ALL should be Lua code now
+    ;; xxx say self->database_disk_threshold = DATABASE_DISK_THRESHOLD_DEFAULT;
+
     (display "#define STATE_INIT_ALL")
     (for-each-param
      (n t v)
@@ -207,15 +172,9 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
    (basename "cf_rcfile_list_private")
    (body
     
-    ;; State.
-    (make-declare-state-all)
-
     ;; State init and validation.
     (make-state-init-all)
     
-    ;; State cleanup.
-    (make-cleanup-all)
-
     )))
 
 (define (generate dump? gen?)

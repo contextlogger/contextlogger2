@@ -11,23 +11,37 @@ extern "C" {
 #include <glib.h>
 
   void *l_alloc (void *ud, void *ptr, size_t osize, size_t nsize); // as in lauxlib.c
-  int atpanic_print(lua_State* L); // as in lauxlib.c
 
   lua_State* cl_lua_new();
   lua_State* cl_lua_new_libs();
 
   gboolean validate_lua_syntax(const gchar* value, GError** error);
 
+  int atpanic_txtlog_exit(lua_State* L);
+
 #ifdef __EPOC32__
   // A Lua error string gives the description for errors like these.
 #define KErrLuaErr (-10400)
 
   int atpanic_leave(lua_State* L);
+  int atpanic_txtlog_leave(lua_State* L);
 #endif
 
+  // Note that you can only catch these panics in C++ code.
+  int atpanic_throw(lua_State* L);
+  int atpanic_txtlog_throw(lua_State* L);
+
+  // Raises the specified 'error' as a Lua error.
   // Frees 'error' before a non-local return.
   // Returns whatever lua_error does.
   int lua_raise_gerror(lua_State* L, GError* error);
+
+  // Takes the error message at the top of the Lua stack, and returns
+  // a newly created GError instance.
+  GError* lua_get_gerror(lua_State* L);
+
+  // As with 'lua_get_gerror', but sets to 'error' instead of returning.
+  void lua_set_gerror(lua_State* L, GError** error);
 
 #ifdef __cplusplus
 } /* extern "C" */
@@ -52,6 +66,12 @@ class lua_State_auto_ptr
   lua_State* iPtr;
 };
 /***end***/
+
+// We might consider inheriting from std::exception, but that would
+// introduce a dependency we do not really require at this point.
+class LuaException
+{
+};
 
 #endif // __cplusplus
 

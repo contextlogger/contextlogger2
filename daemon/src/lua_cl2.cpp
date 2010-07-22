@@ -44,8 +44,8 @@ static void my_openlibs (lua_State *L) {
 // ones or the application specific ones. Add them later as you like.
 // See cl_lua_new_libs().
 // 
-// xxx We are not setting any privileged flag here either, as we do
-// not have such a mechanism, at least not yet.
+// We are not setting any privileged flag here either, as we do not
+// have such a mechanism, at least not yet.
 extern "C" lua_State* cl_lua_new()
 {
   // Second arg is "ud" as passed to l_alloc.
@@ -54,12 +54,9 @@ extern "C" lua_State* cl_lua_new()
     return NULL;
   }
 
-  // On Symbian Lua shall recover from errors by doing a leave, and
-  // lua_pcall should actually return in the case of an error. On
-  // other platforms Lua will simply exit() as there is no panic
-  // handler installed that would do a non-local return.
-  WHEN_SYMBIAN(lua_atpanic(L, atpanic_leave));
-  UNLESS_SYMBIAN(lua_atpanic(L, atpanic_print));
+  // This setting may not always be ideal, so override as desired. At
+  // least this is in some sense safe.
+  lua_atpanic(L, atpanic_txtlog_exit);
 
   return L;
 }
@@ -132,14 +129,61 @@ extern "C" int lua_raise_gerror(lua_State* L, GError* error)
   return lua_error(L);
 }
 
+extern "C" GError* lua_get_gerror(lua_State* L)
+{
+  const char* luaErr = lua_tostring(L, -1);
+  // The _literal does not mean that the argument must be a string
+  // literal, rather it means that it is taken verbatim.
+  return gx_error_new_literal(domain_lua, 0, luaErr);
+}
+
+extern "C" void lua_set_gerror(lua_State* L, GError** error)
+{
+  if (error) {
+    *error = lua_get_gerror(L);
+  }
+}
+
+// Assumes an error message on top of the Lua stack.
+static void log_lua_error(lua_State* L)
+{
+  const char* luaErr = lua_tostring(L, -1);
+  logf("unprotected error in Lua: %s", luaErr);
+}
+
 #ifdef __EPOC32__
 extern "C" int atpanic_leave(lua_State* L)
 {
   User::Leave(KErrLuaErr);
   // we did a leave so Lua will not call "exit"
-  return 0; // number of Lua results (to keep compiler happy)
+  return 0; // not reached
+}
+
+extern "C" int atpanic_txtlog_leave(lua_State* L)
+{
+  log_lua_error(L);
+  return atpanic_leave(L);
 }
 #endif
+
+extern "C" int atpanic_throw(lua_State *L) 
+{
+  throw LuaException;
+  return 0;
+}
+
+extern "C" int atpanic_txtlog_throw(lua_State *L) 
+{
+  log_lua_error(L);
+  return atpanic_throw(L);
+}
+
+extern "C" int atpanic_txtlog_exit(lua_State *L) 
+{
+  log_lua_error(L);
+  er_fatal(); // this may already cause process exit
+  return 0; // number of Lua results returned, caller will proceed to exit()
+}
 
 /**
 
@@ -173,7 +217,7 @@ SOFTWARE.
  **/
 
 // --------------------------------------------------
-// code from Lua follows...
+// code derived from Lua code follows...
 // --------------------------------------------------
 
 /******************************************************************************
@@ -208,13 +252,5 @@ extern "C" void *l_alloc (void *ud, void *ptr, size_t osize, size_t nsize) {
   }
   else
     return realloc(ptr, nsize);
-}
-
-
-extern "C" int atpanic_print (lua_State *L) {
-  (void)L;  /* to avoid warnings */
-  fprintf(stderr, "PANIC: unprotected error in call to Lua API (%s)\n",
-                   lua_tostring(L, -1));
-  return 0;
 }
 

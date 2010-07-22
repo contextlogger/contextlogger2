@@ -10,12 +10,6 @@
 // general
 // --------------------------------------------------
 
-#define SET_LUA_ERROR(_code) \
-  if (error) { \
-    const char* _luaErr = lua_tostring(L, -1); \
-    *error = gx_error_new_literal(domain_lua, _code, _luaErr); \
-  }
-
 // Evaluates the Lua expression "luaStr". If it evaluates to a nil
 // value, sets "L" to NULL. If there is an actual error, returns it.
 // Otherwise leaves the result to the Lua state "L", and the caller
@@ -32,7 +26,7 @@ static gboolean eval_lua_str(const gchar* luaStr, lua_State** pL, GError** error
 
     int res = (luaL_loadstring(L, luaStr) || lua_pcall(L, 0, 1, 0));
     if (res != 0) {
-      SET_LUA_ERROR(res);
+      lua_set_gerror(L, error);
       lua_close(L);
       return FALSE;
     }
