@@ -18,28 +18,6 @@
 
 #include <cntdb.h> // CContactDatabase
 
-#if __NEED_IMEI__
-#include "ut_asynccallhandler_epoc.hpp"
-
-void GetImeiCodeL(CTelephony& aTelephony, 
-                  CTelephony::TPhoneIdV1& aPhoneId)
-{
-  TRequestStatus status;
-  CTelephony::TPhoneIdV1Pckg phoneIdPckg(aPhoneId);
-
-  // It seems that the event loop must get to run before CTelephony
-  // can complete the request, and hence we cannot just invoke
-  // aTelephony.GetPhoneId(status, phoneIdPckg). The call would block
-  // forever. Hence we are using this nested loop handler thing.
-  CAsyncCallHandler* ch = CAsyncCallHandler::NewL(aTelephony);
-  ch->GetPhoneId(phoneIdPckg, status);
-  User::WaitForRequest(status);
-  delete ch;
-
-  User::LeaveIfError(status.Int());
-}
-#endif
-
 /***koog 
 (require codegen/symbian-cxx)
 (ctor-defines/spec
@@ -90,10 +68,6 @@ NONSHARABLE_CLASS(CAppContext) : public CBase
   CTelephony* iTelephony;
 #endif
 
-#if __NEED_IMEI__
-  TBuf8<CTelephony::KPhoneSerialNumberSize + 1> iImeiBuf;
-#endif
-
 #if __NEED_CONTACT_DATABASE__
   CContactDatabase* iContactDatabase;
 #endif
@@ -108,15 +82,6 @@ void CAppContext::ConstructL()
 
 #if __NEED_TELEPHONY__
   iTelephony = CTelephony::NewL();
-#endif
-
-#if __NEED_IMEI__
-  CTelephony::TPhoneIdV1 phoneId;
-  GetImeiCodeL(*iTelephony, phoneId);
-  // Unlikely to contain exotic characters.
-  iImeiBuf.Copy(phoneId.iSerialNumber);
-  iImeiBuf.PtrZ();
-  logf("IMEI code is '%s'", iImeiBuf.Ptr());
 #endif
 
 #if __NEED_CONTACT_DATABASE__
@@ -315,13 +280,6 @@ CTelephony& ac_Telephony(ac_AppContext* self)
 CContactDatabase& ac_ContactDatabase(ac_AppContext* self)
 {
   return *(self->plat->iContactDatabase);
-}
-#endif
-
-#if __NEED_IMEI__
-EXTERN_C const char* ac_Imei(ac_AppContext* self)
-{
-  return (const char*)(self->plat->iImeiBuf.Ptr());
 }
 #endif
 

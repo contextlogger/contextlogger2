@@ -47,11 +47,6 @@ extern "C" {
   const char* ac_get_logdb_dir(ac_AppContext* self);
   const char* ac_get_log_uploads_dir(ac_AppContext* self);
 
-#if __NEED_IMEI__
-  // Returned buffer must not be freed.
-  const char* ac_Imei(ac_AppContext* self);
-#endif
-
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

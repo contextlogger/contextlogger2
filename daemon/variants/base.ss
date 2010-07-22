@@ -133,14 +133,6 @@ project must implement.
   ;; This really should be overridden in the config file.
   (define/public (username.attr) "john_doe")
 
-  ;; This setting, when true, indicates that unless the config file
-  ;; specifies a username, a username should be derived from the phone
-  ;; IMEI code. With this setting username.attr is ignored.
-  ;; This should presently never be enabled, as the Symbian
-  ;; implementation with a nested event loop causes problems during
-  ;; startup.
-  (define/public (username-from-imei.attr) #f)
-    
   ;; The idea is that uploads to this URL will not work.
   ;; This really should be overridden in the config file.
   (define/public (upload-url.attr) "http://127.0.0.1:12345/dummy")
@@ -286,14 +278,9 @@ project must implement.
   ;; features
   ;; --------------------------------------------------
   
-  ;; The way the Symbian IMEI queries are implemented annoyingly
-  ;; complicated, and hence we do not want to do this needlessly.
-  (define/public (need-imei.attr)
-    (and (send this username-from-imei.attr)))
-
   ;; If a "global" copy of a Symbian CTelephony object is needed.
   (define/public (need-telephony.attr)
-    (need-imei.attr))
+    #f)
 
   ;; If a Contacts DB session is needed in the application context.
   (define/public (need-contact-database.attr)

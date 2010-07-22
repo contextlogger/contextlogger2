@@ -291,11 +291,6 @@ int get_config_iap_id()
 const gchar* get_config_username()
 {
   const gchar* username = cf_STATIC_GET(username);
-#if __USERNAME_FROM_IMEI__
-  if (!username) {
-    username = ac_Imei(ac_get_global_AppContext());
-  }
-#endif
   if (!username) {
     username = __USERNAME__; // default value
   }

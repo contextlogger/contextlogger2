@@ -178,9 +178,6 @@ source symbian_auto_ptr.cpp
 source timer_generic_epoc.cpp
 <% end %>
 source ut_diskspace_epoc.cpp
-<% if $NEED_IMEI %>
-source ut_asynccallhandler_epoc.cpp     // xxx experimental
-<% end %>
 //source ut_phonecall_epoc.cpp   //xxx experimental
 source ut_retry_epoc.cpp
 <% if $SMSEVENT_ENABLED %>
