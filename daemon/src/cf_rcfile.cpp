@@ -33,27 +33,27 @@ struct _cf_RcFile {
 
 /***koog 
     (require codegen/cpp-include) 
-    (newline)
-    (display "#define CF_VALIDATE_IN_LUA \\") (newline)
-    (display-file-as-cpp-string "cf_validate.lua") (newline)
+    (display-cpp-string-lit-decl/from-file 
+    "CF_VALIDATE_IN_LUA"
+    "cf_validate.lua")
 ***/
 #define CF_VALIDATE_IN_LUA \
 "function is_non_empty_string (s)\n" \
-"   return (s ~= '')\n" \
+   "return (s ~= '')\n" \
 "end\n" \
 "function validate (n, rt, chk)\n" \
-"   v = _G[n]\n" \
-"   if v then\n" \
-"      t = type(v)\n" \
-"      if t ~= 'function' and t ~= rt then\n" \
-"         error(string.format('value %q not of required type %q', n, rt))\n" \
-"      end\n" \
-"      if chk then\n" \
-"         if not chk(v) then\n" \
-"            error(string.format('value %q is not valid', n))\n" \
-"         end\n" \
-"      end\n" \
-"   end\n" \
+   "v = _G[n]\n" \
+   "if v then\n" \
+      "t = type(v)\n" \
+      "if t ~= 'function' and t ~= rt then\n" \
+	 "error(string.format('value %q not of required type %q', n, rt))\n" \
+      "end\n" \
+      "if chk then\n" \
+	 "if not chk(v) then\n" \
+	    "error(string.format('value %q is not valid', n))\n" \
+	 "end\n" \
+      "end\n" \
+   "end\n" \
 "end\n" \
 "validate('username', 'string', cl2.is_ascii_ident)\n" \
 "validate('upload_url', 'string', is_non_empty_string)\n" \
@@ -65,7 +65,7 @@ struct _cf_RcFile {
 "validate('database_dir_string', 'string', is_non_empty_string)\n" \
 "validate('database_disk_threshold', 'number', nil)\n" \
 "if database_disk_threshold == nil then\n" \
-"   database_disk_threshold = DATABASE_DISK_THRESHOLD_DEFAULT\n" \
+   "database_disk_threshold = DATABASE_DISK_THRESHOLD_DEFAULT\n" \
 "end\n"
 /***end***/
 

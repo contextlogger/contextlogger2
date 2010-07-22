@@ -57,15 +57,15 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
 ;; validator-func and default-val may be #f.
 (define config-param-list
   `(
-    (username string ,validate-ascii-ident-string #f)
-    (upload_url string ,validate-non-empty-string #f)
-    (remokon_host string ,validate-non-empty-string #f)
-    (remokon_port integer ,validate-number #f)
-    (remokon_password string ,validate-non-empty-string #f)
-    (jid string ,validate-non-empty-string #f)
-    (iap integer ,validate-non-empty-string #f)
-    (database_dir string ,validate-non-empty-string #f)
-    (database_disk_threshold integer ,validate-number "DATABASE_DISK_THRESHOLD_DEFAULT")
+    (username string ,validate-ascii-ident-string)
+    (upload_url string ,validate-non-empty-string)
+    (remokon_host string ,validate-non-empty-string)
+    (remokon_port integer ,validate-number)
+    (remokon_password string ,validate-non-empty-string)
+    (jid string ,validate-non-empty-string)
+    (iap integer ,validate-non-empty-string)
+    (database_dir string ,validate-non-empty-string)
+    (database_disk_threshold integer ,validate-number)
     ))
 
 ;; --------------------------------------------------
@@ -106,9 +106,6 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
 ;; manually inserted.
 (define (make-state-init-all)
   (define (f)
-    ;; xxx STATE_INIT_ALL should be Lua code now
-    ;; xxx say self->database_disk_threshold = DATABASE_DISK_THRESHOLD_DEFAULT;
-
     (display "#define STATE_INIT_ALL")
     (for-each-param
      (n t v)
