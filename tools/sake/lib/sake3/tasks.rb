@@ -287,14 +287,28 @@ module Sake::Tasks
     raise "module init not found in freeze file"
   end
 
+  def chcolor(num)
+    "\033[#{num}m"
+  end
+
+  def red(text)
+    "#{chcolor(31)}#{text}#{chcolor(0)}"
+  end
+
+  WARNING_RE = /warning/i
+  ERROR_RE = /(?:fatal error|^make.*Error|error: )/i
+
   def sh_check_build_errors cmd
     raise unless cmd.respond_to? :to_str
     sh_pipe(cmd.to_str + ' 2>&1') do |input|
       input.each_line do |line|
-        puts line
-        if line =~ /fatal error/i or
-            line =~ /^make.*Error/ or
-            line =~ /error: /
+        line.chomp!
+        if line =~ WARNING_RE
+          puts(red(line))
+        else
+          puts(line)
+        end
+        if line =~ ERROR_RE
           raise "build error"
         end
       end

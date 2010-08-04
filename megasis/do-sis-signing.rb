@@ -50,7 +50,7 @@ Usage examples:
     puts opts.help
     exit 0
   end
-  opts.on("-i", "--input FILE", "specifies input file") do |name|
+  opts.on("-i", "--in FILE", "specifies input file") do |name|
     $op.infile = name
   end
   opts.on("-k", "--kit NAME", "specifies SDK name") do |name|

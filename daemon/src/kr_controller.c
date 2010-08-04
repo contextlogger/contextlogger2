@@ -113,7 +113,9 @@ kr_Controller* kr_Controller_new(GError** error)
     return NULL;
   }
   
-  LogDb* log = log_db_new(error);
+  LogDb* log = NULL;
+  // GOB2 generated API, must guard against OOM errors in boilerplate.
+  TRAP_OOM_FAIL(log = log_db_new(error));
   if (G_UNLIKELY(!log)) {
     kr_Controller_destroy(self);
     return NULL;
@@ -167,6 +169,13 @@ kr_Controller* kr_Controller_new(GError** error)
 #endif
 
   return self;
+
+#if HAVE_TRAP_OOM
+ fail:
+  kr_Controller_destroy(self);
+  if (error) *error = gx_error_no_memory;
+  return NULL;
+#endif
 }
 
 void kr_Controller_destroy(kr_Controller* self)

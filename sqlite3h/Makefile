@@ -19,6 +19,9 @@ symbian31 :
 symbian32 :
 	$(SAKE) --trace static=true kits=s60_32 udeb=true cert=$(CERT)
 
+symbian50 :
+	$(SAKE) --trace static=true kits=s60_50 udeb=true cert=$(CERT)
+
 symbian_rel :
 	$(SAKE) --trace static=true kits=s60_30 cert=$(CERT)
 

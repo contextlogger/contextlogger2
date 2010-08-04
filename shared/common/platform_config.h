@@ -77,7 +77,8 @@
 #define DIR_SEP "/"
 #endif
 
-// xxx Is this already included automatically by the toolchain?
+// xxx Is this already included automatically by the toolchain? Looks
+// like it is #if defined(__PRODUCT_INCLUDE__).
 #if 0
 #ifdef __SYMBIAN32__
 #if defined(__SERIES60_30__)
