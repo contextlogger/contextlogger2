@@ -31,13 +31,8 @@ if ( isset($_FILES) &&
     dbgPrint("HTTP upload status was OK",$f);
     
     $matches=array();
-    if ( preg_match("/^([_a-zA-Z][_a-zA-Z0-9]*)[.]db$/", $logName, $matches)==1 ) {
+    if ( preg_match("/^([_a-zA-Z0-9]{1,32})[.]db$/", $logName, $matches)==1 ) {
       dbgPrint("Uploading user's identity analyzed (".$matches[1].")",$f);
-
-      if ( strlen($matches[1])>10 ) {
-        $matches[1]=substr($matches[1],0,10);
-        dbgPrint("User name length exceeded 10 characters. Name trimmed to 10 chars (".$matches[1].")",$f);
-      }
 
       $logFileName="log--" . $matches[1] . "--".$dateStr.".db";
       $logFullPath = $logHome."/".$logFileName;

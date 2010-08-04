@@ -63,8 +63,7 @@ void g_string_vprintf(GString *string,
 gboolean is_ascii_ident(const gchar* s)
 {
   if (!*s) return FALSE;
-  if (!isalpha(*s) && (*s != '_')) return FALSE;
-  s++;
+  // if (!isalpha(*s) && (*s != '_')) return FALSE; s++; // we want to allow an IMEI code as an ident
   while (*s) {
     if (!isalnum(*s) && (*s != '_')) return FALSE;
     s++;

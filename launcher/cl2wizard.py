@@ -383,9 +383,9 @@ end """)
         iap_name = iap_name.encode("utf-8")
         iap_expr = """return cl2.iap_id_by_name('%s');""" % iap_name
 
-        #import sysinfo
-        #username = appuifw.query(u"Username:", "text", unicode(sysinfo.imei()))
-        username = appuifw.query(u"Username:", "text", u"johndoe")
+        import sysinfo
+        username = appuifw.query(u"Username:", "text", unicode(sysinfo.imei()))
+        #username = appuifw.query(u"Username:", "text", u"johndoe")
         if username is None:
             return
         username = username.encode("utf-8")
