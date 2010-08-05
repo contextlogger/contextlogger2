@@ -16,9 +16,18 @@
 #define KEnableSkinFlag 0x1000
 #define KLayoutAwareFlag 0x08
 
+// Immediate process exit.
 extern "C" void ExitApplication()
 {
   logt("ExitApplication");
+  // This should make sure that the process gets killed, assuming it
+  // is the main process that calls this.
+  User::Exit(KErrGeneral);
+}
+
+extern "C" void ShutdownApplication()
+{
+  logt("ShutdownApplication");
 #if 0
   // Yes, a leave from an Exit() actually is possible, and we
   // typically get KErrNoSuitable core. This makes little sense unless
@@ -27,7 +36,7 @@ extern "C" void ExitApplication()
   // http://developer.symbian.com/forum/thread.jspa?messageID=76366&#76366
   TRAPD(errCode,
 	((CCl2appAppUi*)(CEikonEnv::Static()->EikAppUi()))->Exit());
-  logf("ExitApplication (%d)", errCode);
+  logf("ShutdownApplication (%d)", errCode);
 #else
   // Exiting an application from a RunL is tricky, but luckily in S60
   // there is a facility that takes care of this difficulty. We can

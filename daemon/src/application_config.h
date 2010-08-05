@@ -93,9 +93,8 @@ extern "C" {
 // that you should not assume that EXIT_APPLICATION will not return,
 // rather consider it as making a request to get CL2 stopped soon.
 // 
-// Note that ExitApplication() is implemented differently on Symbian
-// depending on whether __IS_APPLICATION__ is true. See epoc-main.cpp
-// and cl2appappui.cpp for the Symbian implementations.
+// See epoc-main.cpp and cl2appappui.cpp for the Symbian
+// implementations.
 // 
 // You may optionally also define a "nicer" variant of
 // EXIT_APPLICATION by defining SHUTDOWN_APPLICATION. The nicer
@@ -103,11 +102,9 @@ extern "C" {
 #ifdef __SYMBIAN32__
   void ExitApplication();
 #define EXIT_APPLICATION ExitApplication()
-#if __IS_DAEMON__
   void ShutdownApplication();
 #define SHUTDOWN_APPLICATION ShutdownApplication()
-#endif
-#else
+#else // not Symbian
 #include <stdlib.h>
 #define EXIT_APPLICATION abort()
 #endif
