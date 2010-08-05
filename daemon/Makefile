@@ -71,7 +71,7 @@ ALL_CXX_FILES := $(CXX_FILES)
 ALL_OBJ_FILES := $(patsubst %.c, %.o, $(ALL_C_FILES)) $(patsubst %.cpp, %.o, $(ALL_CXX_FILES))
 
 DEP_FLAGS := -I$(SRC_PATH) -I$(SHARED_PATH) -I$(TIMESPEC_PATH) $(CURL_CFLAGS) $(LUA_CFLAGS) $(KEYEVENTS_CFLAGS) $(IKSEMEL_DEP_FLAGS)
-COMMON_FLAGS := $(DEP_FLAGS)
+COMMON_FLAGS := $(DEP_FLAGS) -fexceptions
 GNOME_FLAGS := `pkg-config --cflags gobject-2.0` -DG_DISABLE_DEPRECATED=1
 FEATURES := 
 WARNINGS := -Wall -Wmissing-declarations -Wsign-compare -Werror
@@ -131,7 +131,7 @@ epoc_codegen : src/timer_generic_epoc.h src/ut_telephony_epoc.h
 
 ragel : $(RAGEL_C_FILES) $(RAGEL_GV_FILES) $(RAGEL_PNG_FILES)
 
-codegen : ragel epoc_codegen src/sa_sensor_list_log_db.h src/cf_rcfile_list.h $(SHARED_PATH)/common/error_list.h
+codegen : ragel epoc_codegen src/sa_sensor_list_log_db.h $(SHARED_PATH)/common/error_list.h
 	cd ../time-spec && make codegen
 
 src/sa_sensor_list_log_db.h src/sa_sensor_list_log_db.c src/sa_sensor_list_integration.cpp : src/sa_sensor_list_spec.ss src/sa_sensor_list_make.ss src/sa_sensor_list_dsl.ss

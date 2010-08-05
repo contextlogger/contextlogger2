@@ -268,27 +268,12 @@ gboolean get_ConfigDb_str(const gchar* name, gchar** s,
 
 int get_config_iap_id()
 {
-  int value = __IAP_ID__;
-  lua_State* L = NULL;
-  const gchar* expr = cf_STATIC_GET(iap); // may be NULL
-  if (!expr)
-    expr = __IAP_ID_EXPR__; // may also be NULL
-  if (get_lua_value_wd("iap", expr, &L, NULL)) {
-    if (L) {
-      get_int_from_lua(L, &value, NULL);
-      lua_close(L);
-    }
-  }
-  return value;
+  return cf_STATIC_GET(iap);
 }
 
 const gchar* get_config_username()
 {
-  const gchar* username = cf_STATIC_GET(username);
-  if (!username) {
-    username = __USERNAME__; // default value
-  }
-  return username;
+  return cf_STATIC_GET(username);
 }
 
 /**

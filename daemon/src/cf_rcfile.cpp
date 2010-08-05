@@ -2,8 +2,6 @@
 
 #if __FEATURE_RCFILE__
 
-#include "cf_rcfile_list_private.h"
-
 #include "er_errors.h"
 #include "lua_cl2.h"
 #include "utils_cl2.h"
@@ -29,7 +27,7 @@ struct _cf_RcFile {
 #define STRINGIZE_DETAIL(x) #x
 #define STRINGIZE(x) STRINGIZE_DETAIL(x)
 
-#define EVAL(_s) { if (luaL_dostring(L, _s)) throw LuaException; }
+#define EVALUATE(_s) { logt(_s); if (luaL_dostring(L, _s)) throw LuaException(); }
 
 /***koog 
     (require codegen/cpp-include) 
@@ -74,7 +72,12 @@ static void ValidateAdjustConfig(lua_State *L)
   // We first make any defaults available to Lua by defining them as
   // globals. Then we invoke the generated Lua code that does the
   // validation etc.
-  EVAL(CF_VALIDATE_IN_LUA);
+  const char* s = 
+    "IAP_EXPR_DEFAULT = " STRINGIZE(__IAP_ID_EXPR__) ";\n"
+    "UPLOAD_URL_DEFAULT = " STRINGIZE(__UPLOAD_URL__) ";\n"
+    CF_VALIDATE_IN_LUA;
+  EVALUATE(s);
+  // xxx we must actually make some use of the above defaults
 }
 
 static gboolean ReadRcFile(cf_RcFile* self, lua_State *L, GError** error)
@@ -114,12 +117,13 @@ static gboolean ReadRcFile(cf_RcFile* self, lua_State *L, GError** error)
   ValidateAdjustConfig(L);
 
 #if defined(__DO_LOGGING__)
-  EVAL("do local function f (k, t); v = _G[n]; if v ~= nil then cl2.log(string.format('%s configured to ' .. t, n, v)); end; end;"
-       " f('username', '%q');"
-       " f('upload_url', '%q');"
-       " f('remokon_host', '%q');"
-       " f('database_disk_threshold', '%q');"
-       " end");
+  EVALUATE("do\n" 
+	   "  local function f (k, t) local v = _G[n]; if v ~= nil then cl2.log(string.format('%s configured to ' .. t, n, v)); end; end;"
+	   "  f('username', '%q');"
+	   "  f('upload_url', '%q');"
+	   "  f('remokon_host', '%q');"
+	   "  f('database_disk_threshold', '%q');"
+	   "end");
 #endif /* __DO_LOGGING__ */
   
   return TRUE;
@@ -155,7 +159,7 @@ extern "C" cf_RcFile* cf_RcFile_new(GError** error)
       goto fail;
     }
   } catch(const LuaException&) {
-    lua_set_gerror(L, error);
+    lua_set_gerror(self->L, error);
     goto fail;
   }
 
@@ -180,25 +184,25 @@ extern "C" void cf_RcFile_destroy(cf_RcFile* self)
 
 class Fail {};
 
-static void get_value(const char* name)
+static void get_value(lua_State *L, const char* name)
 {
   // It is important to clear the stack occasionally. Note that we do
   // not pop any return value to prevent it from being collected
   // immediately.
-  lua_settop(self->L, 0);
+  lua_settop(L, 0);
 
   // Not documented, but returns nil on non-existent key. Or produces
   // an error if there is no stack space, presumably.
-  lua_getglobal(self->L, name);
-  if (lua_isnil(self->L, -1)) {
-    throw Fail;
+  lua_getglobal(L, name);
+  if (lua_isnil(L, -1)) {
+    throw Fail();
   }
-  if (lua_isfunction(self->L, -1)) {
+  if (lua_isfunction(L, -1)) {
     // Should always return the requested number of values, even if
     // must pad with nil values.
-    lua_call(self->L, 0, 1); // void
-    if (lua_isnil(self->L, -1)) {
-      throw Fail;
+    lua_call(L, 0, 1); // void
+    if (lua_isnil(L, -1)) {
+      throw Fail();
     }
   }
 }
@@ -206,7 +210,7 @@ static void get_value(const char* name)
 extern "C" int cf_RcFile_get_int_or(cf_RcFile* self, const char* name, int dval)
 {
   try {
-    get_value(name);
+    get_value(self->L, name);
   } catch(const Fail& e) {
     return dval;
   }
@@ -219,7 +223,7 @@ extern "C" int cf_RcFile_get_int_or(cf_RcFile* self, const char* name, int dval)
 extern "C" const char* cf_RcFile_get_str_maybe(cf_RcFile* self, const char* name)
 {
   try {
-    get_value(name);
+    get_value(self->L, name);
   } catch(const Fail& e) {
     return NULL;
   }

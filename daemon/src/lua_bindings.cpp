@@ -6,6 +6,7 @@
 #include "lua_cl2.h"
 #include "sa_sensor_list_integration.h"
 #include "sa_sensor_list_log_db.h"
+#include "utils_cl2.h"
 
 #if defined(__SYMBIAN32__)
 #include "epoc-iap.h"
