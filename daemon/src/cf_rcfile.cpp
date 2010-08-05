@@ -73,11 +73,10 @@ static void ValidateAdjustConfig(lua_State *L)
   // globals. Then we invoke the generated Lua code that does the
   // validation etc.
   const char* s = 
-    "IAP_EXPR_DEFAULT = " STRINGIZE(__IAP_ID_EXPR__) ";\n"
+    "IAP_DEFAULT = " STRINGIZE(__IAP_ID_EXPR__) ";\n"
     "UPLOAD_URL_DEFAULT = " STRINGIZE(__UPLOAD_URL__) ";\n"
     CF_VALIDATE_IN_LUA;
   EVALUATE(s);
-  // xxx we must actually make some use of the above defaults
 }
 
 static gboolean ReadRcFile(cf_RcFile* self, lua_State *L, GError** error)

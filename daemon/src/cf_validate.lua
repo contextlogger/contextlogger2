@@ -26,3 +26,11 @@ validate('jid', 'string', is_non_empty_string)
 validate('iap', 'number', nil)
 validate('database_dir_string', 'string', is_non_empty_string)
 validate('database_disk_threshold', 'number', nil)
+
+if iap == nil then
+   iap = IAP_DEFAULT
+end
+if upload_url == nil then
+   upload_url = UPLOAD_URL_DEFAULT
+end
+

@@ -133,22 +133,12 @@ project must implement.
   ;; This really should be overridden in the config file.
   (define/public (username.attr) "john_doe")
 
-  ;; The idea is that uploads to this URL will not work.
-  ;; This really should be overridden in the config file.
-  (define/public (upload-url.attr) "http://127.0.0.1:12345/dummy")
+  ;; No uploads by default. (A Lua expression.)
+  (define/public (upload-url.attr) "nil")
 
-  ;; This can be a string, namely a Lua expression that computes a
-  ;; value. The semantics is that this is used only when there is no
-  ;; "iap" key in ConfigDb. This value be also be left as 0, implying
-  ;; no default string.
-  (define/public (iap-id-expr.attr) 0)
+  ;; No sensible IAP by default. (A Lua expression.)
+  (define/public (iap-id-expr.attr) -1)
   
-  ;; Likely such an ID will not exist. Again, the idea is to fail, and
-  ;; keep failing until this is overridden in ConfigDb. The semantics
-  ;; is that this value is used as the fallback value if there is any
-  ;; problem getting a value from elsewhere.
-  (define/public (iap-id.attr) 99999)
-
   ;; --------------------------------------------------
   ;; features
   ;; --------------------------------------------------
