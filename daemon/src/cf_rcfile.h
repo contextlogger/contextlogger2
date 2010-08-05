@@ -29,11 +29,22 @@ extern "C" {
       configuration information. */
   void cf_RcFile_destroy(cf_RcFile* self);
 
-  // The configuration parameter value getters must be consistently
-  // named, as we have macros assuming so. And they are, as we are
-  // generating them with consistent naming.
+  // Note that you must strdup any strings that must be longer lived.
+  int cf_RcFile_get_int_or(cf_RcFile* self, const char* name, int dval);
+  const char* cf_RcFile_get_str_or(cf_RcFile* self, const char* name, const char* dval);
+  const char* cf_RcFile_get_str_maybe(cf_RcFile* self, const char* name);
 
-#include "cf_rcfile_list.h"
+  // The configuration parameter value getters must be consistently
+  // named, as we have macros assuming so.
+#define cf_RcFile_get_username(_self) cf_RcFile_get_str_or(_self, "username", __USERNAME__)
+#define cf_RcFile_get_upload_url(_self) cf_RcFile_get_str_maybe(_self, "upload_url")
+#define cf_RcFile_get_remokon_host(_self) cf_RcFile_get_str_maybe(_self, "remokon_host")
+#define cf_RcFile_get_remokon_port(_self) cf_RcFile_get_int_or(_self, "remokon_port", 5222)
+#define cf_RcFile_get_remokon_password(_self) cf_RcFile_get_str_maybe(_self, "remokon_password")
+#define cf_RcFile_get_jid(_self) cf_RcFile_get_str_maybe(_self, "jid")
+#define cf_RcFile_get_iap(_self) cf_RcFile_get_int_or(_self, "iap", -1)
+#define cf_RcFile_get_database_dir(_self) cf_RcFile_get_str_or(_self, "database_dir", DATABASE_DIR_DEFAULT)
+#define cf_RcFile_get_database_disk_threshold(_self) cf_RcFile_get_int_or(_self, "database_disk_threshold", DATABASE_DISK_THRESHOLD_DEFAULT)
 
 #ifdef __cplusplus
 } /* extern "C" */

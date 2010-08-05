@@ -63,10 +63,7 @@ struct _cf_RcFile {
 "validate('jid', 'string', is_non_empty_string)\n" \
 "validate('iap', 'number', nil)\n" \
 "validate('database_dir_string', 'string', is_non_empty_string)\n" \
-"validate('database_disk_threshold', 'number', nil)\n" \
-"if database_disk_threshold == nil then\n" \
-   "database_disk_threshold = DATABASE_DISK_THRESHOLD_DEFAULT\n" \
-"end\n"
+"validate('database_disk_threshold', 'number', nil)\n"
 /***end***/
 
 // This function validates the configuration, checking the types of
@@ -74,10 +71,10 @@ struct _cf_RcFile {
 // for values that are not present.
 static void ValidateAdjustConfig(lua_State *L)
 {
-  // We first make defaults available to Lua by defining them as globals.
-  // Then we invoke the generated Lua code that does the validation etc.
-  EVAL("DATABASE_DISK_THRESHOLD_DEFAULT = " STRINGIZE(DATABASE_DISK_THRESHOLD_DEFAULT) ";"
-       CF_VALIDATE_IN_LUA);
+  // We first make any defaults available to Lua by defining them as
+  // globals. Then we invoke the generated Lua code that does the
+  // validation etc.
+  EVAL(CF_VALIDATE_IN_LUA);
 }
 
 static gboolean ReadRcFile(cf_RcFile* self, lua_State *L, GError** error)
@@ -181,8 +178,60 @@ extern "C" void cf_RcFile_destroy(cf_RcFile* self)
   }
 }
 
-extern "C" {
-#include "cf_rcfile_list.c"
+class Fail {};
+
+static void get_value(const char* name)
+{
+  // It is important to clear the stack occasionally. Note that we do
+  // not pop any return value to prevent it from being collected
+  // immediately.
+  lua_settop(self->L, 0);
+
+  // Not documented, but returns nil on non-existent key. Or produces
+  // an error if there is no stack space, presumably.
+  lua_getglobal(self->L, name);
+  if (lua_isnil(self->L, -1)) {
+    throw Fail;
+  }
+  if (lua_isfunction(self->L, -1)) {
+    // Should always return the requested number of values, even if
+    // must pad with nil values.
+    lua_call(self->L, 0, 1); // void
+    if (lua_isnil(self->L, -1)) {
+      throw Fail;
+    }
+  }
+}
+
+extern "C" int cf_RcFile_get_int_or(cf_RcFile* self, const char* name, int dval)
+{
+  try {
+    get_value(name);
+  } catch(const Fail& e) {
+    return dval;
+  }
+  if (!lua_isnumber(self->L, -1)) {
+    return dval;
+  }
+  return lua_tointeger(self->L, -1);
+}
+
+extern "C" const char* cf_RcFile_get_str_maybe(cf_RcFile* self, const char* name)
+{
+  try {
+    get_value(name);
+  } catch(const Fail& e) {
+    return NULL;
+  }
+  return lua_tostring(self->L, -1); // NULL if of wrong type
+}
+
+extern "C" const char* cf_RcFile_get_str_or(cf_RcFile* self, const char* name, const char* dval)
+{
+  const char* val = cf_RcFile_get_str_maybe(self, name);
+  if (!val)
+    return dval;
+  return val;
 }
 
 #endif /* __FEATURE_RCFILE__ */

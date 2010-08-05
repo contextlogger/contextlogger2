@@ -26,7 +26,3 @@ validate('jid', 'string', is_non_empty_string)
 validate('iap', 'number', nil)
 validate('database_dir_string', 'string', is_non_empty_string)
 validate('database_disk_threshold', 'number', nil)
-
-if database_disk_threshold == nil then
-   database_disk_threshold = DATABASE_DISK_THRESHOLD_DEFAULT
-end
