@@ -126,6 +126,7 @@ NONSHARABLE_CLASS(CUploader) :
 
  private: // property
 
+  TBool iNoConfig; // no upload URL
   TPtrC8 iUploadUrl; // data not owned
 
   TUint32 iIapId;
@@ -156,27 +157,10 @@ CTOR_IMPL_CUploader;
 // change succeeded.
 void CUploader::RefreshIap(TBool aNotInitial)
 {
-#if 1
   // TUint32 coercion hopefully okay.
   iIapId = (TUint32)get_config_iap_id();
   if (aNotInitial)
     log_db_log_status(iLogDb, NULL, "Uploader IAP changed to %d", iIapId);
-#else
-  GError* localError = NULL;
-  gboolean found = FALSE;
-  int newId = 0;
-  if (!try_get_ConfigDb_int("iap", &newId, &found, &localError)) {
-    if (aNotInitial)
-      gx_dblog_error_free_check(iLogDb, localError, NULL);
-    else
-      gx_error_free(localError);
-  } else {
-    // TUint32 coercion hopefully okay.
-    iIapId = (found ? (TUint32)newId : __IAP_ID__);
-    if (aNotInitial)
-      log_db_log_status(iLogDb, NULL, "Uploader IAP changed to %d", iIapId);
-  }
-#endif
 }
 
 void CUploader::RefreshSnapshotTimeExpr(TBool aNotInitial)
@@ -216,13 +200,16 @@ void CUploader::RefreshSnapshotTimeExpr(TBool aNotInitial)
 void CUploader::ConstructL()
 {
   const gchar* upload_url = ac_STATIC_GET(upload_url);
-  if (!upload_url) 
-    upload_url = __UPLOAD_URL__; // default value
-  iUploadUrl.Set((TUint8*)upload_url, strlen(upload_url)); 
+  if (!upload_url) {
+    iNoConfig = ETrue;
+    logt("uploads disabled: no upload URL");
+  } else {
+    iUploadUrl.Set((TUint8*)upload_url, strlen(upload_url)); 
+    logf("upload URL: %s", upload_url);
+  }
 
   RefreshIap(EFalse);
-
-  logf("uploader using IAP %d, and URL %s", iIapId, upload_url);
+  logf("uploader using IAP %d", iIapId);
 
   // Ensure that uploads directory exists.
   GError* mdError = NULL;
@@ -538,6 +525,9 @@ void CUploader::HandleCommsError(TInt anError)
 // Can always use an "ImmediateAo" if necessary to avoid such a risk.
 void CUploader::StateChangedL()
 {
+  if (iNoConfig)
+    return;
+
   if (!iSnapshotTimePassed &&
       !iNoNextSnapshotTime &&
       !iSnapshotTimerAo->IsActive()) {
