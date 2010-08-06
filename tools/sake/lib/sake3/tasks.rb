@@ -309,7 +309,8 @@ module Sake::Tasks
           puts(line)
         end
         if line =~ ERROR_RE
-          raise "build error"
+          puts "build error"
+          exit 1
         end
       end
     end

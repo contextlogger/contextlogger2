@@ -22,9 +22,6 @@
 #if !defined(__UPLOAD_URL__)
 #error some default upload url should be defined
 #endif
-#if !defined(__IAP_ID__)
-#error some default iap id should be defined
-#endif
 #endif /* __FEATURE_UPLOADER__ */
 
 #if !defined(__SYMBIAN32__)

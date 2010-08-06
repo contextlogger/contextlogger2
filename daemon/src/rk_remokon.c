@@ -322,7 +322,7 @@ gboolean rk_Remokon_reconfigure(rk_Remokon* self,
     // It should be safe to just set this value. A change won't
     // take effect before a reconnect, but this is okay, a Remokon
     // stop followed by start will allow for that via the API.
-    self->params.iap_id = force_lua_eval_int(value, __IAP_ID__);
+    self->params.iap_id = force_lua_eval_int(value, -1);
   }
 #endif /* __SYMBIAN32__ */
 

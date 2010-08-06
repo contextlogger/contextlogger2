@@ -31,6 +31,13 @@ static int lua_error_unsupported(lua_State* L)
 
 /***koog (require codegen/lua-c) ***//***end***/
 
+/***koog (lua-func throw_unsupported) ***/
+static int f_throw_unsupported(lua_State* L)
+/***end***/
+{
+  throw_error_unsupported;
+}
+
 /***koog (lua-func die_now) ***/
 static int f_die_now(lua_State* L)
 /***end***/
@@ -295,6 +302,7 @@ static const luaL_Reg function_table[] = {
   {"log", f_log},
   {"shutdown", f_shutdown},
   {"die_now", f_die_now},
+  {"throw_unsupported", f_throw_unsupported},
 /***end***/
   {NULL, NULL}
 };
