@@ -3,13 +3,13 @@ function is_non_empty_string (s)
 end
 
 function validate (n, rt, chk)
-   v = _G[n]
+   local v = _G[n]
    if v then
-      t = type(v)
+      local t = type(v)
       if t ~= 'function' and t ~= rt then
 	 error(string.format('value %q not of required type %q', n, rt))
       end
-      if chk then
+      if chk and t ~= 'function' then
 	 if not chk(v) then
 	    error(string.format('value %q is not valid', n))
 	 end

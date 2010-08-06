@@ -137,7 +137,7 @@ project must implement.
   (define/public (upload-url.attr) "nil")
 
   ;; No sensible IAP by default. (A Lua expression.)
-  (define/public (iap-id-expr.attr) -1)
+  (define/public (iap-id-expr.attr) "-1")
   
   ;; --------------------------------------------------
   ;; features

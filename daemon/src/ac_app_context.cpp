@@ -144,9 +144,6 @@ EXTERN_C ac_AppContext* ac_AppContext_new(GError** error)
 static const gchar* get_config_database_dir(ac_AppContext* self)
 {
   const gchar* database_dir = cf_RcFile_get_database_dir(ac_RcFile(self));
-  if (!database_dir) {
-    database_dir = DATABASE_DIR_DEFAULT; // default value
-  }
   return database_dir;
 }
 

@@ -29,6 +29,8 @@ extern "C" {
       configuration information. */
   void cf_RcFile_destroy(cf_RcFile* self);
 
+  int cf_RcFile_vm_id(cf_RcFile* self);
+
   // Note that you must strdup any strings that must be longer lived.
   int cf_RcFile_get_int_or(cf_RcFile* self, const char* name, int dval);
   const char* cf_RcFile_get_str_or(cf_RcFile* self, const char* name, const char* dval);

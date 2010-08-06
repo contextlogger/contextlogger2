@@ -11,6 +11,11 @@ struct _cf_RcFile {
   lua_State *L;
 };
 
+export "C" int cf_RcFile_vm_id(cf_RcFile* self)
+{
+  return (int)self->L;
+}
+
 #ifdef __EPOC32__
 #define RCFILE_BASENAME "config.txt"
 #else
@@ -27,7 +32,7 @@ struct _cf_RcFile {
 #define STRINGIZE_DETAIL(x) #x
 #define STRINGIZE(x) STRINGIZE_DETAIL(x)
 
-#define EVALUATE(_s) { logt(_s); if (luaL_dostring(L, _s)) throw LuaException(); }
+#define EVALUATE(_s) { /*logt(_s);*/ if (luaL_dostring(L, _s)) throw LuaException(); }
 
 /***koog 
     (require codegen/cpp-include) 
@@ -40,13 +45,13 @@ struct _cf_RcFile {
    "return (s ~= '')\n" \
 "end\n" \
 "function validate (n, rt, chk)\n" \
-   "v = _G[n]\n" \
+   "local v = _G[n]\n" \
    "if v then\n" \
-      "t = type(v)\n" \
+      "local t = type(v)\n" \
       "if t ~= 'function' and t ~= rt then\n" \
 	 "error(string.format('value %q not of required type %q', n, rt))\n" \
       "end\n" \
-      "if chk then\n" \
+      "if chk and t ~= 'function' then\n" \
 	 "if not chk(v) then\n" \
 	    "error(string.format('value %q is not valid', n))\n" \
 	 "end\n" \
@@ -76,11 +81,12 @@ struct _cf_RcFile {
 static void ValidateAdjustConfig(lua_State *L)
 {
   // We first make any defaults available to Lua by defining them as
-  // globals. Then we invoke the generated Lua code that does the
-  // validation etc.
+  // globals. (Defaults are typically given as Lua expressions to
+  // begin with, but use STRINGIZE if you need to.) Then we invoke the
+  // generated Lua code that does the validation etc.
   const char* s = 
-    "IAP_DEFAULT = " STRINGIZE(__IAP_ID_EXPR__) ";\n"
-    "UPLOAD_URL_DEFAULT = " STRINGIZE(__UPLOAD_URL__) ";\n"
+    "IAP_DEFAULT = " __IAP_ID_EXPR__ ";\n"
+    "UPLOAD_URL_DEFAULT = " __UPLOAD_URL__ ";\n"
     CF_VALIDATE_IN_LUA;
   EVALUATE(s);
 }
@@ -123,10 +129,11 @@ static gboolean ReadRcFile(cf_RcFile* self, lua_State *L, GError** error)
 
 #if defined(__DO_LOGGING__)
   EVALUATE("do\n" 
-	   "  local function f (k, t) local v = _G[n]; if v ~= nil then cl2.log(string.format('%s configured to ' .. t, n, v)); end; end;"
+	   "  local function f (n, fm) local v = _G[n]; if v ~= nil then if type(v) == 'function' then cl2.log(string.format('%s configured to <function>', n)) else cl2.log(string.format('%s configured to ' .. fm .. ' :: %s', n, v, type(v))); end; end; end;"
 	   "  f('username', '%q');"
 	   "  f('upload_url', '%q');"
 	   "  f('remokon_host', '%q');"
+	   "  f('iap', '%q');"
 	   "  f('database_disk_threshold', '%q');"
 	   "end");
 #endif /* __DO_LOGGING__ */
@@ -142,6 +149,9 @@ extern "C" cf_RcFile* cf_RcFile_new(GError** error)
     return NULL;
   }
 
+  // Be very careful when using CL2 Lua bindings from this VM
+  // instance, as reentering the same VM instance to fetch some config
+  // info is probably *bad*.
   self->L = cl_lua_new_libs();
   if (G_UNLIKELY(!self->L)) {
     if (error) *error = gx_error_no_memory;
@@ -225,6 +235,7 @@ extern "C" int cf_RcFile_get_int_or(cf_RcFile* self, const char* name, int dval)
   return lua_tointeger(self->L, -1);
 }
 
+// Note that unless you want to strdup the returned value, and if you want to keep it around for a while, then you better make sure (in your config file) that you are returning a pointer to a global Lua string.
 extern "C" const char* cf_RcFile_get_str_maybe(cf_RcFile* self, const char* name)
 {
   try {
