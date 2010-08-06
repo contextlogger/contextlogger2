@@ -4,9 +4,9 @@
 
 #include "rk_jabber_session.h"
 
+#include "ac_app_context.h"
 #include "cf_query.h" // get_ConfigDb_int
 #include "er_errors.h"
-#include "kr_controller_private.h" // cf_STATIC_GET
 #include "lua_cl2.h"
 #include "ut_timer.h"
 
@@ -55,7 +55,7 @@ struct _rk_Remokon {
 static void handleTimerError(rk_Remokon* self, GError* timerError)
 {
   logt("timer error in Remokon");
-  gx_dblog_fatal_error_free(getGlobalClient()->log, timerError);
+  gx_dblog_fatal_error_free(ac_global_LogDb, timerError);
 }
 
 static void setRetryTimer(rk_Remokon* self)
@@ -217,12 +217,12 @@ rk_Remokon* rk_Remokon_new(GError** error)
   self->params.observer.gotMsg = cb_gotMsg;
   // not defining self->params.observer.messageSent as have no flow control
 
-  self->params.server = cf_STATIC_GET(remokon_host);
-  self->params.port = cf_STATIC_GET(remokon_port);
+  self->params.server = ac_STATIC_GET(remokon_host);
+  self->params.port = ac_STATIC_GET(remokon_port);
   if (!self->params.port) self->params.port = 5222; // default Jabber port
-  self->params.username = cf_STATIC_GET(username);
-  self->params.password = cf_STATIC_GET(remokon_password);
-  self->params.jid = cf_STATIC_GET(jid);
+  self->params.username = ac_STATIC_GET(username);
+  self->params.password = ac_STATIC_GET(remokon_password);
+  self->params.jid = ac_STATIC_GET(jid);
 #if defined(__SYMBIAN32__)
   self->params.iap_id = get_config_iap_id();
 #endif /* __SYMBIAN32__ */

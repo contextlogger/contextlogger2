@@ -28,7 +28,6 @@ extern "C" {
 
   typedef struct _ac_AppContext ac_AppContext;
 
-  // xxx eventually we will deprecate getGlobalContext
   ac_AppContext* ac_get_global_AppContext();
 
   LogDb* ac_LogDb(ac_AppContext* self);

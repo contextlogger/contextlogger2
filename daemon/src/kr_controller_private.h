@@ -19,6 +19,7 @@
 extern "C" {
 #endif
 
+  // Deprecated.
   kr_Controller* getGlobalClient();
 
   struct _kr_Controller {
@@ -52,9 +53,6 @@ extern "C" {
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
-
-#define cf_STATIC_GET(key) \
-  (cf_RcFile_get_##key(getGlobalClient()->rcFile))
 
   // The caller must free any returned value.
 #define cf_DYNAMIC_GET(_key) \

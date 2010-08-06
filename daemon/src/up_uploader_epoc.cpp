@@ -8,7 +8,6 @@
 #include "cf_query.h"
 #include "epoc-iap.h"
 #include "er_errors.h"
-#include "kr_controller_private.h" // cf_STATIC_GET
 #include "log-db.h"
 #include "timer_generic_epoc.h"
 #include "utils_cl2.h"
@@ -216,7 +215,7 @@ void CUploader::RefreshSnapshotTimeExpr(TBool aNotInitial)
 
 void CUploader::ConstructL()
 {
-  const gchar* upload_url = cf_STATIC_GET(upload_url);
+  const gchar* upload_url = ac_STATIC_GET(upload_url);
   if (!upload_url) 
     upload_url = __UPLOAD_URL__; // default value
   iUploadUrl.Set((TUint8*)upload_url, strlen(upload_url)); 

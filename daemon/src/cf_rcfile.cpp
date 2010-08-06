@@ -61,7 +61,13 @@ struct _cf_RcFile {
 "validate('jid', 'string', is_non_empty_string)\n" \
 "validate('iap', 'number', nil)\n" \
 "validate('database_dir_string', 'string', is_non_empty_string)\n" \
-"validate('database_disk_threshold', 'number', nil)\n"
+"validate('database_disk_threshold', 'number', nil)\n" \
+"if iap == nil then\n" \
+   "iap = IAP_DEFAULT\n" \
+"end\n" \
+"if upload_url == nil then\n" \
+   "upload_url = UPLOAD_URL_DEFAULT\n" \
+"end\n"
 /***end***/
 
 // This function validates the configuration, checking the types of

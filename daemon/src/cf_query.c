@@ -268,12 +268,12 @@ gboolean get_ConfigDb_str(const gchar* name, gchar** s,
 
 int get_config_iap_id()
 {
-  return cf_STATIC_GET(iap);
+  return ac_STATIC_GET(iap);
 }
 
 const gchar* get_config_username()
 {
-  return cf_STATIC_GET(username);
+  return ac_STATIC_GET(username);
 }
 
 /**
