@@ -167,7 +167,7 @@ extern "C" cf_RcFile* cf_RcFile_new(GError** error)
   // 
   // Note that as RcFile is initialized before LogDb, we cannot log
   // any panics into the database at this point.
-  lua_atpanic(self->L, atpanic_throw);
+  lua_atpanic(self->L, atpanic_throw); // xxx implement a logging function that uses log db when available and when database insert actually succeeds, otherwise txt file, and then use that here
 
   try {
     if (G_UNLIKELY(!ReadRcFile(self, self->L, error))) {
@@ -236,6 +236,7 @@ extern "C" int cf_RcFile_get_int_or(cf_RcFile* self, const char* name, int dval)
 }
 
 // Note that unless you want to strdup the returned value, and if you want to keep it around for a while, then you better make sure (in your config file) that you are returning a pointer to a global Lua string.
+// xxx We might want to internally query and strdup settings that cannot change during runtime.
 extern "C" const char* cf_RcFile_get_str_maybe(cf_RcFile* self, const char* name)
 {
   try {

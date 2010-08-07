@@ -72,8 +72,13 @@ release :
 	$(MAKE) dist CERT=unsigned
 
 # For updating the actual script without reinstalling the SIS file.
-update :
+updatel :
 	putfile -d $(DEVICE) $(BASENAME).py
+
+updatew :
+	putfile -d $(DEVICE) cl2wizard.py
+
+update : updatel updatew
 
 push :
 	obex -d $(DEVICE) $(BASENAME)_$(CERT).sisx
