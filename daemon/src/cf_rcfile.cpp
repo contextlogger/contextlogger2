@@ -11,7 +11,7 @@ struct _cf_RcFile {
   lua_State *L;
 };
 
-export "C" int cf_RcFile_vm_id(cf_RcFile* self)
+extern "C" int cf_RcFile_vm_id(cf_RcFile* self)
 {
   return (int)self->L;
 }

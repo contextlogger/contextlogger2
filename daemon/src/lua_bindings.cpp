@@ -31,6 +31,27 @@ static int lua_error_unsupported(lua_State* L)
 
 /***koog (require codegen/lua-c) ***//***end***/
 
+/***koog (lua-func static_get_str) ***/
+static int f_static_get_str(lua_State* L)
+/***end***/
+{
+  const char* name = luaL_checklstring(L, 1, NULL);
+  const char* value = cf_RcFile_get_str_maybe(ac_global_RcFile, name);
+  if (value)
+    lua_pushstring(L, value);
+  else
+    lua_pushnil(L);
+  return 1;
+}
+/*
+-- It seems okay to reenter the same Lua VM via a binding.
+-- Try putting this in the config file, and then
+-- remotely doing return cl2.static_get_str('foo')
+foo = function () return cl2.static_get_str('bar') end
+bar = function () return cl2.static_get_str('baz') end
+baz = "bamf"
+*/
+
 /***koog (lua-func throw_unsupported) ***/
 static int f_throw_unsupported(lua_State* L)
 /***end***/
@@ -303,6 +324,7 @@ static const luaL_Reg function_table[] = {
   {"shutdown", f_shutdown},
   {"die_now", f_die_now},
   {"throw_unsupported", f_throw_unsupported},
+  {"static_get_str", f_static_get_str},
 /***end***/
   {NULL, NULL}
 };
