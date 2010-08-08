@@ -45,11 +45,8 @@ extern "C" {
   gboolean get_ConfigDb_str(const gchar* name, gchar** s, 
 			    gchar* default_s, GError** error);
 
-  // xxx deprecated
   int get_config_iap_id();
 
-  // xxx deprecated
-  //
   // The returned buffer is "static", and not to be freed.
   const gchar* get_config_username();
 

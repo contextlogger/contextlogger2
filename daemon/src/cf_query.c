@@ -268,6 +268,12 @@ gboolean get_ConfigDb_str(const gchar* name, gchar** s,
 
 int get_config_iap_id()
 {
+  // Get from dynamic config.
+  int value = -1;
+  gboolean found = FALSE;
+  try_get_ConfigDb_int("iap", &value, &found, NULL);
+  if (found) return value;
+  // Get from static config.
   return ac_STATIC_GET(iap);
 }
 
