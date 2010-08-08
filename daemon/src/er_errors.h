@@ -32,6 +32,8 @@ extern "C" {
 
   void er_txtlog_fatal();
 
+  void er_log_fatal_str(const char* text);
+
   // --------------------------------------------------
   // GLib extras
   // --------------------------------------------------

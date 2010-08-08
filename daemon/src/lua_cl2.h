@@ -18,6 +18,7 @@ extern "C" {
   gboolean validate_lua_syntax(const gchar* value, GError** error);
 
   int atpanic_txtlog_exit(lua_State* L);
+  int atpanic_log_exit(lua_State* L);
 
 #ifdef __EPOC32__
   // A Lua error string gives the description for errors like these.

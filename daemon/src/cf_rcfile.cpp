@@ -11,11 +11,6 @@ struct _cf_RcFile {
   lua_State *L;
 };
 
-extern "C" int cf_RcFile_vm_id(cf_RcFile* self)
-{
-  return (int)self->L;
-}
-
 #ifdef __EPOC32__
 #define RCFILE_BASENAME "config.txt"
 #else
@@ -149,25 +144,19 @@ extern "C" cf_RcFile* cf_RcFile_new(GError** error)
     return NULL;
   }
 
-  // Be very careful when using CL2 Lua bindings from this VM
-  // instance, as reentering the same VM instance to fetch some config
-  // info is probably *bad*.
+  // Reentering the same VM instance to fetch some config info seems
+  // to work. Not sure if it is quite safe, though, so you may want to
+  // consider that when adding cl2 module using functions into your
+  // config file.
+  // 
+  // Also note that *any* unprotected error occurring in this VM will
+  // bring down the entire process. This is by design, as we consider
+  // OOM errors and errors in config files very severe.
   self->L = cl_lua_new_libs();
   if (G_UNLIKELY(!self->L)) {
     if (error) *error = gx_error_no_memory;
     goto fail;
   }
-
-  // If an error occurs in this VM instance, then either: (1) if the
-  // Lua operation was done inside a protected environment (e.g.,
-  // within lua_pcall), then the system-wide default non-local return
-  // is done to return execution back to the pcall); or (2) if the
-  // operation was done outside a pcall, then the handler we set here
-  // is invoked.
-  // 
-  // Note that as RcFile is initialized before LogDb, we cannot log
-  // any panics into the database at this point.
-  lua_atpanic(self->L, atpanic_throw); // xxx implement a logging function that uses log db when available and when database insert actually succeeds, otherwise txt file, and then use that here
 
   try {
     if (G_UNLIKELY(!ReadRcFile(self, self->L, error))) {
@@ -177,9 +166,6 @@ extern "C" cf_RcFile* cf_RcFile_new(GError** error)
     lua_set_gerror(self->L, error);
     goto fail;
   }
-
-  // xxx if we leave in atpanic_throw, will have to provide wrappers for catching any exceptions (they can be type specific)
-  lua_atpanic(self->L, atpanic_txtlog_exit);
 
   return self;
 
@@ -253,6 +239,11 @@ extern "C" const char* cf_RcFile_get_str_or(cf_RcFile* self, const char* name, c
   if (!val)
     return dval;
   return val;
+}
+
+extern "C" int cf_RcFile_vm_id(cf_RcFile* self)
+{
+  return (int)self->L;
 }
 
 #endif /* __FEATURE_RCFILE__ */

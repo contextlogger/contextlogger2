@@ -56,7 +56,7 @@ extern "C" lua_State* cl_lua_new()
 
   // This setting may not always be ideal, so override as desired. At
   // least this is in some sense safe.
-  lua_atpanic(L, atpanic_txtlog_exit);
+  lua_atpanic(L, atpanic_log_exit);
 
   return L;
 }
@@ -144,12 +144,24 @@ extern "C" void lua_set_gerror(lua_State* L, GError** error)
   }
 }
 
+#if __DO_LOGGING__
 // Assumes an error message on top of the Lua stack.
-static void log_lua_error(lua_State* L)
+static void txtlog_lua_error(lua_State* L)
 {
   const char* luaErr = lua_tostring(L, -1);
   logf("unprotected error in Lua: %s", luaErr);
 }
+#else
+#define txtlog_lua_error(_x)
+#endif
+
+// If an error occurs in a Lua VM instance, then either: (1) if the
+// Lua operation was done inside a protected environment (e.g., within
+// lua_pcall), then the system-wide default non-local return is done
+// internally by Lua to return execution back to the pcall; or (2) if
+// the operation was done outside a pcall, then the handler one sets
+// with 'lua_atpanic' is invoked. Here we have many different possible
+// panic handler implementations.
 
 #ifdef __EPOC32__
 extern "C" int atpanic_leave(lua_State* L)
@@ -161,7 +173,7 @@ extern "C" int atpanic_leave(lua_State* L)
 
 extern "C" int atpanic_txtlog_leave(lua_State* L)
 {
-  log_lua_error(L);
+  txtlog_lua_error(L);
   return atpanic_leave(L);
 }
 #endif
@@ -174,15 +186,22 @@ extern "C" int atpanic_throw(lua_State *L)
 
 extern "C" int atpanic_txtlog_throw(lua_State *L) 
 {
-  log_lua_error(L);
+  txtlog_lua_error(L);
   return atpanic_throw(L);
 }
 
 extern "C" int atpanic_txtlog_exit(lua_State *L) 
 {
-  log_lua_error(L);
+  txtlog_lua_error(L);
   er_fatal(); // this may already cause process exit
   return 0; // number of Lua results returned, caller will proceed to exit()
+}
+
+extern "C" int atpanic_log_exit(lua_State *L) 
+{
+  const char* luaErr = lua_tostring(L, -1);
+  er_log_fatal_str(luaErr); // will not return
+  return 0;
 }
 
 /**

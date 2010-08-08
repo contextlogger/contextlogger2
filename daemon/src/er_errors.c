@@ -210,6 +210,14 @@ void ex_dblog_fatal_error(LogDb* logDb, int errCode)
 
 #endif /* __SYMBIAN32__ */
 
+void er_log_fatal_str(const char* text)
+{
+  LogDb* logDb = ac_global_LogDb;
+  if (!(logDb && log_db_log_status(logDb, NULL, text)))
+    logt(text);
+  er_fatal();
+}
+
 /**
 
 er_errors.c
