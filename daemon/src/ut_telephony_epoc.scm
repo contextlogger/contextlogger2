@@ -155,14 +155,77 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
                           #:data-type data-type
                           #:req-name req-name
                           #:cancel-name cancel-name))
+
+     ;; Have we got enough battery to be running.
+     (let ((data-name "BatteryInfo")
+           (data-type 'CTelephony::TBatteryInfoV1)
+           (req-name 'GetBatteryInfo)
+           (cancel-name 'CTelephony::EGetBatteryInfoCancel))
+       (make-telephony-ao #:data-name data-name
+                          #:data-type data-type
+                          #:req-name req-name
+                          #:cancel-name cancel-name
+                          #:getter? #t))
+
+     ;; Have we got enough battery to be running.
+     (let ((data-name "BatteryInfo")
+           (data-type 'CTelephony::TBatteryInfoV1)
+           (req-name 'CTelephony::EBatteryInfoChange)
+           (cancel-name 'CTelephony::EBatteryInfoChangeCancel))
+       (make-telephony-ao #:data-name data-name
+                          #:data-type data-type
+                          #:req-name req-name
+                          #:cancel-name cancel-name))
+
+     ;; Have we got good enough signal to upload.
+     (let ((data-name "SignalStrength")
+           (data-type 'CTelephony::TSignalStrengthV1)
+           (req-name 'GetSignalStrength)
+           (cancel-name 'CTelephony::EGetSignalStrengthCancel))
+       (make-telephony-ao #:data-name data-name
+                          #:data-type data-type
+                          #:req-name req-name
+                          #:cancel-name cancel-name
+                          #:getter? #t))
+
+     ;; Have we got good enough signal to upload.
+     (let ((data-name "SignalStrength")
+           (data-type 'CTelephony::TSignalStrengthV1)
+           (req-name 'CTelephony::ESignalStrengthChange)
+           (cancel-name 'CTelephony::ESignalStrengthChangeCancel))
+       (make-telephony-ao #:data-name data-name
+                          #:data-type data-type
+                          #:req-name req-name
+                          #:cancel-name cancel-name))
+
+     ;; Are we ERegisteredOnHomeNetwork.
+     (let ((data-name "NetworkRegistration")
+           (data-type 'CTelephony::TNetworkRegistrationV1)
+           (req-name 'GetNetworkRegistrationStatus)
+           (cancel-name 'CTelephony::EGetNetworkRegistrationStatusCancel))
+       (make-telephony-ao #:data-name data-name
+                          #:data-type data-type
+                          #:req-name req-name
+                          #:cancel-name cancel-name
+                          #:getter? #t))
+
+     ;; Are we ERegisteredOnHomeNetwork.
+     (let ((data-name "NetworkRegistration")
+           (data-type 'CTelephony::TNetworkRegistrationV1)
+           (req-name 'CTelephony::ENetworkRegistrationStatusChange)
+           (cancel-name 'CTelephony::ENetworkRegistrationStatusChangeCancel))
+       (make-telephony-ao #:data-name data-name
+                          #:data-type data-type
+                          #:req-name req-name
+                          #:cancel-name cancel-name))
      )))
      
 (define* (main)
   ;;(pretty-nl program-1)
-  (generate-h-and-cpp program-1)
-  ;;(dump-h-and-cpp program-1)
   ;;(dump-analyzed-ast program-1)
   ;;(dump-compiled-ast program-1)
+  ;;(dump-h-and-cpp program-1)
+  (generate-h-and-cpp program-1)
   (void))
 
 #|
