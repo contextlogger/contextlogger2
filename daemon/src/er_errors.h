@@ -102,6 +102,8 @@ extern "C" {
 
   gboolean ex_dblog_error(LogDb* logDb, int errCode, GError** error);
 
+  gboolean ex_dblog_error_msg(LogDb* logDb, const char* msg, int errCode, GError** error);
+
   void ex_txtlog_fatal_error(int errCode);
 
   void ex_dblog_fatal_error(LogDb* logDb, int errCode);

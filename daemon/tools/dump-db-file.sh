@@ -1,6 +1,9 @@
 echo APPLICATION FOCUS
 sqlite3 log.db "select datetime(unixtime, 'unixepoch'), uid, caption from appfocus_scan;"
 
+echo BATTERY STATUS
+sqlite3 log.db "select datetime(unixtime, 'unixepoch'), status, level from battery_scan;"
+
 echo BLUETOOTH PROXIMITY DEVICES
 sqlite3 log.db "select datetime(unixtime, 'unixepoch'), address, name from btprox_item, btprox_scan where btprox_item.scan_id = btprox_scan.scan_id order by unixtime, address;"
 echo BLUETOOTH PROXIMITY SCAN TIMES

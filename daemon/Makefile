@@ -165,8 +165,6 @@ ubuntu-dev :
 	sudo aptitude install gob2 libglib2.0-dev libsqlite3-dev liblua5.1-dev
 
 #
-# sakefile.rb
-#
 # Copyright 2009 Helsinki Institute for Information Technology (HIIT)
 # and the authors. All rights reserved.
 #

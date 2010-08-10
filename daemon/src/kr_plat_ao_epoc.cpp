@@ -3,7 +3,9 @@
 #include "ac_app_context.h"
 #include "er_errors.h"
 #include "kr_diskspace.h"
+#include "sa_sensor_list_log_db.h"
 #include "ut_diskspace_epoc.hpp"
+#include "ut_telephony_epoc.h"
 #include "utils_cl2.h"
 
 // --------------------------------------------------
@@ -102,12 +104,113 @@ void CDiskObserver::DiskSpaceNotify(TInt aDrive, TInt errCode)
   }
 }
 
+/***koog 
+(require codegen/symbian-cxx)
+(ctor-defines/spec
+ "CBatteryObserver" ;; name
+ "" ;; args
+ "" ;; inits
+ "" ;; ctor
+ #t ;; ConstructL
+)
+ ***/
+#define CTOR_DECL_CBatteryObserver  \
+public: static CBatteryObserver* NewLC(); \
+public: static CBatteryObserver* NewL(); \
+private: CBatteryObserver(); \
+private: void ConstructL();
+
+#define CTOR_IMPL_CBatteryObserver  \
+CBatteryObserver* CBatteryObserver::NewLC() \
+{ \
+  CBatteryObserver* obj = new (ELeave) CBatteryObserver(); \
+  CleanupStack::PushL(obj); \
+  obj->ConstructL(); \
+  return obj; \
+} \
+ \
+CBatteryObserver* CBatteryObserver::NewL() \
+{ \
+  CBatteryObserver* obj = CBatteryObserver::NewLC(); \
+  CleanupStack::Pop(obj); \
+  return obj; \
+} \
+ \
+CBatteryObserver::CBatteryObserver() \
+{}
+/***end***/
+NONSHARABLE_CLASS(CBatteryObserver) : 
+  public CBase, 
+  public MBatteryInfoRequestor,
+  public MBatteryInfoObserver
+{
+  CTOR_DECL_CBatteryObserver;
+
+ public:
+  ~CBatteryObserver();
+
+ private:
+  virtual void HandleGotBatteryInfo(TInt aError);
+  virtual void HandleBatteryInfoChange(TInt aError);
+  void HandleBattery(TInt aError, CTelephony::TBatteryInfoV1 const & aData);
+
+ private:
+  CBatteryInfoGetter* iBatteryInfoGetter;
+  CBatteryInfoNotifier* iBatteryInfoNotifier;
+};
+
+CTOR_IMPL_CBatteryObserver;
+
+void CBatteryObserver::ConstructL()
+{
+  ac_AppContext* ac = ac_get_global_AppContext();
+
+  iBatteryInfoGetter = new (ELeave) CBatteryInfoGetter(ac_Telephony(ac), *this);
+  iBatteryInfoNotifier = new (ELeave) CBatteryInfoNotifier(ac_Telephony(ac), *this);
+
+  iBatteryInfoGetter->MakeRequest();
+}
+
+CBatteryObserver::~CBatteryObserver()
+{
+  delete iBatteryInfoGetter;
+  delete iBatteryInfoNotifier;
+}
+
+void CBatteryObserver::HandleGotBatteryInfo(TInt aError)
+{
+  HandleBattery(aError, iBatteryInfoGetter->Data());
+}
+
+void CBatteryObserver::HandleBatteryInfoChange(TInt aError)
+{
+  HandleBattery(aError, iBatteryInfoNotifier->Data());
+}
+
+void CBatteryObserver::HandleBattery(TInt aError, CTelephony::TBatteryInfoV1 const & aData)
+{
+  LogDb* logDb = ac_global_LogDb;
+  if (aError) {
+    if (logDb)
+      ex_dblog_error_msg(logDb, "battery info status query failure", aError, NULL);
+  } else {
+    int status = aData.iStatus;
+    int level = aData.iChargeLevel;
+    logf("battery status: %d (%d%%)", status, level);
+    if (logDb) {
+      log_db_log_battery(logDb, status, level, NULL);
+    }
+    iBatteryInfoNotifier->MakeRequest();
+  }
+}
+
 // --------------------------------------------------
 // auxiliary controller
 // --------------------------------------------------
 
 struct _kr_PlatAo {
   CDiskObserver* iDiskObserver;
+  CBatteryObserver* iBatteryObserver;
 };
 
 extern "C" kr_PlatAo* kr_PlatAo_new(GError** error)
@@ -128,12 +231,23 @@ extern "C" kr_PlatAo* kr_PlatAo_new(GError** error)
     return NULL;
   }
 
+  TRAP(errCode, self->iBatteryObserver = CBatteryObserver::NewL());
+  if (G_UNLIKELY(errCode)) {
+    kr_PlatAo_destroy(self);
+    if (error)
+      *error = gx_error_new(domain_symbian, errCode, 
+			    "battery observer creation failure: %s (%d)", 
+			    plat_error_strerror(errCode), errCode);
+    return NULL;
+  }
+
   return self;
 }
 
 extern "C" void kr_PlatAo_destroy(kr_PlatAo* self)
 {
   if (self) {
+    delete self->iBatteryObserver;
     delete self->iDiskObserver;
     g_free(self);
   }

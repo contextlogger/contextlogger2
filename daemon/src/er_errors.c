@@ -196,6 +196,11 @@ gboolean ex_dblog_error(LogDb* logDb, int errCode, GError** error)
   return log_db_log_status(logDb, error, "ERROR: Symbian error: %s (%d)", plat_error_strerror(errCode), errCode);
 }
 
+gboolean ex_dblog_error_msg(LogDb* logDb, const char* msg, int errCode, GError** error)
+{
+  return log_db_log_status(logDb, error, "ERROR: %s: %s (%d)", msg, plat_error_strerror(errCode), errCode);
+}
+
 void ex_txtlog_fatal_error(int errCode)
 {
   logf("FATAL: Symbian error: %s (%d)", plat_error_strerror(errCode), errCode);

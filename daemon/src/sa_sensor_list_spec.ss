@@ -81,6 +81,21 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
              (bindings
               (binding (index 2) (type int) (value "(value ? 1 : 0)")))))
 
+    ;; battery
+    (sensor (name battery) (inactive #t) (platforms)
+            (cpp-condition "defined(__EPOC32__)")
+            (sql-schema "create table battery_scan (unixtime INTEGER, status INTEGER, level INTEGER);")
+            (sql-statements "insert into battery_scan (unixtime, status, level) values (?, ?, ?);")
+            (log-insert-api
+             (args
+              ,(arg (type 'int) (name 'status))
+              ,(arg (type 'int) (name 'level))
+              )
+             (bindings
+              (binding (index 2) (type int) (value "status"))
+              (binding (index 3) (type int) (value "level"))
+              )))
+    
     ;; profile (needs a variant targeting new extended plugin)
     (sensor (name profile) (platforms symbian)
             (cpp-condition "__PROFILE_ENABLED__")
