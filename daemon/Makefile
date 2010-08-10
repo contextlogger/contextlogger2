@@ -140,9 +140,6 @@ src/sa_sensor_list_log_db.h src/sa_sensor_list_log_db.c src/sa_sensor_list_integ
 src/timer_generic_epoc.h src/timer_generic_epoc.cpp : src/timer_generic_epoc.scm
 	$(PLT_ENV) $<
 
-src/cf_rcfile_list.h src/cf_rcfile_list.c src/cf_rcfile_list_private.h : src/cf_rcfile_list_spec.ss
-	$(PLT_ENV) $<
-
 src/ut_telephony_epoc.h src/ut_telephony_epoc.cpp : src/ut_telephony_epoc.scm
 	$(PLT_ENV) $<
 
