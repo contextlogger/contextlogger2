@@ -109,6 +109,21 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
               (binding (index 2) (type int) (value "status"))
               )))
     
+    ;; signal
+    (sensor (name signal) (inactive #t) (platforms)
+            (cpp-condition "defined(__EPOC32__)")
+            (sql-schema "create table signal_scan (unixtime INTEGER, dbm INTEGER, bars INTEGER);")
+            (sql-statements "insert into signal_scan (unixtime, dbm, bars) values (?, ?, ?);")
+            (log-insert-api
+             (args
+              ,(arg (type 'int) (name 'dbm))
+              ,(arg (type 'int) (name 'bars))
+              )
+             (bindings
+              (binding (index 2) (type int) (value "dbm"))
+              (binding (index 3) (type int) (value "bars"))
+              )))
+    
     ;; profile (needs a variant targeting new extended plugin)
     (sensor (name profile) (platforms symbian)
             (cpp-condition "__PROFILE_ENABLED__")

@@ -317,6 +317,110 @@ void CRegistrationObserver::HandleRegistration(TInt aError, CTelephony::TNetwork
 }
 
 // --------------------------------------------------
+// network signal strength observing
+// --------------------------------------------------
+
+/***koog 
+(require codegen/symbian-cxx)
+(ctor-defines/spec
+ "CSignalObserver" ;; name
+ "" ;; args
+ "" ;; inits
+ "" ;; ctor
+ #t ;; ConstructL
+)
+ ***/
+#define CTOR_DECL_CSignalObserver  \
+public: static CSignalObserver* NewLC(); \
+public: static CSignalObserver* NewL(); \
+private: CSignalObserver(); \
+private: void ConstructL();
+
+#define CTOR_IMPL_CSignalObserver  \
+CSignalObserver* CSignalObserver::NewLC() \
+{ \
+  CSignalObserver* obj = new (ELeave) CSignalObserver(); \
+  CleanupStack::PushL(obj); \
+  obj->ConstructL(); \
+  return obj; \
+} \
+ \
+CSignalObserver* CSignalObserver::NewL() \
+{ \
+  CSignalObserver* obj = CSignalObserver::NewLC(); \
+  CleanupStack::Pop(obj); \
+  return obj; \
+} \
+ \
+CSignalObserver::CSignalObserver() \
+{}
+/***end***/
+NONSHARABLE_CLASS(CSignalObserver) : 
+  public CBase, 
+  public MSignalStrengthRequestor,
+  public MSignalStrengthObserver
+{
+  CTOR_DECL_CSignalObserver;
+
+ public:
+  ~CSignalObserver();
+
+ private:
+  virtual void HandleGotSignalStrength(TInt aError);
+  virtual void HandleSignalStrengthChange(TInt aError);
+  void HandleSignal(TInt aError, CTelephony::TSignalStrengthV1 const & aData);
+
+ private:
+  CSignalStrengthGetter* iSignalInfoGetter;
+  CSignalStrengthNotifier* iSignalInfoNotifier;
+};
+
+CTOR_IMPL_CSignalObserver;
+
+void CSignalObserver::ConstructL()
+{
+  ac_AppContext* ac = ac_get_global_AppContext();
+
+  iSignalInfoGetter = new (ELeave) CSignalStrengthGetter(ac_Telephony(ac), *this);
+  iSignalInfoNotifier = new (ELeave) CSignalStrengthNotifier(ac_Telephony(ac), *this);
+
+  iSignalInfoGetter->MakeRequest();
+}
+
+CSignalObserver::~CSignalObserver()
+{
+  delete iSignalInfoGetter;
+  delete iSignalInfoNotifier;
+}
+
+void CSignalObserver::HandleGotSignalStrength(TInt aError)
+{
+  HandleSignal(aError, iSignalInfoGetter->Data());
+}
+
+void CSignalObserver::HandleSignalStrengthChange(TInt aError)
+{
+  HandleSignal(aError, iSignalInfoNotifier->Data());
+}
+
+void CSignalObserver::HandleSignal(TInt aError, CTelephony::TSignalStrengthV1 const & aData)
+{
+  LogDb* logDb = ac_global_LogDb;
+  if (aError) {
+    if (logDb)
+      ex_dblog_error_msg(logDb, "network signal strength query failure", aError, NULL);
+  } else {
+    int dbm = -(aData.iSignalStrength);
+    int bars = aData.iBar;
+    logf("network signal strength: %d dBm (%d bars)", dbm, bars);
+    if (logDb) {
+      log_db_log_signal(logDb, dbm, bars, NULL);
+    }
+    iSignalInfoNotifier->MakeRequest();
+  }
+}
+
+// --------------------------------------------------
 // auxiliary controller
 // --------------------------------------------------
 
@@ -324,6 +428,7 @@ struct _kr_PlatAo {
   CDiskObserver* iDiskObserver;
   CBatteryObserver* iBatteryObserver;
   CRegistrationObserver* iRegistrationObserver;
+  CSignalObserver* iSignalObserver;
 };
 
 extern "C" kr_PlatAo* kr_PlatAo_new(GError** error)
@@ -364,12 +469,23 @@ extern "C" kr_PlatAo* kr_PlatAo_new(GError** error)
     return NULL;
   }
 
+  TRAP(errCode, self->iSignalObserver = CSignalObserver::NewL());
+  if (G_UNLIKELY(errCode)) {
+    kr_PlatAo_destroy(self);
+    if (error)
+      *error = gx_error_new(domain_symbian, errCode, 
+			    "signal strength observer creation failure: %s (%d)", 
+			    plat_error_strerror(errCode), errCode);
+    return NULL;
+  }
+
   return self;
 }
 
 extern "C" void kr_PlatAo_destroy(kr_PlatAo* self)
 {
   if (self) {
+    delete self->iSignalObserver;
     delete self->iRegistrationObserver;
     delete self->iBatteryObserver;
     delete self->iDiskObserver;
