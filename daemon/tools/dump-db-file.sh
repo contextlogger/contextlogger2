@@ -3,6 +3,8 @@ sqlite3 log.db "select datetime(unixtime, 'unixepoch'), uid, caption from appfoc
 
 echo BATTERY STATUS
 sqlite3 log.db "select datetime(unixtime, 'unixepoch'), status, level from battery_scan;"
+echo NETWORK REGISTRATION STATUS
+sqlite3 log.db "select datetime(unixtime, 'unixepoch'), status from registration_scan;"
 
 echo BLUETOOTH PROXIMITY DEVICES
 sqlite3 log.db "select datetime(unixtime, 'unixepoch'), address, name from btprox_item, btprox_scan where btprox_item.scan_id = btprox_scan.scan_id order by unixtime, address;"

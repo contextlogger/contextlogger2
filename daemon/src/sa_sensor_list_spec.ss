@@ -96,6 +96,19 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
               (binding (index 3) (type int) (value "level"))
               )))
     
+    ;; registration
+    (sensor (name registration) (inactive #t) (platforms)
+            (cpp-condition "defined(__EPOC32__)")
+            (sql-schema "create table registration_scan (unixtime INTEGER, status INTEGER);")
+            (sql-statements "insert into registration_scan (unixtime, status) values (?, ?);")
+            (log-insert-api
+             (args
+              ,(arg (type 'int) (name 'status))
+              )
+             (bindings
+              (binding (index 2) (type int) (value "status"))
+              )))
+    
     ;; profile (needs a variant targeting new extended plugin)
     (sensor (name profile) (platforms symbian)
             (cpp-condition "__PROFILE_ENABLED__")

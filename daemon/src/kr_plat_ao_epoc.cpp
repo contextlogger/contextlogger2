@@ -104,6 +104,15 @@ void CDiskObserver::DiskSpaceNotify(TInt aDrive, TInt errCode)
   }
 }
 
+// --------------------------------------------------
+// battery status observing
+// --------------------------------------------------
+
+/*
+It is worth noting that there also is the hwrmpowerstatesdkpskeys.h API, which it seems we might likewise use. Do not know if one is "better" than the other.
+http://www.forum.nokia.com/document/Cpp_Developers_Library/GUID-759FBC7F-5384-4487-8457-A8D4B76F6AA6/html/hwrmpowerstatesdkpskeys_8h.html
+*/
+
 /***koog 
 (require codegen/symbian-cxx)
 (ctor-defines/spec
@@ -205,12 +214,116 @@ void CBatteryObserver::HandleBattery(TInt aError, CTelephony::TBatteryInfoV1 con
 }
 
 // --------------------------------------------------
+// network registration status observing
+// --------------------------------------------------
+
+/***koog 
+(require codegen/symbian-cxx)
+(ctor-defines/spec
+ "CRegistrationObserver" ;; name
+ "" ;; args
+ "" ;; inits
+ "" ;; ctor
+ #t ;; ConstructL
+)
+ ***/
+#define CTOR_DECL_CRegistrationObserver  \
+public: static CRegistrationObserver* NewLC(); \
+public: static CRegistrationObserver* NewL(); \
+private: CRegistrationObserver(); \
+private: void ConstructL();
+
+#define CTOR_IMPL_CRegistrationObserver  \
+CRegistrationObserver* CRegistrationObserver::NewLC() \
+{ \
+  CRegistrationObserver* obj = new (ELeave) CRegistrationObserver(); \
+  CleanupStack::PushL(obj); \
+  obj->ConstructL(); \
+  return obj; \
+} \
+ \
+CRegistrationObserver* CRegistrationObserver::NewL() \
+{ \
+  CRegistrationObserver* obj = CRegistrationObserver::NewLC(); \
+  CleanupStack::Pop(obj); \
+  return obj; \
+} \
+ \
+CRegistrationObserver::CRegistrationObserver() \
+{}
+/***end***/
+NONSHARABLE_CLASS(CRegistrationObserver) : 
+  public CBase, 
+  public MNetworkRegistrationRequestor,
+  public MNetworkRegistrationObserver
+{
+  CTOR_DECL_CRegistrationObserver;
+
+ public:
+  ~CRegistrationObserver();
+
+ private:
+  virtual void HandleGotNetworkRegistration(TInt aError);
+  virtual void HandleNetworkRegistrationChange(TInt aError);
+  void HandleRegistration(TInt aError, CTelephony::TNetworkRegistrationV1 const & aData);
+
+ private:
+  CNetworkRegistrationGetter* iRegistrationInfoGetter;
+  CNetworkRegistrationNotifier* iRegistrationInfoNotifier;
+};
+
+CTOR_IMPL_CRegistrationObserver;
+
+void CRegistrationObserver::ConstructL()
+{
+  ac_AppContext* ac = ac_get_global_AppContext();
+
+  iRegistrationInfoGetter = new (ELeave) CNetworkRegistrationGetter(ac_Telephony(ac), *this);
+  iRegistrationInfoNotifier = new (ELeave) CNetworkRegistrationNotifier(ac_Telephony(ac), *this);
+
+  iRegistrationInfoGetter->MakeRequest();
+}
+
+CRegistrationObserver::~CRegistrationObserver()
+{
+  delete iRegistrationInfoGetter;
+  delete iRegistrationInfoNotifier;
+}
+
+void CRegistrationObserver::HandleGotNetworkRegistration(TInt aError)
+{
+  HandleRegistration(aError, iRegistrationInfoGetter->Data());
+}
+
+void CRegistrationObserver::HandleNetworkRegistrationChange(TInt aError)
+{
+  HandleRegistration(aError, iRegistrationInfoNotifier->Data());
+}
+
+void CRegistrationObserver::HandleRegistration(TInt aError, CTelephony::TNetworkRegistrationV1 const & aData)
+{
+  LogDb* logDb = ac_global_LogDb;
+  if (aError) {
+    if (logDb)
+      ex_dblog_error_msg(logDb, "network registration status query failure", aError, NULL);
+  } else {
+    int status = aData.iRegStatus;
+    logf("network registration status: %d", status);
+    if (logDb) {
+      log_db_log_registration(logDb, status, NULL);
+    }
+    iRegistrationInfoNotifier->MakeRequest();
+  }
+}
+
+// --------------------------------------------------
 // auxiliary controller
 // --------------------------------------------------
 
 struct _kr_PlatAo {
   CDiskObserver* iDiskObserver;
   CBatteryObserver* iBatteryObserver;
+  CRegistrationObserver* iRegistrationObserver;
 };
 
 extern "C" kr_PlatAo* kr_PlatAo_new(GError** error)
@@ -241,12 +354,23 @@ extern "C" kr_PlatAo* kr_PlatAo_new(GError** error)
     return NULL;
   }
 
+  TRAP(errCode, self->iRegistrationObserver = CRegistrationObserver::NewL());
+  if (G_UNLIKELY(errCode)) {
+    kr_PlatAo_destroy(self);
+    if (error)
+      *error = gx_error_new(domain_symbian, errCode, 
+			    "registration observer creation failure: %s (%d)", 
+			    plat_error_strerror(errCode), errCode);
+    return NULL;
+  }
+
   return self;
 }
 
 extern "C" void kr_PlatAo_destroy(kr_PlatAo* self)
 {
   if (self) {
+    delete self->iRegistrationObserver;
     delete self->iBatteryObserver;
     delete self->iDiskObserver;
     g_free(self);
