@@ -189,7 +189,9 @@ if option<%= optix[:launcher] %> = 1
 
 <% srcdir = '../libs-s60/pys60-1.4.5'
    srcfiles = ['PythonForS60_1_4_5_3rdEd.sis',
-               'PythonScriptShell_1_4_5_3rdEd.SIS'] 
+               'PythonScriptShell_1_4_5_3rdEd_unsigned_testrange.sisx' # DevCert signed
+               #'PythonScriptShell_1_4_5_3rdEd.SIS' # Nokia signed
+              ] 
 %>
 
 <% if $non_redistributable %>
@@ -206,10 +208,11 @@ endif
 ;; Script shell.
 <% srcfile = srcfiles[1]
    srcfile = File.join(srcdir, srcfile)
-   uid = lookup_uid srcfile
+   sisfile = copy_with_sis_ext srcfile
+   uid = lookup_uid sisfile
    uid_s = ("0x%08x" % uid) %>
 if not (package(0x2000b1a5) or package(0xe000b1a5))
-@<%= srcfile.inspect %>, (<%= uid_s %>)
+@<%= sisfile.inspect %>, (<%= uid_s %>)
 endif
 
 <% end %>
@@ -228,7 +231,7 @@ endif
 ;;
 ;; Since we are embedding without building Miso here, do make sure that a sensible
 ;; version has been built (and in a DevCert case) appropriately signed as well.
-<% misover = '1.99'
+<% misover = '2.00'
    srcdir = '../libs-s60/miso-%s' % misover
    old_ext = $SIGNED ? "sisx" : "sis"
    kit = (($CERT_NAME == "self32") ? "s60_32" : "s60_30")

@@ -44,7 +44,7 @@ s60_30_self32 :
 	cd ../py-cl2-cli-lib && $(SAKE) cert=self32 kits=s60_30
 	cd ../launcher && $(MAKE) CERT=self32 sis
 
-non-use : s60_30_dev
+hpe non-use : s60_30_dev
 
 #
 # Copyright 2009 Helsinki Institute for Information Technology (HIIT)

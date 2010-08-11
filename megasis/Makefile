@@ -5,7 +5,7 @@
 configure = ./configure.scm $(1)
 configure = make config VARIANT_NAME=$(1)
 
-CONFIGURATIONS = s60_30_dev s60_30_self30 s60_30_self32 s60_30_unsigned
+CONFIGURATIONS = s60_30_dev s60_30_self30 s60_30_self32 s60_30_unsigned hpe
 
 .PHONY : default
 default : s60_30_dev
