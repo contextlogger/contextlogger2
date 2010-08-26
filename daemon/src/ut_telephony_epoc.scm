@@ -218,6 +218,28 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
                           #:data-type data-type
                           #:req-name req-name
                           #:cancel-name cancel-name))
+
+     ;; CTelephony::TNetworkInfoV2 is only available in more recent
+     ;; platform versions, not in S60 3.0, for instance.
+     (let ((data-name "NetworkInfo")
+           (data-type 'CTelephony::TNetworkInfoV1)
+           (req-name 'GetCurrentNetworkInfo)
+           (cancel-name 'CTelephony::EGetCurrentNetworkInfoCancel))
+       (make-telephony-ao #:data-name data-name
+                          #:data-type data-type
+                          #:req-name req-name
+                          #:cancel-name cancel-name
+                          #:getter? #t))
+
+     (let ((data-name "NetworkInfo")
+           (data-type 'CTelephony::TNetworkInfoV1)
+           (req-name 'CTelephony::ECurrentNetworkInfoChange)
+           (cancel-name 'CTelephony::ECurrentNetworkInfoChangeCancel))
+       (make-telephony-ao #:data-name data-name
+                          #:data-type data-type
+                          #:req-name req-name
+                          #:cancel-name cancel-name))
+     
      )))
      
 (define* (main)

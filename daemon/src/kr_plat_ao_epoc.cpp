@@ -317,6 +317,112 @@ void CRegistrationObserver::HandleRegistration(TInt aError, CTelephony::TNetwork
 }
 
 // --------------------------------------------------
+// network information observing
+// --------------------------------------------------
+
+/***koog 
+(require codegen/symbian-cxx)
+(ctor-defines/spec
+ "CNetworkObserver" ;; name
+ "" ;; args
+ "" ;; inits
+ "" ;; ctor
+ #t ;; ConstructL
+)
+ ***/
+#define CTOR_DECL_CNetworkObserver  \
+public: static CNetworkObserver* NewLC(); \
+public: static CNetworkObserver* NewL(); \
+private: CNetworkObserver(); \
+private: void ConstructL();
+
+#define CTOR_IMPL_CNetworkObserver  \
+CNetworkObserver* CNetworkObserver::NewLC() \
+{ \
+  CNetworkObserver* obj = new (ELeave) CNetworkObserver(); \
+  CleanupStack::PushL(obj); \
+  obj->ConstructL(); \
+  return obj; \
+} \
+ \
+CNetworkObserver* CNetworkObserver::NewL() \
+{ \
+  CNetworkObserver* obj = CNetworkObserver::NewLC(); \
+  CleanupStack::Pop(obj); \
+  return obj; \
+} \
+ \
+CNetworkObserver::CNetworkObserver() \
+{}
+/***end***/
+NONSHARABLE_CLASS(CNetworkObserver) : 
+  public CBase, 
+  public MNetworkInfoRequestor,
+  public MNetworkInfoObserver
+{
+  CTOR_DECL_CNetworkObserver;
+
+ public:
+  ~CNetworkObserver();
+
+ private:
+  virtual void HandleGotNetworkInfo(TInt aError);
+  virtual void HandleNetworkInfoChange(TInt aError);
+  void HandleData(TInt aError, CTelephony::TNetworkInfoV1 const & aData);
+
+ private:
+  CNetworkInfoGetter* iGetter;
+  CNetworkInfoNotifier* iNotifier;
+};
+
+CTOR_IMPL_CNetworkObserver;
+
+void CNetworkObserver::ConstructL()
+{
+  ac_AppContext* ac = ac_get_global_AppContext();
+
+  iGetter = new (ELeave) CNetworkInfoGetter(ac_Telephony(ac), *this);
+  iNotifier = new (ELeave) CNetworkInfoNotifier(ac_Telephony(ac), *this);
+
+  iGetter->MakeRequest();
+}
+
+CNetworkObserver::~CNetworkObserver()
+{
+  delete iGetter;
+  delete iNotifier;
+}
+
+void CNetworkObserver::HandleGotNetworkInfo(TInt aError)
+{
+  HandleData(aError, iGetter->Data());
+}
+
+void CNetworkObserver::HandleNetworkInfoChange(TInt aError)
+{
+  HandleData(aError, iNotifier->Data());
+}
+
+void CNetworkObserver::HandleData(TInt aError, 
+				  CTelephony::TNetworkInfoV1 const & aData)
+{
+  LogDb* logDb = ac_global_LogDb;
+  if (aError) {
+    if (logDb)
+      ex_dblog_error_msg(logDb, "network info status query failure", aError, NULL);
+  } else {
+    /* xxx
+    int status = aData.iRegStatus;
+    logf("network info status: %d", status);
+    if (logDb) {
+      log_db_log_registration(logDb, status, NULL);
+    }
+    */
+    iNotifier->MakeRequest();
+  }
+}
+
+// --------------------------------------------------
 // network signal strength observing
 // --------------------------------------------------
 
@@ -428,6 +534,7 @@ struct _kr_PlatAo {
   CDiskObserver* iDiskObserver;
   CBatteryObserver* iBatteryObserver;
   CRegistrationObserver* iRegistrationObserver;
+  CNetworkObserver* iNetworkObserver;
   CSignalObserver* iSignalObserver;
 };
 
@@ -469,6 +576,16 @@ extern "C" kr_PlatAo* kr_PlatAo_new(GError** error)
     return NULL;
   }
 
+  TRAP(errCode, self->iNetworkObserver = CNetworkObserver::NewL());
+  if (G_UNLIKELY(errCode)) {
+    kr_PlatAo_destroy(self);
+    if (error)
+      *error = gx_error_new(domain_symbian, errCode, 
+			    "network observer creation failure: %s (%d)", 
+			    plat_error_strerror(errCode), errCode);
+    return NULL;
+  }
+
   TRAP(errCode, self->iSignalObserver = CSignalObserver::NewL());
   if (G_UNLIKELY(errCode)) {
     kr_PlatAo_destroy(self);
@@ -486,6 +603,7 @@ extern "C" void kr_PlatAo_destroy(kr_PlatAo* self)
 {
   if (self) {
     delete self->iSignalObserver;
+    delete self->iNetworkObserver;
     delete self->iRegistrationObserver;
     delete self->iBatteryObserver;
     delete self->iDiskObserver;

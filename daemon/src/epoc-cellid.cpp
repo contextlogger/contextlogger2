@@ -143,6 +143,8 @@ gboolean CSensor_cellid::HandleReadGL(GError** error)
 	// hence we are treating them as strings. Whoever parses the
 	// database content may decide to do something different if they
 	// see that all the data indeed is decimal strings.
+	// http://en.wikipedia.org/wiki/List_of_mobile_country_codes
+	// http://en.wikipedia.org/wiki/Mobile_Network_Code
 	HBufC8* countryCode = ConvToUtf8ZL(iData.iCountryCode);
 	CleanupStack::PushL(countryCode);
 	HBufC8* networkCode = ConvToUtf8ZL(iData.iNetworkId);
