@@ -209,7 +209,11 @@ void CBatteryObserver::HandleBattery(TInt aError, CTelephony::TBatteryInfoV1 con
     if (logDb) {
       log_db_log_battery(logDb, status, level, NULL);
     }
-    iBatteryInfoNotifier->MakeRequest();
+    if (level < 20) {
+      er_log_fatal_str("battery running low: exiting");
+    } else {
+      iBatteryInfoNotifier->MakeRequest();
+    }
   }
 }
 
