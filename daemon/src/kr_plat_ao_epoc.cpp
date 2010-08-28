@@ -373,7 +373,6 @@ NONSHARABLE_CLASS(CNetworkObserver) :
 
  private:
   virtual void RetryTimerExpired(CRetryAo* src, TInt errCode);
-  virtual void RetryLimitReached(CRetryAo* src);
   virtual void HandleGotNetworkInfo(TInt aError);
   virtual void HandleNetworkInfoChange(TInt aError);
   void HandleData(TInt aError, CTelephony::TNetworkInfoV1 const & aData);
@@ -420,12 +419,6 @@ void CNetworkObserver::RetryTimerExpired(CRetryAo* src, TInt errCode)
   }
 }
 
-void CNetworkObserver::RetryLimitReached(CRetryAo* src)
-{
-  (void)src;
-  er_log_fatal_str("network info queries failing");
-}
-
 void CNetworkObserver::HandleGotNetworkInfo(TInt aError)
 {
   HandleData(aError, iGetter->Data());
@@ -444,7 +437,9 @@ void CNetworkObserver::HandleData(TInt aError,
   LogDb* logDb = ac_global_LogDb;
   if (aError) {
     logf("network info query failure: Symbian error %d", aError);
-    iRetryAo->Retry();
+    if (!iRetryAo->Retry()) {
+      er_log_fatal_str("network info queries failing");
+    }
   } else {
     iRetryAo->ResetFailures();
 

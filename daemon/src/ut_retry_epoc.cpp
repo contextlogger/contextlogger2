@@ -30,13 +30,18 @@ CRetryAo::~CRetryAo()
   Cancel();
 }
 
-void CRetryAo::Retry()
+TBool CRetryAo::Retry()
 {
   Cancel();
   iNumScanFailures++;
-  TTimeIntervalMicroSeconds32 interval = WaitInterval();
-  iTimer->After(iStatus, interval);
-  SetActive();
+  if (iNumScanFailures > iMaxNumRetries) {
+    return EFalse;
+  } else {
+    TTimeIntervalMicroSeconds32 interval = WaitInterval();
+    iTimer->After(iStatus, interval);
+    SetActive();
+    return ETrue;
+  }
 }
 
 void CRetryAo::RunL()

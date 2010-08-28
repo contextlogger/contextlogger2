@@ -16,7 +16,6 @@ class CRetryAo;
 class MRetryAoObserver {
 public:
   virtual void RetryTimerExpired(CRetryAo* src, TInt errCode) = 0;
-  virtual void RetryLimitReached(CRetryAo* src) = 0;
 };
 
 NONSHARABLE_CLASS(CRetryAo) :
@@ -31,7 +30,9 @@ NONSHARABLE_CLASS(CRetryAo) :
 
   ~CRetryAo();
 
-  void Retry();
+  // Returns a false value if a retry timer was not set (due to
+  // maximum number of retries having been reached).
+  TBool Retry();
 
   void ResetFailures();
 

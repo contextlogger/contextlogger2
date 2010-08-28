@@ -170,8 +170,13 @@ void CSensor_callstatus::HandleCallStatusChange(TInt errCode)
     log_db_log_status(GetLogDb(), NULL,
 		      "NOTICE: call status notification error in callstatus sensor: %s (%d)", 
 		      plat_error_strerror(errCode), errCode);
-    iRetryAo->Retry();
-    iState = ERetryWaiting;
+    if (iRetryAo->Retry()) {
+      iState = ERetryWaiting;
+    } else {
+      log_db_log_status(GetLogDb(), NULL,
+			"INACTIVATE: callstatus: max num of retries");
+      Cancel();
+    }
   } else {
     iRetryAo->ResetFailures();
 
@@ -374,14 +379,6 @@ void CSensor_callstatus::RetryTimerExpired(CRetryAo* src, TInt errCode)
     iCallStatusNotifier->MakeRequest();
     iState = EQueryingCallStatus;
   }
-}
-
-void CSensor_callstatus::RetryLimitReached(CRetryAo* src)
-{
-  (void)src;
-  log_db_log_status(GetLogDb(), NULL,
-		    "INACTIVATE: callstatus: max num of retries");
-  Cancel();
 }
 
 #endif // __CALLSTATUS_ENABLED__

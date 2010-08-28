@@ -231,6 +231,8 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
                           #:cancel-name cancel-name
                           #:getter? #t))
 
+     ;; Note that we are to expect the occasional KErrOverflow.
+     ;; http://developer.symbian.org/forum/showthread.php?t=7474
      (let ((data-name "NetworkInfo")
            (data-type 'CTelephony::TNetworkInfoV1)
            (req-name 'CTelephony::ECurrentNetworkInfoChange)
