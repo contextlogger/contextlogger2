@@ -364,6 +364,7 @@ void CSensor_callstatus::HandleCallStatusChange(TInt errCode)
 // We expect success here.
 void CSensor_callstatus::RetryTimerExpired(CRetryAo* src, TInt errCode)
 {
+  (void)src;
   if (errCode) {
     log_db_log_status(GetLogDb(), NULL,
 		      "INACTIVATE: callstatus: timer error: %s (%d)", 
@@ -373,6 +374,14 @@ void CSensor_callstatus::RetryTimerExpired(CRetryAo* src, TInt errCode)
     iCallStatusNotifier->MakeRequest();
     iState = EQueryingCallStatus;
   }
+}
+
+void CSensor_callstatus::RetryLimitReached(CRetryAo* src)
+{
+  (void)src;
+  log_db_log_status(GetLogDb(), NULL,
+		    "INACTIVATE: callstatus: max num of retries");
+  Cancel();
 }
 
 #endif // __CALLSTATUS_ENABLED__

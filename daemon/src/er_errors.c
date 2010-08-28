@@ -213,6 +213,12 @@ void ex_dblog_fatal_error(LogDb* logDb, int errCode)
   ex_fatal_error(errCode);
 }
 
+void ex_dblog_fatal_error_msg(LogDb* logDb, const char* msg, int errCode)
+{
+  log_db_log_status(logDb, NULL, "FATAL: %s: %s (%d)", msg, plat_error_strerror(errCode), errCode);
+  ex_fatal_error(errCode);
+}
+
 #endif /* __SYMBIAN32__ */
 
 void er_log_fatal_str(const char* text)

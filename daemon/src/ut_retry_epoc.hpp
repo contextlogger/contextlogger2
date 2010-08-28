@@ -16,6 +16,7 @@ class CRetryAo;
 class MRetryAoObserver {
 public:
   virtual void RetryTimerExpired(CRetryAo* src, TInt errCode) = 0;
+  virtual void RetryLimitReached(CRetryAo* src) = 0;
 };
 
 NONSHARABLE_CLASS(CRetryAo) :

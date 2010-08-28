@@ -108,6 +108,8 @@ extern "C" {
 
   void ex_dblog_fatal_error(LogDb* logDb, int errCode);
 
+  void ex_dblog_fatal_error_msg(LogDb* logDb, const char* msg, int errCode);
+
   // Displays the specified Symbian error code in a briefly displayed
   // global dialog.
   void ex_show_error(int errCode);

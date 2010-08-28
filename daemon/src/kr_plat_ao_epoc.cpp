@@ -6,6 +6,7 @@
 #include "sa_sensor_list_log_db.h"
 #include "ut_diskspace_epoc.hpp"
 #include "ut_telephony_epoc.h"
+#include "ut_retry_epoc.hpp"
 #include "utils_cl2.h"
 
 // --------------------------------------------------
@@ -362,7 +363,8 @@ CNetworkObserver::CNetworkObserver() \
 NONSHARABLE_CLASS(CNetworkObserver) : 
   public CBase, 
   public MNetworkInfoRequestor,
-  public MNetworkInfoObserver
+  public MNetworkInfoObserver,
+  public MRetryAoObserver
 {
   CTOR_DECL_CNetworkObserver;
 
@@ -370,13 +372,17 @@ NONSHARABLE_CLASS(CNetworkObserver) :
   ~CNetworkObserver();
 
  private:
+  virtual void RetryTimerExpired(CRetryAo* src, TInt errCode);
+  virtual void RetryLimitReached(CRetryAo* src);
   virtual void HandleGotNetworkInfo(TInt aError);
   virtual void HandleNetworkInfoChange(TInt aError);
   void HandleData(TInt aError, CTelephony::TNetworkInfoV1 const & aData);
 
  private:
   CNetworkInfoGetter* iGetter;
+  TBool iGetterDone;
   CNetworkInfoNotifier* iNotifier;
+  CRetryAo* iRetryAo;
 };
 
 CTOR_IMPL_CNetworkObserver;
@@ -384,6 +390,8 @@ CTOR_IMPL_CNetworkObserver;
 void CNetworkObserver::ConstructL()
 {
   ac_AppContext* ac = ac_get_global_AppContext();
+
+  iRetryAo = new (ELeave) CRetryAo(*this, 20, 60);
 
   iGetter = new (ELeave) CNetworkInfoGetter(ac_Telephony(ac), *this);
   iNotifier = new (ELeave) CNetworkInfoNotifier(ac_Telephony(ac), *this);
@@ -395,11 +403,34 @@ CNetworkObserver::~CNetworkObserver()
 {
   delete iGetter;
   delete iNotifier;
+  delete iRetryAo;
+}
+
+void CNetworkObserver::RetryTimerExpired(CRetryAo* src, TInt errCode)
+{
+  (void)src;
+  if (errCode) {
+    LogDb* logDb = ac_global_LogDb;
+    ex_dblog_fatal_error_msg(logDb, "retry timer error", errCode);
+  } else {
+    if (iGetterDone)
+      iNotifier->MakeRequest();
+    else
+      iGetter->MakeRequest();
+  }
+}
+
+void CNetworkObserver::RetryLimitReached(CRetryAo* src)
+{
+  (void)src;
+  er_log_fatal_str("network info queries failing");
 }
 
 void CNetworkObserver::HandleGotNetworkInfo(TInt aError)
 {
   HandleData(aError, iGetter->Data());
+  if (!aError) 
+    iGetterDone = ETrue;
 }
 
 void CNetworkObserver::HandleNetworkInfoChange(TInt aError)
@@ -412,16 +443,23 @@ void CNetworkObserver::HandleData(TInt aError,
 {
   LogDb* logDb = ac_global_LogDb;
   if (aError) {
-    if (logDb)
-      ex_dblog_error_msg(logDb, "network info status query failure", aError, NULL);
+    logf("network info query failure: Symbian error %d", aError);
+    iRetryAo->Retry();
   } else {
-    /* xxx
+    iRetryAo->ResetFailures();
+
+    /* xxx what do we want to log? (whatever it is, only log it if there is a change to that data)
     int status = aData.iRegStatus;
     logf("network info status: %d", status);
     if (logDb) {
       log_db_log_registration(logDb, status, NULL);
     }
     */
+
+    // xxx roaming should affect uploads allowed flag, if using cellular access point, and if allowed country code has been configured (the flag can go directly to our uploader object, if any)
+
+    //xxx we want to pass this data also to any active cellid sensor
+
     iNotifier->MakeRequest();
   }
 }
@@ -429,6 +467,8 @@ void CNetworkObserver::HandleData(TInt aError,
 // --------------------------------------------------
 // network signal strength observing
 // --------------------------------------------------
+
+/// xxx retries are required here as well (have seen KErrOverflow)
 
 /***koog 
 (require codegen/symbian-cxx)
@@ -527,6 +567,8 @@ void CSignalObserver::HandleSignal(TInt aError, CTelephony::TSignalStrengthV1 co
       log_db_log_signal(logDb, dbm, bars, NULL);
     }
     iSignalInfoNotifier->MakeRequest();
+
+    // xxx poor signal strength should perhaps affect uploads allowed flag, if using cellular access point
   }
 }
 

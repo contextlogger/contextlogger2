@@ -74,6 +74,7 @@ NONSHARABLE_CLASS(CSensor_callstatus) :
  private: // MRetryAoObserver
 
   virtual void RetryTimerExpired(CRetryAo* src, TInt errCode);
+  virtual void RetryLimitReached(CRetryAo* src);
 
  private: // MFlightModeRequestor
 
