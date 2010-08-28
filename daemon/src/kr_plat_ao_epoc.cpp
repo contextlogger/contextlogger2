@@ -1,6 +1,7 @@
 #include "kr_plat_ao.h"
 
 #include "ac_app_context.h"
+//#include "cf_rcfile.h"
 #include "er_errors.h"
 #include "kr_diskspace.h"
 #include "sa_sensor_list_log_db.h"
@@ -382,6 +383,7 @@ NONSHARABLE_CLASS(CNetworkObserver) :
   TBool iGetterDone;
   CNetworkInfoNotifier* iNotifier;
   CRetryAo* iRetryAo;
+  CTelephony::TNetworkInfoV1 iOldData;
 };
 
 CTOR_IMPL_CNetworkObserver;
@@ -434,7 +436,6 @@ void CNetworkObserver::HandleNetworkInfoChange(TInt aError)
 void CNetworkObserver::HandleData(TInt aError, 
 				  CTelephony::TNetworkInfoV1 const & aData)
 {
-  LogDb* logDb = ac_global_LogDb;
   if (aError) {
     logf("network info query failure: Symbian error %d", aError);
     if (!iRetryAo->Retry()) {
@@ -442,8 +443,10 @@ void CNetworkObserver::HandleData(TInt aError,
     }
   } else {
     iRetryAo->ResetFailures();
+    iOldData = aData;
 
     /* xxx what do we want to log? (whatever it is, only log it if there is a change to that data)
+    LogDb* logDb = ac_global_LogDb;
     int status = aData.iRegStatus;
     logf("network info status: %d", status);
     if (logDb) {
@@ -451,9 +454,13 @@ void CNetworkObserver::HandleData(TInt aError,
     }
     */
 
+#if __FEATURE_UPLOADER__
     // xxx roaming should affect uploads allowed flag, if using cellular access point, and if allowed country code has been configured (the flag can go directly to our uploader object, if any)
+#endif
 
-    //xxx we want to pass this data also to any active cellid sensor
+#if __CELLID_ENABLED__
+    //xxx as an optimization, we want to pass this data also to any active cellid sensor (first we would require a mechanism for doing that)
+#endif
 
     iNotifier->MakeRequest();
   }
@@ -563,7 +570,9 @@ void CSignalObserver::HandleSignal(TInt aError, CTelephony::TSignalStrengthV1 co
     }
     iSignalInfoNotifier->MakeRequest();
 
+#if __FEATURE_UPLOADER__
     // xxx poor signal strength should perhaps affect uploads allowed flag, if using cellular access point
+#endif
   }
 }
 

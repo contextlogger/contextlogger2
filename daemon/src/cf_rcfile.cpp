@@ -62,6 +62,7 @@ struct _cf_RcFile {
 "validate('iap', 'number', nil)\n" \
 "validate('database_dir_string', 'string', is_non_empty_string)\n" \
 "validate('database_disk_threshold', 'number', nil)\n" \
+"validate('mcc', 'number', nil)\n" \
 "if iap == nil then\n" \
    "iap = IAP_DEFAULT\n" \
 "end\n" \

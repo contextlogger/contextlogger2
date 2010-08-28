@@ -47,6 +47,7 @@ extern "C" {
 #define cf_RcFile_get_iap(_self) cf_RcFile_get_int_or(_self, "iap", -1)
 #define cf_RcFile_get_database_dir(_self) cf_RcFile_get_str_or(_self, "database_dir", DATABASE_DIR_DEFAULT)
 #define cf_RcFile_get_database_disk_threshold(_self) cf_RcFile_get_int_or(_self, "database_disk_threshold", DATABASE_DISK_THRESHOLD_DEFAULT)
+#define cf_RcFile_get_mcc(_self) cf_RcFile_get_int_or(_self, "mcc", -1)
 
 #ifdef __cplusplus
 } /* extern "C" */

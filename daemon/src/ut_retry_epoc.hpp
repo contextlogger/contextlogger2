@@ -32,7 +32,7 @@ NONSHARABLE_CLASS(CRetryAo) :
 
   // Returns a false value if a retry timer was not set (due to
   // maximum number of retries having been reached).
-  TBool Retry();
+  TBool Retry() __attribute__ ((warn_unused_result));
 
   void ResetFailures();
 
