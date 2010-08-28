@@ -23,7 +23,6 @@ CTOR_IMPL_CSensor_indicator;
 
 void CSensor_indicator::ConstructL()
 {
-  iTelephony = CTelephony::NewL();
   LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iTimer, iTimer.CreateLocal()); 
 }
 
@@ -31,10 +30,10 @@ CSensor_indicator::~CSensor_indicator()
 {
   Cancel();
   SESSION_CLOSE_IF_OPEN(iTimer);
-  delete iTelephony;
 }
 
 #define iLogDb ac_LogDb(iAppContext)
+#define iTelephony ac_Telephony(iAppContext)
 
 gboolean CSensor_indicator::StartL(GError** error)
 {
@@ -56,7 +55,7 @@ void CSensor_indicator::Stop()
 
 void CSensor_indicator::MakeRequest()
 {
-  iTelephony->NotifyChange(iStatus, CTelephony::EIndicatorChange, iIndicatorDes);
+  iTelephony.NotifyChange(iStatus, CTelephony::EIndicatorChange, iIndicatorDes);
   SetActive();
   iState = EQuerying;
   //logt("indicator sensor observing indicator");
@@ -183,7 +182,7 @@ void CSensor_indicator::DoCancel()
     {
     case EQuerying:
       {
-	iTelephony->CancelAsync(CTelephony::EIndicatorChangeCancel);
+	iTelephony.CancelAsync(CTelephony::EIndicatorChangeCancel);
         break;
       }
     case ERetryWaiting:

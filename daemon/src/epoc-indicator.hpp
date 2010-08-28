@@ -91,8 +91,6 @@ NONSHARABLE_CLASS(CSensor_indicator) :
 
   CTelephony::TIndicatorV1Pckg iIndicatorDes;
 
-  CTelephony *iTelephony; // owned
-
   // Actually, we probably do not require retry support in this
   // sensor, but here it is anyway, for now.
 
