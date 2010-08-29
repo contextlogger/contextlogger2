@@ -49,6 +49,90 @@ static void stop_uploader(kr_Controller* self)
 #endif
 
 // --------------------------------------------------
+// uploads allowed flag
+// --------------------------------------------------
+
+static gboolean current_iap_is_cellular()
+{
+  return TRUE; /// xxx assumed to assist in testing readings even when using wlan
+}
+
+static void init_uploads_allowed_state(kr_Controller* self)
+{
+  self->is_cellular_ap = current_iap_is_cellular();
+  self->non_roaming_mcc = cf_RcFile_get_mcc(self->rcFile);
+  self->current_signal_strength = 1; // no reading yet
+  self->current_mcc = -1; // no reading yet
+
+  // Initial value, until more information about any mobile network
+  // becomes available.
+  self->are_uploads_allowed = !self->is_cellular_ap;
+
+  logf("non-roaming MCC: %d", self->non_roaming_mcc);
+  logf("uploads allowed: %d", self->are_uploads_allowed);
+}
+
+static void recompute_uploads_allowed(kr_Controller* self)
+{
+  gboolean old_flag = self->are_uploads_allowed;
+  logf("recomputing uploads allowed (now %d)", old_flag);
+  self->are_uploads_allowed = TRUE;
+  if (self->is_cellular_ap) {
+    if ((self->current_signal_strength == 1) ||
+	(self->current_mcc == -1)) {
+      // no network
+      self->are_uploads_allowed = FALSE;
+    } else {
+      if (self->non_roaming_mcc != -1) {
+	// have a roaming restriction
+	if (self->current_mcc != self->non_roaming_mcc)
+	  // is roaming
+	  self->are_uploads_allowed = FALSE;
+      }
+      // strength is from -123 dBm to -1 dBm (inclusive)
+      if (self->current_signal_strength < -110)
+	// poor signal
+	self->are_uploads_allowed = FALSE;
+    }
+  }
+  if (old_flag != self->are_uploads_allowed) {
+    logf("uploads allowed: %d", self->are_uploads_allowed);
+#if __FEATURE_UPLOADER__
+    //xxx notify uploader of flag change
+#endif
+  }
+}
+
+static void iap_config_changed(kr_Controller* self)
+{
+  gboolean nval = current_iap_is_cellular();
+  if (nval != self->is_cellular_ap) {
+    self->is_cellular_ap = nval;
+    recompute_uploads_allowed(self);
+  }
+}
+
+// pass +1 for no network
+void kr_Controller_set_signal_strength(kr_Controller* self, int strength)
+{
+  logf("setting strength to %d", strength);
+  if (strength != self->current_signal_strength) {
+    self->current_signal_strength = strength;
+    recompute_uploads_allowed(self);
+  }
+}
+
+// pass -1 for no network
+void kr_Controller_set_current_mcc(kr_Controller* self, int mcc)
+{
+  logf("setting mcc to %d", mcc);
+  if (mcc != self->current_mcc) {
+    self->current_mcc = mcc;
+    recompute_uploads_allowed(self);
+  }
+}
+
+// --------------------------------------------------
 // exported interface
 // --------------------------------------------------
 
@@ -113,6 +197,8 @@ kr_Controller* kr_Controller_new(GError** error)
     return NULL;
   }
   
+  init_uploads_allowed_state(self);
+
   LogDb* log = NULL;
   // GOB2 generated API, must guard against OOM errors in boilerplate.
   TRAP_OOM_FAIL(log = log_db_new(error));
@@ -292,7 +378,6 @@ gboolean kr_Controller_reconfigure(kr_Controller* self,
       return FALSE;
   } 
 
-#if __FEATURE_UPLOADER__ || __FEATURE_REMOKON__
   else if (NAME_EQUALS("iap")) {
 #if __FEATURE_UPLOADER__
     if (!up_Uploader_reconfigure(self->uploader, name, value, error))
@@ -302,8 +387,8 @@ gboolean kr_Controller_reconfigure(kr_Controller* self,
     if (!rk_Remokon_reconfigure(self->remokon, name, value, error))
       return FALSE;
 #endif
+    iap_config_changed(self);
   }
-#endif
 
 #if __FEATURE_UPLOADER__
   else if (NAME_STARTS_WITH("uploader.")) {

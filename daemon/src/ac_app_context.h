@@ -18,6 +18,7 @@
 
 #include "config_db.h"
 #include "cf_rcfile.h"
+#include "kr_controller.h"
 #include "log-db.h"
 
 #include <time.h>
@@ -29,6 +30,8 @@ extern "C" {
   typedef struct _ac_AppContext ac_AppContext;
 
   ac_AppContext* ac_get_global_AppContext();
+
+  kr_Controller* ac_Controller(ac_AppContext* self);
 
   LogDb* ac_LogDb(ac_AppContext* self);
 
@@ -50,6 +53,7 @@ extern "C" {
 } /* extern "C" */
 #endif
 
+#define ac_global_Controller ac_Controller(ac_get_global_AppContext())
 #define ac_global_LogDb ac_LogDb(ac_get_global_AppContext())
 #define ac_global_RcFile ac_RcFile(ac_get_global_AppContext())
 #define ac_global_ConfigDb ac_ConfigDb(ac_get_global_AppContext())

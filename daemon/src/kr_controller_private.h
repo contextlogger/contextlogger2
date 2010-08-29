@@ -19,7 +19,7 @@
 extern "C" {
 #endif
 
-  // Deprecated.
+  // Deprecated. xxx
   kr_Controller* getGlobalClient();
 
   struct _kr_Controller {
@@ -48,6 +48,12 @@ extern "C" {
 #if __FEATURE_UPLOADER__
     up_Uploader* uploader; // owned
 #endif
+
+    gboolean are_uploads_allowed;
+    gboolean is_cellular_ap;
+    int non_roaming_mcc; // -1 for none configured
+    int current_mcc; // -1 for no network
+    int current_signal_strength; // +1 for no network
   };
 
 #ifdef __cplusplus

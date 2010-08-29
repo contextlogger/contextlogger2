@@ -26,6 +26,10 @@ extern "C" {
 				     const gchar* value,
 				     GError** error);
 
+  void kr_Controller_set_signal_strength(kr_Controller* self, int strength);
+
+  void kr_Controller_set_current_mcc(kr_Controller* self, int mcc);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

@@ -443,9 +443,8 @@ void CNetworkObserver::HandleData(TInt aError,
     }
   } else {
     iRetryAo->ResetFailures();
-    iOldData = aData;
 
-    /* xxx what do we want to log? (whatever it is, only log it if there is a change to that data)
+    /* xxx what do we want to log? operator name, perhaps? (whatever it is, only log it if there is a change to that data)
     LogDb* logDb = ac_global_LogDb;
     int status = aData.iRegStatus;
     logf("network info status: %d", status);
@@ -454,12 +453,21 @@ void CNetworkObserver::HandleData(TInt aError,
     }
     */
 
-#if __FEATURE_UPLOADER__
-    // xxx roaming should affect uploads allowed flag, if using cellular access point, and if allowed country code has been configured (the flag can go directly to our uploader object, if any)
-#endif
+    if (iOldData.iCountryCode != aData.iCountryCode) {
+      TLex lex(aData.iCountryCode);
+      int mcc;
+      TInt errCode = lex.Val(mcc);
+      if (errCode) 
+	// Unexpected MCC.
+	mcc = -1;
+      // Notify interested parties.
+      kr_Controller_set_current_mcc(ac_global_Controller, mcc);
+    }
+
+    iOldData = aData;
 
 #if __CELLID_ENABLED__
-    //xxx as an optimization, we want to pass this data also to any active cellid sensor (first we would require a mechanism for doing that)
+    //xxx as an optimization, we want to pass this data also to any active cellid sensor (first we would require a mechanism for doing that); we probably require a private symbian only api in the sensor array
 #endif
 
     iNotifier->MakeRequest();
@@ -570,9 +578,8 @@ void CSignalObserver::HandleSignal(TInt aError, CTelephony::TSignalStrengthV1 co
     }
     iSignalInfoNotifier->MakeRequest();
 
-#if __FEATURE_UPLOADER__
-    // xxx poor signal strength should perhaps affect uploads allowed flag, if using cellular access point
-#endif
+    // Notify interested parties.
+    kr_Controller_set_signal_strength(ac_global_Controller, dbm);
   }
 }
 

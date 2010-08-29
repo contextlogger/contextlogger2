@@ -218,6 +218,11 @@ EXTERN_C ac_AppContext* ac_get_global_AppContext()
   return iGlobal;
 }
 
+EXTERN_C kr_Controller* ac_Controller(ac_AppContext* self)
+{
+  return self->kr;
+}
+
 EXTERN_C LogDb* ac_LogDb(ac_AppContext* self)
 {
   if (!self || !(self->kr)) return NULL;

@@ -43,11 +43,13 @@ class name \
 #define IF_SYMBIAN(x,y) { x ; }
 #define WHEN_SYMBIAN(stmt) { stmt ; }
 #define UNLESS_SYMBIAN(stmt)
+#define TRUE_ON_SYMBIAN 1
 #else
 #define IF_SYMBIAN_EXPR(x,y) (y)
 #define IF_SYMBIAN(x,y) { y ; }
 #define WHEN_SYMBIAN(stmt)
 #define UNLESS_SYMBIAN(stmt) { stmt ; }
+#define TRUE_ON_SYMBIAN 0
 #endif /* __SYMBIAN32__ */
 
 #if defined(__SYMBIAN32__) && defined(__cplusplus)

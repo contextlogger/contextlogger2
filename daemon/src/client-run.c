@@ -133,7 +133,7 @@ int cl2GlobalInit()
   printf("console test\n");
 #endif
 
-#if __DO_LOGGING__
+#if __DO_LOGGING__ && 0
   {
     SET_TRAP_OOM_VALUE(ENOMEM);
     double td = 6.38000011;
