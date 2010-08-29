@@ -71,6 +71,50 @@ gboolean epoc_iap_by_name(const gchar* iapName,
   return TRUE;
 }
 
+static TBool IsModemIapL(TUint32 aIapId)
+{
+  TBool res;
+
+  CCommsDatabase* commsDb = CCommsDatabase::NewL(EDatabaseTypeIAP);
+  CleanupStack::PushL(commsDb);
+
+  {
+    CCommsDbTableView* tableView = commsDb->OpenViewMatchingUintLC(TPtrC(IAP), TPtrC(COMMDB_ID), aIapId);
+    // We assume exactly one matching record, but the caller may catch KErrNotFound.
+    User::LeaveIfError(tableView->GotoFirstRecord());
+    TBuf<KCommsDbSvrMaxFieldLength> bearerType;
+    tableView->ReadTextL(TPtrC(IAP_BEARER_TYPE), bearerType);
+    _LIT(KPat, "ModemBearer");
+    res = (bearerType == KPat);
+    CleanupStack::PopAndDestroy(tableView);
+  }
+
+  CleanupStack::PopAndDestroy(commsDb);
+
+  return res;
+}
+
+extern "C" 
+gboolean epoc_iap_is_modem(guint32 iapId,
+			   gboolean* found,
+			   gboolean* yes,
+			   GError** error)
+{
+  TBool res = EFalse;
+  TRAPD(errCode, res = IsModemIapL(iapId));
+  if (errCode == KErrNotFound) {
+    *found = FALSE;
+    return TRUE;
+  } else if (errCode) {
+    if (error)
+      *error = gx_error_new(domain_symbian, errCode, "error looking up bearer for IAP ID %u: %s (%d)", iapId, plat_error_strerror(errCode), errCode);
+    return FALSE;
+  }
+  *found = TRUE;
+  *yes = res;
+  return TRUE;
+}
+
 #if __DO_LOGGING__
 // This function is not kind on the stack.
 static void LogBearerTypesL()
@@ -81,7 +125,7 @@ static void LogBearerTypesL()
   {
     CCommsDbTableView* tableView = commsDb->OpenTableLC(TPtrC(IAP));
     TUint32 iapId;
-    TBuf<KCommsDbSvrMaxFieldLength> iapName;
+    TBuf<KCommsDbSvrMaxFieldLength> iapName; // really should reuse this
     TBuf8<KCommsDbSvrMaxFieldLength+1> iapName8;
     TBuf<KCommsDbSvrMaxFieldLength> bearerType;
     TBuf8<KCommsDbSvrMaxFieldLength+1> bearerType8;
@@ -92,12 +136,13 @@ static void LogBearerTypesL()
 	 errCode = tableView->GotoNextRecord()) {
       tableView->ReadUintL(TPtrC(COMMDB_ID), iapId);
       tableView->ReadTextL(TPtrC(COMMDB_NAME), iapName);
-      tableView->ReadTextL(TPtrC(IAP_BEARER_TYPE), bearerType);
-      tableView->ReadTextL(TPtrC(IAP_SERVICE_TYPE), serviceType);
       iapName8.Copy(iapName);
+      tableView->ReadTextL(TPtrC(IAP_BEARER_TYPE), bearerType);
       bearerType8.Copy(bearerType);
+      tableView->ReadTextL(TPtrC(IAP_SERVICE_TYPE), serviceType);
       serviceType8.Copy(serviceType);
-      logf("iap %u, '%s', bearer '%s', service '%s'", iapId, iapName8.PtrZ(), bearerType8.PtrZ(), serviceType8.PtrZ());
+      logf("iap %u, '%s', bearer '%s', service '%s'", iapId, 
+	   iapName8.PtrZ(), bearerType8.PtrZ(), serviceType8.PtrZ());
     }
     CleanupStack::PopAndDestroy(tableView);
   }

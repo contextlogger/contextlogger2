@@ -1,5 +1,6 @@
 #include "kr_controller_private.h"
 
+#include "cf_query.h"
 #include "epoc-iap.h"
 #include "kr_diskspace.h"
 #include "utils_cl2.h"
@@ -45,7 +46,31 @@ static void stop_uploader(kr_Controller* self)
 
 static gboolean current_iap_is_cellular()
 {
-  return TRUE; /// xxx assumed to assist in testing readings even when using wlan
+#if defined(__SYMBIAN32__)
+  int value = get_config_iap_id();
+  if (value < 0) {
+    // No IAP configured. User can manually choose IAP or not.
+    return FALSE;
+  }
+  guint32 iapId = (guint32)value;
+  gboolean found = FALSE;
+  gboolean yes = FALSE;
+  GError* error = NULL;
+  LogDb* logDb = ac_global_LogDb;
+  if (!epoc_iap_is_modem(iapId, &found, &yes, &error)) {
+    log_db_log_status(logDb, NULL, "could not look up bearer for IAP ID %u", iapId);
+    gx_dblog_error_free(logDb, error);
+    return TRUE; // play it safe
+  }
+  if (!found) {
+    log_db_log_status(logDb, NULL, "WARNING: no IAP ID %u", iapId);
+    return TRUE; // play it safe
+  }
+  logf("iap %u is modem bearer: %d", iapId, yes);
+  return yes;
+#else
+  return FALSE;
+#endif /* __SYMBIAN32__ */
 }
 
 static void init_uploads_allowed_state(kr_Controller* self)
@@ -189,8 +214,6 @@ kr_Controller* kr_Controller_new(GError** error)
     return NULL;
   }
   
-  init_uploads_allowed_state(self);
-
   LogDb* log = NULL;
   // GOB2 generated API, must guard against OOM errors in boilerplate.
   TRAP_OOM_FAIL(log = log_db_new(error));
@@ -199,6 +222,8 @@ kr_Controller* kr_Controller_new(GError** error)
     return NULL;
   }
   self->log = log;
+
+  init_uploads_allowed_state(self);
 
 #if __FEATURE_UPLOADER__
   // This is a bit different in that Uploader is not affected by

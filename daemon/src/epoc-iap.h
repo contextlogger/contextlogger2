@@ -13,6 +13,11 @@ extern "C" {
 			    gboolean* found,
 			    GError** error); 
 
+  gboolean epoc_iap_is_modem(guint32 iapId,
+			     gboolean* found,
+			     gboolean* yes,
+			     GError** error); 
+
   void epoc_log_bearer_types();
 
 #ifdef __cplusplus
