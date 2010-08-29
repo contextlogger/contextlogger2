@@ -75,7 +75,7 @@ static gboolean current_iap_is_cellular()
 
 static void init_uploads_allowed_state(kr_Controller* self)
 {
-  WHEN_SYMBIAN(epoc_log_bearer_types());
+  //WHEN_SYMBIAN(epoc_log_bearer_types());
 
   self->is_cellular_ap = current_iap_is_cellular();
   self->non_roaming_mcc = cf_RcFile_get_mcc(self->rcFile);

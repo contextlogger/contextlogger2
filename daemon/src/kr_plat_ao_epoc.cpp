@@ -478,7 +478,8 @@ void CNetworkObserver::HandleData(TInt aError,
 // network signal strength observing
 // --------------------------------------------------
 
-/// xxx retries are required here as well (have seen KErrOverflow)
+/// We require retries here in particular, as we have seen
+/// KErrOverflow.
 
 /***koog 
 (require codegen/symbian-cxx)
@@ -518,7 +519,8 @@ CSignalObserver::CSignalObserver() \
 NONSHARABLE_CLASS(CSignalObserver) : 
   public CBase, 
   public MSignalStrengthRequestor,
-  public MSignalStrengthObserver
+  public MSignalStrengthObserver,
+  public MRetryAoObserver
 {
   CTOR_DECL_CSignalObserver;
 
@@ -526,13 +528,16 @@ NONSHARABLE_CLASS(CSignalObserver) :
   ~CSignalObserver();
 
  private:
-  virtual void HandleGotSignalStrength(TInt aError);
+  virtual void RetryTimerExpired(CRetryAo* src, TInt errCode);
+   virtual void HandleGotSignalStrength(TInt aError);
   virtual void HandleSignalStrengthChange(TInt aError);
   void HandleSignal(TInt aError, CTelephony::TSignalStrengthV1 const & aData);
 
  private:
-  CSignalStrengthGetter* iSignalInfoGetter;
-  CSignalStrengthNotifier* iSignalInfoNotifier;
+  CRetryAo* iRetryAo;
+  TBool iGetterDone;
+  CSignalStrengthGetter* iGetter;
+  CSignalStrengthNotifier* iNotifier;
 };
 
 CTOR_IMPL_CSignalObserver;
@@ -541,42 +546,65 @@ void CSignalObserver::ConstructL()
 {
   ac_AppContext* ac = ac_get_global_AppContext();
 
-  iSignalInfoGetter = new (ELeave) CSignalStrengthGetter(ac_Telephony(ac), *this);
-  iSignalInfoNotifier = new (ELeave) CSignalStrengthNotifier(ac_Telephony(ac), *this);
+  iRetryAo = new (ELeave) CRetryAo(*this, 20, 60);
 
-  iSignalInfoGetter->MakeRequest();
+  iGetter = new (ELeave) CSignalStrengthGetter(ac_Telephony(ac), *this);
+  iNotifier = new (ELeave) CSignalStrengthNotifier(ac_Telephony(ac), *this);
+
+  iGetter->MakeRequest();
 }
 
 CSignalObserver::~CSignalObserver()
 {
-  delete iSignalInfoGetter;
-  delete iSignalInfoNotifier;
+  delete iGetter;
+  delete iNotifier;
+  delete iRetryAo;
+}
+
+void CSignalObserver::RetryTimerExpired(CRetryAo* src, TInt errCode)
+{
+  (void)src;
+  if (errCode) {
+    LogDb* logDb = ac_global_LogDb;
+    ex_dblog_fatal_error_msg(logDb, "retry timer error", errCode);
+  } else {
+    if (iGetterDone)
+      iNotifier->MakeRequest();
+    else
+      iGetter->MakeRequest();
+  }
 }
 
 void CSignalObserver::HandleGotSignalStrength(TInt aError)
 {
-  HandleSignal(aError, iSignalInfoGetter->Data());
+  HandleSignal(aError, iGetter->Data());
+  if (!aError) 
+    iGetterDone = ETrue;
 }
 
 void CSignalObserver::HandleSignalStrengthChange(TInt aError)
 {
-  HandleSignal(aError, iSignalInfoNotifier->Data());
+  HandleSignal(aError, iNotifier->Data());
 }
 
 void CSignalObserver::HandleSignal(TInt aError, CTelephony::TSignalStrengthV1 const & aData)
 {
   LogDb* logDb = ac_global_LogDb;
   if (aError) {
-    if (logDb)
-      ex_dblog_error_msg(logDb, "network signal strength query failure", aError, NULL);
+    logf("signal strength query failure: Symbian error %d", aError);
+    if (!iRetryAo->Retry()) {
+      er_log_fatal_str("signal strength queries failing");
+    }
   } else {
+    iRetryAo->ResetFailures();
+
     int dbm = -(aData.iSignalStrength);
     int bars = aData.iBar;
     logf("network signal strength: %d dBm (%d bars)", dbm, bars);
     if (logDb) {
       log_db_log_signal(logDb, dbm, bars, NULL);
     }
-    iSignalInfoNotifier->MakeRequest();
+    iNotifier->MakeRequest();
 
     // Notify interested parties.
     kr_Controller_set_signal_strength(ac_global_Controller, dbm);
