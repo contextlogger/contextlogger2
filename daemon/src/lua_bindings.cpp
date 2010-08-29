@@ -133,7 +133,7 @@ static int f_config_get(lua_State* L)
   // xxx should we check that the number of arguments is right
   const char* name = luaL_checklstring(L, 1, NULL);
   GError* getError = NULL;
-  char* value = cf_DYNAMIC_GET_ERR(name, &getError);
+  char* value = ac_DYNAMIC_GET_ERR(name, &getError);
   lua_pop(L, 1); // name
   if (value) {
     lua_pushstring(L, value);
@@ -155,7 +155,7 @@ static int f_config_set(lua_State* L)
   const char* value = luaL_checklstring(L, 2, NULL);
   logf("config set '%s' -> '%s'", name, value);
   GError* setError = NULL;
-  gboolean success = cf_DYNAMIC_SET_ERR(name, value, &setError);
+  gboolean success = ac_DYNAMIC_SET_ERR(name, value, &setError);
   lua_pop(L, 2); // name, value (perhaps unnecessary)
   if (!success) {
     logt("config set failed");

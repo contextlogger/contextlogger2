@@ -1,8 +1,8 @@
 #include "cf_query.h"
 
+#include "ac_app_context.h"
 #include "er_errors.h"
 #include "lua_cl2.h"
-#include "kr_controller_private.h"
 
 #include <string.h>
 
@@ -54,7 +54,7 @@ static gboolean get_lua_value_wd(const gchar* name,
 
   {
     GError* localError = NULL;
-    luaStr = cf_DYNAMIC_GET_ERR(name, &localError);
+    luaStr = ac_DYNAMIC_GET_ERR(name, &localError);
     if (!luaStr) {
       if (is_not_found_error(localError)) {
 	g_error_free(localError);

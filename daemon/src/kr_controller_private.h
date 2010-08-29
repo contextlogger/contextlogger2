@@ -60,19 +60,6 @@ extern "C" {
 } /* extern "C" */
 #endif
 
-  // The caller must free any returned value.
-#define cf_DYNAMIC_GET(_key) \
-  (ConfigDb_get_generic(getGlobalClient()->configDb, _key, NULL))
-
-  // The caller must free any returned value, and free any set GError
-  // value.
-#define cf_DYNAMIC_GET_ERR(_key,_errorpp) \
-  (ConfigDb_get_generic(getGlobalClient()->configDb, _key, _errorpp))
-
-  // The caller must free any set GError value.
-#define cf_DYNAMIC_SET_ERR(_key,_value,_errorpp) \
-  (ConfigDb_set_generic(getGlobalClient()->configDb, _key, _value, _errorpp))
-
 #endif /* __kr_controller_private_h__ */
 
 /**
