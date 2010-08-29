@@ -13,6 +13,8 @@ extern "C" {
 			    gboolean* found,
 			    GError** error); 
 
+  void epoc_log_bearer_types();
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

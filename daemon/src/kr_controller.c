@@ -1,5 +1,6 @@
 #include "kr_controller_private.h"
 
+#include "epoc-iap.h"
 #include "kr_diskspace.h"
 #include "utils_cl2.h"
 
@@ -49,6 +50,8 @@ static gboolean current_iap_is_cellular()
 
 static void init_uploads_allowed_state(kr_Controller* self)
 {
+  WHEN_SYMBIAN(epoc_log_bearer_types());
+
   self->is_cellular_ap = current_iap_is_cellular();
   self->non_roaming_mcc = cf_RcFile_get_mcc(self->rcFile);
   self->current_signal_strength = 1; // no reading yet

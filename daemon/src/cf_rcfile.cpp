@@ -100,7 +100,7 @@ static gboolean ReadRcFile(cf_RcFile* self, lua_State *L, GError** error)
       return TRUE;
     }
 
-#if defined(__DO_LOGGING__)
+#if __DO_LOGGING__
     // An error occurred, and hence an error message should have been pushed by Lua.
     if (!lua_isnone(L, -1)) {
       const char* s = lua_tostring(L, -1);
@@ -123,7 +123,7 @@ static gboolean ReadRcFile(cf_RcFile* self, lua_State *L, GError** error)
 
   ValidateAdjustConfig(L);
 
-#if defined(__DO_LOGGING__)
+#if __DO_LOGGING__
   EVALUATE("do\n" 
 	   "  local function f (n, fm) local v = _G[n]; if v ~= nil then if type(v) == 'function' then cl2.log(string.format('%s configured to <function>', n)) else cl2.log(string.format('%s configured to ' .. fm .. ' :: %s', n, v, type(v))); end; end; end;"
 	   "  f('username', '%q');"

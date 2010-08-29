@@ -10,7 +10,7 @@
 #include <commdb.h>
 #include <utf.h>
 
-#define MAX_IAP_NAME_LENGTH KCommsDbSvrMaxColumnNameLength
+#define MAX_IAP_NAME_LENGTH KCommsDbSvrMaxFieldLength
 
 static TBool FindIapByNameL(const TDesC& aIapName, TUint32& aIapId)
 {
@@ -69,6 +69,51 @@ gboolean epoc_iap_by_name(const gchar* iapName,
   }
 
   return TRUE;
+}
+
+#if __DO_LOGGING__
+// This function is not kind on the stack.
+static void LogBearerTypesL()
+{
+  CCommsDatabase* commsDb = CCommsDatabase::NewL(EDatabaseTypeIAP);
+  CleanupStack::PushL(commsDb);
+
+  {
+    CCommsDbTableView* tableView = commsDb->OpenTableLC(TPtrC(IAP));
+    TUint32 iapId;
+    TBuf<KCommsDbSvrMaxFieldLength> iapName;
+    TBuf8<KCommsDbSvrMaxFieldLength+1> iapName8;
+    TBuf<KCommsDbSvrMaxFieldLength> bearerType;
+    TBuf8<KCommsDbSvrMaxFieldLength+1> bearerType8;
+    TBuf<KCommsDbSvrMaxFieldLength> serviceType;
+    TBuf8<KCommsDbSvrMaxFieldLength+1> serviceType8;
+    for (TInt errCode(tableView->GotoFirstRecord());
+	 !errCode;
+	 errCode = tableView->GotoNextRecord()) {
+      tableView->ReadUintL(TPtrC(COMMDB_ID), iapId);
+      tableView->ReadTextL(TPtrC(COMMDB_NAME), iapName);
+      tableView->ReadTextL(TPtrC(IAP_BEARER_TYPE), bearerType);
+      tableView->ReadTextL(TPtrC(IAP_SERVICE_TYPE), serviceType);
+      iapName8.Copy(iapName);
+      bearerType8.Copy(bearerType);
+      serviceType8.Copy(serviceType);
+      logf("iap %u, '%s', bearer '%s', service '%s'", iapId, iapName8.PtrZ(), bearerType8.PtrZ(), serviceType8.PtrZ());
+    }
+    CleanupStack::PopAndDestroy(tableView);
+  }
+
+  CleanupStack::PopAndDestroy(commsDb);
+}
+#endif
+
+extern "C" 
+void epoc_log_bearer_types()
+{
+#if __DO_LOGGING__
+  TRAPD(errCode, LogBearerTypesL());
+  if (errCode)
+    logf("error %d logging bearer types", errCode);
+#endif
 }
 
 /**
