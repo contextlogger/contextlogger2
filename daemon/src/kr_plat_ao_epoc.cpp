@@ -437,7 +437,8 @@ void CNetworkObserver::HandleData(TInt aError,
 				  CTelephony::TNetworkInfoV1 const & aData)
 {
   if (aError) {
-    logf("network info query failure: Symbian error %d", aError);
+    LogDb* logDb = ac_global_LogDb;
+    ex_dblog_error_msg(logDb, "network info query failure", aError, NULL);
     if (!iRetryAo->Retry()) {
       er_log_fatal_str("network info queries failing");
     }
@@ -591,7 +592,7 @@ void CSignalObserver::HandleSignal(TInt aError, CTelephony::TSignalStrengthV1 co
 {
   LogDb* logDb = ac_global_LogDb;
   if (aError) {
-    logf("signal strength query failure: Symbian error %d", aError);
+    ex_dblog_error_msg(logDb, "signal strength query failure", aError, NULL);
     if (!iRetryAo->Retry()) {
       er_log_fatal_str("signal strength queries failing");
     }

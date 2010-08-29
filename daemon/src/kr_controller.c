@@ -107,8 +107,10 @@ static void recompute_uploads_allowed(kr_Controller* self)
 	  // is roaming
 	  self->are_uploads_allowed = FALSE;
       }
-      // strength is from -123 dBm to -1 dBm (inclusive)
-      if (self->current_signal_strength < -110)
+      // strength is from -123 dBm to -1 dBm (inclusive),
+      // but apparently can also be 0 in flight mode
+      if ((self->current_signal_strength < -110) ||
+	  (self->current_signal_strength == 0))
 	// poor signal
 	self->are_uploads_allowed = FALSE;
     }

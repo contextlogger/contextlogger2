@@ -230,11 +230,12 @@ class Log:Db from G:Object {
     va_start(argp, fmt);
     g_vasprintf(&buf, fmt, argp);
     va_end(argp); // any cleanup
+    logt(buf);
     gboolean res = log_text_to_db(self, 
-			     buf,
-			     self->_priv->stmts.statusStmt,
-			     "failed to log status: %s (%d)",
-			     error);
+				  buf,
+				  self->_priv->stmts.statusStmt,
+				  "failed to log status: %s (%d)",
+				  error);
     g_free(buf);
     return res;
   }
