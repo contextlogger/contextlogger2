@@ -59,7 +59,8 @@ VMs left and right, and we want that to stay fast.
 
 #include "libluasqlite3.h"
 
-#include "kr_controller_private.h"
+#include "ac_app_context.h"
+//#include "kr_controller_private.h"
 #include "log-db.h"
 #include "sqlite_cl2.h"
 
@@ -771,7 +772,7 @@ FUNC( l_sqlite3_last_insert_rowid )
 
 FUNC( l_sqlite3_open )
 {
-  sqlite3 * sqlite3 	= getGlobalClient()->log->db;
+  sqlite3 * sqlite3 	= ac_global_LogDb->db;
   DB * db = (DB *) lua_newuserdata(L, sizeof(DB));
   db->kr_db = sqlite3;
   return 1;	/* database */

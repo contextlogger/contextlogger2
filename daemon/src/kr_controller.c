@@ -14,16 +14,6 @@
 #endif /* __SYMBIAN32__ */
 
 // --------------------------------------------------
-// global instance
-// --------------------------------------------------
-
-static kr_Controller* globalClient = NULL;
-
-kr_Controller* getGlobalClient() {
-  return globalClient;
-}
-
-// --------------------------------------------------
 // internal
 // --------------------------------------------------
 
@@ -153,7 +143,6 @@ kr_Controller* kr_Controller_new(GError** error)
     if (error) *error = gx_error_no_memory;
     return NULL;
   }
-  globalClient = self;
 
   self->appContext = ac;
   ac_AppContext_set_controller(self->appContext, self);
@@ -309,8 +298,6 @@ void kr_Controller_destroy(kr_Controller* self)
     
     g_free(self);
     //logt("logger controller destroyed");
-    
-    globalClient = NULL;
   }
 } 
 

@@ -155,7 +155,7 @@ source er_errors_cxx.cpp
 source kr_controller.c
 source kr_diskspace.cpp
 source kr_plat_ao_epoc.cpp
-source libluasqlite3.c
+source libluasqlite3.c // note, built in, but not yet supported
 <% if $FEATURE_LOCALSERVER %>
 source local_server.cpp
 <% end %>

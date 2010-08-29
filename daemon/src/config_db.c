@@ -1,9 +1,9 @@
 #include "config_db_private.h"
 
+#include "ac_app_context.h"
 #include "application_config.h"
 #include "db_creation.h"
 #include "er_errors.h"
-#include "kr_controller_private.h"
 #include "lua_cl2.h"
 #include "sqlite_cl2.h"
 
@@ -308,7 +308,7 @@ gboolean ConfigDb_set_generic(ConfigDb* self,
     // doing that, and we consider it a separate issue whether the
     // concerned components are actually able to honor the new
     // configuration or not.
-    kr_Controller* kr = getGlobalClient();
+    kr_Controller* kr = ac_global_Controller;
     if (!kr_Controller_reconfigure(kr, name, value, error))
       return FALSE;
   }

@@ -220,6 +220,7 @@ EXTERN_C ac_AppContext* ac_get_global_AppContext()
 
 EXTERN_C kr_Controller* ac_Controller(ac_AppContext* self)
 {
+  if (!self) return NULL;
   return self->kr;
 }
 
@@ -231,11 +232,13 @@ EXTERN_C LogDb* ac_LogDb(ac_AppContext* self)
 
 EXTERN_C cf_RcFile* ac_RcFile(ac_AppContext* self)
 {
+  if (!self || !(self->kr)) return NULL;
   return self->kr->rcFile;
 }
 
 EXTERN_C ConfigDb* ac_ConfigDb(ac_AppContext* self)
 {
+  if (!self || !(self->kr)) return NULL;
   return self->kr->configDb;
 }
 

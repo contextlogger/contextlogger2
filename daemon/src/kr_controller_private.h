@@ -19,9 +19,6 @@
 extern "C" {
 #endif
 
-  // Deprecated. xxx
-  kr_Controller* getGlobalClient();
-
   struct _kr_Controller {
 #if HAVE_PLAT_AO
     kr_PlatAo* platAo;

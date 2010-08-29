@@ -197,7 +197,7 @@ static int f_is_sensor_running(lua_State* L)
 /***end***/
 {
   const char* name = luaL_checklstring(L, 1, NULL);
-  kr_Controller* kr = getGlobalClient();
+  kr_Controller* kr = ac_global_Controller;
   gboolean is_so = sa_Array_sensor_is_running(kr->scanner, name);
   lua_pushboolean(L, is_so);
   return 1;
@@ -208,7 +208,7 @@ static int f_sensor_stop(lua_State* L)
 /***end***/
 {
   const char* name = luaL_checklstring(L, 1, NULL);
-  kr_Controller* kr = getGlobalClient();
+  kr_Controller* kr = ac_global_Controller;
   sa_Array_sensor_stop(kr->scanner, name);
   return 0;
 }
@@ -218,7 +218,7 @@ static int f_sensor_start(lua_State* L)
 /***end***/
 {
   const char* name = luaL_checklstring(L, 1, NULL);
-  kr_Controller* kr = getGlobalClient();
+  kr_Controller* kr = ac_global_Controller;
   GError* localError = NULL;
   if (!sa_Array_sensor_start(kr->scanner, name, &localError)) {
     return lua_raise_gerror(L, localError);
@@ -231,7 +231,7 @@ static int f_upload_now(lua_State* L)
 /***end***/
 {
 #if __FEATURE_UPLOADER__
-  kr_Controller* kr = getGlobalClient();
+  kr_Controller* kr = ac_global_Controller;
   if (!kr->uploader) {
     lua_pushstring(L, "uploader not started");
     lua_error(L); // will not return
@@ -264,7 +264,7 @@ static int f_remokon_start(lua_State* L)
 /***end***/
 {
 #if __FEATURE_REMOKON__
-  kr_Controller* kr = getGlobalClient();
+  kr_Controller* kr = ac_global_Controller;
   GError* localError = NULL;
   if (!rk_Remokon_start(kr->remokon, &localError)) {
     return lua_raise_gerror(L, localError);
@@ -280,7 +280,7 @@ static int f_remokon_stop(lua_State* L)
 /***end***/
 {
 #if __FEATURE_REMOKON__
-  kr_Controller* kr = getGlobalClient();
+  kr_Controller* kr = ac_global_Controller;
   rk_Remokon_stop(kr->remokon);
 #else
   lua_error_unsupported(L);
