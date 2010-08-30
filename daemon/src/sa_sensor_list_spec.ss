@@ -124,6 +124,16 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
               (binding (index 3) (type int) (value "bars"))
               )))
     
+    ;; operator
+    (sensor (name operator) (inactive #t) (platforms)
+            (cpp-condition "defined(__EPOC32__)")
+            (sql-schema "create table operator_scan (unixtime INTEGER, name TEXT);")
+            (sql-statements "insert into operator_scan (unixtime, name) values (?, ?);")
+            (log-insert-api
+             (args ,(arg (type (ptr-to (cconst 'char))) (name 'operatorName)))
+             (bindings
+              (binding (index 2) (type text) (value "operatorName, strlen(operatorName)") (dispose static)))))
+    
     ;; profile (needs a variant targeting new extended plugin)
     (sensor (name profile) (platforms symbian)
             (cpp-condition "__PROFILE_ENABLED__")

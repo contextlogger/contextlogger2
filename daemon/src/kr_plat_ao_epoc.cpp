@@ -445,14 +445,17 @@ void CNetworkObserver::HandleData(TInt aError,
   } else {
     iRetryAo->ResetFailures();
 
-    /* xxx what do we want to log? operator name, perhaps? (whatever it is, only log it if there is a change to that data)
-    LogDb* logDb = ac_global_LogDb;
-    int status = aData.iRegStatus;
-    logf("network info status: %d", status);
-    if (logDb) {
-      log_db_log_registration(logDb, status, NULL);
+    // Log interesting data, if it has changed.
+    {
+      if (aData.iLongName != iOldData.iLongName) {
+	LogDb* logDb = ac_global_LogDb;
+	HBufC8* text8 = ConvToUtf8ZL(aData.iLongName);
+	CleanupStack::PushL(text8);
+	//logf("operator name: '%s'", (char*)text8->Ptr());
+	log_db_log_operator(logDb, (char*)text8->Ptr(), NULL);
+	CleanupStack::PopAndDestroy(text8);
+      }
     }
-    */
 
     if (iOldData.iCountryCode != aData.iCountryCode) {
       TLex lex(aData.iCountryCode);
@@ -530,7 +533,7 @@ NONSHARABLE_CLASS(CSignalObserver) :
 
  private:
   virtual void RetryTimerExpired(CRetryAo* src, TInt errCode);
-   virtual void HandleGotSignalStrength(TInt aError);
+  virtual void HandleGotSignalStrength(TInt aError);
   virtual void HandleSignalStrengthChange(TInt aError);
   void HandleSignal(TInt aError, CTelephony::TSignalStrengthV1 const & aData);
 

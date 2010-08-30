@@ -7,6 +7,8 @@ echo NETWORK REGISTRATION STATUS
 sqlite3 log.db "select datetime(unixtime, 'unixepoch'), status from registration_scan;"
 echo NETWORK SIGNAL STRENGTH
 sqlite3 log.db "select datetime(unixtime, 'unixepoch'), dbm, bars from signal_scan;"
+echo OPERATOR
+sqlite3 log.db "select datetime(unixtime, 'unixepoch'), name from operator_scan;"
 
 echo BLUETOOTH PROXIMITY DEVICES
 sqlite3 log.db "select datetime(unixtime, 'unixepoch'), address, name from btprox_item, btprox_scan where btprox_item.scan_id = btprox_scan.scan_id order by unixtime, address;"
