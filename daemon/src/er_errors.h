@@ -25,7 +25,25 @@ extern "C" {
   void er_global_cleanup();
 
   // --------------------------------------------------
-  // general error reporting
+  // generic error reporting
+  // --------------------------------------------------
+
+#define er_FATAL   (1<<0)
+#define er_NONE    (1<<1)
+#define er_POSIX   (1<<2)
+#define er_ERRNO   (1<<3)
+#define er_SYMBIAN (1<<4)
+#define er_GERROR  (1<<5)
+#define er_FREE    (1<<6)
+
+  void _er_log(int opt, void* errObj, const char *func, const char *file, int line, const char* fmt, ...);
+
+  // Type unsafe.
+#define er_log(opt, err, fmt...) \
+  _er_log(opt, err, __func__, __FILE__, __LINE__, fmt)
+
+  // --------------------------------------------------
+  // error type independent reporting
   // --------------------------------------------------
 
   void er_fatal();

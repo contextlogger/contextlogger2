@@ -5,6 +5,8 @@
 
 #include "common/utilities.h"
 
+#include <glib/gprintf.h>
+
 // Better just abort() on error here, system may not be ready for much else.
 void er_global_init()
 {
@@ -25,6 +27,109 @@ void er_txtlog_fatal()
 {
   logt("fatal error");
   er_fatal();
+}
+
+void _er_log(int opt, void* errObj, 
+	     const char *func, const char *file, int line, 
+	     const char* user_fmt, ...)
+{
+  gboolean is_fatal = ((opt & er_FATAL) != 0);
+  char* user_msg = NULL; // NULL if user_fmt is
+  char* err_msg = NULL; // just "error" if errObj not given
+  gboolean is_dynamic_err_msg = FALSE;
+  char* log_msg = NULL;
+  gboolean is_dynamic_log_msg = FALSE;
+
+  SET_TRAP_OOM(goto nomemory);
+  {
+    if (user_fmt) {
+      va_list argp;
+      va_start(argp, user_fmt);
+      g_vasprintf(&user_msg, user_fmt, argp);
+      va_end(argp);
+    }
+
+    {
+      if (opt & er_NONE) {
+	// Nothing to format.
+      } else if (opt & (er_POSIX | er_ERRNO)) {
+	int errCode;
+	if (opt & er_POSIX)
+	  errCode = (int)errObj;
+	else // (opt & er_ERRNO)
+	  errCode = errno;
+	err_msg = g_strdup_printf("POSIX error: %s (%d)", 
+				  strerror(errCode), errCode);
+	is_dynamic_err_msg = TRUE;
+      } else if (opt & er_SYMBIAN) {
+#if defined(__SYMBIAN32__)
+	int errCode = (int)errObj;
+	err_msg = g_strdup_printf("Symbian error: %s (%d)", 
+				  plat_error_strerror(errCode), errCode);
+	is_dynamic_err_msg = TRUE;
+#else
+	assert(0 && "Symbian error in non-Symbian code");
+#endif /* __SYMBIAN32__ */
+      } else if (opt & er_GERROR) {
+	if (G_LIKELY(errObj)) {
+	  GError* error = (GError*)errObj;
+	  err_msg = g_strdup_printf("GError: %s (%s: %d)",
+				    error->message, 
+				    g_quark_to_string(error->domain), 
+				    error->code);
+	  is_dynamic_err_msg = TRUE;
+	} else {
+	  err_msg = "out of memory error";
+	}
+      } else {
+	assert(0 && "unsupported error type");
+      }
+    }
+
+    {
+      const char* heading = (is_fatal ? "FATAL" : "ERROR");
+      const char* inspect = (err_msg ? err_msg : "<no value>");
+      const char* msg = (user_msg ? user_msg : "<no message>");
+      log_msg = g_strdup_printf("%s: %s: %s [func %s, file %s, line %d]",
+				heading, msg, inspect, func, file, line);
+      is_dynamic_log_msg = TRUE;
+    }
+  }
+  UNSET_TRAP_OOM();
+
+ ready:
+  {
+    LogDb* logDb = ac_global_LogDb;
+    if (!logDb) {
+      logt(log_msg);
+    } else {
+      if (!log_db_log_status(logDb, NULL, log_msg)) {
+	logt("logging failure in __er_log");
+	is_fatal = TRUE;
+      }
+    }
+    
+    g_free(user_msg);
+    if (is_dynamic_err_msg)
+      g_free(err_msg);
+    if (is_dynamic_log_msg)
+      g_free(log_msg);
+    
+    if (opt & er_FREE)
+      if (opt & er_GERROR)
+	gx_error_free((GError*)errObj);
+
+    if (is_fatal)
+      er_fatal();
+  }
+  return;
+
+ nomemory:
+  {
+    log_msg = "FATAL: out of memory in __er_log";
+    is_fatal = TRUE;
+    goto ready;
+  }
 }
 
 // The docs of g_error_free do not say if the error may be NULL. Well
