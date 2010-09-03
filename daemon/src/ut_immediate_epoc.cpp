@@ -1,0 +1,184 @@
+#include "ut_immediate.h"
+
+#include "er_errors.h"
+
+#include <e32base.h>
+
+// --------------------------------------------------
+// opaque object
+// --------------------------------------------------
+
+class CImmediateAo;
+
+struct _ut_Immediate {
+  CImmediateAo* ao;
+  void* userdata; 
+  ut_ImmediateCallback* cb;
+};
+
+// --------------------------------------------------
+// active object
+// --------------------------------------------------
+
+NONSHARABLE_CLASS(CImmediateAo) : public CActive
+{
+ public:
+  static CImmediateAo* NewL(ut_Immediate& aClient);
+  ~CImmediateAo();
+
+ private:
+  CImmediateAo(ut_Immediate& aClient) : 
+    CActive(EPriorityStandard), iClient(aClient)
+  {
+    CActiveScheduler::Add(this);
+  }
+
+ public:
+  void Complete();
+
+ private:
+  void RunL();
+  TInt RunError(TInt aError);
+  void DoCancel();
+
+ private:
+  ut_Immediate& iClient;
+};
+
+CImmediateAo *CImmediateAo::NewL(ut_Immediate &aClient)
+{
+  CImmediateAo *object = new (ELeave) CImmediateAo(aClient);
+  /*
+  CleanupStack::PushL(object);
+  object->ConstructL();
+  CleanupStack::Pop();
+  */
+  return object;
+}
+
+CImmediateAo::~CImmediateAo()
+{
+  Cancel();
+}
+
+TInt CImmediateAo::RunError(TInt aError)
+{
+  assert(0 && "leave in CImmediateAo::RunL()");
+  return 0; // not reached
+}
+
+void CImmediateAo::Complete()
+{
+  Cancel();
+
+  iStatus = KRequestPending;
+  SetActive();
+
+  TRequestStatus* status = &iStatus;
+  User::RequestComplete(status, KErrNone);
+}
+
+void CImmediateAo::DoCancel()
+{
+  if (iStatus == KRequestPending)
+    {
+      assert(0 && "CImmediateAo::DoCancel() unexpectedly called");
+    }
+}
+
+#define make_error(_errCode, _msg)					\
+  gx_error_new(domain_symbian, _errCode, _msg ": %s (%d)",		\
+	       plat_error_strerror(_errCode), _errCode);
+
+void CImmediateAo::RunL()
+{
+  GError* error = NULL;
+  TInt errCode = iStatus.Int();
+  if (G_UNLIKELY(errCode)) {
+    error = make_error(errCode, "immediate error");
+  }
+  (*(iClient.cb))(iClient.userdata, error);
+}
+
+// --------------------------------------------------
+// API
+// --------------------------------------------------
+
+extern "C" ut_Immediate* ut_Immediate_new(void* userdata, ut_ImmediateCallback* cb, 
+					  GError** error)
+{
+  ut_Immediate* self = g_try_new0(ut_Immediate, 1);
+  if (G_UNLIKELY(!self)) {
+    if (error) *error = gx_error_no_memory;
+    return NULL;
+  }
+  self->userdata = userdata;
+  self->cb = cb;
+
+  TRAPD(errCode, self->ao = CImmediateAo::NewL(*self));
+  if (G_UNLIKELY(errCode)) {
+    g_free(self);
+    if (error) 
+      *error = make_error(errCode, "failed to create native immediate instance");
+    return NULL;
+  }
+
+  return self;
+}
+  
+extern "C" void ut_Immediate_destroy(ut_Immediate* self)
+{
+  if (self) {
+    delete self->ao;
+    g_free(self);
+  }
+}
+
+extern "C" gboolean ut_Immediate_complete(ut_Immediate* self, GError** error)
+{
+  (void)error;
+  ut_Immediate_cancel(self);
+  self->ao->Complete();
+  return TRUE;
+}
+
+extern "C" void ut_Immediate_cancel(ut_Immediate* self)
+{
+  self->ao->Cancel();
+}
+
+extern "C" gboolean ut_Immediate_is_active(ut_Immediate* self)
+{
+  return self->ao->IsActive();
+}
+
+/**
+
+ut_immediate_epoc.cpp
+
+Copyright 2009-2010 Helsinki Institute for Information Technology
+(HIIT) and the authors. All rights reserved.
+
+Authors: Tero Hasu <tero.hasu@hut.fi>
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation files
+(the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software,
+and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+ **/
