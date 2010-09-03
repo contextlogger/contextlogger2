@@ -471,7 +471,7 @@ void CNetworkObserver::HandleData(TInt aError,
     iOldData = aData;
 
 #if __CELLID_ENABLED__
-    //xxx as an optimization, we want to pass this data also to any active cellid sensor (first we would require a mechanism for doing that); we probably require a private symbian only api in the sensor array
+    //xxx as an optimization, we want to pass this data also to any active cellid sensor; we may simply set up a private api in the epoc-cellid sensor for getting a handle to the sensor object, and then pass in the information via a method
 #endif
 
     iNotifier->MakeRequest();
@@ -604,10 +604,8 @@ void CSignalObserver::HandleSignal(TInt aError, CTelephony::TSignalStrengthV1 co
 
     int dbm = -(aData.iSignalStrength);
     int bars = aData.iBar;
-    logf("network signal strength: %d dBm (%d bars)", dbm, bars);
-    if (logDb) {
-      log_db_log_signal(logDb, dbm, bars, NULL);
-    }
+    //logf("network signal strength: %d dBm (%d bars)", dbm, bars);
+    log_db_log_signal(logDb, dbm, bars, NULL);
     iNotifier->MakeRequest();
 
     // Notify interested parties.

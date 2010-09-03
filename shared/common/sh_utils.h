@@ -18,6 +18,9 @@
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
 #endif
 
+#define boolstr_true(x) ((x) ? "true" : "false")
+#define boolstr_yes(x) ((x) ? "yes" : "no")
+
 // The caller must free the buffer.
 // Returns NULL on memory allocation failure.
 EXTERN_C char* get_stack_info_string();

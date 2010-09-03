@@ -132,10 +132,10 @@ gboolean CSensor_cellid::HandleReadGL(GError** error)
 	  (iOldData.iLocationAreaCode == iData.iLocationAreaCode) &&
 	  (iOldData.iCellId == iData.iCellId)) {
 	// Same reading as previously.
-	logt("duplicate cell ID reading");
+	//logt("duplicate cell ID reading");
 	MakeRequest();
       } else {
-	logt("new cell ID reading");
+	//logt("new cell ID reading");
 	iOldData = iData;
 
 	// In practice it seems that countryCode and networkCode are
