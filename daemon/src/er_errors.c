@@ -124,12 +124,14 @@ void _er_log(int opt, void* errObj,
   }
   return;
 
+#if HAVE_TRAP_OOM
  nomemory:
   {
     log_msg = "FATAL: out of memory in __er_log";
     is_fatal = TRUE;
     goto ready;
   }
+#endif
 }
 
 // The docs of g_error_free do not say if the error may be NULL. Well

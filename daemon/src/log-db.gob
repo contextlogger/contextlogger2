@@ -244,10 +244,12 @@ class Log:Db from G:Object {
     g_free(buf);
     return res;
 
+#if HAVE_TRAP_OOM
   nomemory:
     g_free(buf);
     if (error) *error = gx_error_no_memory;
     return FALSE;
+#endif
   }
 }
 

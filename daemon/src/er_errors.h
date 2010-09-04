@@ -14,8 +14,6 @@
 
 #include <errno.h>
 
-// xxx We should also have macros for creating typical GError objects here.
-
 #ifdef __cplusplus
 extern "C" {
 #endif
