@@ -16,6 +16,7 @@
 // common API
 // --------------------------------------------------
 
+#include "bb_blackboard.h"
 #include "config_db.h"
 #include "cf_rcfile.h"
 #include "kr_controller.h"
@@ -39,6 +40,8 @@ extern "C" {
 
   ConfigDb* ac_ConfigDb(ac_AppContext* self);
 
+  bb_Blackboard* ac_get_Blackboard(ac_AppContext* self);
+
   typedef struct {
     time_t last_upload_time;
   } ac_Registry;
@@ -58,6 +61,7 @@ extern "C" {
 #define ac_global_RcFile ac_RcFile(ac_get_global_AppContext())
 #define ac_global_ConfigDb ac_ConfigDb(ac_get_global_AppContext())
 #define ac_global_Registry ac_get_Registry(ac_get_global_AppContext())
+#define ac_global_Blackboard ac_get_Blackboard(ac_get_global_AppContext())
 #define LOGDB_FILE ac_get_logdb_file(ac_get_global_AppContext())
 #define LOGDB_DIR ac_get_logdb_dir(ac_get_global_AppContext())
 #define LOG_UPLOADS_DIR ac_get_log_uploads_dir(ac_get_global_AppContext())

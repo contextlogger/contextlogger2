@@ -115,6 +115,7 @@ struct _ac_AppContext
   char* logdb_file; // owned
   char* log_uploads_dir; // owned
   ac_Registry registry; // initially zeroed
+  bb_Blackboard* blackboard; // owned
 };
 
 EXTERN_C ac_AppContext* ac_AppContext_new(GError** error)
@@ -122,6 +123,12 @@ EXTERN_C ac_AppContext* ac_AppContext_new(GError** error)
   ac_AppContext* self = g_try_new0(ac_AppContext, 1);
   if (G_UNLIKELY(!self)) {
     if (error) *error = gx_error_no_memory;
+    return NULL;
+  }
+
+  self->blackboard = bb_Blackboard_new(error);
+  if (G_UNLIKELY(!self->blackboard)) {
+    ac_AppContext_destroy(self);
     return NULL;
   }
 
@@ -194,6 +201,7 @@ EXTERN_C void ac_AppContext_destroy(ac_AppContext* self)
     WHEN_SYMBIAN(delete self->plat);
     g_free(self->logdb_file);
     g_free(self->log_uploads_dir);
+    bb_Blackboard_destroy(self->blackboard);
     g_free(self);
   }
 }
@@ -245,6 +253,12 @@ EXTERN_C ConfigDb* ac_ConfigDb(ac_AppContext* self)
 EXTERN_C ac_Registry* ac_get_Registry(ac_AppContext* self)
 {
   return &self->registry;
+}
+
+EXTERN_C bb_Blackboard* ac_get_Blackboard(ac_AppContext* self)
+{
+  if (!self) return NULL;
+  return self->blackboard;
 }
 
 EXTERN_C const char* ac_get_logdb_file(ac_AppContext* self)
