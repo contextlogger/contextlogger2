@@ -80,7 +80,9 @@ void er_log_base(int opt, void* errObj,
   }
   UNSET_TRAP_OOM();
 
+#if HAVE_TRAP_OOM
  ready:
+#endif
   {
     LogDb* logDb = ac_global_LogDb;
     if (!logDb) {
