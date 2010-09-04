@@ -200,7 +200,7 @@ extern "C" int atpanic_txtlog_exit(lua_State *L)
 extern "C" int atpanic_log_exit(lua_State *L) 
 {
   const char* luaErr = lua_tostring(L, -1);
-  er_log_fatal_str(luaErr); // will not return
+  er_log_none(er_FATAL, luaErr); // will not return
   return 0;
 }
 

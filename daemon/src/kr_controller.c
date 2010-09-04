@@ -170,6 +170,8 @@ kr_Controller* kr_Controller_new(GError** error)
 {
   assert_error_unset(error);
 
+  //er_log_none(er_FATAL, "terrible error (%d)", 555);
+
   ac_AppContext* ac = ac_AppContext_new(error);
   if (G_UNLIKELY(!ac)) {
     return NULL;

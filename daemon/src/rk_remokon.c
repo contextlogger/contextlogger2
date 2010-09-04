@@ -131,8 +131,7 @@ static int cb_severeError(void* userdata, const char* msg)
 // rk_JabberObserver
 static int cb_fatalError(void* userdata, const char* msg)
 {
-  logf("fatal Jabber error: %s", msg);
-  er_txtlog_fatal();
+  er_log_none(er_FATAL, "Jabber error: %s", msg);
   return rk_HALT;
 }
 

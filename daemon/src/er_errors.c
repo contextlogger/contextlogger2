@@ -23,18 +23,12 @@ void er_fatal()
   EXIT_APPLICATION;
 }
 
-void er_txtlog_fatal()
-{
-  logt("fatal error");
-  er_fatal();
-}
-
-void _er_log(int opt, void* errObj, 
-	     const char *func, const char *file, int line, 
-	     const char* user_fmt, ...)
+static
+void er_log_base(int opt, void* errObj, 
+		 const char* func, const char* file, int line, 
+		 const char* user_msg)
 {
   gboolean is_fatal = ((opt & er_FATAL) != 0);
-  char* user_msg = NULL; // NULL if user_fmt is
   char* err_msg = NULL; // just "error" if errObj not given
   gboolean is_dynamic_err_msg = FALSE;
   char* log_msg = NULL;
@@ -42,28 +36,17 @@ void _er_log(int opt, void* errObj,
 
   SET_TRAP_OOM(goto nomemory);
   {
-    if (user_fmt) {
-      va_list argp;
-      va_start(argp, user_fmt);
-      g_vasprintf(&user_msg, user_fmt, argp);
-      va_end(argp);
-    }
-
     {
       if (opt & er_NONE) {
 	// Nothing to format.
-      } else if (opt & (er_POSIX | er_ERRNO)) {
-	int errCode;
-	if (opt & er_POSIX)
-	  errCode = (int)errObj;
-	else // (opt & er_ERRNO)
-	  errCode = errno;
+      } else if (opt & er_POSIX) {
+	int errCode = *(int*)errObj;
 	err_msg = g_strdup_printf("POSIX error: %s (%d)", 
 				  strerror(errCode), errCode);
 	is_dynamic_err_msg = TRUE;
       } else if (opt & er_SYMBIAN) {
 #if defined(__SYMBIAN32__)
-	int errCode = (int)errObj;
+	TInt errCode = *(TInt*)errObj;
 	err_msg = g_strdup_printf("Symbian error: %s (%d)", 
 				  plat_error_strerror(errCode), errCode);
 	is_dynamic_err_msg = TRUE;
@@ -109,7 +92,6 @@ void _er_log(int opt, void* errObj,
       }
     }
     
-    g_free(user_msg);
     if (is_dynamic_err_msg)
       g_free(err_msg);
     if (is_dynamic_log_msg)
@@ -132,6 +114,38 @@ void _er_log(int opt, void* errObj,
     goto ready;
   }
 #endif
+}
+
+#define _er_log_impl(_errObj) \
+  char* user_msg = NULL; \
+  if (user_fmt) { \
+    va_list argp; \
+    va_start(argp, user_fmt); \
+    g_vasprintf(&user_msg, user_fmt, argp); \
+    va_end(argp); \
+  } \
+  er_log_base(opt, _errObj, func, file, line, user_msg); \
+  g_free(user_msg);
+
+void _er_log_any(int opt, void* errObj, 
+		 const char* func, const char* file, int line, 
+		 const char* user_fmt, ...)
+{
+  _er_log_impl(errObj);
+}
+
+void _er_log_int(int opt, int errObj, 
+		 const char* func, const char* file, int line, 
+		 const char* user_fmt, ...)
+{
+  _er_log_impl(&errObj);
+}
+
+void _er_log_gerror(int opt, GError* errObj, 
+		    const char* func, const char* file, int line, 
+		    const char* user_fmt, ...)
+{
+  _er_log_impl(errObj);
 }
 
 // The docs of g_error_free do not say if the error may be NULL. Well
@@ -327,14 +341,6 @@ void ex_dblog_fatal_error_msg(LogDb* logDb, const char* msg, int errCode)
 }
 
 #endif /* __SYMBIAN32__ */
-
-void er_log_fatal_str(const char* text)
-{
-  LogDb* logDb = ac_global_LogDb;
-  if (!(logDb && log_db_log_status(logDb, NULL, text)))
-    logt(text);
-  er_fatal();
-}
 
 /**
 

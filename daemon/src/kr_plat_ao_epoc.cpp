@@ -212,7 +212,7 @@ void CBatteryObserver::HandleBattery(TInt aError, CTelephony::TBatteryInfoV1 con
       log_db_log_battery(logDb, status, level, NULL);
     }
     if (level < 20) {
-      er_log_fatal_str("battery running low: exiting");
+      er_log_none(er_FATAL, "battery running low (at %d%%): exiting", level);
     } else {
       iBatteryInfoNotifier->MakeRequest();
     }
@@ -440,7 +440,7 @@ void CNetworkObserver::HandleData(TInt aError,
     LogDb* logDb = ac_global_LogDb;
     ex_dblog_error_msg(logDb, "network info query failure", aError, NULL);
     if (!iRetryAo->Retry()) {
-      er_log_fatal_str("network info queries failing");
+      er_log_none(er_FATAL, "network info queries failing");
     }
   } else {
     iRetryAo->ResetFailures();
@@ -597,7 +597,7 @@ void CSignalObserver::HandleSignal(TInt aError, CTelephony::TSignalStrengthV1 co
   if (aError) {
     ex_dblog_error_msg(logDb, "signal strength query failure", aError, NULL);
     if (!iRetryAo->Retry()) {
-      er_log_fatal_str("signal strength queries failing");
+      er_log_none(er_FATAL, "signal strength queries failing");
     }
   } else {
     iRetryAo->ResetFailures();
