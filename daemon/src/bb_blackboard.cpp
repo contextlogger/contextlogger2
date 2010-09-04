@@ -68,6 +68,7 @@ gboolean bb_Blackboard_register(bb_Blackboard* self,
   return TRUE;
 
 #if HAVE_TRAP_OOM
+ fail:
   Registrant_free(elem);
   if (error) *error = gx_error_no_memory;
   return FALSE;
