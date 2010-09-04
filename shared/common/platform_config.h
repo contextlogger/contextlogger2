@@ -11,6 +11,29 @@
 #define __SYMBIAN_CXX__ 0
 #endif
 
+/* Throwing and non-throwing "new" for C++. 
+ */
+#if defined(__cplusplus)
+#if defined(__SYMBIAN32__)
+
+// On Symbian, do not know if (std::nothrow) is supported, but the
+// <new> header is there. The semantics of Symbian's default plain
+// "new" are presently the same as for "new (std::nothrow)", and hence
+// this definition may suffice, with default settings in the MMP file.
+#define new_nothrow new (std::nothrow)
+
+// To implement this, we probably want to define a global, but
+// overloaded "new" operator of our own, one that does throw
+// std::badalloc. In standard C++ that is the default behavior.
+#define new_dothrow xxx
+
+#else
+#include <new>
+#define new_nothrow new (std::nothrow)
+#define new_dothrow new
+#endif
+#endif
+
 // --------------------------------------------------
 // compiler
 // --------------------------------------------------

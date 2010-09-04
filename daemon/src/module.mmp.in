@@ -17,6 +17,7 @@ epocstacksize 0x10000
 systeminclude \epoc32\include
 systeminclude \epoc32\include\stdapis
 systeminclude \epoc32\include\stdapis\glib-2.0
+//systeminclude \epoc32\include\stdapis\stlport
 
 <% if $UPLOAD_WITH_CURL
    curl_dir = ($pamp_curl ? "libcurl-pamp" : "libcurl-std") %>
@@ -113,6 +114,7 @@ library keyevents_client_2000af44.lib
 
 sourcepath ..\..\src
 source ac_app_context.cpp
+source bb_blackboard.cpp
 source cf_query.c
 source cf_rcfile.cpp
 <% if $IS_APPLICATION %>
