@@ -35,8 +35,8 @@ extern "C" {
 #define er_GERROR  (1<<3)
 
   // Modifiers.
-#define er_FATAL   (1<<4)
-#define er_FREE    (1<<5)
+#define er_FATAL   (1<<8)
+#define er_FREE    (1<<9)
 
   // Do not use directly.
   void _er_log_any(int opt, void* errObj, 
@@ -48,6 +48,8 @@ extern "C" {
   void _er_log_gerror(int opt, GError* errObj, 
 		      const char* func, const char* file, int line, 
 		      const char* user_fmt, ...);
+
+#define er_POSITION __func__, __FILE__, __LINE__
 
 #define er_log_int_(opt, err, fmt...) \
   _er_log_int(opt, err, __func__, __FILE__, __LINE__, fmt)

@@ -89,7 +89,7 @@ void er_log_base(int opt, void* errObj,
       logt(log_msg);
     } else {
       if (!log_db_log_status(logDb, NULL, log_msg)) {
-	logt("logging failure in __er_log");
+	logt("logging failure in er_log_base");
 	is_fatal = TRUE;
       }
     }
@@ -111,7 +111,7 @@ void er_log_base(int opt, void* errObj,
 #if HAVE_TRAP_OOM
  nomemory:
   {
-    log_msg = "FATAL: out of memory in __er_log";
+    log_msg = "FATAL: out of memory in er_log_base";
     is_fatal = TRUE;
     goto ready;
   }
@@ -119,15 +119,25 @@ void er_log_base(int opt, void* errObj,
 }
 
 #define _er_log_impl(_errObj) \
-  char* user_msg = NULL; \
-  if (user_fmt) { \
-    va_list argp; \
-    va_start(argp, user_fmt); \
-    g_vasprintf(&user_msg, user_fmt, argp); \
-    va_end(argp); \
-  } \
-  er_log_base(opt, _errObj, func, file, line, user_msg); \
-  g_free(user_msg);
+{									\
+  char* user_msg = NULL;						\
+  if (user_fmt) {							\
+    SET_TRAP_OOM_FAIL();						\
+    va_list argp;							\
+    va_start(argp, user_fmt);						\
+    g_vasprintf(&user_msg, user_fmt, argp);				\
+    va_end(argp);							\
+    UNSET_TRAP_OOM();							\
+  }									\
+  er_log_base(opt, _errObj, func, file, line, user_msg);		\
+  g_free(user_msg);							\
+  return;								\
+  WHEN_TRAP_OOM(fail:							\
+		g_free(user_msg);					\
+		er_log_base(er_NONE | er_FATAL, NULL,			\
+			    er_POSITION,				\
+			    "out of memory in _er_log_impl"));		\
+}
 
 void _er_log_any(int opt, void* errObj, 
 		 const char* func, const char* file, int line, 
