@@ -15,6 +15,8 @@
 #include "sa_array.h"
 #include "up_uploader.h"
 
+#include "common/gx_maybe_string.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -49,8 +51,10 @@ extern "C" {
     gboolean are_uploads_allowed;
     gboolean is_cellular_ap;
     int non_roaming_mcc; // -1 for none configured
+    const char* non_roaming_operator_name; // NULL for none configured
     int current_mcc; // -1 for no network
     int current_signal_strength; // +1 for no network
+    GMaybeString current_operator_name;
   };
 
 #ifdef __cplusplus

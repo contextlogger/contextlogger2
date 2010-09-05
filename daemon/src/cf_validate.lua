@@ -27,6 +27,7 @@ validate('iap', 'number', nil)
 validate('database_dir_string', 'string', is_non_empty_string)
 validate('database_disk_threshold', 'number', nil)
 validate('mcc', 'number', nil)
+validate('operator_name', 'string', is_non_empty_string)
 
 if iap == nil then
    iap = IAP_DEFAULT

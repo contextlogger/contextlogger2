@@ -68,6 +68,12 @@ extern "C" {
 #define er_log_gerror(opt, val, fmt...) \
   _er_log_gerror((opt) | er_GERROR, val, __func__, __FILE__, __LINE__, fmt)
 
+#define er_log_nomem \
+  er_log_none(er_FATAL, "out of memory error")
+
+#define er_log_nomem_on_false(x) \
+  if (!(x)) { er_log_nomem; }
+
   // --------------------------------------------------
   // GLib extras
   // --------------------------------------------------
@@ -157,12 +163,6 @@ extern "C" {
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
-
-// We use the GError API in a non-standard way in that we always accept a NULL ``GError`` pointer and interpret it as an out-of-memory error. This is to avoid trying to allocate a ``GError`` when there is no memory.
-#define gx_error_no_memory NULL
-
-#define gx_error_is(_errorptr, d, c) \
-  ((_errorptr) && ((_errorptr)->domain == (d)) && ((_errorptr)->code == (c)))
 
 #define new_not_found_error \
   gx_error_new(domain_cl2app, code_not_found, "not found")

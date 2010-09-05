@@ -34,6 +34,12 @@ extern "C" {
 			      const gchar   *format,
 			      va_list        args);
 
+  // We use the GError API in a non-standard way in that we always accept a NULL ``GError`` pointer and interpret it as an out-of-memory error. This is to avoid trying to allocate a ``GError`` when there is no memory.
+#define gx_error_no_memory NULL
+
+#define gx_error_is(_errorptr, d, c) \
+  ((_errorptr) && ((_errorptr)->domain == (d)) && ((_errorptr)->code == (c)))
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

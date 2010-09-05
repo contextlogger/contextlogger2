@@ -88,16 +88,23 @@ static void init_uploads_allowed_state(kr_Controller* self)
 
   self->is_cellular_ap = current_iap_is_cellular();
   self->non_roaming_mcc = cf_RcFile_get_mcc(self->rcFile);
+  self->non_roaming_operator_name = cf_RcFile_get_operator_name(self->rcFile);
   self->current_signal_strength = 1; // no reading yet
   self->current_mcc = -1; // no reading yet
+  GMaybeString_init(&self->current_operator_name);
 
   // Initial value, until more information about any mobile network
   // becomes available.
   self->are_uploads_allowed = !self->is_cellular_ap;
 
   logf("non-roaming MCC: %d", self->non_roaming_mcc);
-  //logf("uploads allowed: %d", self->are_uploads_allowed);
+  WHEN_LOGGING({if (self->non_roaming_operator_name) logf("non-roaming operator: '%s'", self->non_roaming_operator_name);});
   log_uploads_allowed(self);
+}
+
+static void free_uploads_allowed_state(kr_Controller* self)
+{
+  GMaybeString_free(&self->current_operator_name);
 }
 
 static void recompute_uploads_allowed(kr_Controller* self)
@@ -117,6 +124,16 @@ static void recompute_uploads_allowed(kr_Controller* self)
 	  // is roaming
 	  self->are_uploads_allowed = FALSE;
       }
+
+      if (self->non_roaming_operator_name) {
+	// have a roaming restriction
+	if (GMaybeString_is_nothing(&self->current_operator_name) ||
+	    !GMaybeString_is(&self->current_operator_name,
+			     self->non_roaming_operator_name))
+	  // is roaming
+	  self->are_uploads_allowed = FALSE;
+      }
+
       // strength is from -123 dBm to -1 dBm (inclusive),
       // but apparently can also be 0 in flight mode
       if ((self->current_signal_strength < -110) ||
@@ -159,6 +176,20 @@ void kr_Controller_set_current_mcc(kr_Controller* self, int mcc)
   if (mcc != self->current_mcc) {
     self->current_mcc = mcc;
     recompute_uploads_allowed(self);
+  }
+}
+
+// pass NULL for no network or no name
+void kr_Controller_set_operator_name(kr_Controller* self, const char* name)
+{
+  // As an optimization, we do not care unless the operator name
+  // affects our roaming analysis.
+  if (self->non_roaming_operator_name) {
+    if (!GMaybeString_is(&self->current_operator_name, name)) {
+      logf("setting operator to %s", name ? name : "<none>");
+      er_log_nomem_on_false(GMaybeString_assign(&self->current_operator_name, name, NULL));
+      recompute_uploads_allowed(self);
+    }
   }
 }
 
@@ -334,6 +365,8 @@ void kr_Controller_destroy(kr_Controller* self)
 
     cf_RcFile_destroy(self->rcFile);
     self->rcFile = NULL;
+
+    free_uploads_allowed_state(self);
 
     ac_AppContext_destroy(self->appContext);
     ac_set_global_AppContext(NULL);

@@ -1,5 +1,5 @@
-#ifndef __kr_controller_h__
-#define __kr_controller_h__
+#ifndef __gx_maybe_string_h__
+#define __gx_maybe_string_h__
 
 #include <glib.h>
 
@@ -7,40 +7,32 @@
 extern "C" {
 #endif
 
-  typedef struct _kr_Controller kr_Controller;
-  
-  kr_Controller* kr_Controller_new(GError** error);
-  
-  void kr_Controller_destroy(kr_Controller* self);
-  
-  gboolean kr_Controller_start(kr_Controller* self,
-			       GError** error);
-  
-  void kr_Controller_stop(kr_Controller* self);
-  
-  gboolean kr_Controller_run(kr_Controller* self,
-			     GError** error);
+  typedef struct {
+    gboolean just;
+    GString* value;
+  } GMaybeString;
 
-  gboolean kr_Controller_reconfigure(kr_Controller* self,
-				     const gchar* name,
-				     const gchar* value,
-				     GError** error);
+  void GMaybeString_init(GMaybeString* m);
 
-  void kr_Controller_set_signal_strength(kr_Controller* self, int strength);
-  void kr_Controller_set_current_mcc(kr_Controller* self, int mcc);
-  void kr_Controller_set_operator_name(kr_Controller* self, const char* name);
+  const gchar* GMaybeString_get(GMaybeString* m);
+
+  gboolean GMaybeString_assign(GMaybeString* m, const gchar* rval, GError** error);
+
+  gboolean GMaybeString_is_nothing(GMaybeString* m);
+
+  gboolean GMaybeString_is(GMaybeString* m, const gchar* other);
+
+  void GMaybeString_free(GMaybeString* m);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif /* __kr_controller_h__ */
+#endif /* __gx_maybe_string_h__ */
 
 /**
 
-kr_controller.h
-
-Copyright 2009 Helsinki Institute for Information Technology (HIIT)
+Copyright 2010 Helsinki Institute for Information Technology (HIIT)
 and the authors. All rights reserved.
 
 Authors: Tero Hasu <tero.hasu@hut.fi>

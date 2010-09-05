@@ -452,7 +452,9 @@ void CNetworkObserver::HandleData(TInt aError,
 	HBufC8* text8 = ConvToUtf8ZL(aData.iLongName);
 	CleanupStack::PushL(text8);
 	//logf("operator name: '%s'", (char*)text8->Ptr());
-	log_db_log_operator(logDb, (char*)text8->Ptr(), NULL);
+	log_db_log_operator(logDb, (const char*)text8->Ptr(), NULL);
+	kr_Controller_set_operator_name(ac_global_Controller, 
+					(const char*)text8->Ptr());
 	CleanupStack::PopAndDestroy(text8);
       }
     }

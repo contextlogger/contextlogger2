@@ -30,6 +30,8 @@
 // however.
 #if __DO_LOGGING__
 
+#define WHEN_LOGGING(_act) { _act; }
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -55,6 +57,8 @@ extern "C" {
 #endif
 
 #else // no logging
+
+#define WHEN_LOGGING(_act)
 
 #define log_clear(logfile) ((void)0)
 #define log_text(logfile,s) ((void)0)
