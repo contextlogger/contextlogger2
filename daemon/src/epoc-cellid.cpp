@@ -101,6 +101,7 @@ void CSensor_cellid::PostNewDataL(const CTelephony::TNetworkInfoV1& aData)
 			(char*)(countryCode->Ptr()), 
 			(char*)(networkCode->Ptr()), 
 			areaCode, cellId, NULL);
+      logf("new cellid: (%s, %s, %d, %d)", (char*)(countryCode->Ptr()), (char*)(networkCode->Ptr()), areaCode, cellId);
 
       CleanupStack::PopAndDestroy(2); // networkCode, countryCode
     }
