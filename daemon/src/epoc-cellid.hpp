@@ -5,7 +5,7 @@
 
 #if __CELLID_ENABLED__
 
-#include "epoc-ao-gerror.hpp"
+#include "ac_app_context.h"
 #include "log-db.h"
 #include "utils_cl2.h"
 
@@ -18,99 +18,89 @@
 (require codegen/symbian-cxx)
 (ctor-defines/spec
  "CSensor_cellid" ;; name
- "LogDb* aLogDb" ;; args
- "CActiveRunG(EPriorityStandard), iLogDb(aLogDb), iDataDes(iData)" ;; inits
- "CActiveScheduler::Add(this);" ;; ctor
+ "ac_AppContext* aAppContext" ;; args
+ "iAppContext(aAppContext)" ;; inits
+ "" ;; ctor
  #t ;; ConstructL
 )
  ***/
 #define CTOR_DECL_CSensor_cellid  \
-public: static CSensor_cellid* NewLC(LogDb* aLogDb); \
-public: static CSensor_cellid* NewL(LogDb* aLogDb); \
-private: CSensor_cellid(LogDb* aLogDb); \
+public: static CSensor_cellid* NewLC(ac_AppContext* aAppContext); \
+public: static CSensor_cellid* NewL(ac_AppContext* aAppContext); \
+private: CSensor_cellid(ac_AppContext* aAppContext); \
 private: void ConstructL();
 
 #define CTOR_IMPL_CSensor_cellid  \
-CSensor_cellid* CSensor_cellid::NewLC(LogDb* aLogDb) \
+CSensor_cellid* CSensor_cellid::NewLC(ac_AppContext* aAppContext) \
 { \
-  CSensor_cellid* obj = new (ELeave) CSensor_cellid(aLogDb); \
+  CSensor_cellid* obj = new (ELeave) CSensor_cellid(aAppContext); \
   CleanupStack::PushL(obj); \
   obj->ConstructL(); \
   return obj; \
 } \
  \
-CSensor_cellid* CSensor_cellid::NewL(LogDb* aLogDb) \
+CSensor_cellid* CSensor_cellid::NewL(ac_AppContext* aAppContext) \
 { \
-  CSensor_cellid* obj = CSensor_cellid::NewLC(aLogDb); \
+  CSensor_cellid* obj = CSensor_cellid::NewLC(aAppContext); \
   CleanupStack::Pop(obj); \
   return obj; \
 } \
  \
-CSensor_cellid::CSensor_cellid(LogDb* aLogDb) : CActiveRunG(EPriorityStandard), iLogDb(aLogDb), iDataDes(iData) \
-{CActiveScheduler::Add(this);}
+CSensor_cellid::CSensor_cellid(ac_AppContext* aAppContext) : iAppContext(aAppContext) \
+{}
 /***end***/
 
 NONSHARABLE_CLASS(CSensor_cellid) :
-  public CActiveRunG
+  public CBase
 {
   // We do not increment the refcount of the LogDb object, and the
   // framework is responsible for ensuring that the LogDb instance
   // stays alive for at least as long as this sensor object.
   CTOR_DECL_CSensor_cellid;
 
-public:
+ public:
   virtual ~CSensor_cellid();
 
-  // Produces a leave or a GError if starting fails, in which case the
-  // framework shall merely log this, and leave the particular sensor
-  // unstarted. No harm calling this if already started.
-  gboolean StartL(GError** error);
+  void PostNewData(const CTelephony::TNetworkInfoV1& aData);
 
-  // Stops observing for changes and logging them. No harm calling this if already stopped.
-  void Stop();
+ private:
+  // Leaves on OOM or logging error.
+  void PostNewDataL(const CTelephony::TNetworkInfoV1& aData);
 
-private:
+  void Unregister();
 
-  void MakeRequest();
+ private:
+  ac_AppContext* iAppContext; // not owned
 
-  void SetTimer();
-
-  void HandleTimerL();
-
-  gboolean HandleReadGL(GError** error);
-
-  virtual gboolean RunGL(GError** error);
-  
-  virtual const char* Description();
-
-  virtual void DoCancel();
-
-private:
-
-  LogDb* iLogDb; // not owned
-
-  CTelephony::TNetworkInfoV1 iData;
-
-  CTelephony::TNetworkInfoV1Pckg iDataDes;
-
-  CTelephony *iTelephony; // owned
-
-  TInt iNumScanFailures;
+  bb_Closure iClosure;
 
   CTelephony::TNetworkInfoV1 iOldData;
 
-  enum TState {
-    EInactive = 0,
-    EQuerying,
-    ERetryWaiting
-  };
-  TState iState;
+ private:
+  LogDb* GetLogDb() const { return ac_LogDb(iAppContext); }
 
-  DEF_SESSION(RTimer, iTimer);
-
+  bb_Blackboard* GetBlackboard() const { return ac_get_Blackboard(iAppContext); }
 };
 
 #endif // __CELLID_ENABLED__
+
+// --------------------------------------------------
+// sensor array integration
+// --------------------------------------------------
+
+#if defined(SA_ARRAY_INTEGRATION)
+#if __CELLID_ENABLED__
+#define DECLARE_SENSOR_cellid CSensor_cellid* iSensor_cellid
+#define SENSOR_CELLID_DESTROY DELETE_Z(self->iSensor_cellid)
+#define SENSOR_CELLID_CREATE sa_typical_symbian_sensor_create(self->iSensor_cellid = CSensor_cellid::NewL(self->ac), "cellid sensor initialization")
+#define SENSOR_CELLID_START SENSOR_CELLID_CREATE
+#define SENSOR_CELLID_STOP SENSOR_CELLID_DESTROY
+#define SENSOR_CELLID_IS_RUNNING (self->iSensor_cellid != NULL)
+#define SENSOR_CELLID_RECONFIGURE(key, value) sa_reconfigure_ignore_all_keys
+#else
+#define DECLARE_SENSOR_cellid
+#endif
+#endif /* SA_ARRAY_INTEGRATION */
 
 #endif /* __epoc_cellid_hpp__ */
 

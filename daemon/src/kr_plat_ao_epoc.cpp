@@ -1,7 +1,7 @@
 #include "kr_plat_ao.h"
 
 #include "ac_app_context.h"
-//#include "cf_rcfile.h"
+#include "bb_blackboard.h"
 #include "er_errors.h"
 #include "kr_diskspace.h"
 #include "sa_sensor_list_log_db.h"
@@ -470,9 +470,9 @@ void CNetworkObserver::HandleData(TInt aError,
 
     iOldData = aData;
 
-#if __CELLID_ENABLED__
-    //xxx as an optimization, we want to pass this data also to any active cellid sensor; we may simply set up a private api in the epoc-cellid sensor for getting a handle to the sensor object, and then pass in the information via a method
-#endif
+    bb_Blackboard_notify(ac_global_Blackboard,
+			 bb_dt_network_info,
+			 (gpointer)&aData, 0);
 
     iNotifier->MakeRequest();
   }

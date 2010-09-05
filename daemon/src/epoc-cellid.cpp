@@ -7,221 +7,104 @@
 #include "sa_sensor_list_log_db.h"
 #include "utils_cl2.h"
 
-#include "common/assertions.h"
-#include "common/epoc-time.h"
-#include "common/error_list.h"
-#include "common/logging.h"
-#include "common/platform_error.h"
 #include "common/utilities.h"
-
-#include <stdlib.h> // rand
 
 // -------------------------------------------------------------------
 // the sensor object implementation...
 
 CTOR_IMPL_CSensor_cellid;
 
+static void DataChanged(bb_Blackboard* self, enum bb_DataType dt,
+			gpointer data, int len, gpointer arg)
+{
+  (void)self;
+  (void)dt;
+  (void)len;
+  CSensor_cellid* sensor = (CSensor_cellid*)arg;
+  CTelephony::TNetworkInfoV1* info = (CTelephony::TNetworkInfoV1*)data;
+  sensor->PostNewData(*info);
+}
+
 void CSensor_cellid::ConstructL()
 {
-  iTelephony = CTelephony::NewL();
-  LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iTimer, iTimer.CreateLocal()); 
+  iClosure.changed = DataChanged;
+  iClosure.arg = this;
+  if (!bb_Blackboard_register(GetBlackboard(),
+			      bb_dt_network_info,
+			      iClosure,
+			      NULL))
+    User::LeaveNoMemory();
 }
 
 CSensor_cellid::~CSensor_cellid()
 {
-  Cancel();
-  SESSION_CLOSE_IF_OPEN(iTimer);
-  delete iTelephony;
+  Unregister();
 }
 
-gboolean CSensor_cellid::StartL(GError** error)
+void CSensor_cellid::Unregister()
 {
-  iNumScanFailures = 0;
-  if (!IsActive()) {
-    MakeRequest();
-    log_db_log_status(iLogDb, NULL, "cellid sensor started");
-  }
-  return TRUE;
+  bb_Blackboard_unregister(GetBlackboard(), iClosure);
 }
 
-void CSensor_cellid::Stop()
+void CSensor_cellid::PostNewData(const CTelephony::TNetworkInfoV1& aData)
 {
-  if ((IsActive())) {
-    Cancel();
-    log_db_log_status(iLogDb, NULL, "cellid sensor stopped");
-  }
-}
-
-void CSensor_cellid::MakeRequest()
-{
-  iTelephony->NotifyChange(iStatus, CTelephony::ECurrentNetworkInfoChange, iDataDes);
-  SetActive();
-  iState = EQuerying;
-}
-
-void CSensor_cellid::SetTimer() 
-{
-  int secs = 5 * (1 + iNumScanFailures) + (rand() % 10);
-  TTimeIntervalMicroSeconds32 interval = SecsToUsecs(secs);
-  logf("cellid timer set to %d secs / %d usecs", secs, interval.Int());
-  iTimer.After(iStatus, interval);
-  SetActive();
-  iState = ERetryWaiting;
-}
-
-// Retry timer expired.
-void CSensor_cellid::HandleTimerL()
-{
-  int errCode = iStatus.Int();
-  User::LeaveIfError(errCode); // unexpected with an interval timer
-  MakeRequest();
-}
-
-gboolean CSensor_cellid::HandleReadGL(GError** error)
-{
-  int errCode = iStatus.Int();
-
+  TRAPD(errCode, PostNewDataL(aData));
   if (errCode) {
-    // Sensor read error. Log it and issue a new request if there have
-    // not been all that many consecutive errors. (It is particularly
-    // important to avoid a situation in which we would "busy loop" by
-    // repeatedly making immediately failing requests, and this
-    // approach certainly avoids that.) Read errors should not be all
-    // that unusual here if one disables the network or something, but
-    // hopefully network becoming unavailable is just one event among
-    // others. Have seen at least KErrOverflow here upon turning on
-    // flight mode.
-    iNumScanFailures++;
-    logf("%dth consecutive failure in cellid", iNumScanFailures);
-
-    if (iNumScanFailures < 100) {
-      if (!log_db_log_status(iLogDb, error, "ERROR: %dth consecutive failure reading cellid sensor: %s (%d)", iNumScanFailures, plat_error_strerror(errCode), errCode)) {
-	// Logging failed.
-	return FALSE;
-      }
-      SetTimer();
-    } else {
-      log_db_log_status(iLogDb, NULL, "INACTIVATE: cellid: stopping scanning due to too many errors");
-    }
-
-    return TRUE;
+    er_log_symbian(er_FATAL, errCode, 
+		   "failure processing network info in cellid sensor");
   }
+}
 
-  if (errCode == KErrNone) {
-    iNumScanFailures = 0;
-
-    // Logging is not all that straightforward here, as some readings
-    // can for instance indicate that some or all of the usual
-    // (country_code, network_code, area_code, cell_id) information is
-    // not available or has just become unavailable. Our present
-    // solution is to log nothing unless all of that information is
-    // available.
-    if (!iData.iAccess) {
-      logf("cellid info: no network access: iAreaKnown=%d", (int)iData.iAreaKnown);
-      MakeRequest();
+void CSensor_cellid::PostNewDataL(const CTelephony::TNetworkInfoV1& aData)
+{
+  // Logging is not all that straightforward here, as some readings
+  // can for instance indicate that some or all of the usual
+  // (country_code, network_code, area_code, cell_id) information is
+  // not available or has just become unavailable. Our present
+  // solution is to log nothing unless all of that information is
+  // available.
+  if (!aData.iAccess) {
+    logf("cellid info: no network access: iAreaKnown=%d", (int)aData.iAreaKnown);
+  } else {
+    // Here we are assuming that the initial "zero" iOldData is not
+    // a valid reading, and likely this is true as it would mean no
+    // country code or network ID. And duplicates can still occur,
+    // across sensor restarts. This should nonetheless help reduce
+    // the amount of logged data quite a bit, as it seems that in
+    // practice one gets around 2-4 cell ID events per minute even
+    // when there is no cell change.
+    if ((iOldData.iCountryCode == aData.iCountryCode) &&
+	(iOldData.iNetworkId == aData.iNetworkId) &&
+	(iOldData.iLocationAreaCode == aData.iLocationAreaCode) &&
+	(iOldData.iCellId == aData.iCellId)) {
+      // Same reading as previously.
+      //logt("duplicate cell ID reading");
     } else {
-      // Here we are assuming that the initial "zero" iOldData is not
-      // a valid reading, and likely this is true as it would mean no
-      // country code or network ID. And duplicates can still occur,
-      // across sensor restarts. This should nonetheless help reduce
-      // the amount of logged data quite a bit, as it seems that in
-      // practice one gets around 2-4 cell ID events per minute even
-      // when there is no cell change.
-      if ((iOldData.iCountryCode == iData.iCountryCode) &&
-	  (iOldData.iNetworkId == iData.iNetworkId) &&
-	  (iOldData.iLocationAreaCode == iData.iLocationAreaCode) &&
-	  (iOldData.iCellId == iData.iCellId)) {
-	// Same reading as previously.
-	//logt("duplicate cell ID reading");
-	MakeRequest();
-      } else {
-	//logt("new cell ID reading");
-	iOldData = iData;
+      //logt("new cell ID reading");
+      iOldData = aData;
 
-	// In practice it seems that countryCode and networkCode are
-	// decimal strings, but this may only apply to GSM networks, and
-	// hence we are treating them as strings. Whoever parses the
-	// database content may decide to do something different if they
-	// see that all the data indeed is decimal strings.
-	// http://en.wikipedia.org/wiki/List_of_mobile_country_codes
-	// http://en.wikipedia.org/wiki/Mobile_Network_Code
-	HBufC8* countryCode = ConvToUtf8ZL(iData.iCountryCode);
-	CleanupStack::PushL(countryCode);
-	HBufC8* networkCode = ConvToUtf8ZL(iData.iNetworkId);
-	CleanupStack::PushL(networkCode);
-	int areaCode = iData.iLocationAreaCode; // valid if iAccess is true
-	int cellId = iData.iCellId; // valid if iAccess is true
+      // In practice it seems that countryCode and networkCode are
+      // decimal strings, but this may only apply to GSM networks, and
+      // hence we are treating them as strings. Whoever parses the
+      // database content may decide to do something different if they
+      // see that all the data indeed is decimal strings.
+      // http://en.wikipedia.org/wiki/List_of_mobile_country_codes
+      // http://en.wikipedia.org/wiki/Mobile_Network_Code
+      HBufC8* countryCode = ConvToUtf8ZL(aData.iCountryCode);
+      CleanupStack::PushL(countryCode);
+      HBufC8* networkCode = ConvToUtf8ZL(aData.iNetworkId);
+      CleanupStack::PushL(networkCode);
+      int areaCode = aData.iLocationAreaCode; // valid if iAccess is true
+      int cellId = aData.iCellId; // valid if iAccess is true
 
-	gboolean ok = log_db_log_cellid(iLogDb, (char*)(countryCode->Ptr()), (char*)(networkCode->Ptr()), areaCode, cellId, error);
-	CleanupStack::PopAndDestroy(2); // networkCode, countryCode
-	if (!ok) return FALSE;
-	MakeRequest();
-      }
+      log_db_log_cellid(GetLogDb(), 
+			(char*)(countryCode->Ptr()), 
+			(char*)(networkCode->Ptr()), 
+			areaCode, cellId, NULL);
+
+      CleanupStack::PopAndDestroy(2); // networkCode, countryCode
     }
   }
-
-  return TRUE;
-}
-
-// To display readable logged times, do something like
-//
-//   select datetime(unixtime, 'unixepoch', 'localtime') from cellid_scan;
-gboolean CSensor_cellid::RunGL(GError** error)
-{
-  assert_error_unset(error);
-  TState oldState = iState;
-  iState = EInactive;
-
-  switch (oldState)
-    {
-    case EQuerying:
-      {
-	return HandleReadGL(error);
-      }
-    case ERetryWaiting:
-      {
-	HandleTimerL();
-        break;
-      }
-    default:
-      {
-        assert(0 && "unexpected state");
-        break;
-      }
-    }
-
-  return TRUE;
-}
-
-void CSensor_cellid::DoCancel()
-{
-  switch (iState)
-    {
-    case EQuerying:
-      {
-	iTelephony->CancelAsync(CTelephony::ECurrentNetworkInfoChangeCancel);
-        break;
-      }
-    case ERetryWaiting:
-      {
-	iTimer.Cancel();
-        break;
-      }
-    default:
-      {
-        assert(0 && "unexpected state");
-        break;
-      }
-    }
-
-  // Note that the state must never become anything else without
-  // invoking SetActive at the same time.
-  iState = EInactive;
-}
-
-const char* CSensor_cellid::Description()
-{
-  return "cellid";
 }
 
 #endif // __CELLID_ENABLED__

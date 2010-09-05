@@ -76,7 +76,7 @@ gboolean bb_Blackboard_register(bb_Blackboard* self,
 }
 
 extern "C"
-void bb_Blackboard_deregister(bb_Blackboard* self,
+void bb_Blackboard_unregister(bb_Blackboard* self,
 			      bb_Closure cb)
 {
   GSList* plink = NULL;

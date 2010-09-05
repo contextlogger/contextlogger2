@@ -41,9 +41,9 @@ extern "C" {
 				  bb_Closure cb,
 				  GError** error);
 
-  // Deregisters all entries for the specified closure.
+  // Unregisters all entries for the specified closure.
   // Does nothing if not registered.
-  void bb_Blackboard_deregister(bb_Blackboard* self,
+  void bb_Blackboard_unregister(bb_Blackboard* self,
 				bb_Closure cb);
 
   // Note that the delivery is synchronous, and usual caveats apply.

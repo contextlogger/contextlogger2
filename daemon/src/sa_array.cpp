@@ -52,9 +52,6 @@
 #if __BTPROX_ENABLED__
 #include "epoc-btprox.hpp"
 #endif
-#if __CELLID_ENABLED__
-#include "epoc-cellid.hpp"
-#endif
 #if __FLIGHTMODE_ENABLED__
 #include "epoc-flightmode.hpp"
 #endif
@@ -88,6 +85,7 @@
 #include "sa_sensor_mark.h"
 #endif
 
+#include "epoc-cellid.hpp"
 #include "epoc-callstatus.hpp"
 #include "epoc-smsevent.hpp"
 
@@ -107,9 +105,6 @@ extern "C" struct _sa_Array
 #endif
 #if __BTPROX_ENABLED__
   CSensor_btprox *iSensor_btprox;
-#endif
-#if __CELLID_ENABLED__
-  CSensor_cellid *iSensor_cellid;
 #endif
 #if __FLIGHTMODE_ENABLED__
   CSensor_flightmode *iSensor_flightmode;
@@ -135,6 +130,7 @@ extern "C" struct _sa_Array
 #if __MARK_ENABLED__
   sa_Sensor_mark* iSensor_mark;
 #endif
+  DECLARE_SENSOR_cellid;
   DECLARE_SENSOR_callstatus;
   DECLARE_SENSOR_smsevent;
 };
@@ -144,7 +140,6 @@ extern "C" struct _sa_Array
  */
 #define SENSOR_APPFOCUS_START sa_typical_symbian_sensor_start(self->iSensor_appfocus, "failed to start appfocus scanning")
 #define SENSOR_BTPROX_START sa_typical_symbian_sensor_start(self->iSensor_btprox, "failed to start btprox scanning")
-#define SENSOR_CELLID_START sa_typical_symbian_sensor_start(self->iSensor_cellid, "failed to start cellid scanning")
 #define SENSOR_FLIGHTMODE_START sa_typical_symbian_sensor_start(self->iSensor_flightmode, "failed to start flightmode scanning")
 #define SENSOR_GPS_START sa_typical_symbian_sensor_start(self->iSensor_gps, "failed to start gps scanning")
 #define SENSOR_INACTIVITY_START sa_typical_symbian_sensor_start(self->iSensor_inactivity, "failed to start inactivity scanning")
@@ -157,7 +152,6 @@ extern "C" struct _sa_Array
 /* Sensor stopping. (Statement.) */
 #define SENSOR_APPFOCUS_STOP { self->iSensor_appfocus->Stop(); }
 #define SENSOR_BTPROX_STOP { self->iSensor_btprox->Stop(); }
-#define SENSOR_CELLID_STOP { self->iSensor_cellid->Stop(); }
 #define SENSOR_FLIGHTMODE_STOP { self->iSensor_flightmode->Stop(); }
 #define SENSOR_GPS_STOP { self->iSensor_gps->Stop(); }
 #define SENSOR_INACTIVITY_STOP { self->iSensor_inactivity->Stop(); }
@@ -170,7 +164,6 @@ extern "C" struct _sa_Array
 /* Sensor running querying. (Boolean expression.) */
 #define SENSOR_APPFOCUS_IS_RUNNING (self->iSensor_appfocus->IsActive())
 #define SENSOR_BTPROX_IS_RUNNING (self->iSensor_btprox->IsActive())
-#define SENSOR_CELLID_IS_RUNNING (self->iSensor_cellid->IsActive())
 #define SENSOR_FLIGHTMODE_IS_RUNNING (self->iSensor_flightmode->IsActive())
 #define SENSOR_GPS_IS_RUNNING (self->iSensor_gps->IsActive())
 #define SENSOR_INACTIVITY_IS_RUNNING (self->iSensor_inactivity->IsActive())
@@ -183,7 +176,6 @@ extern "C" struct _sa_Array
 /* Sensor destruction. (Statement.) */
 #define SENSOR_APPFOCUS_DESTROY { delete self->iSensor_appfocus; self->iSensor_appfocus = NULL; }
 #define SENSOR_BTPROX_DESTROY { delete self->iSensor_btprox; self->iSensor_btprox = NULL; }
-#define SENSOR_CELLID_DESTROY { delete self->iSensor_cellid; self->iSensor_cellid = NULL; }
 #define SENSOR_FLIGHTMODE_DESTROY { delete self->iSensor_flightmode; self->iSensor_flightmode = NULL; }
 #define SENSOR_GPS_DESTROY { delete self->iSensor_gps; self->iSensor_gps = NULL; }
 #define SENSOR_INACTIVITY_DESTROY { delete self->iSensor_inactivity; self->iSensor_inactivity = NULL; }
@@ -198,7 +190,6 @@ extern "C" struct _sa_Array
 */
 #define SENSOR_FLIGHTMODE_CREATE sa_typical_symbian_sensor_create(self->iSensor_flightmode = CSensor_flightmode::NewL(self->logDb), "flightmode sensor initialization")
 #define SENSOR_PROFILE_CREATE sa_typical_symbian_sensor_create(self->iSensor_profile = CSensor_profile::NewL(self->logDb), "profile sensor initialization")
-#define SENSOR_CELLID_CREATE sa_typical_symbian_sensor_create(self->iSensor_cellid = CSensor_cellid::NewL(self->logDb), "cellid sensor initialization")
 #define SENSOR_BTPROX_CREATE sa_typical_symbian_sensor_create(self->iSensor_btprox = CSensor_btprox::NewL(self->logDb), "btprox sensor initialization")
 #define SENSOR_GPS_CREATE sa_typical_symbian_sensor_create(self->iSensor_gps = CSensor_gps::NewL(self->logDb), "gps sensor initialization")
 #define SENSOR_INACTIVITY_CREATE sa_typical_symbian_sensor_create(self->iSensor_inactivity = CSensor_inactivity::NewL(self->ac), "inactivity sensor initialization")
@@ -217,7 +208,6 @@ extern "C" struct _sa_Array
 /* Sensor reconfiguring. (Statement.) */
 #define SENSOR_APPFOCUS_RECONFIGURE(key,value) sa_reconfigure_ignore_all_keys
 #define SENSOR_BTPROX_RECONFIGURE(key,value) sa_typical_symbian_sensor_reconfigure(btprox)
-#define SENSOR_CELLID_RECONFIGURE(key,value) sa_reconfigure_ignore_all_keys
 #define SENSOR_FLIGHTMODE_RECONFIGURE(key,value) sa_reconfigure_ignore_all_keys
 #define SENSOR_GPS_RECONFIGURE(key,value) sa_typical_symbian_sensor_reconfigure(gps)
 #define SENSOR_INACTIVITY_RECONFIGURE(key,value) sa_reconfigure_ignore_all_keys
