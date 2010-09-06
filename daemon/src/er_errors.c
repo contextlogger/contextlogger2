@@ -39,7 +39,6 @@ void er_log_base(int opt, void* errObj,
 		 const char* func, const char* file, int line, 
 		 const char* user_msg)
 {
-  gboolean is_fatal = ((opt & er_FATAL) != 0);
   char* err_msg = NULL; // just "error" if errObj not given
   gboolean is_dynamic_err_msg = FALSE;
   char* log_msg = NULL;
@@ -81,7 +80,7 @@ void er_log_base(int opt, void* errObj,
     }
 
     {
-      const char* heading = (is_fatal ? "FATAL" : "ERROR");
+      const char* heading = ((opt & (er_FATAL|er_OOM)) ? "FATAL" : "ERROR");
       const char* inspect = (err_msg ? err_msg : "<no value>");
       const char* msg = (user_msg ? user_msg : "<no message>");
       log_msg = g_strdup_printf("%s: %s: %s [func %s, file %s, line %d]",
@@ -101,7 +100,7 @@ void er_log_base(int opt, void* errObj,
     } else {
       if (!log_db_log_status(logDb, NULL, log_msg)) {
 	logt("logging failure in er_log_base");
-	is_fatal = TRUE;
+	opt |= er_FATAL;
       }
     }
     
@@ -114,8 +113,10 @@ void er_log_base(int opt, void* errObj,
       if (opt & er_GERROR)
 	gx_error_free((GError*)errObj);
 
-    if (is_fatal)
-      er_fatal();
+    if (opt & er_OOM)
+      er_fatal_oom;
+    else if (opt & er_FATAL)
+      er_fatal_general;
   }
   return;
 
@@ -123,13 +124,13 @@ void er_log_base(int opt, void* errObj,
  nomemory:
   {
     log_msg = "FATAL: out of memory in er_log_base";
-    is_fatal = TRUE;
+    opt |= er_OOM;
     goto ready;
   }
 #endif
 }
 
-#define _er_log_impl(_errObj) \
+#define _er_log_impl(_errObj)						\
 {									\
   char* user_msg = NULL;						\
   if (user_fmt) {							\
@@ -145,7 +146,7 @@ void er_log_base(int opt, void* errObj,
   return;								\
   WHEN_TRAP_OOM(fail:							\
 		g_free(user_msg);					\
-		er_log_base(er_NONE | er_FATAL, NULL,			\
+		er_log_base(er_NONE | er_OOM | opt, NULL,		\
 			    er_POSITION,				\
 			    "out of memory in _er_log_impl"));		\
 }

@@ -38,15 +38,17 @@ extern "C" {
 #define er_fatal_battery_low er_fatal_msg("Battery low (CL2 exited)")
 #define er_fatal_disk_low er_fatal_msg("Disk low (CL2 exited)")
 
-  // Error types. (Mutually exclusive.)
-#define er_NONE    (1<<0)
-#define er_POSIX   (1<<1)
-#define er_SYMBIAN (1<<2)
-#define er_GERROR  (1<<3)
+  // Error types. (In order of precedence.)
+#define er_NONE    (1<< 0)
+#define er_POSIX   (1<< 1)
+#define er_SYMBIAN (1<< 2)
+#define er_GERROR  (1<< 3)
 
   // Modifiers.
-#define er_FATAL   (1<<8)
-#define er_FREE    (1<<9)
+#define er_FATAL   (1<< 8)
+#define er_FREE    (1<< 9)
+#define er_NODB    (1<<10) // xxx not yet supported
+#define er_OOM     (1<<11)
 
   // Do not use directly.
   void _er_log_any(int opt, void* errObj, 
@@ -80,8 +82,7 @@ extern "C" {
 #define er_log_gerror(opt, val, fmt...) \
   _er_log_gerror((opt) | er_GERROR, val, __func__, __FILE__, __LINE__, fmt)
 
-#define er_log_nomem \
-  { er_log_none(0, "out of memory error"); er_fatal_oom; }
+#define er_log_nomem er_log_none(er_OOM, "out of memory error")
 
 #define er_log_nomem_on_false(x) \
   if (!(x)) { er_log_nomem; }
