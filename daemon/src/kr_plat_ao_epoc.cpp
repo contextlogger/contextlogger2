@@ -102,7 +102,11 @@ void CDiskObserver::DiskSpaceNotify(TInt aDrive, TInt errCode)
       // try to log this error to the database. Possibly not, so the
       // debug log, if any, shall have to do.
       ex_txtlog_error(errCode);
-      er_fatal_disk_low;
+      if (errCode == KErrDiskFull) {
+	er_fatal_disk_low;
+      } else {
+	er_fatal_disk_not_ready;
+      }
     }
   }
 }

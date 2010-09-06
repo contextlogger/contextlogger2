@@ -37,6 +37,7 @@ extern "C" {
 #define er_fatal_oom er_fatal_msg("Out of memory (CL2 exited)")
 #define er_fatal_battery_low er_fatal_msg("Battery low (CL2 exited)")
 #define er_fatal_disk_low er_fatal_msg("Disk low (CL2 exited)")
+#define er_fatal_disk_not_ready er_fatal_msg("Disk not ready (CL2 exited)")
 
   // Error types. (In order of precedence.)
 #define er_NONE    (1<< 0)
@@ -82,10 +83,10 @@ extern "C" {
 #define er_log_gerror(opt, val, fmt...) \
   _er_log_gerror((opt) | er_GERROR, val, __func__, __FILE__, __LINE__, fmt)
 
-#define er_log_nomem er_log_none(er_OOM, "out of memory error")
+#define er_log_oom er_log_none(er_OOM, "out of memory error")
 
-#define er_log_nomem_on_false(x) \
-  if (!(x)) { er_log_nomem; }
+#define er_log_oom_on_false(x) \
+  if (!(x)) { er_log_oom; }
 
   // --------------------------------------------------
   // GLib extras

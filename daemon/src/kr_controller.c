@@ -187,7 +187,7 @@ void kr_Controller_set_operator_name(kr_Controller* self, const char* name)
   if (self->non_roaming_operator_name) {
     if (!GMaybeString_is(&self->current_operator_name, name)) {
       logf("setting operator to %s", name ? name : "<none>");
-      er_log_nomem_on_false(GMaybeString_assign(&self->current_operator_name, name, NULL));
+      er_log_oom_on_false(GMaybeString_assign(&self->current_operator_name, name, NULL));
       recompute_uploads_allowed(self);
     }
   }
