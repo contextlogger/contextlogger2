@@ -377,12 +377,25 @@ end """)
         appuifw.note(u"Config file deleted", "info")
 
     def create_config_file(self):
-        iap_name = ask_iap_name()
-        if iap_name is None:
+        iap_name_u = ask_iap_name()
+        if iap_name_u is None:
             return
-        iap_name = iap_name.encode("utf-8")
+        iap_name = iap_name_u.encode("utf-8")
         iap_expr = """function () return cl2.iap_id_by_name('%s') end""" % iap_name
 
+        mcc = appuifw.query(u"Home MCC:", "number", 244)
+        if mcc is None:
+            mcc = "nil"
+        else:
+            mcc = str(mcc)
+        
+        #operator = appuifw.query(u"Home operator:", "text", iap_name_u)
+        operator = appuifw.query(u"Home operator:", "text", u"Elisa")
+        if operator is None:
+            operator = "nil"
+        else:
+            operator = '"' + operator.encode("utf-8") + '"'
+        
         import sysinfo
         username = appuifw.query(u"Username:", "text", unicode(sysinfo.imei()))
         #username = appuifw.query(u"Username:", "text", u"johndoe")
@@ -406,9 +419,12 @@ end """)
 	text = """
         username = "%s"
         iap = %s
+        mcc = %s
+        operator_name = %s
         database_dir = "%s"
         database_disk_threshold = %d
-	""" % (username, iap_expr, dbdir, database_disk_threshold)
+	""" % (username, iap_expr, mcc,
+               operator, dbdir, database_disk_threshold)
 	make_file(config_file, str(text))
         appuifw.note(u"Config file written", "info")
 
