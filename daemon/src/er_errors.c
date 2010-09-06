@@ -94,7 +94,7 @@ void er_log_base(int opt, void* errObj,
  ready:
 #endif
   {
-    LogDb* logDb = ac_global_LogDb;
+    LogDb* logDb = ((opt & er_NODB) ? NULL : ac_global_LogDb);
     if (!logDb) {
       logt(log_msg);
     } else {

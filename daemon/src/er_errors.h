@@ -47,7 +47,7 @@ extern "C" {
   // Modifiers.
 #define er_FATAL   (1<< 8)
 #define er_FREE    (1<< 9)
-#define er_NODB    (1<<10) // xxx not yet supported
+#define er_NODB    (1<<10)
 #define er_OOM     (1<<11)
 
   // Do not use directly.
