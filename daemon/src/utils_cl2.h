@@ -62,6 +62,8 @@ int ConvToUtf8CString(gchar* buf, int bufLen, const TDesC& name16);
 
 HBufC* ConvFromUtf8L(const TDesC8& name8);
 
+HBufC* ConvFromUtf8CStringL(const char* s);
+
 #include "common/epoc-session.hpp"
 
 #endif // __cplusplus

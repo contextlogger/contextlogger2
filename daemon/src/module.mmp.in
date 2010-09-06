@@ -82,6 +82,7 @@ library euser.lib
 library <%= libfile %>
 <% end %>
 
+library aknnotify.lib eiksrv.lib // CAknGlobalNote
 library cntmodel.lib // CContactDatabase
 //library estor.lib // RReadStream
 //library etel.lib // RCall, RLine

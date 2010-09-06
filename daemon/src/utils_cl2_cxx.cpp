@@ -55,6 +55,12 @@ HBufC* ConvFromUtf8L(const TDesC8& name8)
   return name16;
 }
 
+HBufC* ConvFromUtf8CStringL(const char* s)
+{
+  TPtrC8 ptr((const TUint8*)s);
+  return ConvFromUtf8L(ptr);
+}
+
 // The caller must free the return value with g_free.
 gchar* ConvToUtf8CStringL(const TDesC& name16)
 {

@@ -28,6 +28,16 @@ extern "C" {
 
   void er_fatal();
 
+  // The "msg" text should be fairly short.
+  void er_fatal_msg(const char* msg);
+
+  void er_show_error_msg(const char* text);
+
+#define er_fatal_general er_fatal_msg("Fatal error (CL2 exited)")
+#define er_fatal_oom er_fatal_msg("Out of memory (CL2 exited)")
+#define er_fatal_battery_low er_fatal_msg("Battery low (CL2 exited)")
+#define er_fatal_disk_low er_fatal_msg("Disk low (CL2 exited)")
+
   // Error types. (Mutually exclusive.)
 #define er_NONE    (1<<0)
 #define er_POSIX   (1<<1)
@@ -71,7 +81,7 @@ extern "C" {
   _er_log_gerror((opt) | er_GERROR, val, __func__, __FILE__, __LINE__, fmt)
 
 #define er_log_nomem \
-  er_log_none(er_FATAL, "out of memory error")
+  { er_log_none(0, "out of memory error"); er_fatal_oom; }
 
 #define er_log_nomem_on_false(x) \
   if (!(x)) { er_log_nomem; }
@@ -158,8 +168,8 @@ extern "C" {
 
   void ex_show_nomem_error();
 
-  // Like ex_show_error(KErrGeneral).
-  void ex_show_default_error();
+  void ex_show_error_msg(const char* text);
+
 #endif /* __SYMBIAN32__ */
 
 #ifdef __cplusplus

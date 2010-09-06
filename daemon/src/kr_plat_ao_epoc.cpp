@@ -101,7 +101,8 @@ void CDiskObserver::DiskSpaceNotify(TInt aDrive, TInt errCode)
       // One issue here is that we do not really know if it is safe to
       // try to log this error to the database. Possibly not, so the
       // debug log, if any, shall have to do.
-      ex_txtlog_fatal_error(errCode);
+      ex_txtlog_error(errCode);
+      er_fatal_disk_low;
     }
   }
 }
@@ -212,7 +213,8 @@ void CBatteryObserver::HandleBattery(TInt aError, CTelephony::TBatteryInfoV1 con
       log_db_log_battery(logDb, status, level, NULL);
     }
     if (level < 20) {
-      er_log_none(er_FATAL, "battery running low (at %d%%): exiting", level);
+      er_log_none(0, "battery running low (at %d%%): exiting", level);
+      er_fatal_battery_low;
     } else {
       iBatteryInfoNotifier->MakeRequest();
     }

@@ -19,8 +19,19 @@ void er_global_cleanup()
 
 void er_fatal()
 {
-  WHEN_SYMBIAN(ex_show_default_error());
+  er_fatal_general;
+}
+
+void er_fatal_msg(const char* msg)
+{
+  er_show_error_msg(msg);
   EXIT_APPLICATION;
+}
+
+void er_show_error_msg(const char* msg)
+{
+  WHEN_SYMBIAN(ex_show_error_msg(msg));
+  UNLESS_SYMBIAN(logt(msg));
 }
 
 static

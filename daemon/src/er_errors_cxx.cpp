@@ -12,6 +12,9 @@
 
 */
 
+#include "utils_cl2.h"
+
+#include <aknglobalnote.h>
 #include <errorui.h>
 
 extern "C" void ex_show_error(int errCode)
@@ -23,14 +26,18 @@ extern "C" void ex_show_error(int errCode)
 	);
 }
 
-extern "C" void ex_show_default_error()
-{
-  ex_show_error(KErrGeneral);
-}
-
 extern "C" void ex_show_nomem_error()
 {
   ex_show_error(KErrNoMemory);
+}
+
+extern "C" void ex_show_error_msg(const char* text)
+{
+  HBufC* buf = ConvFromUtf8CStringL(text);
+  CleanupStack::PushL(buf);
+  CAknGlobalNote* note = CAknGlobalNote::NewLC();
+  note->ShowNoteL(EAknGlobalErrorNote, *buf);
+  CleanupStack::PopAndDestroy(2); // note, buf
 }
 
 #endif /* __SYMBIAN32__ */
