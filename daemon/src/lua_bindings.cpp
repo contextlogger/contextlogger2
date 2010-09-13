@@ -304,8 +304,18 @@ static int f_log_message(lua_State* L)
   return 0;
 }
 
+/***koog (lua-func are_uploads_allowed) ***/
+static int f_are_uploads_allowed(lua_State* L)
+/***end***/
+{
+  kr_Controller* kr = ac_global_Controller;
+  lua_pushboolean(L, kr->are_uploads_allowed);
+  return 1;
+}
+
 static const luaL_Reg function_table[] = {
 /***koog (lua-entries) ***/
+  {"are_uploads_allowed", f_are_uploads_allowed},
   {"log_message", f_log_message},
   {"remokon_stop", f_remokon_stop},
   {"remokon_start", f_remokon_start},

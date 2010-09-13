@@ -491,7 +491,8 @@ void CNetworkObserver::HandleData(TInt aError,
 // --------------------------------------------------
 
 /// We require retries here in particular, as we have seen
-/// KErrOverflow.
+/// KErrOverflow. In fact we have enough many failures so as to run
+/// out of retries, but perhaps in those cases it is good to relaunch?
 
 /***koog 
 (require codegen/symbian-cxx)
@@ -599,7 +600,8 @@ void CSignalObserver::HandleSignalStrengthChange(TInt aError)
   HandleSignal(aError, iNotifier->Data());
 }
 
-void CSignalObserver::HandleSignal(TInt aError, CTelephony::TSignalStrengthV1 const & aData)
+void CSignalObserver::HandleSignal(TInt aError, 
+				   CTelephony::TSignalStrengthV1 const & aData)
 {
   LogDb* logDb = ac_global_LogDb;
   if (aError) {

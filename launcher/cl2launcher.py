@@ -107,6 +107,7 @@ class GUI:
               (u"Enable WD autostart", self.enable_wd))),
 
 	    (u"Upload now", self.upload_now),
+            (u"Uploads allowed?", self.are_uploads_allowed),
 
             (u"Sensors",
              ((u"Select sensor", self.select_sensor),
@@ -257,6 +258,13 @@ class GUI:
             except:
 		return
         return self.with_daemon_session(f)
+
+    def are_uploads_allowed(self):
+	res = self.daemon_query(""" if cl2.are_uploads_allowed() then return "yes" else return "no" end """)
+	if res == "yes" or res == "no":
+            appuifw.note(u"Uploads allowed: %s" % res, "info")
+        else:
+	    appuifw.note(u"Query failure", "error")
 
     def status_overview(self):
         b2s = lambda v: v and "yes" or "no"
