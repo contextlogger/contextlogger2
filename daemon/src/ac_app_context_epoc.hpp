@@ -8,11 +8,15 @@
 
 #include <f32file.h> // RFs
 
-#if __NEED_TELEPHONY__
 #include <etel3rdparty.h> // CTelephony
-#endif
 
 #include <cntdb.h> // CContactDatabase
+
+class MAppContextInitObserver
+{
+public:
+  virtual void AppContextReady(TInt aError) = 0;
+};
 
 /***koog 
 (require codegen/symbian-cxx)
@@ -60,13 +64,26 @@ NONSHARABLE_CLASS(CAppContext) : public CBase
  public: // internally public
   DEF_SESSION(RFs, iFs);
 
-#if __NEED_TELEPHONY__
   CTelephony* iTelephony;
-#endif
 
 #if __NEED_CONTACT_DATABASE__
   CContactDatabase* iContactDatabase;
 #endif
+
+ private:
+
+  TBool iInitDone;
+
+  // If this is set, the observer is notified of the completion of any
+  // asynchronous initialization.
+  MAppContextInitObserver* iInitObserver;
+
+ public:
+
+  void DoAsyncInit(MAppContextInitObserver* aInitObserver);
+
+  TBool IsReady() const { return iInitDone; }
+
 };
 
 #endif /* __ac_app_context_epoc_hpp__ */

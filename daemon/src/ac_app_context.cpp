@@ -18,9 +18,7 @@ void CAppContext::ConstructL()
 {
   LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iFs, iFs.Connect());
 
-#if __NEED_TELEPHONY__
   iTelephony = CTelephony::NewL();
-#endif
 
 #if __NEED_CONTACT_DATABASE__
   iContactDatabase = CContactDatabase::OpenL();
@@ -32,10 +30,14 @@ CAppContext::~CAppContext()
 #if __NEED_CONTACT_DATABASE__
   delete iContactDatabase;
 #endif
-#if __NEED_TELEPHONY__
   delete iTelephony;
-#endif
   SESSION_CLOSE_IF_OPEN(iFs);
+}
+
+void CAppContext::DoAsyncInit(MAppContextInitObserver* aInitObserver)
+{
+  iInitObserver = aInitObserver;
+  //xxx
 }
 
 #endif /* __SYMBIAN32__ */
@@ -240,12 +242,10 @@ RFs& ac_Fs(ac_AppContext* self)
   return self->plat->iFs;
 }
 
-#if __NEED_TELEPHONY__
 CTelephony& ac_Telephony(ac_AppContext* self)
 {
   return *(self->plat->iTelephony);
 }
-#endif
 
 #if __NEED_CONTACT_DATABASE__
 CContactDatabase& ac_ContactDatabase(ac_AppContext* self)

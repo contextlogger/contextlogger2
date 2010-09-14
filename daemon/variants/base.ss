@@ -268,10 +268,6 @@ project must implement.
   ;; features
   ;; --------------------------------------------------
   
-  ;; If a "global" copy of a Symbian CTelephony object is needed.
-  (define/public (need-telephony.attr)
-    #t)
-
   ;; If a Contacts DB session is needed in the application context.
   (define/public (need-contact-database.attr)
     #t) ;; xxx
