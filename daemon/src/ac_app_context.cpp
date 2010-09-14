@@ -200,22 +200,26 @@ void ac_AppContext_PlatInitAsyncL(ac_AppContext* self,
 
 CAppContext& ac_AppContext_plat(ac_AppContext* self)
 {
+  assert(self && self->plat);
   return *(self->plat);
 }
 
 RFs& ac_Fs(ac_AppContext* self)
 {
+  assert(self && self->plat);
   return self->plat->iImpl->iFs;
 }
 
 CTelephony& ac_Telephony(ac_AppContext* self)
 {
+  assert(self && self->plat);
   return *(self->plat->iImpl->iTelephony);
 }
 
 #if __NEED_CONTACT_DATABASE__
 CContactDatabase& ac_ContactDatabase(ac_AppContext* self)
 {
+  assert(self && self->plat);
   return *(self->plat->iImpl->iContactDatabase);
 }
 #endif

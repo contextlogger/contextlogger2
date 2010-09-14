@@ -112,120 +112,6 @@ void CDiskObserver::DiskSpaceNotify(TInt aDrive, TInt errCode)
 }
 
 // --------------------------------------------------
-// battery status observing
-// --------------------------------------------------
-
-/*
-It is worth noting that there also is the hwrmpowerstatesdkpskeys.h API, which it seems we might likewise use. Do not know if one is "better" than the other.
-http://www.forum.nokia.com/document/Cpp_Developers_Library/GUID-759FBC7F-5384-4487-8457-A8D4B76F6AA6/html/hwrmpowerstatesdkpskeys_8h.html
-*/
-
-/***koog 
-(require codegen/symbian-cxx)
-(ctor-defines/spec
- "CBatteryObserver" ;; name
- "" ;; args
- "" ;; inits
- "" ;; ctor
- #t ;; ConstructL
-)
- ***/
-#define CTOR_DECL_CBatteryObserver  \
-public: static CBatteryObserver* NewLC(); \
-public: static CBatteryObserver* NewL(); \
-private: CBatteryObserver(); \
-private: void ConstructL();
-
-#define CTOR_IMPL_CBatteryObserver  \
-CBatteryObserver* CBatteryObserver::NewLC() \
-{ \
-  CBatteryObserver* obj = new (ELeave) CBatteryObserver(); \
-  CleanupStack::PushL(obj); \
-  obj->ConstructL(); \
-  return obj; \
-} \
- \
-CBatteryObserver* CBatteryObserver::NewL() \
-{ \
-  CBatteryObserver* obj = CBatteryObserver::NewLC(); \
-  CleanupStack::Pop(obj); \
-  return obj; \
-} \
- \
-CBatteryObserver::CBatteryObserver() \
-{}
-/***end***/
-NONSHARABLE_CLASS(CBatteryObserver) : 
-  public CBase, 
-  public MBatteryInfoRequestor,
-  public MBatteryInfoObserver
-{
-  CTOR_DECL_CBatteryObserver;
-
- public:
-  ~CBatteryObserver();
-
- private:
-  virtual void HandleGotBatteryInfo(TInt aError);
-  virtual void HandleBatteryInfoChange(TInt aError);
-  void HandleBattery(TInt aError, CTelephony::TBatteryInfoV1 const & aData);
-
- private:
-  CBatteryInfoGetter* iBatteryInfoGetter;
-  CBatteryInfoNotifier* iBatteryInfoNotifier;
-};
-
-CTOR_IMPL_CBatteryObserver;
-
-void CBatteryObserver::ConstructL()
-{
-  ac_AppContext* ac = ac_get_global_AppContext();
-
-  iBatteryInfoGetter = new (ELeave) CBatteryInfoGetter(ac_Telephony(ac), *this);
-  iBatteryInfoNotifier = new (ELeave) CBatteryInfoNotifier(ac_Telephony(ac), *this);
-
-  iBatteryInfoGetter->MakeRequest();
-}
-
-CBatteryObserver::~CBatteryObserver()
-{
-  delete iBatteryInfoGetter;
-  delete iBatteryInfoNotifier;
-}
-
-void CBatteryObserver::HandleGotBatteryInfo(TInt aError)
-{
-  HandleBattery(aError, iBatteryInfoGetter->Data());
-}
-
-void CBatteryObserver::HandleBatteryInfoChange(TInt aError)
-{
-  HandleBattery(aError, iBatteryInfoNotifier->Data());
-}
-
-void CBatteryObserver::HandleBattery(TInt aError, CTelephony::TBatteryInfoV1 const & aData)
-{
-  LogDb* logDb = ac_global_LogDb;
-  if (aError) {
-    if (logDb)
-      ex_dblog_error_msg(logDb, "battery info status query failure", aError, NULL);
-  } else {
-    int status = aData.iStatus;
-    int level = aData.iChargeLevel;
-    logf("battery status: %d (%d%%)", status, level);
-    if (logDb) {
-      log_db_log_battery(logDb, status, level, NULL);
-    }
-    if (level < 20) {
-      er_log_none(0, "battery running low (at %d%%): exiting", level);
-      er_fatal_battery_low;
-    } else {
-      iBatteryInfoNotifier->MakeRequest();
-    }
-  }
-}
-
-// --------------------------------------------------
 // network registration status observing
 // --------------------------------------------------
 
@@ -629,7 +515,6 @@ void CSignalObserver::HandleSignal(TInt aError,
 
 struct _kr_PlatAo {
   CDiskObserver* iDiskObserver;
-  CBatteryObserver* iBatteryObserver;
   CRegistrationObserver* iRegistrationObserver;
   CNetworkObserver* iNetworkObserver;
   CSignalObserver* iSignalObserver;
@@ -649,16 +534,6 @@ extern "C" kr_PlatAo* kr_PlatAo_new(GError** error)
     if (error)
       *error = gx_error_new(domain_symbian, errCode, 
 			    "disk observer creation failure: %s (%d)", 
-			    plat_error_strerror(errCode), errCode);
-    return NULL;
-  }
-
-  TRAP(errCode, self->iBatteryObserver = CBatteryObserver::NewL());
-  if (G_UNLIKELY(errCode)) {
-    kr_PlatAo_destroy(self);
-    if (error)
-      *error = gx_error_new(domain_symbian, errCode, 
-			    "battery observer creation failure: %s (%d)", 
 			    plat_error_strerror(errCode), errCode);
     return NULL;
   }
@@ -702,7 +577,6 @@ extern "C" void kr_PlatAo_destroy(kr_PlatAo* self)
     delete self->iSignalObserver;
     delete self->iNetworkObserver;
     delete self->iRegistrationObserver;
-    delete self->iBatteryObserver;
     delete self->iDiskObserver;
     g_free(self);
   }

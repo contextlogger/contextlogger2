@@ -1,6 +1,8 @@
 // Not a standalone file. It exists as a separate file only to avoid
 // platform-specific clutter in the primary implementation file.
 
+#include "sa_sensor_list_log_db.h"
+#include "ut_telephony_epoc.h"
 #include "utils_cl2.h" // DEF_SESSION
 
 #include <f32file.h> // RFs
@@ -10,6 +12,137 @@
 #if __NEED_CONTACT_DATABASE__
 #include <cntdb.h> // CContactDatabase
 #endif
+
+// --------------------------------------------------
+// battery status observing
+// --------------------------------------------------
+
+/*
+The primary function of this AO is to exit the process if battery is running low. We do not want to be the ones to consume the last bit of battery.
+
+As a secondary task, the battery level is also logged, if the required resources have been initialized.
+
+It is worth noting that there also is the hwrmpowerstatesdkpskeys.h API, which it seems we might likewise use. Do not know if one is "better" than the other.
+http://www.forum.nokia.com/document/Cpp_Developers_Library/GUID-759FBC7F-5384-4487-8457-A8D4B76F6AA6/html/hwrmpowerstatesdkpskeys_8h.html
+*/
+
+/***koog 
+(require codegen/symbian-cxx)
+(ctor-defines/spec
+ "CBatteryObserver" ;; name
+ "CTelephony& tel" ;; args
+ "" ;; inits
+ "" ;; ctor
+ #t ;; ConstructL
+ '(args-to-constructl)
+)
+ ***/
+#define CTOR_DECL_CBatteryObserver  \
+public: static CBatteryObserver* NewLC(CTelephony& tel); \
+public: static CBatteryObserver* NewL(CTelephony& tel); \
+private: CBatteryObserver(CTelephony& tel); \
+private: void ConstructL(CTelephony& tel);
+
+#define CTOR_IMPL_CBatteryObserver  \
+CBatteryObserver* CBatteryObserver::NewLC(CTelephony& tel) \
+{ \
+  CBatteryObserver* obj = new (ELeave) CBatteryObserver(tel); \
+  CleanupStack::PushL(obj); \
+  obj->ConstructL(tel); \
+  return obj; \
+} \
+ \
+CBatteryObserver* CBatteryObserver::NewL(CTelephony& tel) \
+{ \
+  CBatteryObserver* obj = CBatteryObserver::NewLC(tel); \
+  CleanupStack::Pop(obj); \
+  return obj; \
+} \
+ \
+CBatteryObserver::CBatteryObserver(CTelephony& tel) \
+{}
+/***end***/
+NONSHARABLE_CLASS(CBatteryObserver) : 
+  public CBase, 
+  public MBatteryInfoRequestor,
+  public MBatteryInfoObserver
+{
+  CTOR_DECL_CBatteryObserver;
+
+ public:
+  ~CBatteryObserver();
+
+ private:
+  virtual void HandleGotBatteryInfo(TInt aError);
+  virtual void HandleBatteryInfoChange(TInt aError);
+  void HandleBattery(TInt aError, CTelephony::TBatteryInfoV1 const & aData);
+
+ private:
+  CBatteryInfoGetter* iBatteryInfoGetter;
+  CBatteryInfoNotifier* iBatteryInfoNotifier;
+};
+
+CTOR_IMPL_CBatteryObserver;
+
+void CBatteryObserver::ConstructL(CTelephony& tel)
+{
+  iBatteryInfoGetter = new (ELeave) CBatteryInfoGetter(tel, *this);
+  iBatteryInfoNotifier = new (ELeave) CBatteryInfoNotifier(tel, *this);
+
+  iBatteryInfoGetter->MakeRequest();
+}
+
+CBatteryObserver::~CBatteryObserver()
+{
+  delete iBatteryInfoGetter;
+  delete iBatteryInfoNotifier;
+}
+
+void CBatteryObserver::HandleGotBatteryInfo(TInt aError)
+{
+  HandleBattery(aError, iBatteryInfoGetter->Data());
+}
+
+void CBatteryObserver::HandleBatteryInfoChange(TInt aError)
+{
+  HandleBattery(aError, iBatteryInfoNotifier->Data());
+}
+
+void CBatteryObserver::HandleBattery(TInt aError, 
+				     CTelephony::TBatteryInfoV1 const & aData)
+{
+  if (aError) {
+    // This is unexpected, but if we cannot query it, then we shall
+    // live without this feature for the rest of the runtime.
+    er_log_symbian(0, aError, "battery info status query failure");
+  } else {
+    int status = aData.iStatus;
+    int level = aData.iChargeLevel;
+    logf("battery status: %d (%d%%)", status, level);
+
+    LogDb* logDb = ac_global_LogDb;
+    if (logDb) {
+      log_db_log_battery(logDb, status, level, NULL);
+    }
+
+    if (level < 20) {
+      er_log_none(0, "battery running low (at %d%%): exiting", level);
+      if (logDb) {
+	er_fatal_battery_low;
+      } else {
+        // This is to avoid repeated error dialogs when the logger
+        // does not get as far as properly running due to low battery.
+	er_fatal_quiet();
+      }
+    } else {
+      iBatteryInfoNotifier->MakeRequest();
+    }
+  }
+}
+
+// --------------------------------------------------
+// plat app context implementation
+// --------------------------------------------------
 
 /***koog 
 (require codegen/symbian-cxx)
@@ -69,15 +202,20 @@ NONSHARABLE_CLASS(CAppContextImpl) : public CBase
 #if __NEED_CONTACT_DATABASE__
   CContactDatabase* iContactDatabase;
 #endif
+
+ private:
+  CBatteryObserver* iBatteryObserver;
 };
 
 CTOR_IMPL_CAppContextImpl;
 
 void CAppContextImpl::ConstructL()
 {
-  LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iFs, iFs.Connect());
-
   iTelephony = CTelephony::NewL();
+
+  iBatteryObserver = CBatteryObserver::NewL(*iTelephony);
+
+  LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iFs, iFs.Connect());
 
 #if __NEED_CONTACT_DATABASE__
   iContactDatabase = CContactDatabase::OpenL();
@@ -86,6 +224,7 @@ void CAppContextImpl::ConstructL()
 
 CAppContextImpl::~CAppContextImpl()
 {
+  delete iBatteryObserver;
 #if __NEED_CONTACT_DATABASE__
   delete iContactDatabase;
 #endif

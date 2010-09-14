@@ -77,6 +77,8 @@ void CMainObj::ConstructL() // activates the object
 
 void CMainObj::AppContextReady(TInt aError)
 {
+  logh();
+
   if (aError) {
     er_log_symbian(er_FATAL, aError, "error in app ctx async init");
     return; // not reached
@@ -105,7 +107,7 @@ static TInt MainLoop()
   }
 
   CMainObj* mainObj = NULL;
-  TRAPD(errCode, CMainObj::NewL());
+  TRAPD(errCode, mainObj = CMainObj::NewL());
   if (errCode) {
     delete globalLoop;
     return errCode;
@@ -116,6 +118,7 @@ static TInt MainLoop()
   globalLoop->Start();
 
   delete globalLoop;
+  delete mainObj;
 
   return 0;
 }

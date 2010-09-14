@@ -74,6 +74,7 @@ extern "C" {
 #define logt(s) log_text(PRIMARY_LOG_FILENAME, s)
 #define logc(s) log_ctx(PRIMARY_LOG_FILENAME, s)
 #define logf(f...) log_fmt(PRIMARY_LOG_FILENAME, f)
+#define logh() log_ctx(PRIMARY_LOG_FILENAME, "")
 
 #endif // __LOGGING_H__
 

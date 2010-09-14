@@ -7,6 +7,11 @@
 
 #include <glib/gprintf.h>
 
+void er_fatal_quiet()
+{
+  EXIT_APPLICATION;
+}
+
 void er_fatal()
 {
   er_fatal_general;
@@ -103,10 +108,13 @@ void er_log_base(int opt, void* errObj,
       if (opt & er_GERROR)
 	gx_error_free((GError*)errObj);
 
-    if (opt & er_OOM)
+    if ((opt & er_QUIET) && (opt & (er_FATAL|er_OOM))) {
+      er_fatal_quiet();
+    } else if (opt & er_OOM) {
       er_fatal_oom;
-    else if (opt & er_FATAL)
+    }  else if (opt & er_FATAL) {
       er_fatal_general;
+    }
   }
   return;
 

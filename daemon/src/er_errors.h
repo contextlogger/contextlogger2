@@ -22,6 +22,8 @@ extern "C" {
   // generic error reporting
   // --------------------------------------------------
 
+  void er_fatal_quiet();
+
   void er_fatal();
 
   // The "msg" text should be fairly short.
@@ -46,6 +48,7 @@ extern "C" {
 #define er_FREE    (1<< 9)
 #define er_NODB    (1<<10)
 #define er_OOM     (1<<11)
+#define er_QUIET   (1<<12)
 
   // Do not use directly.
   void _er_log_any(int opt, void* errObj, 

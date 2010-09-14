@@ -191,6 +191,7 @@ int cl2GlobalInit()
     return -1;
   }
   ac_set_global_AppContext(ac);
+  logt("app ctx sync init complete");
 
   return 0;
 }
