@@ -12,70 +12,6 @@
 #ifdef __cplusplus
 #if defined(__SYMBIAN32__)
 
-#include <f32file.h> // RFs
-
-#if __NEED_TELEPHONY__
-#include <etel3rdparty.h> // CTelephony
-#endif
-
-#include <cntdb.h> // CContactDatabase
-
-/***koog 
-(require codegen/symbian-cxx)
-(ctor-defines/spec
- "CAppContext" ;; name
- "" ;; args
- "" ;; inits
- "" ;; ctor
- #t ;; ConstructL
-)
- ***/
-#define CTOR_DECL_CAppContext  \
-public: static CAppContext* NewLC(); \
-public: static CAppContext* NewL(); \
-private: CAppContext(); \
-private: void ConstructL();
-
-#define CTOR_IMPL_CAppContext  \
-CAppContext* CAppContext::NewLC() \
-{ \
-  CAppContext* obj = new (ELeave) CAppContext(); \
-  CleanupStack::PushL(obj); \
-  obj->ConstructL(); \
-  return obj; \
-} \
- \
-CAppContext* CAppContext::NewL() \
-{ \
-  CAppContext* obj = CAppContext::NewLC(); \
-  CleanupStack::Pop(obj); \
-  return obj; \
-} \
- \
-CAppContext::CAppContext() \
-{}
-/***end***/
-
-NONSHARABLE_CLASS(CAppContext) : public CBase
-{
-  CTOR_DECL_CAppContext;
-
- public:
-  ~CAppContext();
-
- public: // internally public
-  DEF_SESSION(RFs, iFs);
-
-#if __NEED_TELEPHONY__
-  CTelephony* iTelephony;
-#endif
-
-#if __NEED_CONTACT_DATABASE__
-  CContactDatabase* iContactDatabase;
-#endif
-
-};
-
 CTOR_IMPL_CAppContext;
 
 void CAppContext::ConstructL()
@@ -293,6 +229,11 @@ EXTERN_C const char* ac_get_log_uploads_dir(ac_AppContext* self)
 
 #if defined(__SYMBIAN32__)
 #if defined(__cplusplus)
+
+CAppContext& ac_AppContext_plat(ac_AppContext* self)
+{
+  return *(self->plat);
+}
 
 RFs& ac_Fs(ac_AppContext* self)
 {

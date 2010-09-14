@@ -5,6 +5,8 @@
 
 #include "kr_controller.h"
 
+#include "common/platform_config.h"
+
 //
 // This internal API is only for controller and application context
 // implementation.
@@ -31,6 +33,14 @@ extern "C" {
 
 #ifdef __cplusplus
 } /* extern "C" */
+#endif
+
+#if __SYMBIAN_CXX__
+#include "ac_app_context_epoc.hpp"
+
+// Returns a reference to a Symbian-specific app context object, via
+// which additional services are available.
+CAppContext& ac_AppContext_plat(ac_AppContext* ac);
 #endif
 
 #endif /* __ac_app_context_private_h__ */
