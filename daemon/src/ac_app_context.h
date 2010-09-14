@@ -32,6 +32,18 @@ extern "C" {
 
   ac_AppContext* ac_get_global_AppContext();
 
+  typedef struct {
+    time_t last_upload_time;
+  } ac_Registry;
+
+  ac_Registry* ac_get_Registry(ac_AppContext* self);
+
+  bb_Blackboard* ac_get_Blackboard(ac_AppContext* self);
+
+  const char* ac_get_logdb_file(ac_AppContext* self);
+  const char* ac_get_logdb_dir(ac_AppContext* self);
+  const char* ac_get_log_uploads_dir(ac_AppContext* self);
+
   kr_Controller* ac_Controller(ac_AppContext* self);
 
   LogDb* ac_LogDb(ac_AppContext* self);
@@ -39,18 +51,6 @@ extern "C" {
   cf_RcFile* ac_RcFile(ac_AppContext* self);
 
   ConfigDb* ac_ConfigDb(ac_AppContext* self);
-
-  bb_Blackboard* ac_get_Blackboard(ac_AppContext* self);
-
-  typedef struct {
-    time_t last_upload_time;
-  } ac_Registry;
-
-  ac_Registry* ac_get_Registry(ac_AppContext* self);
-
-  const char* ac_get_logdb_file(ac_AppContext* self);
-  const char* ac_get_logdb_dir(ac_AppContext* self);
-  const char* ac_get_log_uploads_dir(ac_AppContext* self);
 
 #ifdef __cplusplus
 } /* extern "C" */

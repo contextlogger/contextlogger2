@@ -26,7 +26,7 @@ extern "C" {
     kr_PlatAo* platAo;
 #endif
 
-    ac_AppContext* appContext;
+    ac_AppContext* appContext; // not owned
 
     LogDb* log; // owned
 

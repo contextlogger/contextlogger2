@@ -1,5 +1,6 @@
 #include "client-run.h"
 
+#include "ac_app_context_private.h"
 #include "kr_controller.h"
 #include "er_errors.h"
 #include "up_uploader.h"
@@ -15,13 +16,14 @@
 #include <signal.h>
 #endif
 
-#if __IS_DAEMON__
+#if !defined(__SYMBIAN32__)
 
 // Note that these "Run" methods are not required in a typical Symbian
 // application, since Symbian applications have a built in event loop,
 // and a blocking call to "run" the client to the finish in the main
 // thread makes little sense. More likely you will run it on the
-// background in the main thread.
+// background in the main thread. Still, this code does run on Symbian
+// as well, should you want it.
 
 gboolean cl2RunOnce(GError** error)
 {
@@ -72,7 +74,7 @@ int cl2RunOnceGetExitCode()
   return exitCode;
 }
 
-#endif // __IS_DAEMON__
+#endif // run functions
 
 #if defined(__SYMBIAN32__)
 #include <pipsversion.h>
@@ -174,14 +176,22 @@ int cl2GlobalInit()
   // Required when using the GObject object system.
   TRAP_OOM_ENOMEM(g_type_init());
 
-  er_global_init();
-
+  GError* error = NULL;
 #if __FEATURE_UPLOADER__
-  if (!up_global_init(NULL)) {
-    logf("Uploader global init failure");
+  if (!up_global_init(&error)) {
+    logf("uploader global init failure");
+    gx_txtlog_error_clear(&error);
     return -1;
   }
 #endif
+
+  ac_AppContext* ac = ac_AppContext_new(&error);
+  if (G_UNLIKELY(!ac)) {
+    logt("failure creating app context");
+    gx_txtlog_error_clear(&error);
+    return -1;
+  }
+  ac_set_global_AppContext(ac);
 
   return 0;
 }
@@ -195,7 +205,11 @@ void cl2GlobalCleanup()
   up_global_cleanup();
 #endif
 
-  er_global_cleanup();
+  ac_AppContext* ac = ac_get_global_AppContext();
+  if (ac) {
+    ac_set_global_AppContext(NULL);
+    ac_AppContext_destroy(ac);
+  }
 
   logt("global cleanup complete");
 }

@@ -203,21 +203,15 @@ kr_Controller* kr_Controller_new(GError** error)
 
   //er_log_none(er_FATAL, "terrible error (%d)", 555);
 
-  ac_AppContext* ac = ac_AppContext_new(error);
-  if (G_UNLIKELY(!ac)) {
-    return NULL;
-  }
-  ac_set_global_AppContext(ac);
-
   kr_Controller* self = g_try_new0(kr_Controller, 1);
   if (G_UNLIKELY(!self)) {
-    ac_set_global_AppContext(NULL);
-    ac_AppContext_destroy(ac);
     if (error) *error = gx_error_no_memory;
     return NULL;
   }
 
-  self->appContext = ac;
+  self->appContext = ac_get_global_AppContext();
+  // A controller reference kept here whenever it exists. Querying
+  // AppContext at any time will tell you which objects exist.
   ac_AppContext_set_controller(self->appContext, self);
 
 #if !defined(__SYMBIAN32__)
@@ -236,7 +230,7 @@ kr_Controller* kr_Controller_new(GError** error)
     return NULL;
   }
 
-  if (!ac_AppContext_configure(ac, error)) {
+  if (!ac_AppContext_configure(self->appContext, error)) {
     kr_Controller_destroy(self);
     return NULL;
   }
@@ -284,7 +278,7 @@ kr_Controller* kr_Controller_new(GError** error)
   }
 #endif
   
-  sa_Array* scanner = sa_Array_new(ac, error);
+  sa_Array* scanner = sa_Array_new(self->appContext, error);
   if (!scanner) {
     kr_Controller_destroy(self);
     return NULL;
@@ -368,8 +362,7 @@ void kr_Controller_destroy(kr_Controller* self)
 
     free_uploads_allowed_state(self);
 
-    ac_AppContext_destroy(self->appContext);
-    ac_set_global_AppContext(NULL);
+    ac_AppContext_set_controller(self->appContext, NULL);
     
     g_free(self);
     //logt("logger controller destroyed");

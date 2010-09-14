@@ -20,6 +20,8 @@ extern "C" {
 
   void ac_AppContext_set_controller(ac_AppContext* self, kr_Controller* kr);
 
+  // Refreshes settings from the configuration file.
+  // Any previous settings are lost.
   // Should be called once the configuration file has been read.
   gboolean ac_AppContext_configure(ac_AppContext* self, GError** error);
 

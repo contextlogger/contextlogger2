@@ -18,10 +18,6 @@
 extern "C" {
 #endif
 
-  void er_global_init();
-
-  void er_global_cleanup();
-
   // --------------------------------------------------
   // generic error reporting
   // --------------------------------------------------

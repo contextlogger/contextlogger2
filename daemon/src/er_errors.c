@@ -7,16 +7,6 @@
 
 #include <glib/gprintf.h>
 
-// Better just abort() on error here, system may not be ready for much else.
-void er_global_init()
-{
-}
-
-// May be invoked more than once.
-void er_global_cleanup()
-{
-}
-
 void er_fatal()
 {
   er_fatal_general;

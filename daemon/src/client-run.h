@@ -7,7 +7,7 @@
 
 G_BEGIN_DECLS
 
-#if __IS_DAEMON__
+#if !defined(__SYMBIAN32__)
 gboolean cl2RunOnce(GError** error);
 
 int cl2RunOnceGetExitCode();

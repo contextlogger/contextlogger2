@@ -3,6 +3,8 @@
 #include "kr_controller_private.h"
 #include "utils_cl2.h"
 
+#include <stdlib.h> // free
+
 // --------------------------------------------------
 // Symbian private implementation
 // --------------------------------------------------
@@ -160,9 +162,19 @@ EXTERN_C void ac_AppContext_set_controller(ac_AppContext* self,
   self->kr = kr;
 }
 
+//// Clear previous cached configuration.
+static void free_config_cache(ac_AppContext* self)
+{
+  self->logdb_dir = NULL;
+  FREE_Z(self->logdb_file, free);
+  FREE_Z(self->log_uploads_dir, free);
+}
+
 EXTERN_C gboolean ac_AppContext_configure(ac_AppContext* self, 
 					  GError** error)
 {
+  free_config_cache(self);
+
   const gchar* database_dir = get_config_database_dir(self);
 
   self->logdb_dir = database_dir;
@@ -199,8 +211,7 @@ EXTERN_C void ac_AppContext_destroy(ac_AppContext* self)
 {
   if (self) {
     WHEN_SYMBIAN(delete self->plat);
-    g_free(self->logdb_file);
-    g_free(self->log_uploads_dir);
+    free_config_cache(self);
     bb_Blackboard_destroy(self->blackboard);
     g_free(self);
   }
