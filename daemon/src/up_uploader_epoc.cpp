@@ -126,12 +126,11 @@ NONSHARABLE_CLASS(CUploader) :
 
  private: // property
 
+  LogDb* iLogDb; // not owned
+
   TBool iNoConfig; // no upload URL
   TPtrC8 iUploadUrl; // data not owned
-
   TUint32 iIapId;
-
-  LogDb* iLogDb; // not owned
 
   //// posting state
   CPosterAo* iPosterAo;
@@ -146,9 +145,59 @@ NONSHARABLE_CLASS(CUploader) :
   gchar* iSnapshotTimeExpr;
   time_t iSnapshotTimeCtx;
   TBool iNoNextSnapshotTime;
+
+  //// blackboard
+ public:
+  void Set_uploads_allowed(TBool val);
+ private:
+  TBool i_uploads_allowed; // from blackboard
+  bb_Closure iClosure;
+  void BbRegisterL();
+  void BbUnregister();
+
 };
 
 CTOR_IMPL_CUploader;
+
+static void DataChanged(bb_Blackboard* bb, enum bb_DataType dt,
+			gpointer data, int len, gpointer arg)
+{
+  (void)dt;
+  (void)len;
+  CUploader* self = (CUploader*)arg;
+  bb_Board* bd = bb_Blackboard_board(bb);
+  TBool val = bd->uploads_allowed;
+  self->Set_uploads_allowed(val);
+}
+
+void CUploader::Set_uploads_allowed(TBool val)
+{
+  i_uploads_allowed = val;
+  StateChanged();
+}
+
+void CUploader::BbRegisterL()
+{
+  // Initial value (internal).
+  bb_Blackboard* bb = ac_global_Blackboard;
+  bb_Board* bd = bb_Blackboard_board(bb);
+  i_uploads_allowed = bd->uploads_allowed;
+
+  // Closure init.
+  iClosure.changed = DataChanged;
+  iClosure.arg = this;
+
+  // Registration proper.
+  if (!bb_Blackboard_register(bb,
+			      bb_dt_uploads_allowed,
+			      iClosure, NULL))
+    User::LeaveNoMemory();
+}
+
+void CUploader::BbUnregister()
+{
+  bb_Blackboard_unregister(ac_global_Blackboard, iClosure);
+}
 
 // The effect is not immediate. Will only take effect when the next
 // poster is created.
@@ -249,11 +298,16 @@ void CUploader::ConstructL()
   if (iSnapshotTimeCtx == -1) User::Leave(KErrGeneral);
   //logf("using snapshot time '%s'", iSnapshotTimeExpr);
 
+  // Note that if this ConstructL() leaves, the dtor of this will
+  // unregister us.
+  BbRegisterL();
+
   StateChangedL();
 }
 
 CUploader::~CUploader()
 {
+  BbUnregister();
   delete iPostTimerAo;
   delete iSnapshotTimerAo;
   DestroyPosterAo();
@@ -536,15 +590,20 @@ void CUploader::StateChangedL()
 
  again:
   if (iFileToPost) {
-    if (PosterAoIsActive() ||
+    if (PosterAoIsActive() || 
+	// 'iPostTimerAo' is a post retry timer.
 	iPostTimerAo->IsActive())
       return;
-    PostNowL();
+    if (i_uploads_allowed) {
+      PostNowL(); // not called elsewhere
+    } else {
+      DestroyPosterAo(); // make sure no connection remains
+    }
   } else if (!iNoOldFiles) {
     NextOldFileL();
     goto again;
   } else if (iSnapshotTimePassed) {
-    TakeSnapshotNowL();
+    TakeSnapshotNowL(); // not called elsewhere
   } else {
     // Have nothing to post for now. This will see to it that we close
     // any connection that we do not require. With some operators,
