@@ -82,6 +82,22 @@ static void log_uploads_allowed(kr_Controller* self)
   log_db_log_status(logDb, NULL, "CHANGE: uploads allowed = %s (modem IAP %s, MCC %d at %d dBm)", boolstr_yes(self->are_uploads_allowed), boolstr_yes(self->is_cellular_ap), self->current_mcc, self->current_signal_strength);
 }
 
+static void uploads_allowed_update_board(gboolean value)
+{
+  bb_Blackboard* bb = ac_global_Blackboard;
+  assert(bb);
+  bb_Board* bd = bb_Blackboard_board(bb);
+  bd->uploads_allowed = value;
+  bb_Blackboard_notify(bb, bb_dt_uploads_allowed,
+		       (gpointer)&(bd->uploads_allowed), 0);
+}
+
+static void uploads_allowed_changed(kr_Controller* self)
+{
+  log_uploads_allowed(self);
+  uploads_allowed_update_board(self->are_uploads_allowed);
+}
+
 static void init_uploads_allowed_state(kr_Controller* self)
 {
   //WHEN_SYMBIAN(epoc_log_bearer_types());
@@ -99,7 +115,7 @@ static void init_uploads_allowed_state(kr_Controller* self)
 
   logf("non-roaming MCC: %d", self->non_roaming_mcc);
   WHEN_LOGGING({if (self->non_roaming_operator_name) logf("non-roaming operator: '%s'", self->non_roaming_operator_name);});
-  log_uploads_allowed(self);
+  uploads_allowed_changed(self);
 }
 
 static void free_uploads_allowed_state(kr_Controller* self)
@@ -143,10 +159,7 @@ static void recompute_uploads_allowed(kr_Controller* self)
     }
   }
   if (old_flag != self->are_uploads_allowed) {
-    log_uploads_allowed(self);
-#if __FEATURE_UPLOADER__
-    //xxx notify
-#endif
+    uploads_allowed_changed(self);
   }
 }
 

@@ -9,11 +9,15 @@ typedef struct {
 
 struct _bb_Blackboard
 {
-  // In some sense the name of this data structure is misleading, as
-  // we do not actually maintain a "blackboard" of data.
-public:
+  bb_Board board; // any board data
   GSList* reg; // of Registrant
 };
+
+extern "C"
+bb_Board* bb_Blackboard_board(bb_Blackboard* self)
+{
+  return &(self->board);
+}
 
 extern "C"
 bb_Blackboard* bb_Blackboard_new(GError** error)

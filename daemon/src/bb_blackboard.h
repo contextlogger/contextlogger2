@@ -21,6 +21,16 @@ extern "C" {
 
   void bb_Blackboard_destroy(bb_Blackboard* self);
 
+  // This structure may be used to store data that the notifications
+  // point to, for any datatype as desired. Note that no automatic
+  // allocation or freeing is performed; this memory is simply
+  // zero-initialized.
+  typedef struct {
+    gboolean uploads_allowed;
+  } bb_Board;
+
+  bb_Board* bb_Blackboard_board(bb_Blackboard* self);
+
   enum bb_DataType {
     bb_dt_uploads_allowed, /* gboolean */
     bb_dt_network_info     /* CTelephony::TNetworkInfoV1 */
