@@ -30,36 +30,36 @@ http://www.forum.nokia.com/document/Cpp_Developers_Library/GUID-759FBC7F-5384-44
 (require codegen/symbian-cxx)
 (ctor-defines/spec
  "CBatteryObserver" ;; name
- "CTelephony& tel" ;; args
- "" ;; inits
+ "CTelephony& tel, MBatteryInfoRequestor& obs" ;; args
+ "iObserver(obs)" ;; inits
  "" ;; ctor
  #t ;; ConstructL
  '(args-to-constructl)
 )
  ***/
 #define CTOR_DECL_CBatteryObserver  \
-public: static CBatteryObserver* NewLC(CTelephony& tel); \
-public: static CBatteryObserver* NewL(CTelephony& tel); \
-private: CBatteryObserver(CTelephony& tel); \
-private: void ConstructL(CTelephony& tel);
+public: static CBatteryObserver* NewLC(CTelephony& tel, MBatteryInfoRequestor& obs); \
+public: static CBatteryObserver* NewL(CTelephony& tel, MBatteryInfoRequestor& obs); \
+private: CBatteryObserver(CTelephony& tel, MBatteryInfoRequestor& obs); \
+private: void ConstructL(CTelephony& tel, MBatteryInfoRequestor& obs);
 
 #define CTOR_IMPL_CBatteryObserver  \
-CBatteryObserver* CBatteryObserver::NewLC(CTelephony& tel) \
+CBatteryObserver* CBatteryObserver::NewLC(CTelephony& tel, MBatteryInfoRequestor& obs) \
 { \
-  CBatteryObserver* obj = new (ELeave) CBatteryObserver(tel); \
+  CBatteryObserver* obj = new (ELeave) CBatteryObserver(tel, obs); \
   CleanupStack::PushL(obj); \
-  obj->ConstructL(tel); \
+  obj->ConstructL(tel, obs); \
   return obj; \
 } \
  \
-CBatteryObserver* CBatteryObserver::NewL(CTelephony& tel) \
+CBatteryObserver* CBatteryObserver::NewL(CTelephony& tel, MBatteryInfoRequestor& obs) \
 { \
-  CBatteryObserver* obj = CBatteryObserver::NewLC(tel); \
+  CBatteryObserver* obj = CBatteryObserver::NewLC(tel, obs); \
   CleanupStack::Pop(obj); \
   return obj; \
 } \
  \
-CBatteryObserver::CBatteryObserver(CTelephony& tel) \
+CBatteryObserver::CBatteryObserver(CTelephony& tel, MBatteryInfoRequestor& obs) : iObserver(obs) \
 {}
 /***end***/
 NONSHARABLE_CLASS(CBatteryObserver) : 
@@ -80,11 +80,14 @@ NONSHARABLE_CLASS(CBatteryObserver) :
  private:
   CBatteryInfoGetter* iBatteryInfoGetter;
   CBatteryInfoNotifier* iBatteryInfoNotifier;
+
+ private:
+  MBatteryInfoRequestor& iObserver;
 };
 
 CTOR_IMPL_CBatteryObserver;
 
-void CBatteryObserver::ConstructL(CTelephony& tel)
+void CBatteryObserver::ConstructL(CTelephony& tel, MBatteryInfoRequestor& obs)
 {
   iBatteryInfoGetter = new (ELeave) CBatteryInfoGetter(tel, *this);
   iBatteryInfoNotifier = new (ELeave) CBatteryInfoNotifier(tel, *this);
@@ -101,6 +104,7 @@ CBatteryObserver::~CBatteryObserver()
 void CBatteryObserver::HandleGotBatteryInfo(TInt aError)
 {
   HandleBattery(aError, iBatteryInfoGetter->Data());
+  iObserver.HandleGotBatteryInfo(aError); // forward
 }
 
 void CBatteryObserver::HandleBatteryInfoChange(TInt aError)
@@ -180,7 +184,9 @@ CAppContextImpl::CAppContextImpl(ac_AppContext* ac, MAppContextInitObserver& obs
 {}
 /***end***/
 
-NONSHARABLE_CLASS(CAppContextImpl) : public CBase
+NONSHARABLE_CLASS(CAppContextImpl) : 
+  public CBase,
+  public MBatteryInfoRequestor
 {
   CTOR_DECL_CAppContextImpl;
 
@@ -205,15 +211,26 @@ NONSHARABLE_CLASS(CAppContextImpl) : public CBase
 
  private:
   CBatteryObserver* iBatteryObserver;
+
+ private: // MBatteryInfoRequestor
+  virtual void HandleGotBatteryInfo(TInt aError);
 };
 
 CTOR_IMPL_CAppContextImpl;
+
+void CAppContextImpl::HandleGotBatteryInfo(TInt aError)
+{
+  (void)aError;
+  // We need no bookkeeping for as long as we are only waiting for
+  // this one reading before we are ready.
+  iObs.AppContextReady(0);
+}
 
 void CAppContextImpl::ConstructL()
 {
   iTelephony = CTelephony::NewL();
 
-  iBatteryObserver = CBatteryObserver::NewL(*iTelephony);
+  iBatteryObserver = CBatteryObserver::NewL(*iTelephony, *this);
 
   LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iFs, iFs.Connect());
 
@@ -251,3 +268,32 @@ CAppContext::~CAppContext()
 {
   delete iImpl;
 }
+
+/**
+
+Copyright 2010 Helsinki Institute for Information Technology (HIIT)
+and the authors. All rights reserved.
+
+Authors: Tero Hasu <tero.hasu@hut.fi>
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation files
+(the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software,
+and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+ **/

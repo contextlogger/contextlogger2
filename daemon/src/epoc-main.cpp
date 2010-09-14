@@ -70,9 +70,8 @@ CMainObj::~CMainObj()
 
 void CMainObj::ConstructL() // activates the object
 {
+  // Invokes AppContextReady upon completion.
   ac_AppContext_PlatInitAsyncL(ac_get_global_AppContext(), *this);
-
-  AppContextReady(0); ///xxx soon removed
 }
 
 void CMainObj::AppContextReady(TInt aError)
