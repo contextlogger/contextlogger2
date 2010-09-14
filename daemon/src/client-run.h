@@ -14,8 +14,10 @@ int cl2RunOnceGetExitCode();
 #endif
 
 // Returns 0 on success.
+// If this fails, it is fatal, and you may not attempt again.
 int cl2GlobalInit();
 
+// Okay to call whether or not init succeeded.
 void cl2GlobalCleanup();
 
 G_END_DECLS

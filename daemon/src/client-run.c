@@ -22,8 +22,7 @@
 // application, since Symbian applications have a built in event loop,
 // and a blocking call to "run" the client to the finish in the main
 // thread makes little sense. More likely you will run it on the
-// background in the main thread. Still, this code does run on Symbian
-// as well, should you want it.
+// background in the main thread.
 
 gboolean cl2RunOnce(GError** error)
 {

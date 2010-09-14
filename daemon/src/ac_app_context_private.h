@@ -36,7 +36,31 @@ extern "C" {
 #endif
 
 #if __SYMBIAN_CXX__
-#include "ac_app_context_epoc.hpp"
+
+class MAppContextInitObserver
+{
+public:
+  virtual void AppContextReady(TInt aError) = 0;
+};
+
+class CAppContextImpl;
+
+NONSHARABLE_CLASS(CAppContext) : public CBase
+{
+ public:
+  static CAppContext* NewL(ac_AppContext* ac,
+			   MAppContextInitObserver& obs);
+  ~CAppContext();
+ public:
+  CAppContextImpl* iImpl;
+};
+
+// Creates a platform-specific CAppContext object, and sets it as
+// property of the specified ac_AppContext, provided that at least
+// initial allocation succeeds. Notification of asynchronous
+// initialization completion is provided via MAppContextInitObserver.
+void ac_AppContext_PlatInitAsyncL(ac_AppContext* ac,
+				  MAppContextInitObserver& obs);
 
 // Returns a reference to a Symbian-specific app context object, via
 // which additional services are available.

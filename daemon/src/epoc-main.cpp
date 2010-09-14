@@ -2,6 +2,7 @@
 // attached to any application.
 
 #include "application_config.h"
+#include "ac_app_context_private.h"
 #include "kr_controller.h"
 #include "client-run.h"
 #include "epoc-ao-gerror.hpp"
@@ -36,42 +37,85 @@ extern "C" void ShutdownApplication()
   }
 }
 
-#define DELETE_GLOBAL_LOOP { delete globalLoop; globalLoop = NULL; }
+NONSHARABLE_CLASS(CMainObj) : 
+  public CBase,
+  public MAppContextInitObserver
+{
+ public:
+  static CMainObj* NewL();
+  ~CMainObj();
+ private:
+  void ConstructL();
+ private: // MAppContextInitObserver
+  void AppContextReady(TInt aError);
+ private:
+  kr_Controller* client;
+};
+
+CMainObj* CMainObj::NewL()
+{
+  CMainObj* obj = new (ELeave) CMainObj;
+  CleanupStack::PushL(obj);
+  obj->ConstructL();
+  CleanupStack::Pop(obj);
+  return obj;
+}
+
+CMainObj::~CMainObj()
+{
+  // Note that calling kr_Controller_stop is unnecessary since
+  // destruction is quite sufficient for stopping.
+  kr_Controller_destroy(client);
+}
+
+void CMainObj::ConstructL() // activates the object
+{
+  ac_AppContext_PlatInitAsyncL(ac_get_global_AppContext(), *this);
+
+  AppContextReady(0); ///xxx soon removed
+}
+
+void CMainObj::AppContextReady(TInt aError)
+{
+  if (aError) {
+    er_log_symbian(er_FATAL, aError, "error in app ctx async init");
+    return; // not reached
+  }
+
+  GError* localError = NULL;
+
+  kr_Controller* client = kr_Controller_new(&localError);
+  if (!client) {
+    er_log_gerror(er_FATAL|er_FREE, localError, "error in client creation");
+    return; // not reached
+  }
+    
+  if (!kr_Controller_start(client, &localError)) {
+    kr_Controller_destroy(client);
+    er_log_gerror(er_FATAL|er_FREE, localError, "error starting client");
+    return; // not reached
+  }
+}
 
 static TInt MainLoop()
 {
-  GError* localError = NULL;
-  GError** error = &localError;
-
   globalLoop = new CActiveSchedulerWait;
   if (!globalLoop) {
     return KErrNoMemory;
   }
 
-  kr_Controller* client = kr_Controller_new(error);
-  if (!client) {
-    logt("error in client creation");
-    gx_txtlog_error_clear(error);
-    DELETE_GLOBAL_LOOP;
-    return KGError;
-  }
-    
-  if (!kr_Controller_start(client, error)) {
-    logt("error starting client");
-    gx_txtlog_error_clear(error);
-    kr_Controller_destroy(client);
-    DELETE_GLOBAL_LOOP;
-    return KGError;
+  CMainObj* mainObj = NULL;
+  TRAPD(errCode, CMainObj::NewL());
+  if (errCode) {
+    delete globalLoop;
+    return errCode;
   }
 
-  // Will not return until explicitly stopped by ExitApplication.
+  // Will not return unless/until explicitly stopped by
+  // ExitApplication.
   globalLoop->Start();
 
-  // Note that calling kr_Controller_stop is unnecessary since
-  // destruction is quite sufficient for stopping.
-
-  kr_Controller_destroy(client);
-  DELETE_GLOBAL_LOOP;
+  delete globalLoop;
 
   return 0;
 }
@@ -84,7 +128,7 @@ static TInt SubMain()
     return errCode;
   TRAPD(leaveCode, errCode = MainLoop());
   if (leaveCode) {
-    assert(0 && "leave in C code");
+    assert(0 && "leave where not expected");
   }
   cl2GlobalCleanup();
   return errCode;

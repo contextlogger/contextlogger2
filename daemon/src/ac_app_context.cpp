@@ -11,35 +11,7 @@
 
 #ifdef __cplusplus
 #if defined(__SYMBIAN32__)
-
-CTOR_IMPL_CAppContext;
-
-void CAppContext::ConstructL()
-{
-  LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iFs, iFs.Connect());
-
-  iTelephony = CTelephony::NewL();
-
-#if __NEED_CONTACT_DATABASE__
-  iContactDatabase = CContactDatabase::OpenL();
-#endif
-}
-
-CAppContext::~CAppContext()
-{
-#if __NEED_CONTACT_DATABASE__
-  delete iContactDatabase;
-#endif
-  delete iTelephony;
-  SESSION_CLOSE_IF_OPEN(iFs);
-}
-
-void CAppContext::DoAsyncInit(MAppContextInitObserver* aInitObserver)
-{
-  iInitObserver = aInitObserver;
-  //xxx
-}
-
+#include "ac_app_context_epoc.cpp"
 #endif /* __SYMBIAN32__ */
 #endif
 
@@ -71,18 +43,6 @@ EXTERN_C ac_AppContext* ac_AppContext_new(GError** error)
     ac_AppContext_destroy(self);
     return NULL;
   }
-
-#if defined(__SYMBIAN32__)
-  TRAPD(errCode, self->plat = CAppContext::NewL());
-  if (G_UNLIKELY(errCode)) {
-    ac_AppContext_destroy(self);
-    if (error)
-      *error = gx_error_new(domain_symbian, errCode, 
-			    "AppContext Symbian init failure: %s (%d)", 
-			    plat_error_strerror(errCode), errCode);
-    return NULL;
-  }
-#endif /* __SYMBIAN32__ */
 
   return self;
 }
@@ -232,6 +192,12 @@ EXTERN_C const char* ac_get_log_uploads_dir(ac_AppContext* self)
 #if defined(__SYMBIAN32__)
 #if defined(__cplusplus)
 
+void ac_AppContext_PlatInitAsyncL(ac_AppContext* self,
+				  MAppContextInitObserver& obs)
+{
+  self->plat = CAppContext::NewL(self, obs);
+}
+
 CAppContext& ac_AppContext_plat(ac_AppContext* self)
 {
   return *(self->plat);
@@ -239,18 +205,18 @@ CAppContext& ac_AppContext_plat(ac_AppContext* self)
 
 RFs& ac_Fs(ac_AppContext* self)
 {
-  return self->plat->iFs;
+  return self->plat->iImpl->iFs;
 }
 
 CTelephony& ac_Telephony(ac_AppContext* self)
 {
-  return *(self->plat->iTelephony);
+  return *(self->plat->iImpl->iTelephony);
 }
 
 #if __NEED_CONTACT_DATABASE__
 CContactDatabase& ac_ContactDatabase(ac_AppContext* self)
 {
-  return *(self->plat->iContactDatabase);
+  return *(self->plat->iImpl->iContactDatabase);
 }
 #endif
 
