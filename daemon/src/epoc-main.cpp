@@ -85,7 +85,7 @@ void CMainObj::AppContextReady(TInt aError)
 
   GError* localError = NULL;
 
-  kr_Controller* client = kr_Controller_new(&localError);
+  client = kr_Controller_new(&localError);
   if (!client) {
     er_log_gerror(er_FATAL|er_FREE, localError, "error in client creation");
     return; // not reached
