@@ -330,6 +330,7 @@ void CNetworkObserver::HandleData(TInt aError,
 {
   if (aError) {
     LogDb* logDb = ac_global_LogDb;
+    // xxx In flight mode, we are seeing KErrAccessDenied (-21) in here. See what the documentation says about flight mode for this API.
     ex_dblog_error_msg(logDb, "network info query failure", aError, NULL);
     if (!iRetryAo->Retry()) {
       er_log_none(er_FATAL, "network info queries failing");
@@ -376,9 +377,12 @@ void CNetworkObserver::HandleData(TInt aError,
 // network signal strength observing
 // --------------------------------------------------
 
-/// We require retries here in particular, as we have seen
-/// KErrOverflow. In fact we have enough many failures so as to run
-/// out of retries, but perhaps in those cases it is good to relaunch?
+/* We require retries here in particular, as we have seen KErrOverflow frequently. In fact we have had enough many failures so as to run out of retries.
+
+   xxx Should find out why this is, if there are conditions under which it is not okay to make this query. Cannot find any information about the cause, but something to account for is that "this functionality is not available when the phone is in flight mode".
+
+   We try to account for the above by observing flightmode status, and refraining from making requests (or having outstanding requests) when flightmode is on. We shall see if this addresses the issue.
+*/
 
 /***koog 
 (require codegen/symbian-cxx)
@@ -437,12 +441,96 @@ NONSHARABLE_CLASS(CSignalObserver) :
   TBool iGetterDone;
   CSignalStrengthGetter* iGetter;
   CSignalStrengthNotifier* iNotifier;
+
+ private:
+  void MakeRequest();
+  void Cancel();
+
+  // Flight mode observation.
+ private:
+  bb_Closure iClosure;
+  void BbRegisterL();
+  void BbUnregister();
+  TBool GetFlightMode();
+ public:
+  void HandleFlightModeChange();
 };
 
 CTOR_IMPL_CSignalObserver;
 
+void CSignalObserver::MakeRequest()
+{
+  if (iGetterDone)
+    iNotifier->MakeRequest();
+  else
+    iGetter->MakeRequest();
+}
+
+void CSignalObserver::Cancel()
+{
+  iRetryAo->Cancel();
+  iNotifier->Cancel();
+  iGetter->Cancel();
+
+  iRetryAo->ResetFailures();
+
+  // Once we begin observing again, we want a reading immediately,
+  // rather than waiting for a change in readings.
+  iGetterDone = EFalse;
+}
+
+static void SignalObserverFlightModeChanged
+(bb_Blackboard* bb, enum bb_DataType dt,
+ gpointer data, int len, gpointer arg)
+{
+  (void)dt;
+  (void)len;
+  CSignalObserver* self = (CSignalObserver*)arg;
+  self->HandleFlightModeChange();
+}
+
+void CSignalObserver::HandleFlightModeChange()
+{
+  TBool fm = GetFlightMode();
+  if (fm) {
+    Cancel();
+
+    // Notify with value +1 to indicate no signal.
+    kr_Controller_set_signal_strength(ac_global_Controller, 1);
+  } else {
+    MakeRequest();
+  }
+}
+
+TBool CSignalObserver::GetFlightMode()
+{
+  // Initial value (internal).
+  bb_Blackboard* bb = ac_global_Blackboard;
+  bb_Board* bd = bb_Blackboard_board(bb);
+  return bd->flightmode;
+}
+
+void CSignalObserver::BbRegisterL()
+{
+  // Closure init.
+  iClosure.changed = SignalObserverFlightModeChanged;
+  iClosure.arg = this;
+
+  // Registration proper.
+  bb_Blackboard* bb = ac_global_Blackboard;
+  if (!bb_Blackboard_register(bb, bb_dt_flightmode, iClosure, NULL))
+    User::LeaveNoMemory();
+}
+
+void CSignalObserver::BbUnregister()
+{
+  bb_Blackboard_unregister(ac_global_Blackboard, iClosure);
+}
+
 void CSignalObserver::ConstructL()
 {
+  BbRegisterL();
+
   ac_AppContext* ac = ac_get_global_AppContext();
 
   iRetryAo = new (ELeave) CRetryAo(*this, 20, 60);
@@ -450,11 +538,17 @@ void CSignalObserver::ConstructL()
   iGetter = new (ELeave) CSignalStrengthGetter(ac_Telephony(ac), *this);
   iNotifier = new (ELeave) CSignalStrengthNotifier(ac_Telephony(ac), *this);
 
-  iGetter->MakeRequest();
+  TBool fm = GetFlightMode();
+  if (!fm) {
+    // We will not be getting any signal strength reading for as long
+    // as flightmode is on. Makes sense.
+    MakeRequest();
+  }
 }
 
 CSignalObserver::~CSignalObserver()
 {
+  BbUnregister();
   delete iGetter;
   delete iNotifier;
   delete iRetryAo;
@@ -467,10 +561,7 @@ void CSignalObserver::RetryTimerExpired(CRetryAo* src, TInt errCode)
     LogDb* logDb = ac_global_LogDb;
     ex_dblog_fatal_error_msg(logDb, "retry timer error", errCode);
   } else {
-    if (iGetterDone)
-      iNotifier->MakeRequest();
-    else
-      iGetter->MakeRequest();
+    MakeRequest();
   }
 }
 
@@ -500,11 +591,12 @@ void CSignalObserver::HandleSignal(TInt aError,
 
     int dbm = -(aData.iSignalStrength);
     int bars = aData.iBar;
-    //logf("network signal strength: %d dBm (%d bars)", dbm, bars);
+    logf("network signal strength: %d dBm (%d bars)", dbm, bars);
     log_db_log_signal(logDb, dbm, bars, NULL);
     iNotifier->MakeRequest();
 
-    // Notify interested parties.
+    // Notify interested parties. Indiscriminately, receiver must
+    // check for duplicates.
     kr_Controller_set_signal_strength(ac_global_Controller, dbm);
   }
 }
