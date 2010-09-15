@@ -1,3 +1,8 @@
+/*
+ !concept {:name => "Observing call status events",
+   :desc => "Detecting phone call status changes and querying for additional information about any call."}
+*/
+
 #include "epoc-callstatus.hpp"
 
 #if __CALLSTATUS_ENABLED__

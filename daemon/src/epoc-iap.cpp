@@ -1,14 +1,14 @@
-/*
- !concept {:name => "Resolving AP names",
-   :desc => "Resolving an access point name to its ID on Symbian."}
-*/
-
 #include "epoc-iap.h"
 
 #include "er_errors.h"
 
 #include <commdb.h>
 #include <utf.h>
+
+/*
+ !concept {:name => "Resolving AP names",
+   :desc => "Resolving an access point name to its ID on Symbian."}
+*/
 
 #define MAX_IAP_NAME_LENGTH KCommsDbSvrMaxFieldLength
 
@@ -70,6 +70,11 @@ gboolean epoc_iap_by_name(const gchar* iapName,
 
   return TRUE;
 }
+
+/*
+ !concept {:name => "Checking AP types",
+   :desc => "Checking whether an access point with a given ID is a modem one (GSM) or not (WLAN)."}
+*/
 
 static TBool IsModemIapL(TUint32 aIapId)
 {

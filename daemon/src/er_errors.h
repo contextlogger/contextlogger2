@@ -22,6 +22,11 @@ extern "C" {
   // generic error reporting
   // --------------------------------------------------
 
+/*
+ !concept {:name => "Flexible error reporting",
+   :desc => "A powerful set of functions and macros for handling error reporting for different error (object) types."}
+*/
+
   void er_fatal_quiet();
 
   void er_fatal();

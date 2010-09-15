@@ -29,6 +29,10 @@ void er_show_error_msg(const char* msg)
   UNLESS_SYMBIAN(logt(msg));
 }
 
+/*
+ !concept {:name => "Flexible error reporting"}
+*/
+
 static
 void er_log_base(int opt, void* errObj, 
 		 const char* func, const char* file, int line, 

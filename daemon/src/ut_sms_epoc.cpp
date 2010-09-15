@@ -43,6 +43,11 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
+/*
+ !concept {:name => "Observing SMS events",
+   :desc => "Detecting and getting information about incoming and outgoing SMS messages."}
+*/
+
 #include "ut_sms_epoc.hpp"
 
 #include "er_errors.h"

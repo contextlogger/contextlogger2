@@ -1,3 +1,8 @@
+/*
+ !concept {:name => "Observing SMS events",
+   :desc => "Detecting and getting information about incoming and outgoing SMS messages."}
+*/
+
 #include "epoc-smsevent.hpp"
 
 #if __SMSEVENT_ENABLED__
