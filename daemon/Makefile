@@ -9,7 +9,7 @@ APP_C_FILES := cf_query.c client-run.c config_db.c db_creation.c er_errors.c kr_
 APP_CXX_FILES := ac_app_context.cpp bb_blackboard.cpp cf_rcfile.cpp lua_bindings.cpp lua_cl2.cpp sa_array.cpp
 
 SHARED_PATH := ../shared
-SHARED_C_FILES := error_list.c gxerror.c logging-time.c platform_error.c utilities.c
+SHARED_C_FILES := error_list.c gx_maybe_string.c gxerror.c logging-time.c platform_error.c utilities.c
 SHARED_CXX_FILES := assertions_cxx.cpp logging.cpp utilities_cxx.cpp
 
 TIMESPEC_PATH := ../time-spec

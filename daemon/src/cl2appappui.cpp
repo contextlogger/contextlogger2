@@ -103,6 +103,19 @@ void CCl2appAppUi::ConstructL()
   }
   logt("global init complete");
 
+  // Invokes AppContextReady upon completion.
+  ac_AppContext_PlatInitAsyncL(ac_get_global_AppContext(), *this);
+}
+
+void CCl2appAppUi::AppContextReady(TInt aError)
+{
+  logh();
+
+  if (aError) {
+    er_log_symbian(er_FATAL, aError, "error in app ctx async init");
+    return; // not reached
+  }
+
   //cl_lua_eval_string("do x = \"hello world\"; return x end");
 
   {
@@ -110,8 +123,8 @@ void CCl2appAppUi::ConstructL()
     iClient = kr_Controller_new(&localError);
     logf("client init %s", iClient ? "ok" : "failed");
     if (!iClient) {
-      gx_txtlog_error_free(localError);
-      User::Leave(KErrGeneral);
+      er_log_gerror(er_FATAL|er_FREE, localError, "error in client creation");
+      return; // not reached
     }
   }
 

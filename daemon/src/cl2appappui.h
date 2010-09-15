@@ -3,6 +3,7 @@
 #ifndef CL2APPAPPUI_H
 #define CL2APPAPPUI_H
 
+#include "ac_app_context_private.h"
 #include "kr_controller.h"
 
 #include <aknappui.h>
@@ -15,7 +16,9 @@
 
 class CCl2appContainer;
 
-class CCl2appAppUi : public CAknAppUi
+class CCl2appAppUi : 
+  public CAknAppUi,
+  public MAppContextInitObserver
 {
 public:
   void ConstructL();
@@ -37,6 +40,9 @@ private: // CEikAppUi
   void HandleCommandL(TInt aCommand);
   virtual TKeyResponse HandleKeyEventL(const TKeyEvent& aKeyEvent, 
 				       TEventCode aType);
+
+private: // MAppContextInitObserver
+  void AppContextReady(TInt aError);
 
 private:
   CCl2appContainer* iAppContainer;
