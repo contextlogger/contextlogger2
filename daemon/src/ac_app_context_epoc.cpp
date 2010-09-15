@@ -194,9 +194,11 @@ NONSHARABLE_CLASS(CFlightModeObserver) :
  public:
   ~CFlightModeObserver();
 
- private:
+ private: // MFlightModeRequestor
   virtual void HandleGotFlightMode(TInt aError);
+ private: // MFlightModeObserver
   virtual void HandleFlightModeChange(TInt aError);
+ private:
   void HandleFlightMode(TInt aError, CTelephony::TFlightModeV1 const & aData);
 
  private:
@@ -320,7 +322,8 @@ CAppContextImpl::CAppContextImpl(ac_AppContext* ac, MAppContextInitObserver& obs
 
 NONSHARABLE_CLASS(CAppContextImpl) : 
   public CBase,
-  public MBatteryInfoRequestor
+  public MBatteryInfoRequestor,
+  public MFlightModeRequestor
 {
   CTOR_DECL_CAppContextImpl;
 
@@ -345,19 +348,42 @@ NONSHARABLE_CLASS(CAppContextImpl) :
 
  private:
   CBatteryObserver* iBatteryObserver;
+  CFlightModeObserver* iFlightModeObserver;
 
  private: // MBatteryInfoRequestor
   virtual void HandleGotBatteryInfo(TInt aError);
+ private: // MFlightModeRequestor
+  virtual void HandleGotFlightMode(TInt aError);
+
+ private:
+  TBool iHaveBattery;
+  TBool iHaveFlightMode;
+  void GotMoreInfo();
 };
 
 CTOR_IMPL_CAppContextImpl;
 
+void CAppContextImpl::GotMoreInfo()
+{
+  if (iHaveBattery && iHaveFlightMode) {
+    // We need no bookkeeping for as long as we are only waiting for
+    // this one reading before we are ready.
+    iObs.AppContextReady(0);
+  }
+}
+
 void CAppContextImpl::HandleGotBatteryInfo(TInt aError)
 {
-  (void)aError;
-  // We need no bookkeeping for as long as we are only waiting for
-  // this one reading before we are ready.
-  iObs.AppContextReady(0);
+  (void)aError; // do not care
+  iHaveBattery = ETrue;
+  GotMoreInfo();
+}
+
+void CAppContextImpl::HandleGotFlightMode(TInt aError)
+{
+  (void)aError; // no error, would have exited
+  iHaveFlightMode = ETrue;
+  GotMoreInfo();
 }
 
 void CAppContextImpl::ConstructL()
@@ -365,6 +391,8 @@ void CAppContextImpl::ConstructL()
   iTelephony = CTelephony::NewL();
 
   iBatteryObserver = CBatteryObserver::NewL(*iTelephony, *this);
+
+  iFlightModeObserver = CFlightModeObserver::NewL(*iTelephony, *this);
 
   LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iFs, iFs.Connect());
 
@@ -375,6 +403,7 @@ void CAppContextImpl::ConstructL()
 
 CAppContextImpl::~CAppContextImpl()
 {
+  delete iFlightModeObserver;
   delete iBatteryObserver;
 #if __NEED_CONTACT_DATABASE__
   delete iContactDatabase;
