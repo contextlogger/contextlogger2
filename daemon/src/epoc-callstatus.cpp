@@ -154,8 +154,10 @@ void CSensor_callstatus::HandleFlightModeChange(TInt errCode)
   } else {
     gboolean value = TFlightModeV1ToBoolean(iFlightModeNotifier->Data());
 
+    /* logged elsewhere now
     // Log this as well since we are observing this anyway.
     log_db_log_flightmode(GetLogDb(), value, NULL);
+    */
 
     if (value) {
       Cancel();
