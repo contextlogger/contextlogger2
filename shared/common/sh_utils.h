@@ -20,6 +20,7 @@
 
 #define boolstr_true(x) ((x) ? "true" : "false")
 #define boolstr_yes(x) ((x) ? "yes" : "no")
+#define boolstr_on(x) ((x) ? "on" : "off")
 
 // The caller must free the buffer.
 // Returns NULL on memory allocation failure.

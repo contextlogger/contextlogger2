@@ -26,14 +26,16 @@ extern "C" {
   // allocation or freeing is performed; this memory is simply
   // zero-initialized.
   typedef struct {
+    gboolean flightmode;
     gboolean uploads_allowed;
   } bb_Board;
 
   bb_Board* bb_Blackboard_board(bb_Blackboard* self);
 
   enum bb_DataType {
-    bb_dt_uploads_allowed, /* gboolean */
-    bb_dt_network_info     /* CTelephony::TNetworkInfoV1 */
+    bb_dt_flightmode,      /* gboolean */
+    bb_dt_network_info,    /* CTelephony::TNetworkInfoV1 */
+    bb_dt_uploads_allowed  /* gboolean */
   };
 
   typedef void (*bb_Func)(bb_Blackboard* self, enum bb_DataType dt,

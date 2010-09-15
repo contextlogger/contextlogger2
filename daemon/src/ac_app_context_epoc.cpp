@@ -145,6 +145,140 @@ void CBatteryObserver::HandleBattery(TInt aError,
 }
 
 // --------------------------------------------------
+// flightmode observing
+// --------------------------------------------------
+
+/***koog 
+(require codegen/symbian-cxx)
+(ctor-defines/spec
+ "CFlightModeObserver" ;; name
+ "CTelephony& tel, MFlightModeRequestor& obs" ;; args
+ "iObserver(obs)" ;; inits
+ "" ;; ctor
+ #t ;; ConstructL
+ '(args-to-constructl)
+)
+ ***/
+#define CTOR_DECL_CFlightModeObserver  \
+public: static CFlightModeObserver* NewLC(CTelephony& tel, MFlightModeRequestor& obs); \
+public: static CFlightModeObserver* NewL(CTelephony& tel, MFlightModeRequestor& obs); \
+private: CFlightModeObserver(CTelephony& tel, MFlightModeRequestor& obs); \
+private: void ConstructL(CTelephony& tel, MFlightModeRequestor& obs);
+
+#define CTOR_IMPL_CFlightModeObserver  \
+CFlightModeObserver* CFlightModeObserver::NewLC(CTelephony& tel, MFlightModeRequestor& obs) \
+{ \
+  CFlightModeObserver* obj = new (ELeave) CFlightModeObserver(tel, obs); \
+  CleanupStack::PushL(obj); \
+  obj->ConstructL(tel, obs); \
+  return obj; \
+} \
+ \
+CFlightModeObserver* CFlightModeObserver::NewL(CTelephony& tel, MFlightModeRequestor& obs) \
+{ \
+  CFlightModeObserver* obj = CFlightModeObserver::NewLC(tel, obs); \
+  CleanupStack::Pop(obj); \
+  return obj; \
+} \
+ \
+CFlightModeObserver::CFlightModeObserver(CTelephony& tel, MFlightModeRequestor& obs) : iObserver(obs) \
+{}
+/***end***/
+NONSHARABLE_CLASS(CFlightModeObserver) : 
+  public CBase, 
+  public MFlightModeRequestor,
+  public MFlightModeObserver
+{
+  CTOR_DECL_CFlightModeObserver;
+
+ public:
+  ~CFlightModeObserver();
+
+ private:
+  virtual void HandleGotFlightMode(TInt aError);
+  virtual void HandleFlightModeChange(TInt aError);
+  void HandleFlightMode(TInt aError, CTelephony::TFlightModeV1 const & aData);
+
+ private:
+  CFlightModeGetter* iGetter;
+  CFlightModeNotifier* iNotifier;
+
+ private:
+  MFlightModeRequestor& iObserver;
+};
+
+CTOR_IMPL_CFlightModeObserver;
+
+void CFlightModeObserver::ConstructL(CTelephony& tel, MFlightModeRequestor& obs)
+{
+  iGetter = new (ELeave) CFlightModeGetter(tel, *this);
+  iNotifier = new (ELeave) CFlightModeNotifier(tel, *this);
+
+  iGetter->MakeRequest();
+}
+
+CFlightModeObserver::~CFlightModeObserver()
+{
+  delete iGetter;
+  delete iNotifier;
+}
+
+void CFlightModeObserver::HandleGotFlightMode(TInt aError)
+{
+  HandleFlightMode(aError, iGetter->Data());
+  iObserver.HandleGotFlightMode(aError); // forward
+}
+
+void CFlightModeObserver::HandleFlightModeChange(TInt aError)
+{
+  HandleFlightMode(aError, iNotifier->Data());
+}
+
+static gboolean TFlightModeV1ToBoolean(const CTelephony::TFlightModeV1& data)
+{
+  if (data.iFlightModeStatus == CTelephony::EFlightModeOn)
+    return ETrue;
+  else if (data.iFlightModeStatus == CTelephony::EFlightModeOff)
+    return EFalse;
+  else
+    assert(0 && "unexpected TFlightModeStatus value");
+  return EFalse;
+}
+
+void CFlightModeObserver::HandleFlightMode(TInt aError, 
+					   CTelephony::TFlightModeV1 const & aData)
+{
+  if (aError) {
+    // This is unexpected. No matter the network state, surely we
+    // should at least be able to determine whether the network is
+    // unavailable.
+    er_log_symbian(er_FATAL, aError, "flightmode info status query failure");
+  } else {
+    gboolean on = TFlightModeV1ToBoolean(aData);
+
+    logf("flightmode: %s", boolstr_on(on));
+
+    LogDb* logDb = ac_global_LogDb;
+    if (logDb) {
+      log_db_log_flightmode(logDb, on, NULL);
+    }
+
+    // Post to blackboard if changed (compare against blackboard).
+    {
+      bb_Blackboard* bb = ac_global_Blackboard;
+      bb_Board* bd = bb_Blackboard_board(bb);
+      if (bd->flightmode != on) {
+	bd->flightmode = on;
+	bb_Blackboard_notify(bb, bb_dt_flightmode,
+			     (gpointer)&(bd->flightmode), 0);
+      }
+    }
+
+    iNotifier->MakeRequest();
+  }
+}
+
+// --------------------------------------------------
 // plat app context implementation
 // --------------------------------------------------
 
