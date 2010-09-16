@@ -150,7 +150,10 @@ CRegistrationObserver* CRegistrationObserver::NewL() \
 CRegistrationObserver::CRegistrationObserver() \
 {}
 /***end***/
-NONSHARABLE_CLASS(CRegistrationObserver) : 
+
+#define This CRegistrationObserver
+
+NONSHARABLE_CLASS(This) : 
   public CBase, 
   public MNetworkRegistrationRequestor,
   public MNetworkRegistrationObserver
@@ -172,7 +175,7 @@ NONSHARABLE_CLASS(CRegistrationObserver) :
 
 CTOR_IMPL_CRegistrationObserver;
 
-void CRegistrationObserver::ConstructL()
+void This::ConstructL()
 {
   ac_AppContext* ac = ac_get_global_AppContext();
 
@@ -182,23 +185,23 @@ void CRegistrationObserver::ConstructL()
   iRegistrationInfoGetter->MakeRequest();
 }
 
-CRegistrationObserver::~CRegistrationObserver()
+This::~CRegistrationObserver()
 {
   delete iRegistrationInfoGetter;
   delete iRegistrationInfoNotifier;
 }
 
-void CRegistrationObserver::HandleGotNetworkRegistration(TInt aError)
+void This::HandleGotNetworkRegistration(TInt aError)
 {
   HandleRegistration(aError, iRegistrationInfoGetter->Data());
 }
 
-void CRegistrationObserver::HandleNetworkRegistrationChange(TInt aError)
+void This::HandleNetworkRegistrationChange(TInt aError)
 {
   HandleRegistration(aError, iRegistrationInfoNotifier->Data());
 }
 
-void CRegistrationObserver::HandleRegistration(TInt aError, CTelephony::TNetworkRegistrationV1 const & aData)
+void This::HandleRegistration(TInt aError, CTelephony::TNetworkRegistrationV1 const & aData)
 {
   LogDb* logDb = ac_global_LogDb;
   if (aError) {
@@ -213,6 +216,8 @@ void CRegistrationObserver::HandleRegistration(TInt aError, CTelephony::TNetwork
     iRegistrationInfoNotifier->MakeRequest();
   }
 }
+
+#undef This
 
 // --------------------------------------------------
 // network information observing
