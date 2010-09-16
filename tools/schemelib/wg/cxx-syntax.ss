@@ -56,7 +56,7 @@
 (require "type-util.scm")
 (require (prefix-in a. "ast-spec.scm"))
 
-(provide ccond cswitch)
+(provide ccond cswitch typedef)
 
 (define cclass class)
 (define cexport export)

@@ -29,9 +29,14 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
                            )
   (let*-sc
    ((pckg-type (format "~aPckg" data-type))
+    (data-alias (format "TData_~a" data-name))
     (observer-name (format (if getter? "M~aRequestor" "M~aObserver") data-name))
     (notifier-name (format (if getter? "C~aGetter" "C~aNotifier") data-name))
     (handler-name (format (if getter? "HandleGot~a" "Handle~aChange") data-name)))
+
+   (typedef
+    (name data-alias)
+    (type data-type))
    
    (cclass
     (name observer-name)
