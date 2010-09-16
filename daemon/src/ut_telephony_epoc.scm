@@ -35,11 +35,11 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     (notifier-name (format (if getter? "CGetterAo_~a" "CNotifyAo_~a") data-name))
     (handler-name (format (if getter? "GotData_~a" "ChangedData_~a") data-name)))
 
-   (typedef
+   (typedef cexport
     (name data-alias)
     (type data-type))
    
-   (typedef
+   (typedef cexport
     (name pckg-alias)
     (type pckg-type))
    

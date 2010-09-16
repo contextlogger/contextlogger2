@@ -258,7 +258,10 @@ CNetworkObserver* CNetworkObserver::NewL() \
 CNetworkObserver::CNetworkObserver() \
 {}
 /***end***/
-NONSHARABLE_CLASS(CNetworkObserver) : 
+
+#define This CNetworkObserver
+
+NONSHARABLE_CLASS(This) : 
   public CBase, 
   public MGetterObs_NetworkInfo,
   public MNotifyObs_NetworkInfo,
@@ -273,19 +276,19 @@ NONSHARABLE_CLASS(CNetworkObserver) :
   virtual void RetryTimerExpired(CRetryAo* src, TInt errCode);
   virtual void GotData_NetworkInfo(TInt aError);
   virtual void ChangedData_NetworkInfo(TInt aError);
-  void HandleData(TInt aError, CTelephony::TNetworkInfoV1 const & aData);
+  void HandleData(TInt aError, TData_NetworkInfo const & aData);
 
  private:
   CGetterAo_NetworkInfo* iGetter;
   TBool iGetterDone;
   CNotifyAo_NetworkInfo* iNotifier;
   CRetryAo* iRetryAo;
-  CTelephony::TNetworkInfoV1 iOldData;
+  TData_NetworkInfo iOldData;
 };
 
 CTOR_IMPL_CNetworkObserver;
 
-void CNetworkObserver::ConstructL()
+void This::ConstructL()
 {
   ac_AppContext* ac = ac_get_global_AppContext();
 
@@ -297,14 +300,14 @@ void CNetworkObserver::ConstructL()
   iGetter->MakeRequest();
 }
 
-CNetworkObserver::~CNetworkObserver()
+This::~CNetworkObserver()
 {
   delete iGetter;
   delete iNotifier;
   delete iRetryAo;
 }
 
-void CNetworkObserver::RetryTimerExpired(CRetryAo* src, TInt errCode)
+void This::RetryTimerExpired(CRetryAo* src, TInt errCode)
 {
   (void)src;
   if (errCode) {
@@ -318,20 +321,20 @@ void CNetworkObserver::RetryTimerExpired(CRetryAo* src, TInt errCode)
   }
 }
 
-void CNetworkObserver::GotData_NetworkInfo(TInt aError)
+void This::GotData_NetworkInfo(TInt aError)
 {
   HandleData(aError, iGetter->Data());
   if (!aError) 
     iGetterDone = ETrue;
 }
 
-void CNetworkObserver::ChangedData_NetworkInfo(TInt aError)
+void This::ChangedData_NetworkInfo(TInt aError)
 {
   HandleData(aError, iNotifier->Data());
 }
 
-void CNetworkObserver::HandleData(TInt aError, 
-				  CTelephony::TNetworkInfoV1 const & aData)
+void This::HandleData(TInt aError, 
+		      TData_NetworkInfo const & aData)
 {
   if (aError) {
     LogDb* logDb = ac_global_LogDb;
@@ -377,6 +380,8 @@ void CNetworkObserver::HandleData(TInt aError,
     iNotifier->MakeRequest();
   }
 }
+
+#undef This
 
 // --------------------------------------------------
 // network signal strength observing
@@ -424,7 +429,10 @@ CSignalObserver* CSignalObserver::NewL() \
 CSignalObserver::CSignalObserver() \
 {}
 /***end***/
-NONSHARABLE_CLASS(CSignalObserver) : 
+
+#define This CSignalObserver
+
+NONSHARABLE_CLASS(This) : 
   public CBase, 
   public MGetterObs_SignalStrength,
   public MNotifyObs_SignalStrength,
@@ -439,7 +447,7 @@ NONSHARABLE_CLASS(CSignalObserver) :
   virtual void RetryTimerExpired(CRetryAo* src, TInt errCode);
   virtual void GotData_SignalStrength(TInt aError);
   virtual void ChangedData_SignalStrength(TInt aError);
-  void HandleSignal(TInt aError, CTelephony::TSignalStrengthV1 const & aData);
+  void HandleSignal(TInt aError, TData_SignalStrength const & aData);
 
  private:
   CRetryAo* iRetryAo;
@@ -463,7 +471,7 @@ NONSHARABLE_CLASS(CSignalObserver) :
 
 CTOR_IMPL_CSignalObserver;
 
-void CSignalObserver::MakeRequest()
+void This::MakeRequest()
 {
   if (iGetterDone)
     iNotifier->MakeRequest();
@@ -471,7 +479,7 @@ void CSignalObserver::MakeRequest()
     iGetter->MakeRequest();
 }
 
-void CSignalObserver::Cancel()
+void This::Cancel()
 {
   iRetryAo->Cancel();
   iNotifier->Cancel();
@@ -490,11 +498,11 @@ static void SignalObserverFlightModeChanged
 {
   (void)dt;
   (void)len;
-  CSignalObserver* self = (CSignalObserver*)arg;
+  This* self = (This*)arg;
   self->HandleFlightModeChange();
 }
 
-void CSignalObserver::HandleFlightModeChange()
+void This::HandleFlightModeChange()
 {
   TBool fm = GetFlightMode();
   if (fm) {
@@ -507,7 +515,7 @@ void CSignalObserver::HandleFlightModeChange()
   }
 }
 
-TBool CSignalObserver::GetFlightMode()
+TBool This::GetFlightMode()
 {
   // Initial value (internal).
   bb_Blackboard* bb = ac_global_Blackboard;
@@ -515,7 +523,7 @@ TBool CSignalObserver::GetFlightMode()
   return bd->flightmode;
 }
 
-void CSignalObserver::BbRegisterL()
+void This::BbRegisterL()
 {
   // Closure init.
   iClosure.changed = SignalObserverFlightModeChanged;
@@ -527,12 +535,12 @@ void CSignalObserver::BbRegisterL()
     User::LeaveNoMemory();
 }
 
-void CSignalObserver::BbUnregister()
+void This::BbUnregister()
 {
   bb_Blackboard_unregister(ac_global_Blackboard, iClosure);
 }
 
-void CSignalObserver::ConstructL()
+void This::ConstructL()
 {
   BbRegisterL();
 
@@ -551,7 +559,7 @@ void CSignalObserver::ConstructL()
   }
 }
 
-CSignalObserver::~CSignalObserver()
+This::~CSignalObserver()
 {
   BbUnregister();
   delete iGetter;
@@ -559,7 +567,7 @@ CSignalObserver::~CSignalObserver()
   delete iRetryAo;
 }
 
-void CSignalObserver::RetryTimerExpired(CRetryAo* src, TInt errCode)
+void This::RetryTimerExpired(CRetryAo* src, TInt errCode)
 {
   (void)src;
   if (errCode) {
@@ -570,20 +578,20 @@ void CSignalObserver::RetryTimerExpired(CRetryAo* src, TInt errCode)
   }
 }
 
-void CSignalObserver::GotData_SignalStrength(TInt aError)
+void This::GotData_SignalStrength(TInt aError)
 {
   HandleSignal(aError, iGetter->Data());
   if (!aError) 
     iGetterDone = ETrue;
 }
 
-void CSignalObserver::ChangedData_SignalStrength(TInt aError)
+void This::ChangedData_SignalStrength(TInt aError)
 {
   HandleSignal(aError, iNotifier->Data());
 }
 
-void CSignalObserver::HandleSignal(TInt aError, 
-				   CTelephony::TSignalStrengthV1 const & aData)
+void This::HandleSignal(TInt aError, 
+			TData_SignalStrength const & aData)
 {
   LogDb* logDb = ac_global_LogDb;
   if (aError) {
@@ -605,6 +613,8 @@ void CSignalObserver::HandleSignal(TInt aError,
     kr_Controller_set_signal_strength(ac_global_Controller, dbm);
   }
 }
+
+#undef This
 
 // --------------------------------------------------
 // auxiliary controller
