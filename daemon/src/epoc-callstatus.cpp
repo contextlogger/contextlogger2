@@ -123,7 +123,7 @@ void CSensor_callstatus::Stop()
 }
 
 // We expect success here.
-void CSensor_callstatus::HandleGotFlightMode(TInt errCode)
+void CSensor_callstatus::GotData_FlightMode(TInt errCode)
 {
   if (errCode) {
     log_db_log_status(GetLogDb(), NULL,
@@ -144,7 +144,7 @@ void CSensor_callstatus::HandleGotFlightMode(TInt errCode)
 }
 
 // We expect success here.
-void CSensor_callstatus::HandleFlightModeChange(TInt errCode)
+void CSensor_callstatus::ChangedData_FlightMode(TInt errCode)
 {
   if (errCode) {
     log_db_log_status(GetLogDb(), NULL,
@@ -171,7 +171,7 @@ void CSensor_callstatus::HandleFlightModeChange(TInt errCode)
   }
 }
 
-void CSensor_callstatus::HandleCallStatusChange(TInt errCode)
+void CSensor_callstatus::ChangedData_CallStatus(TInt errCode)
 {
   if (errCode) {
     log_db_log_status(GetLogDb(), NULL,

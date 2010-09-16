@@ -77,15 +77,15 @@ NONSHARABLE_CLASS(CSensor_callstatus) :
 
  private: // MFlightModeRequestor
 
-  virtual void HandleGotFlightMode(TInt aError);
+  virtual void GotData_FlightMode(TInt aError);
 
  private: // MFlightModeObserver
 
-  virtual void HandleFlightModeChange(TInt aError);
+  virtual void ChangedData_FlightMode(TInt aError);
 
  private: // MCallStatusObserver
 
-  virtual void HandleCallStatusChange(TInt aError);
+  virtual void ChangedData_CallStatus(TInt aError);
 
  private:
 

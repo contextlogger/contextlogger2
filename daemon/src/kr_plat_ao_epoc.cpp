@@ -164,8 +164,8 @@ NONSHARABLE_CLASS(This) :
   ~CRegistrationObserver();
 
  private:
-  virtual void HandleGotNetworkRegistration(TInt aError);
-  virtual void HandleNetworkRegistrationChange(TInt aError);
+  virtual void GotData_NetworkRegistration(TInt aError);
+  virtual void ChangedData_NetworkRegistration(TInt aError);
   void HandleRegistration(TInt aError, CTelephony::TNetworkRegistrationV1 const & aData);
 
  private:
@@ -191,12 +191,12 @@ This::~CRegistrationObserver()
   delete iRegistrationInfoNotifier;
 }
 
-void This::HandleGotNetworkRegistration(TInt aError)
+void This::GotData_NetworkRegistration(TInt aError)
 {
   HandleRegistration(aError, iRegistrationInfoGetter->Data());
 }
 
-void This::HandleNetworkRegistrationChange(TInt aError)
+void This::ChangedData_NetworkRegistration(TInt aError)
 {
   HandleRegistration(aError, iRegistrationInfoNotifier->Data());
 }
@@ -271,8 +271,8 @@ NONSHARABLE_CLASS(CNetworkObserver) :
 
  private:
   virtual void RetryTimerExpired(CRetryAo* src, TInt errCode);
-  virtual void HandleGotNetworkInfo(TInt aError);
-  virtual void HandleNetworkInfoChange(TInt aError);
+  virtual void GotData_NetworkInfo(TInt aError);
+  virtual void ChangedData_NetworkInfo(TInt aError);
   void HandleData(TInt aError, CTelephony::TNetworkInfoV1 const & aData);
 
  private:
@@ -318,14 +318,14 @@ void CNetworkObserver::RetryTimerExpired(CRetryAo* src, TInt errCode)
   }
 }
 
-void CNetworkObserver::HandleGotNetworkInfo(TInt aError)
+void CNetworkObserver::GotData_NetworkInfo(TInt aError)
 {
   HandleData(aError, iGetter->Data());
   if (!aError) 
     iGetterDone = ETrue;
 }
 
-void CNetworkObserver::HandleNetworkInfoChange(TInt aError)
+void CNetworkObserver::ChangedData_NetworkInfo(TInt aError)
 {
   HandleData(aError, iNotifier->Data());
 }
@@ -437,8 +437,8 @@ NONSHARABLE_CLASS(CSignalObserver) :
 
  private:
   virtual void RetryTimerExpired(CRetryAo* src, TInt errCode);
-  virtual void HandleGotSignalStrength(TInt aError);
-  virtual void HandleSignalStrengthChange(TInt aError);
+  virtual void GotData_SignalStrength(TInt aError);
+  virtual void ChangedData_SignalStrength(TInt aError);
   void HandleSignal(TInt aError, CTelephony::TSignalStrengthV1 const & aData);
 
  private:
@@ -570,14 +570,14 @@ void CSignalObserver::RetryTimerExpired(CRetryAo* src, TInt errCode)
   }
 }
 
-void CSignalObserver::HandleGotSignalStrength(TInt aError)
+void CSignalObserver::GotData_SignalStrength(TInt aError)
 {
   HandleSignal(aError, iGetter->Data());
   if (!aError) 
     iGetterDone = ETrue;
 }
 
-void CSignalObserver::HandleSignalStrengthChange(TInt aError)
+void CSignalObserver::ChangedData_SignalStrength(TInt aError)
 {
   HandleSignal(aError, iNotifier->Data());
 }

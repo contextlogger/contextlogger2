@@ -73,8 +73,8 @@ NONSHARABLE_CLASS(CBatteryObserver) :
   ~CBatteryObserver();
 
  private:
-  virtual void HandleGotBatteryInfo(TInt aError);
-  virtual void HandleBatteryInfoChange(TInt aError);
+  virtual void GotData_BatteryInfo(TInt aError);
+  virtual void ChangedData_BatteryInfo(TInt aError);
   void HandleBattery(TInt aError, CTelephony::TBatteryInfoV1 const & aData);
 
  private:
@@ -101,13 +101,13 @@ CBatteryObserver::~CBatteryObserver()
   delete iBatteryInfoNotifier;
 }
 
-void CBatteryObserver::HandleGotBatteryInfo(TInt aError)
+void CBatteryObserver::GotData_BatteryInfo(TInt aError)
 {
   HandleBattery(aError, iBatteryInfoGetter->Data());
-  iObserver.HandleGotBatteryInfo(aError); // forward
+  iObserver.GotData_BatteryInfo(aError); // forward
 }
 
-void CBatteryObserver::HandleBatteryInfoChange(TInt aError)
+void CBatteryObserver::ChangedData_BatteryInfo(TInt aError)
 {
   HandleBattery(aError, iBatteryInfoNotifier->Data());
 }
@@ -195,9 +195,9 @@ NONSHARABLE_CLASS(CFlightModeObserver) :
   ~CFlightModeObserver();
 
  private: // MFlightModeRequestor
-  virtual void HandleGotFlightMode(TInt aError);
+  virtual void GotData_FlightMode(TInt aError);
  private: // MFlightModeObserver
-  virtual void HandleFlightModeChange(TInt aError);
+  virtual void ChangedData_FlightMode(TInt aError);
  private:
   void HandleFlightMode(TInt aError, CTelephony::TFlightModeV1 const & aData);
 
@@ -225,13 +225,13 @@ CFlightModeObserver::~CFlightModeObserver()
   delete iNotifier;
 }
 
-void CFlightModeObserver::HandleGotFlightMode(TInt aError)
+void CFlightModeObserver::GotData_FlightMode(TInt aError)
 {
   HandleFlightMode(aError, iGetter->Data());
-  iObserver.HandleGotFlightMode(aError); // forward
+  iObserver.GotData_FlightMode(aError); // forward
 }
 
-void CFlightModeObserver::HandleFlightModeChange(TInt aError)
+void CFlightModeObserver::ChangedData_FlightMode(TInt aError)
 {
   HandleFlightMode(aError, iNotifier->Data());
 }
@@ -351,9 +351,9 @@ NONSHARABLE_CLASS(CAppContextImpl) :
   CFlightModeObserver* iFlightModeObserver;
 
  private: // MBatteryInfoRequestor
-  virtual void HandleGotBatteryInfo(TInt aError);
+  virtual void GotData_BatteryInfo(TInt aError);
  private: // MFlightModeRequestor
-  virtual void HandleGotFlightMode(TInt aError);
+  virtual void GotData_FlightMode(TInt aError);
 
  private:
   TBool iHaveBattery;
@@ -372,14 +372,14 @@ void CAppContextImpl::GotMoreInfo()
   }
 }
 
-void CAppContextImpl::HandleGotBatteryInfo(TInt aError)
+void CAppContextImpl::GotData_BatteryInfo(TInt aError)
 {
   (void)aError; // do not care
   iHaveBattery = ETrue;
   GotMoreInfo();
 }
 
-void CAppContextImpl::HandleGotFlightMode(TInt aError)
+void CAppContextImpl::GotData_FlightMode(TInt aError)
 {
   (void)aError; // no error, would have exited
   iHaveFlightMode = ETrue;

@@ -33,7 +33,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     (pckg-alias (format "TDataPckg_~a" data-name))
     (observer-name (format (if getter? "M~aRequestor" "M~aObserver") data-name))
     (notifier-name (format (if getter? "C~aGetter" "C~aNotifier") data-name))
-    (handler-name (format (if getter? "HandleGot~a" "Handle~aChange") data-name)))
+    (handler-name (format (if getter? "GotData_~a" "ChangedData_~a") data-name)))
 
    (typedef
     (name data-alias)
