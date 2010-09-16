@@ -147,6 +147,9 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     (body
      (func
       (name (format "ObservedData_~a" data-name))
+      (args (arg (name 'aData)
+                 (type (const-ref-to
+                        (format "TData_~a" data-name)))))
       cpublic pure virtual)
 
      (if retries?
@@ -179,6 +182,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
            (format "MNotifyObs_~a" data-name)
            (and retries? "MRetryAoObserver")))
     (body
+
      (mz-call make-ctor
               #:newl? #t
               #:newlc? #t
@@ -223,9 +227,10 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
      (ic flightmode?
          (var (name 'iClosure)
               (type 'bb_Closure)))
-     
+
      (func leaving
            (name 'ConstructL)
+           ;;(name 'BaseConstructL)
            (block
             (ic flightmode?
                  (call 'BbRegisterL))
@@ -357,7 +362,9 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
              (ic retries?
                  (call-via 'iRetryAo 'ResetFailures))
              (call-via 'iNotifier 'MakeRequest)
-             (call-on 'iInterface (format "ObservedData_~a" data-name))))))
+             (call-on 'iInterface
+                      (format "ObservedData_~a" data-name)
+                      (list 'aData))))))
      ))
 
    (func
@@ -460,6 +467,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
                           #:cancel-name cancel-name))
 
      ;; Are we ERegisteredOnHomeNetwork.
+     ;; Functionality not available in flight mode.
      (let ((data-name "NetworkRegistration")
            (data-type 'CTelephony::TNetworkRegistrationV1)
            (req-name 'GetNetworkRegistrationStatus)
@@ -482,6 +490,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
 
      ;; CTelephony::TNetworkInfoV2 is only available in more recent
      ;; platform versions, not in S60 3.0, for instance.
+     ;; Functionality not available in flight mode.
      (let ((data-name "NetworkInfo")
            (data-type 'CTelephony::TNetworkInfoV1)
            (req-name 'GetCurrentNetworkInfo)
@@ -506,6 +515,16 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
      (let ((data-name "SignalStrength"))
        (make-observer-ao #:data-name data-name
                          #:retries? #t
+                         #:flightmode? #t))
+     
+     (let ((data-name "NetworkInfo"))
+       (make-observer-ao #:data-name data-name
+                         #:retries? #t
+                         #:flightmode? #t))
+
+     (let ((data-name "NetworkRegistration"))
+       (make-observer-ao #:data-name data-name
+                         #:retries? #f
                          #:flightmode? #t))
      
      )))

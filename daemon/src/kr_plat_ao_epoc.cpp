@@ -155,8 +155,7 @@ CRegistrationObserver::CRegistrationObserver() \
 
 NONSHARABLE_CLASS(This) : 
   public CBase, 
-  public MGetterObs_NetworkRegistration,
-  public MNotifyObs_NetworkRegistration
+  public MObserverObs_NetworkRegistration
 {
   CTOR_DECL_CRegistrationObserver;
 
@@ -164,13 +163,12 @@ NONSHARABLE_CLASS(This) :
   ~CRegistrationObserver();
 
  private:
-  virtual void GotData_NetworkRegistration(TInt aError);
-  virtual void ChangedData_NetworkRegistration(TInt aError);
-  void HandleRegistration(TInt aError, CTelephony::TNetworkRegistrationV1 const & aData);
+  virtual void ObservedData_NetworkRegistration(TData_NetworkRegistration const &aData);
+  virtual void Failed_NetworkRegistration(TInt aError);
+  virtual void InFlightMode_NetworkRegistration();
 
  private:
-  CGetterAo_NetworkRegistration* iRegistrationInfoGetter;
-  CNotifyAo_NetworkRegistration* iRegistrationInfoNotifier;
+  CObserverAo_NetworkRegistration* iObserver;
 };
 
 CTOR_IMPL_CRegistrationObserver;
@@ -179,42 +177,33 @@ void This::ConstructL()
 {
   ac_AppContext* ac = ac_get_global_AppContext();
 
-  iRegistrationInfoGetter = new (ELeave) CGetterAo_NetworkRegistration(ac_Telephony(ac), *this);
-  iRegistrationInfoNotifier = new (ELeave) CNotifyAo_NetworkRegistration(ac_Telephony(ac), *this);
-
-  iRegistrationInfoGetter->MakeRequest();
+  iObserver = CObserverAo_NetworkRegistration::NewL(ac, *this);
 }
 
 This::~CRegistrationObserver()
 {
-  delete iRegistrationInfoGetter;
-  delete iRegistrationInfoNotifier;
+  delete iObserver;
 }
 
-void This::GotData_NetworkRegistration(TInt aError)
+void This::ObservedData_NetworkRegistration(TData_NetworkRegistration const &aData)
 {
-  HandleRegistration(aError, iRegistrationInfoGetter->Data());
-}
-
-void This::ChangedData_NetworkRegistration(TInt aError)
-{
-  HandleRegistration(aError, iRegistrationInfoNotifier->Data());
-}
-
-void This::HandleRegistration(TInt aError, CTelephony::TNetworkRegistrationV1 const & aData)
-{
+  int status = aData.iRegStatus;
+  logf("network registration status: %d", status);
   LogDb* logDb = ac_global_LogDb;
-  if (aError) {
-    if (logDb)
-      ex_dblog_error_msg(logDb, "network registration status query failure", aError, NULL);
-  } else {
-    int status = aData.iRegStatus;
-    logf("network registration status: %d", status);
-    if (logDb) {
-      log_db_log_registration(logDb, status, NULL);
-    }
-    iRegistrationInfoNotifier->MakeRequest();
+  if (logDb) {
+    log_db_log_registration(logDb, status, NULL);
   }
+}
+
+void This::Failed_NetworkRegistration(TInt aError)
+{
+  er_log_symbian(0, aError, 
+		 "network registration status query failure (giving up)");
+}
+
+void This::InFlightMode_NetworkRegistration()
+{
+  logt("network registration observer sleeping (flight mode)");
 }
 
 #undef This
