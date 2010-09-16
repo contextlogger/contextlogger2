@@ -21,6 +21,9 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     ((_ defs cdecl ...)
      (let* defs (sc cdecl ...)))))
 
+(define (compact-list . args)
+  (compact args))
+
 (define (make-telephony-ao #:data-name data-name
                            #:data-type data-type
                            #:req-name req-name
@@ -128,13 +131,261 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
         cprivate)
        ))))
 
+(define (make-observer-ao #:data-name data-name
+                          #:retries? (retries? #f)
+                          #:flightmode? (flightmode? #f)
+                          )
+  (let*-sc
+   ((data-type (format "TData_~a" data-name))
+    (observer-name (format "MObserverObs_~a" data-name))
+    (notifier-name (format "CObserverAo_~a" data-name))
+    )
+
+   (cclass
+    (name observer-name)
+    cexport
+    (body
+     (func
+      (name (format "ObservedData_~a" data-name))
+      cpublic pure virtual)
+
+     (if retries?
+         (sc
+          (func
+           (name (format "ReportTransientError_~a" data-name))
+           (args (arg (name 'aError) (type 'TInt)))
+           cpublic pure virtual)
+          (func
+           (name (format "RetriesExhausted_~a" data-name))
+           cpublic pure virtual)
+          )
+         (func
+          (name (format "Failed_~a" data-name))
+          (args (arg (name 'aError) (type 'TInt)))
+          cpublic pure virtual))
+     
+     (ic flightmode?
+         (func
+          (name (format "InFlightMode_~a" data-name))
+          cpublic pure virtual))
+     ))
+
+   (cclass cexport non-sharable
+    (name notifier-name)
+    (apply bases 
+          (compact-list
+           'CBase
+           (format "MGetterObs_~a" data-name)
+           (format "MNotifyObs_~a" data-name)
+           (and retries? "MRetryAoObserver")))
+    (body
+     (mz-call make-ctor
+              #:newl? #t
+              #:newlc? #t
+              #:call-constructl? #t
+              #:arg-list (list
+                          (arg (name 'aAppContext)
+                               (type (ptr-to 'ac_AppContext)))
+                          (arg (name 'aInterface)
+                               (type (ref-to observer-name))))
+              #:init-list (list
+                           (ctor-var 'iAppContext '(aAppContext))
+                           (ctor-var 'iInterface '(aInterface)))
+              #:class-name notifier-name)
+
+     (dtor cpublic virtual
+           (block
+            (ic flightmode? (call 'BbUnregister))
+            (ic retries? (cdelete 'iRetryAo))
+            (cdelete 'iNotifier)
+            (cdelete 'iGetter)))
+
+     (var
+      (name 'iAppContext)
+      (type (ptr-to 'ac_AppContext)))
+
+     (var
+      (name 'iInterface)
+      (type (ref-to observer-name)))
+     
+     (var (name 'iGetterDone) (type 'TBool))
+     
+     (var (name 'iGetter)
+          (type (ptr-to (format "CGetterAo_~a" data-name))))
+     
+     (var (name 'iNotifier)
+          (type (ptr-to (format "CNotifyAo_~a" data-name))))
+     
+     (ic retries?
+         (var (name 'iRetryAo)
+              (type (ptr-to 'CRetryAo))))
+
+     (ic flightmode?
+         (var (name 'iClosure)
+              (type 'bb_Closure)))
+     
+     (func leaving
+           (name 'ConstructL)
+           (block
+            (ic flightmode?
+                 (call 'BbRegisterL))
+            (ic retries?
+                (assign 'iRetryAo
+                        (leaving-new "CRetryAo"
+                                     (list self 20 60))))
+            (assign 'iGetter
+                    (leaving-new (format "CGetterAo_~a" data-name)
+                                 (list (call 'ac_Telephony '(iAppContext))
+                                       self)))
+            (assign 'iNotifier
+                    (leaving-new (format "CNotifyAo_~a" data-name)
+                                 (list (call 'ac_Telephony '(iAppContext))
+                                       self)))
+            (if flightmode?
+                (only-unless (call 'GetFlightMode)
+                             (call-via 'iGetter 'MakeRequest))
+                (call-via 'iGetter 'MakeRequest))
+            ))
+
+     (ic flightmode?
+         (func
+          (name 'BbRegisterL)
+          (block
+           (assign (field-on 'iClosure 'changed)
+                   (format "ClosureFunc_~a" data-name))
+           (assign (field-on 'iClosure 'arg) 'this)
+           )))
+     
+     (ic flightmode?
+          (func
+           (name 'BbUnregister)
+           (block
+            (call 'bb_Blackboard_unregister
+                  (list
+                   (call 'ac_get_Blackboard '(iAppContext))
+                   'iClosure)))))
+
+     (ic (or retries? flightmode?)
+         (func
+          (name 'MakeRequest)
+          (block
+           (cif 'iGetterDone
+                (call-via 'iNotifier 'MakeRequest)
+                (call-via 'iGetter 'MakeRequest)))))
+
+     (ic flightmode?
+         (func
+          (name 'Cancel)
+          (block
+           (call-via 'iNotifier 'Cancel)
+           (call-via 'iGetter 'Cancel)
+           (ic retries?
+               (call-via 'iRetryAo 'Cancel))
+           (ic retries?
+               (call-via 'iRetryAo 'ResetFailures))
+           (assign 'iGetterDone 'EFalse))))
+     
+     (ic flightmode?
+         (func non-modifying
+          (name 'GetFlightMode)
+          (returns (type 'TBool))
+          (block
+           (return (field-via
+                    (call 'bb_Blackboard_board
+                          (list 'ac_global_Blackboard))
+                    'flightmode)))))
+           
+     (ic flightmode?
+         (func cpublic
+          (name 'HandleFlightModeChange)
+          (block
+           (cif (call 'GetFlightMode)
+                (block
+                 (call 'Cancel)
+                 (call-on 'iInterface
+                          (format "InFlightMode_~a" data-name)))
+                (call 'MakeRequest)))))
+     
+     (ic retries?
+         (func virtual
+           (name 'RetryTimerExpired)
+           (args
+            (arg (type (ptr-to 'CRetryAo)))
+            (arg (type 'TInt) (name 'aError)))
+           (block
+            (cif 'aError
+                 (call 'er_log_symbian
+                       (list 'er_FATAL 'aError
+                             (cstr (format "retry timer error in ~a"
+                                           notifier-name))))
+                 (call 'MakeRequest)))))
+     
+     (func virtual
+      (name (format "GotData_~a" data-name))
+      (args (arg (type 'TInt) (name 'aError)))
+      (block
+       (call 'HandleData (list 'aError (call-via 'iGetter 'Data)))
+       (only-unless 'aError
+                    (assign 'iGetterDone 'ETrue))))
+
+     (func virtual
+      (name (format "ChangedData_~a" data-name))
+      (args (arg (type 'TInt) (name 'aError)))
+      (block
+       (call 'HandleData (list 'aError (call-via 'iNotifier 'Data)))))
+
+     (func
+      (name "HandleData")
+      (args
+       (arg (type 'TInt) (name 'aError))
+       (arg (type (const-ref-to data-type)) (name 'aData)))
+      (block
+       (cif 'aError
+            (if retries?
+                (block
+                 (call-on 'iInterface
+                          (format "ReportTransientError_~a" data-name)
+                          (list 'aError))
+                 (only-unless
+                  (call-via 'iRetryAo 'Retry)
+                  (call-on 'iInterface
+                           (format "RetriesExhausted_~a" data-name))))
+                (call-on 'iInterface
+                         (format "Failed_~a" data-name)
+                         (list 'aError)))
+            (block
+             (ic retries?
+                 (call-via 'iRetryAo 'ResetFailures))
+             (call-via 'iNotifier 'MakeRequest)
+             (call-on 'iInterface (format "ObservedData_~a" data-name))))))
+     ))
+
+   (func
+    (name (format "ClosureFunc_~a" data-name))
+    (args
+     (arg (type (ptr-to 'bb_Blackboard)))
+     (arg (type "enum bb_DataType"))
+     (arg (type 'gpointer))
+     (arg (type 'int))
+     (arg (type 'gpointer) (name 'arg)))
+    (block
+     (call-via (reinterpret-cast (ptr-to notifier-name) 'arg)
+               'HandleFlightModeChange)
+     ))
+   ))
+
 (define program-1
   (cunit
     (basename (path->string program-basename))
 
     (includes
+     (local-include "ac_app_context.h")
+     (local-include "bb_blackboard.h")
+     (local-include "er_errors.h")
+     (local-include "ut_retry_epoc.hpp")
      (system-include "e32base.h")
      (system-include "etel3rdparty.h")
+     (system-include "glib.h")
      )
 
     (body
@@ -251,6 +502,11 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
                           #:data-type data-type
                           #:req-name req-name
                           #:cancel-name cancel-name))
+
+     (let ((data-name "SignalStrength"))
+       (make-observer-ao #:data-name data-name
+                         #:retries? #t
+                         #:flightmode? #t))
      
      )))
      

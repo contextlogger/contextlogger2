@@ -56,7 +56,7 @@
 (require "type-util.scm")
 (require (prefix-in a. "ast-spec.scm"))
 
-(provide ccond cswitch typedef)
+(provide ccond cif cstr cswitch self reinterpret-cast typedef)
 
 (define cclass class)
 (define cexport export)
@@ -153,6 +153,7 @@
 (provide/contract
  (arg (func-listof/c (or/c name? type?) any/c))
  (args (func-listof/c arg? any/c))
+ (assign (-> expr/c? expr/c? any/c))
  (basename (-> symbol/c? any/c))
  (bases (func-listof/c (or/c symbol/c? base?) any/c))
  (block (func-listof/c (or/c a.var-decl? a.statement? a.expression? a.cxx-chunk? splice?) any/c))

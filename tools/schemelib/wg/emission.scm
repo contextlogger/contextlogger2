@@ -399,12 +399,13 @@
    (let ((texpr (get-reqd-nlist-elem-1 ast 'type))
 	 (expr (get-reqd-nlist-elem-1 ast 'expr)))
      (snippet-list
+      "("
       cast-string
       "<"
       (type-to-cxx-string texpr)
       ">("
       (ast-to-snippet expr)
-      ")")))
+      "))")))
 
  (define (fmt-number value fmt)
    (cond
