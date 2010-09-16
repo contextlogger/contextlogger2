@@ -55,8 +55,8 @@ NONSHARABLE_CLASS(CSensor_callstatus) :
   public CBase,
   public MRetryAoObserver,
   public MGetterObs_FlightMode,
-  public MFlightModeObserver,
-  public MCallStatusObserver
+  public MNotifyObs_FlightMode,
+  public MNotifyObs_CallStatus
 {
   CTOR_DECL_CSensor_callstatus;
 
@@ -79,11 +79,11 @@ NONSHARABLE_CLASS(CSensor_callstatus) :
 
   virtual void GotData_FlightMode(TInt aError);
 
- private: // MFlightModeObserver
+ private: // MNotifyObs_FlightMode
 
   virtual void ChangedData_FlightMode(TInt aError);
 
- private: // MCallStatusObserver
+ private: // MNotifyObs_CallStatus
 
   virtual void ChangedData_CallStatus(TInt aError);
 

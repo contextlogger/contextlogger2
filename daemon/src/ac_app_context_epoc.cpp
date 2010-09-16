@@ -65,7 +65,7 @@ CBatteryObserver::CBatteryObserver(CTelephony& tel, MGetterObs_BatteryInfo& obs)
 NONSHARABLE_CLASS(CBatteryObserver) : 
   public CBase, 
   public MGetterObs_BatteryInfo,
-  public MBatteryInfoObserver
+  public MNotifyObs_BatteryInfo
 {
   CTOR_DECL_CBatteryObserver;
 
@@ -187,7 +187,7 @@ CFlightModeObserver::CFlightModeObserver(CTelephony& tel, MGetterObs_FlightMode&
 NONSHARABLE_CLASS(CFlightModeObserver) : 
   public CBase, 
   public MGetterObs_FlightMode,
-  public MFlightModeObserver
+  public MNotifyObs_FlightMode
 {
   CTOR_DECL_CFlightModeObserver;
 
@@ -196,7 +196,7 @@ NONSHARABLE_CLASS(CFlightModeObserver) :
 
  private: // MGetterObs_FlightMode
   virtual void GotData_FlightMode(TInt aError);
- private: // MFlightModeObserver
+ private: // MNotifyObs_FlightMode
   virtual void ChangedData_FlightMode(TInt aError);
  private:
   void HandleFlightMode(TInt aError, CTelephony::TFlightModeV1 const & aData);

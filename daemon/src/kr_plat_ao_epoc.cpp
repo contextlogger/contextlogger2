@@ -156,7 +156,7 @@ CRegistrationObserver::CRegistrationObserver() \
 NONSHARABLE_CLASS(This) : 
   public CBase, 
   public MGetterObs_NetworkRegistration,
-  public MNetworkRegistrationObserver
+  public MNotifyObs_NetworkRegistration
 {
   CTOR_DECL_CRegistrationObserver;
 
@@ -261,7 +261,7 @@ CNetworkObserver::CNetworkObserver() \
 NONSHARABLE_CLASS(CNetworkObserver) : 
   public CBase, 
   public MGetterObs_NetworkInfo,
-  public MNetworkInfoObserver,
+  public MNotifyObs_NetworkInfo,
   public MRetryAoObserver
 {
   CTOR_DECL_CNetworkObserver;
@@ -427,7 +427,7 @@ CSignalObserver::CSignalObserver() \
 NONSHARABLE_CLASS(CSignalObserver) : 
   public CBase, 
   public MGetterObs_SignalStrength,
-  public MSignalStrengthObserver,
+  public MNotifyObs_SignalStrength,
   public MRetryAoObserver
 {
   CTOR_DECL_CSignalObserver;
