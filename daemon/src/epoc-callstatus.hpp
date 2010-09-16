@@ -101,9 +101,9 @@ NONSHARABLE_CLASS(CSensor_callstatus) :
 
   CGetterAo_FlightMode* iFlightModeGetter; // owned
 
-  CFlightModeNotifier* iFlightModeNotifier; // owned
+  CNotifyAo_FlightMode* iFlightModeNotifier; // owned
 
-  CCallStatusNotifier* iCallStatusNotifier; // owned
+  CNotifyAo_CallStatus* iCallStatusNotifier; // owned
 
   enum TState {
     EInactive = 0, // not started

@@ -81,8 +81,8 @@ void CSensor_callstatus::ConstructL()
   iTelephony = CTelephony::NewL();
   iRetryAo = new (ELeave) CRetryAo(*this, 100, 10);
   iFlightModeGetter = new (ELeave) CGetterAo_FlightMode(*iTelephony, *this);
-  iFlightModeNotifier = new (ELeave) CFlightModeNotifier(*iTelephony, *this);
-  iCallStatusNotifier = new (ELeave) CCallStatusNotifier(*iTelephony, *this);
+  iFlightModeNotifier = new (ELeave) CNotifyAo_FlightMode(*iTelephony, *this);
+  iCallStatusNotifier = new (ELeave) CNotifyAo_CallStatus(*iTelephony, *this);
 }
 
 CSensor_callstatus::~CSensor_callstatus()

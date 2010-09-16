@@ -79,7 +79,7 @@ NONSHARABLE_CLASS(CBatteryObserver) :
 
  private:
   CGetterAo_BatteryInfo* iBatteryInfoGetter;
-  CBatteryInfoNotifier* iBatteryInfoNotifier;
+  CNotifyAo_BatteryInfo* iBatteryInfoNotifier;
 
  private:
   MGetterObs_BatteryInfo& iObserver;
@@ -90,7 +90,7 @@ CTOR_IMPL_CBatteryObserver;
 void CBatteryObserver::ConstructL(CTelephony& tel, MGetterObs_BatteryInfo& obs)
 {
   iBatteryInfoGetter = new (ELeave) CGetterAo_BatteryInfo(tel, *this);
-  iBatteryInfoNotifier = new (ELeave) CBatteryInfoNotifier(tel, *this);
+  iBatteryInfoNotifier = new (ELeave) CNotifyAo_BatteryInfo(tel, *this);
 
   iBatteryInfoGetter->MakeRequest();
 }
@@ -203,7 +203,7 @@ NONSHARABLE_CLASS(CFlightModeObserver) :
 
  private:
   CGetterAo_FlightMode* iGetter;
-  CFlightModeNotifier* iNotifier;
+  CNotifyAo_FlightMode* iNotifier;
 
  private:
   MGetterObs_FlightMode& iObserver;
@@ -214,7 +214,7 @@ CTOR_IMPL_CFlightModeObserver;
 void CFlightModeObserver::ConstructL(CTelephony& tel, MGetterObs_FlightMode& obs)
 {
   iGetter = new (ELeave) CGetterAo_FlightMode(tel, *this);
-  iNotifier = new (ELeave) CFlightModeNotifier(tel, *this);
+  iNotifier = new (ELeave) CNotifyAo_FlightMode(tel, *this);
 
   iGetter->MakeRequest();
 }
