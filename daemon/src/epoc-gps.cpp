@@ -44,8 +44,6 @@ anything. Still, without setting this presumably there is no timeout.
 */
 // iUpdateOptions.SetUpdateTimeOut(TTimeIntervalMicroSeconds(5 * 60 * 1000000));
 
-// xxx UpdateInterval in iUpdateOptions should be made runtime configurable
-
 /***koog 
 (require codegen/symbian-cxx)
 
