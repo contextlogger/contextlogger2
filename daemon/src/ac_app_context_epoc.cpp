@@ -30,7 +30,7 @@ http://www.forum.nokia.com/document/Cpp_Developers_Library/GUID-759FBC7F-5384-44
 (require codegen/symbian-cxx)
 (ctor-defines/spec
  "CBatteryObserver" ;; name
- "CTelephony& tel, MBatteryInfoRequestor& obs" ;; args
+ "CTelephony& tel, MGetterObs_BatteryInfo& obs" ;; args
  "iObserver(obs)" ;; inits
  "" ;; ctor
  #t ;; ConstructL
@@ -38,13 +38,13 @@ http://www.forum.nokia.com/document/Cpp_Developers_Library/GUID-759FBC7F-5384-44
 )
  ***/
 #define CTOR_DECL_CBatteryObserver  \
-public: static CBatteryObserver* NewLC(CTelephony& tel, MBatteryInfoRequestor& obs); \
-public: static CBatteryObserver* NewL(CTelephony& tel, MBatteryInfoRequestor& obs); \
-private: CBatteryObserver(CTelephony& tel, MBatteryInfoRequestor& obs); \
-private: void ConstructL(CTelephony& tel, MBatteryInfoRequestor& obs);
+public: static CBatteryObserver* NewLC(CTelephony& tel, MGetterObs_BatteryInfo& obs); \
+public: static CBatteryObserver* NewL(CTelephony& tel, MGetterObs_BatteryInfo& obs); \
+private: CBatteryObserver(CTelephony& tel, MGetterObs_BatteryInfo& obs); \
+private: void ConstructL(CTelephony& tel, MGetterObs_BatteryInfo& obs);
 
 #define CTOR_IMPL_CBatteryObserver  \
-CBatteryObserver* CBatteryObserver::NewLC(CTelephony& tel, MBatteryInfoRequestor& obs) \
+CBatteryObserver* CBatteryObserver::NewLC(CTelephony& tel, MGetterObs_BatteryInfo& obs) \
 { \
   CBatteryObserver* obj = new (ELeave) CBatteryObserver(tel, obs); \
   CleanupStack::PushL(obj); \
@@ -52,19 +52,19 @@ CBatteryObserver* CBatteryObserver::NewLC(CTelephony& tel, MBatteryInfoRequestor
   return obj; \
 } \
  \
-CBatteryObserver* CBatteryObserver::NewL(CTelephony& tel, MBatteryInfoRequestor& obs) \
+CBatteryObserver* CBatteryObserver::NewL(CTelephony& tel, MGetterObs_BatteryInfo& obs) \
 { \
   CBatteryObserver* obj = CBatteryObserver::NewLC(tel, obs); \
   CleanupStack::Pop(obj); \
   return obj; \
 } \
  \
-CBatteryObserver::CBatteryObserver(CTelephony& tel, MBatteryInfoRequestor& obs) : iObserver(obs) \
+CBatteryObserver::CBatteryObserver(CTelephony& tel, MGetterObs_BatteryInfo& obs) : iObserver(obs) \
 {}
 /***end***/
 NONSHARABLE_CLASS(CBatteryObserver) : 
   public CBase, 
-  public MBatteryInfoRequestor,
+  public MGetterObs_BatteryInfo,
   public MBatteryInfoObserver
 {
   CTOR_DECL_CBatteryObserver;
@@ -82,12 +82,12 @@ NONSHARABLE_CLASS(CBatteryObserver) :
   CBatteryInfoNotifier* iBatteryInfoNotifier;
 
  private:
-  MBatteryInfoRequestor& iObserver;
+  MGetterObs_BatteryInfo& iObserver;
 };
 
 CTOR_IMPL_CBatteryObserver;
 
-void CBatteryObserver::ConstructL(CTelephony& tel, MBatteryInfoRequestor& obs)
+void CBatteryObserver::ConstructL(CTelephony& tel, MGetterObs_BatteryInfo& obs)
 {
   iBatteryInfoGetter = new (ELeave) CBatteryInfoGetter(tel, *this);
   iBatteryInfoNotifier = new (ELeave) CBatteryInfoNotifier(tel, *this);
@@ -152,7 +152,7 @@ void CBatteryObserver::HandleBattery(TInt aError,
 (require codegen/symbian-cxx)
 (ctor-defines/spec
  "CFlightModeObserver" ;; name
- "CTelephony& tel, MFlightModeRequestor& obs" ;; args
+ "CTelephony& tel, MGetterObs_FlightMode& obs" ;; args
  "iObserver(obs)" ;; inits
  "" ;; ctor
  #t ;; ConstructL
@@ -160,13 +160,13 @@ void CBatteryObserver::HandleBattery(TInt aError,
 )
  ***/
 #define CTOR_DECL_CFlightModeObserver  \
-public: static CFlightModeObserver* NewLC(CTelephony& tel, MFlightModeRequestor& obs); \
-public: static CFlightModeObserver* NewL(CTelephony& tel, MFlightModeRequestor& obs); \
-private: CFlightModeObserver(CTelephony& tel, MFlightModeRequestor& obs); \
-private: void ConstructL(CTelephony& tel, MFlightModeRequestor& obs);
+public: static CFlightModeObserver* NewLC(CTelephony& tel, MGetterObs_FlightMode& obs); \
+public: static CFlightModeObserver* NewL(CTelephony& tel, MGetterObs_FlightMode& obs); \
+private: CFlightModeObserver(CTelephony& tel, MGetterObs_FlightMode& obs); \
+private: void ConstructL(CTelephony& tel, MGetterObs_FlightMode& obs);
 
 #define CTOR_IMPL_CFlightModeObserver  \
-CFlightModeObserver* CFlightModeObserver::NewLC(CTelephony& tel, MFlightModeRequestor& obs) \
+CFlightModeObserver* CFlightModeObserver::NewLC(CTelephony& tel, MGetterObs_FlightMode& obs) \
 { \
   CFlightModeObserver* obj = new (ELeave) CFlightModeObserver(tel, obs); \
   CleanupStack::PushL(obj); \
@@ -174,19 +174,19 @@ CFlightModeObserver* CFlightModeObserver::NewLC(CTelephony& tel, MFlightModeRequ
   return obj; \
 } \
  \
-CFlightModeObserver* CFlightModeObserver::NewL(CTelephony& tel, MFlightModeRequestor& obs) \
+CFlightModeObserver* CFlightModeObserver::NewL(CTelephony& tel, MGetterObs_FlightMode& obs) \
 { \
   CFlightModeObserver* obj = CFlightModeObserver::NewLC(tel, obs); \
   CleanupStack::Pop(obj); \
   return obj; \
 } \
  \
-CFlightModeObserver::CFlightModeObserver(CTelephony& tel, MFlightModeRequestor& obs) : iObserver(obs) \
+CFlightModeObserver::CFlightModeObserver(CTelephony& tel, MGetterObs_FlightMode& obs) : iObserver(obs) \
 {}
 /***end***/
 NONSHARABLE_CLASS(CFlightModeObserver) : 
   public CBase, 
-  public MFlightModeRequestor,
+  public MGetterObs_FlightMode,
   public MFlightModeObserver
 {
   CTOR_DECL_CFlightModeObserver;
@@ -194,7 +194,7 @@ NONSHARABLE_CLASS(CFlightModeObserver) :
  public:
   ~CFlightModeObserver();
 
- private: // MFlightModeRequestor
+ private: // MGetterObs_FlightMode
   virtual void GotData_FlightMode(TInt aError);
  private: // MFlightModeObserver
   virtual void ChangedData_FlightMode(TInt aError);
@@ -206,12 +206,12 @@ NONSHARABLE_CLASS(CFlightModeObserver) :
   CFlightModeNotifier* iNotifier;
 
  private:
-  MFlightModeRequestor& iObserver;
+  MGetterObs_FlightMode& iObserver;
 };
 
 CTOR_IMPL_CFlightModeObserver;
 
-void CFlightModeObserver::ConstructL(CTelephony& tel, MFlightModeRequestor& obs)
+void CFlightModeObserver::ConstructL(CTelephony& tel, MGetterObs_FlightMode& obs)
 {
   iGetter = new (ELeave) CFlightModeGetter(tel, *this);
   iNotifier = new (ELeave) CFlightModeNotifier(tel, *this);
@@ -322,8 +322,8 @@ CAppContextImpl::CAppContextImpl(ac_AppContext* ac, MAppContextInitObserver& obs
 
 NONSHARABLE_CLASS(CAppContextImpl) : 
   public CBase,
-  public MBatteryInfoRequestor,
-  public MFlightModeRequestor
+  public MGetterObs_BatteryInfo,
+  public MGetterObs_FlightMode
 {
   CTOR_DECL_CAppContextImpl;
 
@@ -350,9 +350,9 @@ NONSHARABLE_CLASS(CAppContextImpl) :
   CBatteryObserver* iBatteryObserver;
   CFlightModeObserver* iFlightModeObserver;
 
- private: // MBatteryInfoRequestor
+ private: // MGetterObs_BatteryInfo
   virtual void GotData_BatteryInfo(TInt aError);
- private: // MFlightModeRequestor
+ private: // MGetterObs_FlightMode
   virtual void GotData_FlightMode(TInt aError);
 
  private:

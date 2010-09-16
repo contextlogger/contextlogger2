@@ -54,7 +54,7 @@ CSensor_callstatus::CSensor_callstatus(ac_AppContext* aAppContext) : iAppContext
 NONSHARABLE_CLASS(CSensor_callstatus) :
   public CBase,
   public MRetryAoObserver,
-  public MFlightModeRequestor,
+  public MGetterObs_FlightMode,
   public MFlightModeObserver,
   public MCallStatusObserver
 {
@@ -75,7 +75,7 @@ NONSHARABLE_CLASS(CSensor_callstatus) :
 
   virtual void RetryTimerExpired(CRetryAo* src, TInt errCode);
 
- private: // MFlightModeRequestor
+ private: // MGetterObs_FlightMode
 
   virtual void GotData_FlightMode(TInt aError);
 
