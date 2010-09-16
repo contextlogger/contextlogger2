@@ -32,7 +32,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     (data-alias (format "TData_~a" data-name))
     (pckg-alias (format "TDataPckg_~a" data-name))
     (observer-name (format (if getter? "MGetterObs_~a" "MNotifyObs_~a") data-name))
-    (notifier-name (format (if getter? "C~aGetter" "C~aNotifier") data-name))
+    (notifier-name (format (if getter? "CGetterAo_~a" "C~aNotifier") data-name))
     (handler-name (format (if getter? "GotData_~a" "ChangedData_~a") data-name)))
 
    (typedef

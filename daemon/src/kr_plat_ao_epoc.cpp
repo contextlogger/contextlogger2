@@ -169,7 +169,7 @@ NONSHARABLE_CLASS(This) :
   void HandleRegistration(TInt aError, CTelephony::TNetworkRegistrationV1 const & aData);
 
  private:
-  CNetworkRegistrationGetter* iRegistrationInfoGetter;
+  CGetterAo_NetworkRegistration* iRegistrationInfoGetter;
   CNetworkRegistrationNotifier* iRegistrationInfoNotifier;
 };
 
@@ -179,7 +179,7 @@ void This::ConstructL()
 {
   ac_AppContext* ac = ac_get_global_AppContext();
 
-  iRegistrationInfoGetter = new (ELeave) CNetworkRegistrationGetter(ac_Telephony(ac), *this);
+  iRegistrationInfoGetter = new (ELeave) CGetterAo_NetworkRegistration(ac_Telephony(ac), *this);
   iRegistrationInfoNotifier = new (ELeave) CNetworkRegistrationNotifier(ac_Telephony(ac), *this);
 
   iRegistrationInfoGetter->MakeRequest();
@@ -276,7 +276,7 @@ NONSHARABLE_CLASS(CNetworkObserver) :
   void HandleData(TInt aError, CTelephony::TNetworkInfoV1 const & aData);
 
  private:
-  CNetworkInfoGetter* iGetter;
+  CGetterAo_NetworkInfo* iGetter;
   TBool iGetterDone;
   CNetworkInfoNotifier* iNotifier;
   CRetryAo* iRetryAo;
@@ -291,7 +291,7 @@ void CNetworkObserver::ConstructL()
 
   iRetryAo = new (ELeave) CRetryAo(*this, 20, 60);
 
-  iGetter = new (ELeave) CNetworkInfoGetter(ac_Telephony(ac), *this);
+  iGetter = new (ELeave) CGetterAo_NetworkInfo(ac_Telephony(ac), *this);
   iNotifier = new (ELeave) CNetworkInfoNotifier(ac_Telephony(ac), *this);
 
   iGetter->MakeRequest();
@@ -444,7 +444,7 @@ NONSHARABLE_CLASS(CSignalObserver) :
  private:
   CRetryAo* iRetryAo;
   TBool iGetterDone;
-  CSignalStrengthGetter* iGetter;
+  CGetterAo_SignalStrength* iGetter;
   CSignalStrengthNotifier* iNotifier;
 
  private:
@@ -540,7 +540,7 @@ void CSignalObserver::ConstructL()
 
   iRetryAo = new (ELeave) CRetryAo(*this, 20, 60);
 
-  iGetter = new (ELeave) CSignalStrengthGetter(ac_Telephony(ac), *this);
+  iGetter = new (ELeave) CGetterAo_SignalStrength(ac_Telephony(ac), *this);
   iNotifier = new (ELeave) CSignalStrengthNotifier(ac_Telephony(ac), *this);
 
   TBool fm = GetFlightMode();

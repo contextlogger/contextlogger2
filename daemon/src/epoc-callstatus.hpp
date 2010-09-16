@@ -99,7 +99,7 @@ NONSHARABLE_CLASS(CSensor_callstatus) :
 
   CRetryAo* iRetryAo; // owned
 
-  CFlightModeGetter* iFlightModeGetter; // owned
+  CGetterAo_FlightMode* iFlightModeGetter; // owned
 
   CFlightModeNotifier* iFlightModeNotifier; // owned
 
