@@ -212,6 +212,9 @@ void This::InFlightMode_NetworkRegistration()
 // network information observing
 // --------------------------------------------------
 
+// In flight mode, we have been seeing KErrAccessDenied (-21). The
+// current implementation avoids querying in flight mode.
+
 /***koog 
 (require codegen/symbian-cxx)
 (ctor-defines/spec
@@ -252,9 +255,7 @@ CNetworkObserver::CNetworkObserver() \
 
 NONSHARABLE_CLASS(This) : 
   public CBase, 
-  public MGetterObs_NetworkInfo,
-  public MNotifyObs_NetworkInfo,
-  public MRetryAoObserver
+  public MObserverObs_NetworkInfo
 {
   CTOR_DECL_CNetworkObserver;
 
@@ -262,112 +263,84 @@ NONSHARABLE_CLASS(This) :
   ~CNetworkObserver();
 
  private:
-  virtual void RetryTimerExpired(CRetryAo* src, TInt errCode);
-  virtual void GotData_NetworkInfo(TInt aError);
-  virtual void ChangedData_NetworkInfo(TInt aError);
-  void HandleData(TInt aError, TData_NetworkInfo const & aData);
+  virtual void ObservedData_NetworkInfo(TData_NetworkInfo const &aData);
+  virtual void ReportTransientError_NetworkInfo(TInt aError);
+  virtual void RetriesExhausted_NetworkInfo();
+  virtual void InFlightMode_NetworkInfo();
 
  private:
-  CGetterAo_NetworkInfo* iGetter;
-  TBool iGetterDone;
-  CNotifyAo_NetworkInfo* iNotifier;
-  CRetryAo* iRetryAo;
+  CObserverAo_NetworkInfo* iObserver;
   TData_NetworkInfo iOldData;
+  TData_NetworkInfo iFlightModeData;
 };
 
 CTOR_IMPL_CNetworkObserver;
 
 void This::ConstructL()
 {
+  // The default constructor basically gives us what we want, but we
+  // add the "operator" name to help us see from the logs what is
+  // going on.
+  _LIT(KFlightModeText, "(flight mode)");
+  iFlightModeData.iLongName.Copy(KFlightModeText);
+
   ac_AppContext* ac = ac_get_global_AppContext();
-
-  iRetryAo = new (ELeave) CRetryAo(*this, 20, 60);
-
-  iGetter = new (ELeave) CGetterAo_NetworkInfo(ac_Telephony(ac), *this);
-  iNotifier = new (ELeave) CNotifyAo_NetworkInfo(ac_Telephony(ac), *this);
-
-  iGetter->MakeRequest();
+  iObserver = CObserverAo_NetworkInfo::NewL(ac, *this);
 }
 
 This::~CNetworkObserver()
 {
-  delete iGetter;
-  delete iNotifier;
-  delete iRetryAo;
+  delete iObserver;
 }
 
-void This::RetryTimerExpired(CRetryAo* src, TInt errCode)
+void This::ObservedData_NetworkInfo(TData_NetworkInfo const &aData)
 {
-  (void)src;
-  if (errCode) {
-    LogDb* logDb = ac_global_LogDb;
-    ex_dblog_fatal_error_msg(logDb, "retry timer error", errCode);
-  } else {
-    if (iGetterDone)
-      iNotifier->MakeRequest();
-    else
-      iGetter->MakeRequest();
+  // Log interesting data, if it has changed.
+  {
+    if (aData.iLongName != iOldData.iLongName) {
+      LogDb* logDb = ac_global_LogDb;
+      HBufC8* text8 = ConvToUtf8ZL(aData.iLongName);
+      CleanupStack::PushL(text8);
+      //logf("operator name: '%s'", (char*)text8->Ptr());
+      log_db_log_operator(logDb, (const char*)text8->Ptr(), NULL);
+      kr_Controller_set_operator_name(ac_global_Controller, 
+				      (const char*)text8->Ptr());
+      CleanupStack::PopAndDestroy(text8);
+    }
   }
-}
 
-void This::GotData_NetworkInfo(TInt aError)
-{
-  HandleData(aError, iGetter->Data());
-  if (!aError) 
-    iGetterDone = ETrue;
-}
-
-void This::ChangedData_NetworkInfo(TInt aError)
-{
-  HandleData(aError, iNotifier->Data());
-}
-
-void This::HandleData(TInt aError, 
-		      TData_NetworkInfo const & aData)
-{
-  if (aError) {
-    LogDb* logDb = ac_global_LogDb;
-    // xxx In flight mode, we are seeing KErrAccessDenied (-21) in here. See what the documentation says about flight mode for this API.
-    ex_dblog_error_msg(logDb, "network info query failure", aError, NULL);
-    if (!iRetryAo->Retry()) {
-      er_log_none(er_FATAL, "network info queries failing");
-    }
-  } else {
-    iRetryAo->ResetFailures();
-
-    // Log interesting data, if it has changed.
-    {
-      if (aData.iLongName != iOldData.iLongName) {
-	LogDb* logDb = ac_global_LogDb;
-	HBufC8* text8 = ConvToUtf8ZL(aData.iLongName);
-	CleanupStack::PushL(text8);
-	//logf("operator name: '%s'", (char*)text8->Ptr());
-	log_db_log_operator(logDb, (const char*)text8->Ptr(), NULL);
-	kr_Controller_set_operator_name(ac_global_Controller, 
-					(const char*)text8->Ptr());
-	CleanupStack::PopAndDestroy(text8);
-      }
-    }
-
-    if (iOldData.iCountryCode != aData.iCountryCode) {
-      TLex lex(aData.iCountryCode);
-      int mcc;
-      TInt errCode = lex.Val(mcc);
-      if (errCode) 
-	// Unexpected MCC.
-	mcc = -1;
-      // Notify interested parties.
-      kr_Controller_set_current_mcc(ac_global_Controller, mcc);
-    }
-
-    iOldData = aData;
-
-    bb_Blackboard_notify(ac_global_Blackboard,
-			 bb_dt_network_info,
-			 (gpointer)&aData, 0);
-
-    iNotifier->MakeRequest();
+  if (iOldData.iCountryCode != aData.iCountryCode) {
+    TLex lex(aData.iCountryCode);
+    int mcc;
+    TInt errCode = lex.Val(mcc);
+    if (errCode) 
+      // Unexpected MCC.
+      mcc = -1;
+    // Notify interested parties.
+    kr_Controller_set_current_mcc(ac_global_Controller, mcc);
   }
+
+  iOldData = aData;
+
+  bb_Blackboard_notify(ac_global_Blackboard,
+		       bb_dt_network_info,
+		       (gpointer)&aData, 0);
+}
+
+void This::ReportTransientError_NetworkInfo(TInt aError)
+{
+  er_log_symbian(0, aError, "network info query failure (transient)");
+}
+
+void This::RetriesExhausted_NetworkInfo()
+{
+  er_log_none(er_FATAL, "network info queries failing");
+}
+
+void This::InFlightMode_NetworkInfo()
+{
+  logt("network info observer sleeping (flight mode)");
+  ObservedData_NetworkInfo(iFlightModeData);
 }
 
 #undef This
@@ -381,6 +354,8 @@ void This::HandleData(TInt aError,
    xxx Should find out why this is, if there are conditions under which it is not okay to make this query. Cannot find any information about the cause, but something to account for is that "this functionality is not available when the phone is in flight mode".
 
    We try to account for the above by observing flightmode status, and refraining from making requests (or having outstanding requests) when flightmode is on. We shall see if this addresses the issue.
+
+   xxx Could more easily implement based on CObserverAo_SignalStrength.
 */
 
 /***koog 
