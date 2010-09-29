@@ -277,7 +277,7 @@
        (let* ((doc (any-docstring ast))
               (members (map baa (get-members ast))))
          (when doc
-           (set! members (cons doc members)))
+           (set! members (push members doc)))
          `(seq (sep skip ,@members))))
 
       ((list-named? ast 'access-label)

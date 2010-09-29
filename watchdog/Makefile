@@ -14,7 +14,7 @@ BASENAME := cl2watchdog
 KIT := s60_30
 SDKHOME := $(GNUPOCDEVENV)/kits/$(KIT)
 CERT := dev
-VERSION := 0.52
+VERSION := 0.53
 
 PLT_ENV := PLTCOLLECTS=`pwd`/../tools/schemelib:
 SAKE := ../tools/bin/sake --trace
@@ -60,14 +60,14 @@ TARFILE := $(SRCDIST_HOME)/$(BASENAME)-$(VERSION).tar
 srcdist :
 	mkdir -p $(SRCDIST_HOME)
 	git archive --format=tar --prefix=$(BASENAME)/ HEAD > $(TARFILE)
-	tar rvf $(TARFILE) build/*/*.{inf,hrh,mmp,pkg} graph/states.png src/watchdog.{h,cpp}
+	tar rvf $(TARFILE) build/*/*.{inf,hrh,mmp,pkg} graph/states.png src/process_handle_observer.{h,cpp} src/timer_observer.{h,cpp} src/watchdog.{h,cpp}
 	gzip -f $(TARFILE)
 
 bindist : symbian
 	mkdir -p $(BINDIST_HOME)
 	cp $(BUILT_SIS) $(BINDIST_HOME)/$(BASENAME)-$(VERSION)-$(KIT)_$(CERT).$(SIS_EXT)
 
-release :
+release : srcdist
 	$(MAKE) bindist CERT=dev
 
 clean :
