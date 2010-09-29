@@ -55,16 +55,16 @@ codegen : src/process_handle_observer.h src/timer_observer.h src/watchdog.h
 .PRECIOUS : %.cpp
 
 SRCDIST_HOME := dist
-TARFILE := $(SRCDIST_HOME)/$(BASENAME)-$(VERSION).tar
+TARFILE := $(SRCDIST_HOME)/$(BASENAME)-$(VERSION).tar.gz
 
 srcdist :
-	mkdir -p $(SRCDIST_HOME)
-	git archive --format=tar --prefix=$(BASENAME)/ HEAD > $(TARFILE)
+	#git archive --format=tar --prefix=$(BASENAME)/ HEAD > $(TARFILE)
 	rm -rf /tmp/$(BASENAME)
 	mkdir /tmp/$(BASENAME)
-	rsync -az --relative build/*/*.{inf,hrh,mmp,pkg} graph/states.png src/process_handle_observer.{h,cpp} src/timer_observer.{h,cpp} src/watchdog.{h,cpp} /tmp/$(BASENAME)/
-	tar rvf $(TARFILE) -C /tmp/ $(BASENAME)
-	gzip -f $(TARFILE)
+	rsync -az --relative `git-ls-files` build/*/*.{inf,hrh,mmp,pkg} graph/states.png src/process_handle_observer.{h,cpp} src/timer_observer.{h,cpp} src/watchdog.{h,cpp} /tmp/$(BASENAME)/
+	mkdir -p $(SRCDIST_HOME)
+	tar czvf $(TARFILE) --mode='ug+rwX,o+rX' -C /tmp/ $(BASENAME)
+	#gzip -f $(TARFILE)
 
 bindist : symbian
 	mkdir -p $(BINDIST_HOME)
