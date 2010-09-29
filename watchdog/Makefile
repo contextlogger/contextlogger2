@@ -14,7 +14,7 @@ BASENAME := cl2watchdog
 KIT := s60_30
 SDKHOME := $(GNUPOCDEVENV)/kits/$(KIT)
 CERT := dev
-VERSION := 0.51
+VERSION := 0.52
 
 PLT_ENV := PLTCOLLECTS=`pwd`/../tools/schemelib:
 SAKE := ../tools/bin/sake --trace
