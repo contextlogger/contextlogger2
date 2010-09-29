@@ -42,6 +42,9 @@ sqlite3 $1 "select datetime(unixtime, 'unixepoch'), value, name from profile_sca
 echo KEYPRESS
 sqlite3 $1 "select datetime(unixtime, 'unixepoch'), presstimes from keypress_scan;" 
 
+echo WEBURL
+sqlite3 $1 "select datetime(unixtime, 'unixepoch'), name, url from weburl_scan;" 
+
 echo APP MESSAGES
 sqlite3 $1 "select datetime(unixtime, 'unixepoch'), message from appmessage_log;"
 

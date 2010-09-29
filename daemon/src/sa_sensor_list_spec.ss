@@ -134,6 +134,21 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
              (args ,(arg (type (ptr-to (cconst 'char))) (name 'operatorName)))
              (bindings
               (binding (index 2) (type text) (value "operatorName, strlen(operatorName)") (dispose static)))))
+
+    ;; weburl
+    (sensor (name weburl) (platforms symbian)
+            (cpp-condition "__WEBURL_ENABLED__")
+            (sql-schema "create table weburl_scan (unixtime INTEGER, name TEXT, url TEXT);")
+            (sql-statements "insert into weburl_scan (unixtime, name, url) values (?, ?, ?);")
+            (log-insert-api
+             (args
+              ,(arg (type (ptr-to (cconst 'char))) (name 'name))
+              ,(arg (type (ptr-to (cconst 'char))) (name 'url))
+              )
+             (bindings
+              (binding (index 2) (type text) (value "name, strlen(name)") (dispose static))
+              (binding (index 3) (type text) (value "url, strlen(url)") (dispose static))
+              )))
     
     ;; profile (needs a variant targeting new extended plugin)
     (sensor (name profile) (platforms symbian)

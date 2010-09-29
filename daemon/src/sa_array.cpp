@@ -85,9 +85,10 @@
 #include "sa_sensor_mark.h"
 #endif
 
-#include "epoc-cellid.hpp"
 #include "epoc-callstatus.hpp"
+#include "epoc-cellid.hpp"
 #include "epoc-smsevent.hpp"
+#include "epoc-weburl.hpp"
 
 // This file is generated, and included only once here. Code for
 // creating, destroying, starting, and stopping sensors comes from
@@ -130,9 +131,10 @@ extern "C" struct _sa_Array
 #if __MARK_ENABLED__
   sa_Sensor_mark* iSensor_mark;
 #endif
-  DECLARE_SENSOR_cellid;
   DECLARE_SENSOR_callstatus;
+  DECLARE_SENSOR_cellid;
   DECLARE_SENSOR_smsevent;
+  DECLARE_SENSOR_weburl;
 };
 
 /* Sensor starting. (Statement.)

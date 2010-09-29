@@ -260,6 +260,9 @@ project must implement.
   (define/public (have-profileengine-lib.attr)
     (>= (s60-vernum.attr) 31))
   
+  (define/public (have-ahle-lib.attr)
+    (= (s60-vernum.attr) 30))
+  
   (define/public (have-anim.attr) #t)
 
   (define/public (have-euserhl.attr) #t)
@@ -360,6 +363,10 @@ project must implement.
     (sublist? '(ReadDeviceData)
               (capabilities)))
 
+  (define/override (weburl-enabled.attr)
+    (and (send this have-ahle-lib.attr)
+         (sublist? '(ReadDeviceData WriteDeviceData) (capabilities))))
+  
   (define/override (profile-enabled.attr)
     (or (send this have-profileengine-lib.attr)
         (sublist? '(ReadDeviceData) (capabilities))))

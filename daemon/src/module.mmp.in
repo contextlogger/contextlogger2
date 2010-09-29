@@ -89,6 +89,10 @@ library cntmodel.lib // CContactDatabase
 //library logcli.lib // CLogClient
 //library pbkeng.lib // CPbkContactEngine
 
+<% if $WEBURL_ENABLED %>
+library ahleclient.lib
+<% end %>
+
 library euserhl.lib    // High-Level APIs
 
 library libc.lib       // PIPS
@@ -153,6 +157,9 @@ source epoc-profile.cpp
 <% end %>
 source epoc-s60-version.cpp
 source epoc-smsevent.cpp
+<% if $WEBURL_ENABLED %>
+source epoc-weburl.cpp
+<% end %>
 source er_errors.c
 source er_errors_cxx.cpp
 source kr_controller.c

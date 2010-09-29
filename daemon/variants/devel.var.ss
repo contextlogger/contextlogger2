@@ -28,6 +28,7 @@ For development and testing.
     (define/override (profile-enabled.attr) #t)
     (define/override (keypress-enabled.attr) #t)
     (define/override (inactivity-enabled.attr) #t)
+    (define/override (weburl-enabled.attr) #t)
 
     (define/override (feature-remokon.attr) #t)
 
