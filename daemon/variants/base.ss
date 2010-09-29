@@ -363,9 +363,13 @@ project must implement.
     (sublist? '(ReadDeviceData)
               (capabilities)))
 
+  #;
   (define/override (weburl-enabled.attr)
     (and (send this have-ahle-lib.attr)
          (sublist? '(ReadDeviceData WriteDeviceData) (capabilities))))
+  
+  (define/override (weburl-enabled.attr)
+    #f) ;; problematic sensor due to binary incompatibility
   
   (define/override (profile-enabled.attr)
     (or (send this have-profileengine-lib.attr)
