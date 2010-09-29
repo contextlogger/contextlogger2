@@ -19,16 +19,15 @@ VERSION := 0.51
 PLT_ENV := PLTCOLLECTS=`pwd`/../tools/schemelib:
 SAKE := ../tools/bin/sake --trace
 
-DIST_HOME := ../download
+BINDIST_HOME := ../download
 
 ifeq ($(CERT),dev)
-DIST_EXT := sis
+SIS_EXT := sis
 else
-DIST_EXT := sisx
+SIS_EXT := sisx
 endif
 
-BUILT_SIS := build/$(KIT)_udeb_$(CERT)/$(BASENAME).$(DIST_EXT)
-DIST_COPY := cp $(BUILT_SIS) $(DIST_HOME)/$(BASENAME)-$(VERSION)-$(KIT)_$(CERT).$(DIST_EXT)
+BUILT_SIS := build/$(KIT)_udeb_$(CERT)/$(BASENAME).$(SIS_EXT)
 
 default : symbian
 
@@ -51,12 +50,21 @@ codegen : src/process_handle_observer.h src/timer_observer.h src/watchdog.h
 .PRECIOUS : %.h
 .PRECIOUS : %.cpp
 
-dist : symbian
-	mkdir -p $(DIST_HOME)
-	$(DIST_COPY)
+SRCDIST_HOME := dist
+TARFILE := $(SRCDIST_HOME)/$(BASENAME)-$(VERSION).tar
+
+srcdist :
+	mkdir -p $(SRCDIST_HOME)
+	git archive --format=tar --prefix=$(BASENAME)/ HEAD > $(TARFILE)
+	tar rvf $(TARFILE) build/*/*.{inf,hrh,mmp,pkg} graph/states.png src/watchdog.{h,cpp}
+	gzip -f $(TARFILE)
+
+bindist : symbian
+	mkdir -p $(BINDIST_HOME)
+	cp $(BUILT_SIS) $(BINDIST_HOME)/$(BASENAME)-$(VERSION)-$(KIT)_$(CERT).$(SIS_EXT)
 
 release :
-	$(MAKE) dist CERT=dev
+	$(MAKE) bindist CERT=dev
 
 clean :
 	-rm .sake_op *~
@@ -66,12 +74,6 @@ clean :
 
 changelog :
 	darcs changes > doc/changelog.txt
-
-upload_dry :
-	$(SAKE) upload dry=true
-
-upload :
-	$(SAKE) upload
 
 #
 # Copyright 2009 Helsinki Institute for Information Technology (HIIT)
