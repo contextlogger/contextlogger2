@@ -72,9 +72,6 @@ clean :
 # Any host-specific rules.
 -include local/custom.mk
 
-changelog :
-	darcs changes > doc/changelog.txt
-
 #
 # Copyright 2009 Helsinki Institute for Information Technology (HIIT)
 # and the authors. All rights reserved.
