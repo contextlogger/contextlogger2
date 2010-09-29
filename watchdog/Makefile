@@ -60,7 +60,10 @@ TARFILE := $(SRCDIST_HOME)/$(BASENAME)-$(VERSION).tar
 srcdist :
 	mkdir -p $(SRCDIST_HOME)
 	git archive --format=tar --prefix=$(BASENAME)/ HEAD > $(TARFILE)
-	tar rvf $(TARFILE) build/*/*.{inf,hrh,mmp,pkg} graph/states.png src/process_handle_observer.{h,cpp} src/timer_observer.{h,cpp} src/watchdog.{h,cpp}
+	rm -rf /tmp/$(BASENAME)
+	mkdir /tmp/$(BASENAME)
+	rsync -az --relative build/*/*.{inf,hrh,mmp,pkg} graph/states.png src/process_handle_observer.{h,cpp} src/timer_observer.{h,cpp} src/watchdog.{h,cpp} /tmp/$(BASENAME)/
+	tar rvf $(TARFILE) -C /tmp/ $(BASENAME)
 	gzip -f $(TARFILE)
 
 bindist : symbian
