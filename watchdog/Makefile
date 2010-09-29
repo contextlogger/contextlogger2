@@ -31,7 +31,11 @@ BUILT_SIS := build/$(KIT)_udeb_$(CERT)/$(BASENAME).$(SIS_EXT)
 
 default : symbian
 
-symbian : codegen
+.info.rb : Makefile
+	echo '$$BASENAME = "'$(BASENAME)'"' > $@
+	echo '$$VERSION = "'$(VERSION)'"' >> $@
+
+symbian : .info.rb codegen
 	$(SAKE) kits=s60_30 udeb=true logging=true cert=$(CERT)
 
 symbian_all : autostart.rsc symbian

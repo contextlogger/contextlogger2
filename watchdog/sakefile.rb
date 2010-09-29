@@ -12,12 +12,15 @@ def try_load file
   rescue LoadError; end
 end
 
+load(".info.rb")
+
 $uid_v9 = 0x08460006
-$basename = "cl2watchdog"
+$basename = ($BASENAME || raise)
+$version = $VERSION.split(".").map {|x| x.to_i}
 
 $proj = Sake::Project.new(:basename => $basename,
                           :name => "CL2 Watchdog",
-                          :version => [0, 2],
+                          :version => $version,
                           :uid => Sake::Uid.v9($uid_v9),
                           :vendor => "HIIT")
 
