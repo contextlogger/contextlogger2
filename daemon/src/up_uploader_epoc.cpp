@@ -476,14 +476,14 @@ void CUploader::PosterEvent(TInt anError)
 	  gx_txtlog_error_free(localError);
 	  FatalError(KErrGeneral);
 	} else {
-	  logf("posted log file '%s'", iFileToPost);
+	  log_db_log_status(iLogDb, NULL, "posted log file '%s'", iFileToPost);
 	  iNumPostFailures = 0;
 	  iFileToPost = NULL;
 
 	  {
 	    time_t t = time(NULL);
 	    if (t == -1) {
-	      px_dblog_fatal_errno(iLogDb);
+	      er_log_errno(er_FATAL, "time()");
 	      return;
 	    }
 	    ac_global_Registry->last_upload_time = t;
@@ -504,7 +504,7 @@ void CUploader::PosterEvent(TInt anError)
       {
         // We must be doing something wrong. Better stop altogether,
         // barring external intervention.
-	logt("inactivating uploader due to a permanent posting failure");
+	er_log_none(0, "inactivating uploader due to a permanent posting failure");
 	Inactivate();
         break;
       }
@@ -670,7 +670,8 @@ void CUploader::TakeSnapshotNowL()
   // for renaming rather than copying.
   char* pathname = tempnam(LOG_UPLOADS_DIR, "log_"); // caller must free 'pathname'
   if (!pathname) {
-    logf("failure in tempnam: %s (%d)", strerror(errno), errno);
+    er_log_errno(0, "failure in tempnam");
+    //logf("failure in tempnam: %s (%d)", strerror(errno), errno);
     User::Leave(KErrGeneral);
   }
   
@@ -683,6 +684,8 @@ void CUploader::TakeSnapshotNowL()
     gx_txtlog_error_free(snapError);
     User::Leave(KErrGeneral);
   }
+
+  log_db_log_status(iLogDb, NULL, "snapshot taken as '%s'", pathname);
 
   iFileToPost = pathname;
   iSnapshotTimePassed = EFalse;
