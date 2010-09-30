@@ -69,7 +69,11 @@ void CSensor_weburl::LogDataL()
   for (TInt i = 0; i < numItems; i++) {
     TPtrC url16(urlArray->MdcaPoint(i));
     TInt dummyPos;
-    if ((!iOldUrlArray) ||
+    // We will not log the initial full set, which probably means that
+    // we miss the first URL browsed. But then again, we do anyway
+    // miss URLs that are revisited while still in history, and that
+    // is a bigger problem.
+    if ((iOldUrlArray) &&
 	// This returns zero if a match is found.
 	// iOldUrlArray must be sorted for this to work.
 	iOldUrlArray->FindIsq(url16, dummyPos, ECmpNormal)) {
