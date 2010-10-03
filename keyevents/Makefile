@@ -5,7 +5,7 @@ SAKE := ../tools/bin/sake
 
 default : symbian
 
-symbian : symbian30 symbian31 symbian32
+symbian : symbian30 symbian31 symbian32 symbian50
 
 symbian30 :
 	$(SAKE) --trace kits=s60_30 udeb=true cert=$(CERT)
@@ -15,6 +15,9 @@ symbian31 :
 
 symbian32 :
 	$(SAKE) --trace kits=s60_32 udeb=true cert=$(CERT)
+
+symbian50 :
+	$(SAKE) --trace kits=s60_50 udeb=true cert=$(CERT)
 
 makefiles :
 	$(SAKE) --trace kits=s60_30 udeb=true cert=$(CERT) makefiles

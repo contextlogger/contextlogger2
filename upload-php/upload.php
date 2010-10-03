@@ -24,7 +24,7 @@ if ( isset($_FILES) &&
 
   dbgPrint("HTTP upload fields in \$_FILES were correct",$f);
   
-  if($file["error"] == UPLOAD_ERR_OK) {
+  if($_FILES["logdata"]["error"] == UPLOAD_ERR_OK) {
     $logTmpName=$_FILES['logdata']['tmp_name'];
     $logName=$_FILES['logdata']['name'];
 
@@ -48,7 +48,7 @@ if ( isset($_FILES) &&
   }
   else {
     header("Status: 400 Bad request",true,400);
-    dbgPrint("ERROR in upload, error code=".$file["error"].
+    dbgPrint("ERROR in upload, error code=".$_FILES["logdata"]["error"].
              "\n\$_FILES=".print_r($_FILES,true),$f);
   }
 }

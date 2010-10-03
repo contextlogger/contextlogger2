@@ -2,6 +2,11 @@
 
 #if __WEBURL_ENABLED__
 
+/*
+http://wiki.forum.nokia.com/index.php/Adaptive_History_List_API
+http://wiki.forum.nokia.com/index.php/Adaptive_History_List_API_for_5th_Edition
+*/
+
 #include "er_errors.h"
 #include "log-db-logging.h"
 #include "sa_sensor_list_log_db.h"
