@@ -64,8 +64,8 @@ require 'rbconfig'
 #   even be defined.
 require 'sake0/rake071hiit'
 
-require 'efileutils1'
-include EFileUtils1
+require 'sakefileutils1'
+include SakeFileUtils1
 
 def verbose(value = nil, &block)
   unless value.nil?

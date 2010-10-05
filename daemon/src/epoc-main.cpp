@@ -76,7 +76,7 @@ void CMainObj::ConstructL() // activates the object
 
 void CMainObj::AppContextReady(TInt aError)
 {
-  logh();
+  logt("app context ready");
 
   if (aError) {
     er_log_symbian(er_FATAL, aError, "error in app ctx async init");

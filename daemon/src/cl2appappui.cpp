@@ -109,7 +109,7 @@ void CCl2appAppUi::ConstructL()
 
 void CCl2appAppUi::AppContextReady(TInt aError)
 {
-  logh();
+  logt("app context ready");
 
   if (aError) {
     er_log_symbian(er_FATAL, aError, "error in app ctx async init");

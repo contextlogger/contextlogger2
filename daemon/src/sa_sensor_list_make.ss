@@ -167,6 +167,10 @@
   ;; remain valid during all subsequent calls to sqlite3_step() on the
   ;; statement handle. Or until you bind a different value to the same
   ;; parameter."
+  ;; 
+  ;; Below we always bind all the values and then proceed to step. If
+  ;; at any point we fail, we will not step before binding all the
+  ;; values (next time). So should be safe.
   (define (maybe-dispose type dispose)
     (if dispose
         (string-append ", "
@@ -193,7 +197,6 @@
                  (body-text
                   (capture-output
                    (thunk
-                    (display-nl "gboolean rval = TRUE;")
                     (display-nl "time_t now = time(NULL); if (now == -1) { goto posix_fail; }")
                     (display-nl (format "if (sqlite3_bind_int(~a, 1, now)) { goto sql_fail; }" stmt-var))
                     (for-each
@@ -205,12 +208,11 @@
                               (func-name (bind-func-by-type type)))
                          (display-nl (format "if (~a(~a, ~a, ~a~a)) { goto sql_fail; }" func-name stmt-var index value (maybe-dispose type dispose)))))
                      binding-list)
-                    (display-nl (format "if (sqlite3_step(~a) != SQLITE_DONE) goto sql_fail;" stmt-var))
+                    (display-nl (format "if (sqlite3_step(~a) != SQLITE_DONE) { goto sql_fail; }" stmt-var))
                     (display-nl (format "if (sqlite3_reset(~a)) goto sql_fail;" stmt-var))
-                    (display-nl "goto done;")
-                    (display-nl "posix_fail: rval = FALSE; if (error) *error = gx_error_new(domain_cl2app, code_time_query, \"failed to access current time: %s (%d)\", strerror(errno), errno); goto done;")
-                    (display-nl (format "sql_fail: rval = FALSE; if (error) *error = gx_error_new(domain_cl2app, code_database_command, \"failed to log ~a event: %s (%d)\", sqlite3_errmsg(self->db), sqlite3_errcode(self->db));" sensor-name))
-                    (display "done: return rval;")
+                    (display-nl "return TRUE;")
+                    (display-nl "posix_fail: if (error) *error = gx_error_new(domain_cl2app, code_time_query, \"failed to access current time: %s (%d)\", strerror(errno), errno); return FALSE;")
+                    (display (format "sql_fail: if (error) *error = gx_error_new(domain_cl2app, code_database_command, \"failed to log ~a event: %s (%d)\", sqlite3_errmsg(self->db), sqlite3_errcode(self->db)); return FALSE;" sensor-name))
                     )))
                  (func-decl
                   (func (name func-name) cexport

@@ -259,6 +259,8 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
            (assign (field-on 'iClosure 'changed)
                    (format "ClosureFunc_~a" data-name))
            (assign (field-on 'iClosure 'arg) 'this)
+           (only-unless (call 'bb_Blackboard_register (list (call 'ac_get_Blackboard '(iAppContext)) 'bb_dt_flightmode 'iClosure 'NULL))
+                        (call 'User::LeaveNoMemory))
            )))
      
      (ic flightmode?

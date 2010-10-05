@@ -323,7 +323,7 @@ kr_Controller* kr_Controller_new(GError** error)
 
   return self;
 
-#if HAVE_TRAP_OOM
+#if 0
  fail:
   kr_Controller_destroy(self);
   if (error) *error = gx_error_no_memory;
@@ -339,7 +339,7 @@ void kr_Controller_destroy(kr_Controller* self)
     // responsible for deregistering.
 
 #if HAVE_PLAT_AO
-  kr_PlatAo_destroy(self->platAo);
+    kr_PlatAo_destroy(self->platAo);
 #endif
 
 #if __FEATURE_REMOKON__
