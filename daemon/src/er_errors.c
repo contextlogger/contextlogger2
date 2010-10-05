@@ -99,6 +99,7 @@ void er_log_base(int opt, void* errObj,
     } else {
       if (!log_db_log_status_direct(logDb, NULL, log_msg)) {
 	logt("logging failure in er_log_base");
+	logf("tried to log: %s", log_msg); // at least txtlog, then
 	opt |= er_FATAL;
       }
     }

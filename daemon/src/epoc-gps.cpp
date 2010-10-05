@@ -645,7 +645,7 @@ gboolean CSensor_gps::PositionerEventL(GError** error)
 	}
       }
     } else {
-      logt("warning, unknown gps request status code");
+      logf("warning, unknown gps request status code (%d)", errCode);
     }
     iPositioner->MakeRequest();
   }

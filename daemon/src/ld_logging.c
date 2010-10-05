@@ -55,7 +55,7 @@ gboolean log_db_log_btprox(LogDb* self,
     goto sql_fail;
   if (sqlite3_reset(self->stmts.btproxScanStmt))
     goto sql_fail;
-  logt("btprox scan entry insert done");
+  //logt("btprox scan entry insert done");
 
   assert(self->db);
   sqlite3_int64 scanId = sqlite3_last_insert_rowid(self->db);

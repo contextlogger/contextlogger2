@@ -77,8 +77,7 @@ void CSensor_indicator::HandleTimer()
   int errCode = iStatus.Int();
   if (errCode) {
     // unexpected with an interval timer
-    logt("retry timer error in indicator");
-    ex_txtlog_fatal_error(errCode);
+    er_log_symbian(er_FATAL, errCode, "retry timer error in indicator");
     return;
   }
   MakeRequest();

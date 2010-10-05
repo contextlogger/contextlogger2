@@ -348,12 +348,10 @@ void CUploader::NextOldFileL()
       return;
     } else {
       iNoOldFiles = ETrue;
-      logt("no more old files to upload");
+      dblogt("no more old files to upload");
     }
   } else {
-    // A leave here is considered fatal regardless of the error.
-    gx_dblog_error_free(iLogDb, error);
-    User::Leave(KErrGeneral);
+    er_log_gerror(er_FATAL|er_FREE, error, "getting next log file");
   }
 }
 
@@ -384,7 +382,7 @@ void CUploader::SetSnapshotTimerL()
     return;
   }
   if (!snaptime) {
-    logt("no snapshot time upcoming");
+    dblogt("no snapshot time upcoming");
     iNoNextSnapshotTime = ETrue;
     return;
   }
@@ -465,7 +463,7 @@ void CUploader::HandleTimerEvent(CTimerAo* aTimerAo, TInt errCode)
 
 void CUploader::PosterEvent(TInt anError)
 {
-  logf("poster reports %d", anError);
+  dblogf("poster reports %d", anError);
 
   switch (anError)
     {
@@ -658,21 +656,19 @@ void CUploader::PostNowL()
   TFileName fileNameDes;
   // Our names should all be ASCII, so this may be overkill.
   User::LeaveIfError(CnvUtfConverter::ConvertToUnicodeFromUtf8(fileNameDes, fileName));
-  logf("asking poster to post '%s'", iFileToPost);
+  dblogf("asking poster to post '%s'", iFileToPost);
   iPosterAo->PostFileL(iUploadUrl, fileNameDes);
 }
 
 void CUploader::TakeSnapshotNowL()
 {
-  logt("taking snapshot now");
+  dblogt("taking snapshot now");
 
   // LOG_UPLOADS_DIR and LOGDB_DIR must be on the same device to allow
   // for renaming rather than copying.
   char* pathname = tempnam(LOG_UPLOADS_DIR, "log_"); // caller must free 'pathname'
   if (!pathname) {
-    er_log_errno(0, "failure in tempnam");
-    //logf("failure in tempnam: %s (%d)", strerror(errno), errno);
-    User::Leave(KErrGeneral);
+    er_log_errno(er_FATAL, "failure in tempnam");
   }
   
   gboolean wasRenamed = FALSE;
@@ -681,8 +677,7 @@ void CUploader::TakeSnapshotNowL()
     logf("failure taking snapshot to file '%s'", pathname);
     free(pathname);
     logf("snapshot file was%s created", wasRenamed ? "" : " not");
-    gx_txtlog_error_free(snapError);
-    User::Leave(KErrGeneral);
+    er_log_gerror(er_FATAL|er_FREE, snapError, "taking snapshot");
   }
 
   log_db_log_status(iLogDb, NULL, "snapshot taken as '%s'", pathname);

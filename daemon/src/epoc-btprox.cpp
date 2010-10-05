@@ -315,7 +315,7 @@ gboolean CSensor_btprox::HandleScanEventL(TInt errCode, GError** error)
 	  // result still stands. Is it necessary to know the time
 	  // of the attempt to scan a different set?
 	  
-	  logt("bt device set unchanged");
+	  //logt("bt device set unchanged");
 	}
       iState = EScanWaiting;
       SetTimer(); // wait before scanning for more
@@ -323,8 +323,8 @@ gboolean CSensor_btprox::HandleScanEventL(TInt errCode, GError** error)
   else if (errCode) // some error
     {
       iNumScanFailures++;
-      logf("%dth consecutive failure in btprox: %s (%d)", 
-	   iNumScanFailures, plat_error_strerror(errCode), errCode);
+      dblogf("%dth consecutive failure in btprox: %s (%d)", 
+	     iNumScanFailures, plat_error_strerror(errCode), errCode);
       iState = ERetryWaiting;
       SetTimer();
     } 
