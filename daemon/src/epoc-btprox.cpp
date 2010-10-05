@@ -201,7 +201,7 @@ TBool CSensor_btprox::EnsureBtInit()
     return TRUE;
   }
 
-  logf("BT init failed in btprox scanner: %s (%d)", plat_error_strerror(errCode), errCode);
+  dblogf("BT init failed in btprox scanner: %s (%d)", plat_error_strerror(errCode), errCode);
   return FALSE;
 }
 
@@ -234,7 +234,7 @@ void CSensor_btprox::RefreshBaseScanIntervalSecs()
   try_get_ConfigDb_int("sensor.btprox.interval",
 		       &iBaseScanIntervalSecs,
 		       NULL, NULL);
-  logf("btprox scan interval set to %d secs", iBaseScanIntervalSecs);
+  dblogf("btprox scan interval set to %d secs", iBaseScanIntervalSecs);
 }
 
 void CSensor_btprox::SetTimer() 
@@ -351,7 +351,7 @@ gboolean CSensor_btprox::HandleScanEventL(TInt errCode, GError** error)
 	item->address = g_strdup((gchar*)(addrBuf8.PtrZ()));
 	g_ptr_array_add(iResult, item);
 	UNSET_TRAP_OOM();
-	logf("discovered bt device '%s' '%s'", item->address, item->name);
+	//logf("discovered bt device '%s' '%s'", item->address, item->name);
       }
       BtNext();
     }

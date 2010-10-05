@@ -140,7 +140,7 @@ void CPositioner_gps::ConstructL()
 
   User::LeaveIfError(iPositioner.SetUpdateOptions(iUpdateOptions));
 
-  logf("gps scan interval set to %d secs", iUpdateIntervalSecs);
+  dblogf("gps scan interval set to %d secs", iUpdateIntervalSecs);
 }
 
 CPositioner_gps::~CPositioner_gps()
@@ -270,13 +270,11 @@ TBool CSensor_gps::ChooseBestPositionerL(TPositionModuleId& aBestId)
 
 #if __DO_LOGGING__
     {
-      // Risky since do not know how long the name can be, but okay
-      // since this is for the debug build only.
-      TBuf<50> moduleName;
+      TBuf<KPositionMaxModuleName> moduleName;
       moduleInfo.GetModuleName(moduleName);
-      gchar nameString[101];
-      ConvToUtf8CString(nameString, 100, moduleName);
+      gchar* nameString = ConvToUtf8CStringL(moduleName);
       logf("considering positioning module '%s'", nameString);
+      g_free(nameString);
     }
 #endif
 
@@ -313,15 +311,15 @@ TBool CSensor_gps::ChooseBestPositionerL(TPositionModuleId& aBestId)
   }
   if (bestIndex >= 0) {
     User::LeaveIfError(iPositionServer.GetModuleInfoByIndex(bestIndex, moduleInfo));
-#if __DO_LOGGING__
-    // Risky since do not know how long the name can be, but okay
-    // since this is for the debug build only.
-    TBuf<50> moduleName;
-    moduleInfo.GetModuleName(moduleName);
-    gchar nameString[101];
-    ConvToUtf8CString(nameString, 100, moduleName);
-    logf("chose positioning module '%s'", nameString);
-#endif
+
+    {
+      TBuf<KPositionMaxModuleName> moduleName;
+      moduleInfo.GetModuleName(moduleName);
+      gchar* nameString = ConvToUtf8CStringL(moduleName);
+      dblogf("chose positioning module '%s'", nameString);
+      g_free(nameString);
+    }
+
     aBestId = moduleInfo.ModuleId();
     return ETrue;
   }
@@ -365,7 +363,7 @@ gboolean CSensor_gps::RunGL(GError** error)
   assert_error_unset(error);
 
   TInt errCode = iStatus.Int();
-  logf("module status event (%d)", errCode);
+  dblogf("positioning module status event (%d)", errCode);
 
   if (errCode) {
     Stop();
@@ -398,7 +396,7 @@ gboolean CSensor_gps::RunGL(GError** error)
     logf("occurred position events: %d", (int)occurredEvents);
     if (occurredEvents & TPositionModuleStatusEventBase::EEventDeviceStatus) {
       TPositionModuleStatus::TDeviceStatus deviceStatus = moduleStatus.DeviceStatus();
-      logf("device status now %d", (int)deviceStatus);
+      dblogf("device status now %d", (int)deviceStatus);
       if (aboutCurrent && 
 	  ((deviceStatus == TPositionModuleStatus::EDeviceDisabled) ||
 	   (deviceStatus == TPositionModuleStatus::EDeviceError) ||
@@ -424,7 +422,7 @@ gboolean CSensor_gps::RunGL(GError** error)
     // optimal way necessarily.
     if (occurredEvents & TPositionModuleStatusEventBase::EEventSystemModuleEvent) {
       TPositionModuleStatusEventBase::TSystemModuleEvent systemModuleEvent = iPositionModuleStatusEvent.SystemModuleEvent();
-      logf("system module event was %d", (int)systemModuleEvent);
+      dblogf("system module event was %d", (int)systemModuleEvent);
       if (aboutCurrent &&
 	  ((systemModuleEvent == TPositionModuleStatusEventBase::ESystemError) || (systemModuleEvent == TPositionModuleStatusEventBase::ESystemModuleRemoved))) {
 	CurrentModuleUnavailable();
@@ -468,7 +466,7 @@ gboolean CSensor_gps::PositionerEventL(GError** error)
     // there may be immediate error returns in cases such as a
     // positioning module being or having become unavailable.
     iNumScanFailures++;
-    logf("%dth consecutive failure in gps: %s (%d)", iNumScanFailures, plat_error_strerror(errCode), errCode);
+    dblogf("%dth consecutive failure in gps: %s (%d)", iNumScanFailures, plat_error_strerror(errCode), errCode);
     // xxx maybe should support KErrServerBusy by trying again only after a small delay
     switch (errCode) {
     case KErrAccessDenied: // Perhaps some capability thing.
@@ -645,7 +643,7 @@ gboolean CSensor_gps::PositionerEventL(GError** error)
 	}
       }
     } else {
-      logf("warning, unknown gps request status code (%d)", errCode);
+      dblogf("warning, unknown gps request status code (%d)", errCode);
     }
     iPositioner->MakeRequest();
   }

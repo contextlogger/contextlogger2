@@ -111,8 +111,8 @@ void CSensor_indicator::HandleRead()
     logf("%dth consecutive failure in indicator", iNumScanFailures);
 
     if (iNumScanFailures < 100) {
-      logf("ERROR: %dth consecutive failure reading indicator sensor: %s (%d)", 
-	   iNumScanFailures, plat_error_strerror(errCode), errCode);
+      dblogf("ERROR: %dth consecutive failure reading indicator sensor: %s (%d)", 
+	     iNumScanFailures, plat_error_strerror(errCode), errCode);
 
       SetTimer();
     } else {

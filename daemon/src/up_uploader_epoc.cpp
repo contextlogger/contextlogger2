@@ -411,7 +411,7 @@ void CUploader::SetPostTimer()
   // Roughly num_failures * 5 mins.     xxx perhaps this should be computed by a Lua function coming from ConfigDb
   int secs = 5 * 60 * iNumPostFailures + (rand() % 60);
   TTimeIntervalMicroSeconds32 interval = SecsToUsecs(secs);
-  logf("retrying upload in %d secs / %d usecs", secs, interval.Int());
+  dblogf("retrying upload in %d secs / %d usecs", secs, interval.Int());
 
   // Note that these timers should not complete with KErrAbort, since
   // a wait for an interval should not be affected by a system time
@@ -566,7 +566,7 @@ void CUploader::HandleCommsError(TInt anError)
 	// We do not yet have logic for handling this kind of
 	// error, so inactivate. Future versions may implement
 	// this better.
-	logf("inactivating uploader due to Symbian error %d", anError);
+	dblogf("inactivating uploader due to Symbian error %d", anError);
 	Inactivate();
 	break;
       }

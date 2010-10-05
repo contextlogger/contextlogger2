@@ -568,7 +568,7 @@ void This::HandleSignal(TInt aError,
 
     int dbm = -(aData.iSignalStrength);
     int bars = aData.iBar;
-    logf("network signal strength: %d dBm (%d bars)", dbm, bars);
+    //logf("network signal strength: %d dBm (%d bars)", dbm, bars);
     log_db_log_signal(logDb, dbm, bars, NULL);
     iNotifier->MakeRequest();
 
