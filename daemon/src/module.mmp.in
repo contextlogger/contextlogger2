@@ -173,7 +173,7 @@ source lua_bindings.cpp
 source lua_cl2.cpp
 //source lua_linit_cl2.c
 source log-db.c
-source log-db-create.c
+source ld_create.c
 source log-db-logging.c
 <% if $FEATURE_REMOKON %>
 source rk_jabber_session.c
