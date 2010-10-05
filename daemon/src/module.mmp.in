@@ -172,9 +172,9 @@ source local_server.cpp
 source lua_bindings.cpp
 source lua_cl2.cpp
 //source lua_linit_cl2.c
-source log-db.c
+source ld_log_db.c
 source ld_create.c
-source log-db-logging.c
+source ld_logging.c
 <% if $FEATURE_REMOKON %>
 source rk_jabber_session.c
 source rk_remokon.c

@@ -8,7 +8,7 @@
 #include "cf_query.h"
 #include "epoc-iap.h"
 #include "er_errors.h"
-#include "log-db.h"
+#include "ld_log_db.h"
 #include "timer_generic_epoc.h"
 #include "utils_cl2.h"
 

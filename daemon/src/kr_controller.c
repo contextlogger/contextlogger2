@@ -266,9 +266,7 @@ kr_Controller* kr_Controller_new(GError** error)
     return NULL;
   }
   
-  LogDb* log = NULL;
-  // GOB2 generated API, must guard against OOM errors in boilerplate.
-  TRAP_OOM_FAIL(log = log_db_new(error));
+  LogDb* log = LogDb_new(error);
   if (G_UNLIKELY(!log)) {
     kr_Controller_destroy(self);
     return NULL;
@@ -364,7 +362,8 @@ void kr_Controller_destroy(kr_Controller* self)
     self->scanner = NULL;
     //logt("scanner array destroyed");
     
-    XDECREF(self->log);
+    LogDb_destroy(self->log);
+    self->log = NULL;
     //logt("LogDb session destroyed");
 
     ConfigDb_destroy(self->configDb);

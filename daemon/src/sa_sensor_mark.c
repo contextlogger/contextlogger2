@@ -3,7 +3,7 @@
 #if __MARK_ENABLED__
 
 #include "er_errors.h"
-#include "log-db-logging.h"
+#include "ld_logging.h"
 #include "sa_sensor_list_log_db.h"
 #include "ut_timer.h"
 

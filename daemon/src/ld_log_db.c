@@ -17,6 +17,26 @@
 #include <string.h> /* memset() */
 #include <time.h>
 
+static void 
+log_db_close_session (LogDb * self)
+{
+  if (self->db) {
+    destroy_sql_statements(self);
+
+    // Note that prepared statements and BLOB handles must be
+    // freed separately.
+    int errCode = sqlite3_close(self->db);
+#if __DO_LOGGING__
+    if (errCode) {
+      // A close failure is probably a programming error, so we
+      // shall log it.
+      logf("sqlite3_close failure %d", errCode);
+    }
+#endif
+    self->db = NULL;
+  }
+}
+
 static gboolean 
 log_db_open_session (LogDb * self, GError ** error)
 {
@@ -42,26 +62,6 @@ log_db_open_session (LogDb * self, GError ** error)
   }
   
   return TRUE;
-}
-
-static void 
-log_db_close_session (LogDb * self)
-{
-  if (self->db) {
-    destroy_sql_statements(self);
-
-    // Note that prepared statements and BLOB handles must be
-    // freed separately.
-    int errCode = sqlite3_close(self->db);
-#if __DO_LOGGING__
-    if (errCode) {
-      // A close failure is probably a programming error, so we
-      // shall log it.
-      logf("sqlite3_close failure %d", errCode);
-    }
-#endif
-    self->db = NULL;
-  }
 }
 
 // text:: A zero-terminated string, in UTF-8. Ownership is not
@@ -118,7 +118,7 @@ static gboolean log_text_to_db(LogDb* self,
 }
 
 LogDb * 
-log_db_new (GError ** error)
+LogDb_new (GError ** error)
 {
   assert_error_unset(error);
 
@@ -151,7 +151,7 @@ LogDb_destroy (LogDb * self)
 gboolean 
 log_db_log_status_direct (LogDb * self, GError ** error, const char * text)
 {
-  return log_text_to_db(self, text, self->_priv->stmts.statusStmt,
+  return log_text_to_db(self, text, self->stmts.statusStmt,
 			"failed to log status: %s (%d)", error);
 }
 

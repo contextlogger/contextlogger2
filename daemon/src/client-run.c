@@ -9,6 +9,8 @@
 #include "common/assertions.h"
 #include "common/logging-stack.h"
 
+#include <glib-object.h> // g_type_init
+
 #include <stdio.h>
 #include <stdlib.h>
 

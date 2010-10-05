@@ -6,7 +6,7 @@
 #if __BTPROX_ENABLED__
 
 #include "epoc-ao-gerror.hpp"
-#include "log-db.h"
+#include "ld_log_db.h"
 #include "utils_cl2.h"
 
 #include <bt_sock.h>

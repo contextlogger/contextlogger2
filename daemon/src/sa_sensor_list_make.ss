@@ -126,7 +126,7 @@
      (thunk
       (for-each-statement
        (lambda (sensor-name cpp-condition stmt-name stmt-sql)
-         (alet write-them (thunk (display-nl (format "if (sqlite_prepare(self->db, ~s, -1, &(self->_priv->stmts.~a~aStmt), 0)) { goto fail; }" stmt-sql sensor-name stmt-name)))
+         (alet write-them (thunk (display-nl (format "if (sqlite_prepare(self->db, ~s, -1, &(self->stmts.~a~aStmt), 0)) { goto fail; }" stmt-sql sensor-name stmt-name)))
                (with-cpp-condition-harness cpp-condition write-them))))
       (display-nl "return TRUE;")
       (display-nl "fail:")
@@ -138,7 +138,7 @@
      (thunk
       (for-each-statement
        (lambda (sensor-name cpp-condition stmt-name stmt-sql)
-         (alet write-them (thunk (display-nl (format "if (self->_priv->stmts.~a~aStmt) { sqlite3_finalize(self->_priv->stmts.~a~aStmt); self->_priv->stmts.~a~aStmt = NULL; }" sensor-name stmt-name sensor-name stmt-name sensor-name stmt-name)))
+         (alet write-them (thunk (display-nl (format "if (self->stmts.~a~aStmt) { sqlite3_finalize(self->stmts.~a~aStmt); self->stmts.~a~aStmt = NULL; }" sensor-name stmt-name sensor-name stmt-name sensor-name stmt-name)))
                (with-cpp-condition-harness cpp-condition write-them))))
       (display "return;"))))
 
@@ -188,12 +188,11 @@
                  (func-name (format "log_db_log_~a" sensor-name))
                  (specific-args (fget-opt-nlist-elem-1up-e api 'args))
                  (stmt-id (fget-opt-nlist-elem-1 api 'statement))
-                 (stmt-var (format "self->_priv->stmts.~a~aStmt" sensor-name (or stmt-id "")))
+                 (stmt-var (format "self->stmts.~a~aStmt" sensor-name (or stmt-id "")))
                  (binding-list (fget-opt-nlist-elem-1up-e api 'bindings))
                  (body-text
                   (capture-output
                    (thunk
-                    (display-nl "mutex_lock(&self->mutex);")
                     (display-nl "gboolean rval = TRUE;")
                     (display-nl "time_t now = time(NULL); if (now == -1) { goto posix_fail; }")
                     (display-nl (format "if (sqlite3_bind_int(~a, 1, now)) { goto sql_fail; }" stmt-var))
@@ -211,7 +210,7 @@
                     (display-nl "goto done;")
                     (display-nl "posix_fail: rval = FALSE; if (error) *error = gx_error_new(domain_cl2app, code_time_query, \"failed to access current time: %s (%d)\", strerror(errno), errno); goto done;")
                     (display-nl (format "sql_fail: rval = FALSE; if (error) *error = gx_error_new(domain_cl2app, code_database_command, \"failed to log ~a event: %s (%d)\", sqlite3_errmsg(self->db), sqlite3_errcode(self->db));" sensor-name))
-                    (display "done: mutex_unlock(&self->mutex); return rval;")
+                    (display "done: return rval;")
                     )))
                  (func-decl
                   (func (name func-name) cexport
@@ -233,14 +232,14 @@
      (includes
       (system-include "glib.h")
       (local-include "application_config.h")
-      (local-include "log-db.h")
+      (local-include "ld_log_db.h")
       (local-include "sqlite_cl2.h")
       (local-include "common/utilities.h")
       )
      (body
 
       (cxx-internal-declarations
-       "#include \"log-db-private.h\""
+       "#include \"ld_private.h\""
        )
       
       (cxx-internal-declarations

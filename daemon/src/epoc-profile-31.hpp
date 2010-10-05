@@ -5,7 +5,7 @@
 
 #if __PROFILE_ENABLED__ && __HAVE_PROFILEENGINE_LIB__
 
-#include "log-db.h"
+#include "ld_log_db.h"
 
 #include <glib.h>
 

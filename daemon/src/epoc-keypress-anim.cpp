@@ -2,7 +2,7 @@
 
 #if __KEYPRESS_ENABLED__ && __HAVE_ANIM__
 
-#include "log-db-logging.h"
+#include "ld_logging.h"
 #include "sa_sensor_list_log_db.h"
 
 #include "common/assertions.h"

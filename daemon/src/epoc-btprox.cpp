@@ -5,7 +5,7 @@
 #include "cf_query.h"
 #include "er_errors.h"
 #include "kr_controller_private.h"
-#include "log-db-logging.h"
+#include "ld_logging.h"
 #include "utils_cl2.h"
 
 #include "common/epoc-time.h"

@@ -20,7 +20,7 @@
 #include "config_db.h"
 #include "cf_rcfile.h"
 #include "kr_controller.h"
-#include "log-db.h"
+#include "ld_log_db.h"
 
 #include <time.h>
 

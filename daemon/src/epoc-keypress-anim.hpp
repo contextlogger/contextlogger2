@@ -11,7 +11,7 @@
 
 #if __KEYPRESS_ENABLED__ && __HAVE_ANIM__
 
-#include "log-db.h"
+#include "ld_log_db.h"
 #include "utils_cl2.h"
 
 #include "keyevents/client.h" // third-party library

@@ -2,7 +2,7 @@
 
 #include "cf_query.h"
 #include "kr_controller_private.h" // for runtime config queries
-#include "log-db-logging.h" // for error handling routines
+#include "ld_logging.h" // for error handling routines
 
 #include "common/assertions.h"
 #include "common/error_list.h"

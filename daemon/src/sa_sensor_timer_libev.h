@@ -5,7 +5,7 @@
 
 #if __TIMER_ENABLED__
 
-#include "log-db.h"
+#include "ld_log_db.h"
 
 #include <glib.h>
 

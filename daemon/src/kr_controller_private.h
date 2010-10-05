@@ -9,7 +9,7 @@
 #include "cf_rcfile.h"
 #include "config_db.h"
 #include "local_server.h"
-#include "log-db.h"
+#include "ld_log_db.h"
 #include "kr_plat_ao.h"
 #include "rk_remokon.h"
 #include "sa_array.h"

@@ -6,7 +6,7 @@
 #if __CELLID_ENABLED__
 
 #include "ac_app_context.h"
-#include "log-db.h"
+#include "ld_log_db.h"
 #include "utils_cl2.h"
 
 #include <e32base.h>

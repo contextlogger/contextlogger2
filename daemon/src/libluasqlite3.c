@@ -60,8 +60,7 @@ VMs left and right, and we want that to stay fast.
 #include "libluasqlite3.h"
 
 #include "ac_app_context.h"
-//#include "kr_controller_private.h"
-#include "log-db.h"
+#include "ld_private.h"
 #include "sqlite_cl2.h"
 
 #include "lua.h"

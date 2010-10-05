@@ -23,7 +23,7 @@
 // For info on accessing additional profile info on 3rd,
 // see http://mikie.iki.fi/wordpress/?p=31
 
-#include "log-db.h"
+#include "ld_log_db.h"
 
 NONSHARABLE_CLASS(CSensor_profile) : public CBase, 
 				     public MProfileChangeObserver

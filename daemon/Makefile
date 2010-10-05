@@ -5,7 +5,7 @@ VARIANT_NAME := s60_30_dev
 CC := gcc
 
 SRC_PATH := src
-APP_C_FILES := cf_query.c client-run.c config_db.c db_creation.c er_errors.c kr_controller.c libluasqlite3.c ld_create.c log-db-logging.c posix-main.c rk_jabber_session.c rk_remokon.c sa_sensor_list_log_db.c sa_sensor_mark.c sa_sensor_timer_libev.c up_shared.c up_uploader_curl.c ut_timer_libev.c utils_cl2.c
+APP_C_FILES := cf_query.c client-run.c config_db.c db_creation.c er_errors.c kr_controller.c libluasqlite3.c ld_create.c ld_log_db.c ld_logging.c posix-main.c rk_jabber_session.c rk_remokon.c sa_sensor_list_log_db.c sa_sensor_mark.c sa_sensor_timer_libev.c up_shared.c up_uploader_curl.c ut_timer_libev.c utils_cl2.c
 APP_CXX_FILES := ac_app_context.cpp bb_blackboard.cpp cf_rcfile.cpp lua_bindings.cpp lua_cl2.cpp sa_array.cpp
 
 SHARED_PATH := ../shared
@@ -40,17 +40,7 @@ endif
 C_FILES := $(patsubst %, $(SRC_PATH)/%, $(APP_C_FILES)) $(patsubst %, $(SHARED_PATH)/common/%, $(SHARED_C_FILES)) $(patsubst %, $(TIMESPEC_PATH)/%, $(TIMESPEC_C_FILES)) $(FULL_IKSEMEL_C_FILES)
 CXX_FILES := $(patsubst %, $(SRC_PATH)/%, $(APP_CXX_FILES)) $(patsubst %, $(SHARED_PATH)/common/%, $(SHARED_CXX_FILES))
 
-GOB_BASENAMES := log-db
-GOB_FILES := $(patsubst %, $(SRC_PATH)/%.gob, $(GOB_BASENAMES))
-GOB_H_FILES := $(patsubst %.gob, %.h, $(GOB_FILES))
-# These do not affect the external interface of the components, but there might be "friend" components depending on some of these.
-GOB_PRIV_H_FILES := $(patsubst %.gob, %-private.h, $(GOB_FILES))
-GOB_C_FILES := $(patsubst %.gob, %.c, $(GOB_FILES))
-# We are not using --no-touch-headers, as that might lead to repeated invocations of gob2. Anyway for as long as gob2 is not invoked unnecessarily, there should be little extra work caused by this. Sure probably the public header does not change as often as the implementation, but this is okay.
-# We would really need --no-extern-c because of GOB's indiscriminate enclosing of almost everything in an extern "C"; this is an issue when #including a GOB-generated header into a C++ source file, as then there may end up being C++ declarations with C linkage, which will not work. But not having an --no-extern-c for all the C functions will lead to problems as well at linking time.
-GOB_FLAGS := --always-private-header --output-dir $(SRC_PATH)
-
-GEN_FILES := $(GOB_H_FILES) $(GOB_PRIV_H_FILES) $(GOB_C_FILES) $(RAGEL_GEN_FILES)
+GEN_FILES := $(RAGEL_GEN_FILES)
 
 BUILD_LUA := true
 ifeq ($(BUILD_LUA),true)
@@ -66,7 +56,7 @@ endif
 # We need this for fastdep at least.
 KEYEVENTS_CFLAGS := -I../keyevents/inc
 
-ALL_C_FILES := $(C_FILES) $(GOB_C_FILES) $(LUA_C_FILES)
+ALL_C_FILES := $(C_FILES) $(LUA_C_FILES)
 ALL_CXX_FILES := $(CXX_FILES)
 ALL_OBJ_FILES := $(patsubst %.c, %.o, $(ALL_C_FILES)) $(patsubst %.cpp, %.o, $(ALL_CXX_FILES))
 
@@ -115,6 +105,8 @@ posix_test : main
 main : $(ALL_OBJ_FILES)
 	g++ -o $@ $(ALL_OBJ_FILES) $(LDFLAGS)
 
+GOB_FLAGS := --always-private-header --output-dir $(SRC_PATH)
+
 %.c %.h %-private.h : %.gob
 	gob2 $(GOB_FLAGS) $<
 
@@ -162,7 +154,7 @@ apidoc :
 
 # Some of the Ubuntu packages required for building.
 ubuntu-dev :
-	sudo aptitude install gob2 libglib2.0-dev libsqlite3-dev liblua5.1-dev
+	sudo aptitude install libglib2.0-dev libsqlite3-dev liblua5.1-dev
 
 #
 # Copyright 2009 Helsinki Institute for Information Technology (HIIT)

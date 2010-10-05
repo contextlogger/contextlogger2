@@ -36,7 +36,7 @@
 #if __KEYPRESS_ENABLED__ && !__HAVE_ANIM__
 
 #include "epoc-ao-gerror.hpp"
-#include "log-db.h"
+#include "ld_log_db.h"
 #include "utils_cl2.h"
 
 #include <w32std.h> // link against: ws32.lib

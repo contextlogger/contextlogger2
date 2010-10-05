@@ -7,7 +7,7 @@
 
 #include "epoc-ao-gerror.hpp"
 #include "epoc-s60-version.hpp"
-#include "log-db.h"
+#include "ld_log_db.h"
 #include "utils_cl2.h"
 
 #include <e32std.h>

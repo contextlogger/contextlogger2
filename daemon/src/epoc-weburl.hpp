@@ -6,7 +6,7 @@
 #if __WEBURL_ENABLED__
 
 #include "ac_app_context.h"
-#include "log-db.h"
+#include "ld_log_db.h"
 #include "utils_cl2.h"
 
 // Note that this sensor relies on a DLL that is not available on 5th
