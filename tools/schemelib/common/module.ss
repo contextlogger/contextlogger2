@@ -1,8 +1,7 @@
 #lang scheme
 
-(provide define* define-syntax*
-         define-struct*
-         define-signature* define-unit*)
+(provide define* define-syntax* define-syntax-rule*
+         define-struct* define-signature* define-unit*)
 
 (define-syntax define*
   (syntax-rules ()
@@ -30,6 +29,13 @@
        (define-syntax name body ...)
        (provide name)))))
 
+(define-syntax define-syntax-rule*
+  (syntax-rules ()
+    ((_ (name rest ...) body)
+     (begin
+       (define-syntax-rule (name rest ...) body)
+       (provide name)))))
+  
 (define-syntax define-struct*
   (syntax-rules ()
     ((_ (name super-name) rest ...)

@@ -118,6 +118,9 @@
 (define-elem-pred splice)
 (define-elem-pred type)
 
+(define (splice/c x)
+  (or (splice? x) (eq? 'nocode x)))
+
 ;; Here the "/c" means "coercable".
 (define* (symbol/c? x)
   (some-hold (list string? symbol?) x))
@@ -156,8 +159,8 @@
  (assign (-> expr/c? expr/c? any/c))
  (basename (-> symbol/c? any/c))
  (bases (func-listof/c (or/c symbol/c? base?) any/c))
- (block (func-listof/c (or/c a.var-decl? a.statement? a.expression? a.cxx-chunk? splice?) any/c))
- (body (func-listof/c (or/c a.declaration? splice?) any/c))
+ (block (func-listof/c (or/c a.var-decl? a.statement? a.expression? a.cxx-chunk? splice/c) any/c))
+ (body (func-listof/c (or/c a.declaration? splice/c) any/c))
  (call call/c)
  (call-on call/id/c)
  (call-via call/id/c)
