@@ -97,7 +97,7 @@ void er_log_base(int opt, void* errObj,
     if (!logDb) {
       logt(log_msg);
     } else {
-      if (!log_db_log_status(logDb, NULL, log_msg)) {
+      if (!log_db_log_status_direct(logDb, NULL, log_msg)) {
 	logt("logging failure in er_log_base");
 	opt |= er_FATAL;
       }
@@ -173,6 +173,47 @@ void _er_log_gerror(int opt, GError* errObj,
 {
   _er_log_impl(errObj);
 }
+
+// --------------------------------------------------
+// status logging
+// --------------------------------------------------
+
+void er_log_status_string(const char* log_msg)
+{
+  LogDb* logDb = ac_global_LogDb;
+  if (!logDb) {
+    logt(log_msg);
+  } else {
+    if (!log_db_log_status_direct(logDb, NULL, log_msg)) {
+      logt("logging failure in er_log_status_string");
+      er_fatal_general;
+    }
+  }
+}
+
+void er_log_status_fmt(const char* user_fmt, ...)
+{
+  char* user_msg = NULL;
+  if (user_fmt) {
+    SET_TRAP_OOM_FAIL();
+    va_list argp;
+    va_start(argp, user_fmt);
+    g_vasprintf(&user_msg, user_fmt, argp);
+    va_end(argp);
+    UNSET_TRAP_OOM();
+  }
+  er_log_status_string(user_msg);
+  g_free(user_msg);
+  return;
+
+  WHEN_TRAP_OOM(fail:
+		g_free(user_msg);
+		er_log_oom);
+}
+
+// --------------------------------------------------
+// GLib specific
+// --------------------------------------------------
 
 // The docs of g_error_free do not say if the error may be NULL. Well
 // with this function it may.
@@ -253,7 +294,7 @@ gboolean gx_dblog_error_check(LogDb* logDb, GError* errorToLog, GError** error)
   if (!s)
     s = "out of memory error";
 
-  gboolean r = log_db_log_status(logDb, error, s);
+  gboolean r = log_db_log_status_direct(logDb, error, s);
   if (free_s) g_free(s);
   return r;
 }
@@ -303,6 +344,10 @@ void gx_txtlog_fatal_error_clear(GError** errorToLog)
   er_fatal();
 }
 
+// --------------------------------------------------
+// POSIX specific
+// --------------------------------------------------
+
 void px_dblog_fatal_error(LogDb* logDb, int errCode)
 {
   log_db_log_status(logDb, NULL, "FATAL: POSIX error: %s (%d)", strerror(errCode), errCode);
@@ -324,6 +369,10 @@ void px_txtlog_fatal_errno()
 {
   px_txtlog_fatal_error(errno);
 }
+
+// --------------------------------------------------
+// Symbian specific
+// --------------------------------------------------
 
 #if defined(__SYMBIAN32__)
 

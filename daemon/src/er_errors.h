@@ -93,6 +93,18 @@ extern "C" {
   if (!(x)) { er_log_oom; }
 
   // --------------------------------------------------
+  // status logging to database
+  // --------------------------------------------------
+  
+  void er_log_status_string(const char* s);
+
+  void er_log_status_fmt(const char* fmt, ...);
+
+  // For compatibility with logt and logf macros.
+#define dblogt(s) er_log_status_string(s)
+#define dblogf(f...) er_log_status_fmt(f)
+
+  // --------------------------------------------------
   // GLib extras
   // --------------------------------------------------
 
