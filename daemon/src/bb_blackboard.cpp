@@ -83,7 +83,7 @@ extern "C"
 void bb_Blackboard_unregister(bb_Blackboard* self,
 			      bb_Closure cb)
 {
-  GSList* plink = NULL;
+  GSList* plink = NULL; // previous in chain (if any)
   GSList* link = self->reg;
   while (link != NULL) {
     Registrant* elem = (Registrant*)link->data;
@@ -92,6 +92,8 @@ void bb_Blackboard_unregister(bb_Blackboard* self,
       link = g_slist_delete_link(link, link);
       if (plink)
 	plink->next = link;
+      else
+	self->reg = link;
     } else {
       plink = link;
       link = link->next;
