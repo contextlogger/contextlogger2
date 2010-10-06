@@ -52,6 +52,13 @@
 			 + __GNUC_PATCHLEVEL__)
 #endif
 
+// Be careful not to use an octal number here.
+#if (defined(__GCCE__) && (__GCC_VERSION__ <= 30403))
+#define EXCEPTION_CRASHES_VARARGS_BUG 1
+#else
+#define EXCEPTION_CRASHES_VARARGS_BUG 0
+#endif
+
 // --------------------------------------------------
 // toolchain
 // --------------------------------------------------
@@ -133,13 +140,6 @@
 // The functions that we have deemed broken include: vsprintf,
 // vsnprintf.
 #define PRINTF_DOUBLE_BUGGY defined(__SYMBIAN32__)
-
-// Be careful not to use an octal number here.
-#if (defined(__GCCE__) && (__GCC_VERSION__ <= 30403))
-#define EXCEPTION_CRASHES_VARARGS_BUG 1
-#else
-#define EXCEPTION_CRASHES_VARARGS_BUG 0
-#endif
 
 #endif /* __platform_config_h__ */
 

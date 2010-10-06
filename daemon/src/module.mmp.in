@@ -90,7 +90,12 @@ library cntmodel.lib // CContactDatabase
 //library pbkeng.lib // CPbkContactEngine
 
 <% if $WEBURL_ENABLED %>
+<% if $HAVE_AHLECLIENT_LIB %>
 library ahleclient.lib
+<% end %>
+<% if $HAVE_AHLE2CLIENT_LIB %>
+library ahle2client.lib
+<% end %>
 <% end %>
 
 library euserhl.lib    // High-Level APIs

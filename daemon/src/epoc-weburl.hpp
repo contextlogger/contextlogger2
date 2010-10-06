@@ -9,11 +9,22 @@
 #include "ld_log_db.h"
 #include "utils_cl2.h"
 
+#include <badesca.h>
+
 // Note that this sensor relies on a DLL that is not available on 5th
 // edition devices. Hence dynamic linking fails, and the logger will
 // not even start.
+#if __HAVE_AHLECLIENT_LIB__
 #include <ahleclientobserver.h> 
 #include <ahle.h>
+typedef CAHLE AhleClientType;
+typedef MAHLEClientObserver AhleObserverType;
+#elif __HAVE_AHLE2CLIENT_LIB__
+#include <ahleobserver.h>
+class MAHLEGenericAPI;
+typedef MAHLEGenericAPI AhleClientType;
+typedef MAHLEObserver AhleObserverType;
+#endif
 
 /***koog 
 (require codegen/symbian-cxx)
@@ -53,7 +64,7 @@ CSensor_weburl::CSensor_weburl(ac_AppContext* aAppContext) : iAppContext(aAppCon
 
 NONSHARABLE_CLASS(CSensor_weburl) :
   public CBase,
-  public MAHLEClientObserver
+  public AhleObserverType
 {
   CTOR_DECL_CSensor_weburl;
 
@@ -63,11 +74,11 @@ NONSHARABLE_CLASS(CSensor_weburl) :
  private:
   ac_AppContext* iAppContext; // not owned
 
-  CAHLE* iAhle; // owned
+  AhleClientType* iAhle; // owned
 
   CDesCArray* iOldUrlArray; // owned
 
- private: // MAHLEClientObserver
+ private: // AhleObserverType
   virtual void AdaptiveListChanged(TInt aError);
 
  private:

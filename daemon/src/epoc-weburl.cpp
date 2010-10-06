@@ -14,6 +14,10 @@ http://wiki.forum.nokia.com/index.php/Adaptive_History_List_API_for_5th_Edition
 
 #include "common/utilities.h"
 
+#if __HAVE_AHLE2CLIENT_LIB__
+#include <ahlegenericapi.h>
+#endif
+
 // -------------------------------------------------------------------
 // the sensor object implementation...
 
@@ -21,7 +25,18 @@ CTOR_IMPL_CSensor_weburl;
 
 void CSensor_weburl::ConstructL()
 {
+#if __HAVE_AHLECLIENT_LIB__
   iAhle = CAHLE::NewL();
+#else
+  // Can we find a list of these from somewhere? Not in API docs,
+  // anyway. It would actually seem that the built-in apps use a
+  // separate API (we would want EAHLEBrowser type client session via
+  // that API). But we do not have the header in the SDK, which is
+  // inconvenient. And who knows which LIB file would be required.
+  _LIT(databaseName, "Browser");
+  iAhle = NewAHLEClientL(databaseName);
+  //logh();
+#endif
   iAhle->SetObserverL(this);
 }
 
@@ -34,6 +49,9 @@ CSensor_weburl::~CSensor_weburl()
 void CSensor_weburl::AdaptiveListChanged(TInt errCode)
 {
   //logf("AdaptiveListChanged(%d)", errCode);
+
+  // xxx no point in enabling this code unless can get the events
+#if __HAVE_AHLECLIENT_LIB__
   if (errCode) {
     er_log_symbian(0, errCode,
 		   "URL change notification failure in weburl sensor");
@@ -44,6 +62,7 @@ void CSensor_weburl::AdaptiveListChanged(TInt errCode)
 		     "URL data logging in weburl sensor");
     }
   }
+#endif
 }
 
 #define MAX_URLS 100
@@ -61,12 +80,16 @@ void CSensor_weburl::LogDataL()
   // addition to the list. We may have to keep any previous copy of
   // urlArray, and log the new ones only. Difficult to analyze, but
   // better than nothing, I guess.
-  iAhle->AdaptiveListL(*urlArray, *nameArray, MAX_URLS, 
-		       KNullDesC, 
+  //logh();
+  iAhle->AdaptiveListL(*urlArray, *nameArray, MAX_URLS, KNullDesC
+#if __HAVE_AHLECLIENT_LIB__
+		       , 
 		       //EAHLEAdaptiveSiteList // (short url, short url) 
 		       EAHLEAdaptiveSiteDetails // (caption, long url)
 		       //EAHLEAdaptiveAutoComplete // (caption, long url)
+#endif
 		       );
+  //logh();
 
   TInt numItems = urlArray->Count();
   logf("read total of %d adaptive history items", numItems);
