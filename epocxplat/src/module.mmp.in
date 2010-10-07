@@ -15,8 +15,16 @@ systeminclude	\epoc32\include
 
 userinclude 	.
 userinclude 	..\..\src
+userinclude	..\..\..\shared
 
 library 	euser.lib
+library		bafl.lib
+
+<% if build.trait_map[:has_ahleclient] %>
+library 	ahleclient.lib
+<% elsif build.trait_map[:has_ahle2client] %>
+//library		ahle2client.lib
+<% end %>
 
 sourcepath 	..\..\src
 source 		epocxplat.cpp

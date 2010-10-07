@@ -327,6 +327,9 @@ module Sake
         dlist.push :has_vibractrl if ((s60_version <=> [2, 2]) >= 0)
 
         dlist.push :has_hwrmvibra if edition >= 3
+
+        dlist.push :has_ahleclient if edition == 3
+        dlist.push :has_ahle2client if edition == 5
       end
 
       vlist + Sake::define_value_map(dlist)

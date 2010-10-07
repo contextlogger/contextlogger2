@@ -54,7 +54,9 @@ PKG_FILE := sis/$(BASENAME)_$(REL)_$(CAPA).pkg
 SIS_FILE := sis/$(BASENAME)_$(REL)_$(CAPA).sis
 SISX_FILE := sis/$(BASENAME)_$(REL)_$(CAPA)_$(CERT).sisx
 
-SAKE_COMMAND := sake --trace handle=$(DLL_VARIANT) kits=$(KIT) rel=$(REL) "caps=$(CAPLIST)" version=$(VERSION) "projname=$(PROJECT_NAME)"
+SAKE_EXE := sake
+#SAKE_EXE := ../tools/bin/sake
+SAKE_COMMAND := $(SAKE_EXE) --trace handle=$(DLL_VARIANT) kits=$(KIT) rel=$(REL) "caps=$(CAPLIST)" version=$(VERSION) "projname=$(PROJECT_NAME)"
 
 default : dll
 

@@ -1,12 +1,28 @@
 #include "epocxplat.hpp"
 
-#if (__S60_VERSION__ >= 30) && (__S60_VERSION__ < 50) 
+// --------------------------------------------------
+// platform info
+// --------------------------------------------------
+
+#include "sconfig.hrh"
+
+#include "common/platform_config.h"
+
+#if defined(__HAS_AHLECLIENT__)
 #define __HAVE_AHLECLIENT_LIB__ 1
 #else
 #define __HAVE_AHLECLIENT_LIB__ 0
 #endif
 
+#if defined(__HAS_AHLE2CLIENT__)
+#define __HAVE_AHLE2CLIENT_LIB__ 1
+#else
 #define __HAVE_AHLE2CLIENT_LIB__ 0
+#endif
+
+// --------------------------------------------------
+// runtime feature query
+// --------------------------------------------------
 
 #define FEATURE_AhleBrowser __HAVE_AHLECLIENT_LIB__
 
@@ -24,6 +40,10 @@ EXPORT_C TBool epocxplat::HasFeature(TFeature aFeature)
       }
     }
 }
+
+// --------------------------------------------------
+// feature implementations
+// --------------------------------------------------
 
 using namespace epocxplat;
 
@@ -46,7 +66,7 @@ http://wiki.forum.nokia.com/index.php/Adaptive_History_List_API_for_5th_Edition
 #include <ahle.h>
 typedef CAHLE AhleClientType;
 typedef MAHLEClientObserver AhleObserverType;
-#elsif __HAVE_AHLE2CLIENT_LIB__
+#elif __HAVE_AHLE2CLIENT_LIB__
 #include <ahleobserver.h>
 class MAHLEGenericAPI;
 typedef MAHLEGenericAPI AhleClientType;
@@ -97,7 +117,7 @@ CMyAhleNotifier::CMyAhleNotifier(AhleBrowser::MObserver& aObserver) : iObserver(
 
 NONSHARABLE_CLASS(CMyAhleNotifier) :
   public CBase,
-  public AhleBrowser::MNotifier,
+  public epocxplat::AhleBrowser::MNotifier,
   public AhleObserverType
 {
   CTOR_DECL_CMyAhleNotifier;
@@ -106,6 +126,8 @@ NONSHARABLE_CLASS(CMyAhleNotifier) :
   virtual ~CMyAhleNotifier();
 
  private:
+  epocxplat::AhleBrowser::MObserver& iObserver;
+
   AhleClientType* iAhle; // owned
 
   CDesCArray* iOldUrlArray; // owned
@@ -116,6 +138,8 @@ NONSHARABLE_CLASS(CMyAhleNotifier) :
  private:
   void HandleDataL();
 };
+
+CTOR_IMPL_CMyAhleNotifier;
 
 void CMyAhleNotifier::ConstructL()
 {
@@ -212,7 +236,7 @@ void CMyAhleNotifier::HandleDataL()
 EXPORT_C AhleBrowser::MNotifier* AhleBrowser::NewNotifierL(AhleBrowser::MObserver& aObserver)
 {
 #if FEATURE_AhleBrowser
-  return CMyAhleNotifier::NewL(aObserver);
+  return ::CMyAhleNotifier::NewL(aObserver);
 #else
   return NULL;
 #endif
