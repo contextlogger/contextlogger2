@@ -1,16 +1,29 @@
-BASENAME := epocxplat # nickname
-VERSION := 0.01 # decimal number with two-digit fraction
-KIT := s60_30 # nickname
-CAPA := devcert # nickname, or one of self, self32, devcert, publisher, manufacturer
-CAPS := # list of capabilities
-DEBUG := true # true or nothing
-DEVICE := default # nickname
+# string
+PROJECT_NAME := epocxplat Library
+# nickname
+BASENAME := epocxplat
+# decimal number with two-digit fraction
+VERSION := 0.01
+# nickname
+KIT := s60_30
+# nickname, or one of self, self32, devcert, publisher, manufacturer
+CAPA := devcert
+# list of capabilities
+CAPS :=
+# true or nothing
+DEBUG := true
+# nickname
+DEVICE := default
 
 ## For packaging only.
-CERT := dev # nickname
-SISVER := 2 # 1 or 2
-OWNERUID := # 8-digit hex number 
-SIGN := true # true or nothing
+# nickname
+CERT := dev
+# 1 or 2
+SISVER := 2
+# 8-digit hex number 
+OWNERUID :=
+# true or nothing
+SIGN := true
 
 SELF_CAPS := LocalServices NetworkServices ReadUserData UserEnvironment WriteUserData
 SELF32_CAPS := $(SELF_CAPS) Location
@@ -19,15 +32,17 @@ PUBLISHER_CAPS := $(DEVCERT_CAPS) CommDD DiskAdmin NetworkControl MultimediaDD
 MANUFACTURER_CAPS := $(PUBLISHER_CAPS) AllFiles DRM TCB
 
 ifeq ($(CAPA),self)
-  CAPS := $(SELF_CAPS)
+  CAPLIST := $(SELF_CAPS)
 else ifeq ($(CAPA),self32)
-  CAPS := $(SELF32_CAPS)
+  CAPLIST := $(SELF32_CAPS)
 else ifeq ($(CAPA),devcert)
-  CAPS := $(DEVCERT_CAPS)
+  CAPLIST := $(DEVCERT_CAPS)
 else ifeq ($(CAPA),publisher)
-  CAPS := $(PUBLISHER_CAPS)
+  CAPLIST := $(PUBLISHER_CAPS)
 else ifeq ($(CAPA),manufacturer)
-  CAPS := $(MANUFACTURER_CAPS)
+  CAPLIST := $(MANUFACTURER_CAPS)
+else
+  CAPLIST := $(or $(CAPS),none)
 endif
 
 REL := $(if $(DEBUG),udeb,urel)
@@ -39,11 +54,14 @@ PKG_FILE := sis/$(BASENAME)_$(REL)_$(CAPA).pkg
 SIS_FILE := sis/$(BASENAME)_$(REL)_$(CAPA).sis
 SISX_FILE := sis/$(BASENAME)_$(REL)_$(CAPA)_$(CERT).sisx
 
-SAKE_COMMAND := sake --trace handle=$(DLL_VARIANT) kits=$(KIT) rel=$(REL) "caps=$(CAPS)" version=$(VERSION)
+SAKE_COMMAND := sake --trace handle=$(DLL_VARIANT) kits=$(KIT) rel=$(REL) "caps=$(CAPLIST)" version=$(VERSION) "projname=$(PROJECT_NAME)"
 
 default : dll
 
 -include local.mk
+
+caps :
+	@echo $(CAPA): $(CAPLIST)
 
 dll :
 	$(SAKE_COMMAND)
@@ -52,7 +70,7 @@ define sake_template
 $(1) :
 	$(SAKE_COMMAND) $(1)
 endef
-SAKE_RULES := build_info
+SAKE_RULES := build_info makefiles
 $(foreach name,$(SAKE_RULES),$(eval $(call sake_template,$(name))))
 
 # Copyright 2010 Helsinki Institute for Information Technology (HIIT)

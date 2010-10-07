@@ -3,13 +3,14 @@
 
 require 'sake4/component'
 
+$projname = $sake_op[:projname]
 $basename = "epocxplat"
 $uid_v8 = 0x0846000d
 $version = $sake_op[:version].split(".").map {|x| x.to_i}
 $caps = $sake_op[:caps].split(/\s+/)
 
 $proj = Sake::Project.new(:basename => $basename,
-                          :name => "epocxplat Library",
+                          :name => $projname,
                           :version => $version,
                           :uid => Sake::Uid.v8($uid_v8),
                           :vendor => "HIIT")
@@ -47,7 +48,7 @@ $builds = $kits.map do |kit|
                               :devkit => kit)
   build.abld_platform = (build.v9_up? ? "gcce" : "armi")
   build.abld_build = ($sake_op[:rel] || raise)
-  build.handle = ($sake_op[:handle] || raise)
+  build.handle = ($sake_op[:handle] || raise)
   build
 end
 
@@ -85,7 +86,7 @@ task :build_info do
     puts "  devkit        #{build.devkit.handle}"
     puts "  abld platform #{build.abld_platform}"
     puts "  abld build    #{build.abld_build}"
-    puts "  cert caps     #{build.max_caps.inspect}"
+    puts "  cert caps     #{$comp_build.caps.inspect}"
     puts "  components    #{build.comp_builds.map {|x| x.component.basename}.inspect}"
   end
 end
@@ -125,7 +126,8 @@ for build in $builds
   build.comp_builds = $comp_list.map do |comp|
     b = Sake::CompBuild.new(:proj_build => build,
                             :component => comp)
-    $exeb[build] = b
+    b.caps = $caps
+    $comp_build = b
     b
   end
 end
@@ -141,8 +143,6 @@ Sake::Tasks::def_makefile_tasks(:builds => $builds)
 Sake::Tasks::def_binary_tasks(:builds => $builds)
 
 Sake::Tasks::def_clean_tasks(:builds => $builds)
-
-$doc_build = $builds.last
 
 Sake::Tasks::force_uncurrent_on_op_change
 
