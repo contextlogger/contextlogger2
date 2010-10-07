@@ -3,6 +3,14 @@
 
 #include <e32std.h>
 
+namespace epocxplat {
+  enum TFeature {
+    EFeatureAhleBrowser
+  };
+
+  IMPORT_C TBool HasFeature(TFeature aFeature);
+};
+
 #endif /* __epocxplat_hpp__ */
 
 /**

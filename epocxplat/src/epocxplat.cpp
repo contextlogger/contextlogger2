@@ -1,5 +1,24 @@
 #include "epocxplat.hpp"
 
+EXPORT_C TBool epocxplat::HasFeature(TFeature aFeature)
+{
+  switch (aFeature)
+    {
+    case EFeatureAhleBrowser:
+      {
+#if (__S60_VERSION__ >= 30) && (__S60_VERSION__ < 50) 
+	return ETrue;
+#else
+	return EFalse;
+#endif
+      }
+    default:
+      {
+	return EFalse;
+      }
+    }
+}
+
 /**
 
 Copyright 2010 Helsinki Institute for Information Technology (HIIT)
