@@ -15,5 +15,6 @@
 #define APP_UID_CL2_CXX_CLIENT_LIB 0xe8460009 // devrange
 #define APP_UID_CL2_PYTHON_CLIENT_LIB 0xe846000a // devrange
 #define APP_UID_LIBGXLIB 0xe846000c // devrange
+#define APP_UID_EPOCXPLAT 0xe846000d // devrange
 
 #endif /* __epoc_app_uid_list_hrh__ */

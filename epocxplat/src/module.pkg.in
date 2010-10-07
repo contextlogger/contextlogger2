@@ -1,0 +1,97 @@
+;; We have three orthogonal variable factors.
+;;
+;; * whether v8 or v9 SIS file format
+;; * whether UREL or UDEB
+;; * application UID of "owning" application
+;;
+;; At most we have one SIS file for each combination of these.
+
+#{"<%= build.name %>"}, (<%= build.uid.chex_string %>), <%= build.major_version %>, <%= build.minor_version %>, 0
+
+<% if build.v9_up? %>
+;; In S60 3rd ed SDKs, vendor name(s) are required.
+;; Apparently both unique and localized versions.
+
+;Localised Vendor name
+%{"<%= build.vendor %>"}
+
+;Unique Vendor name
+:"<%= build.vendor %>"
+<% end %>
+
+;; Platform dependency.
+;; http://wiki.forum.nokia.com/index.php/S60_Platform_and_device_identification_codes
+<% if build.v9_up? %>
+[0x101f7961], 0, 0, 0, {"Series60ProductID"} ;; s60_30
+;;[0x102032be], 0, 0, 0, {"Series60ProductID"} ;; s60_31
+;;[0x102752ae], 0, 0, 0, {"Series60ProductID"} ;; s60_32
+[0x1028315f], 0, 0, 0, {"Series60ProductID"} ;; s60_50
+;; Product ID unknown ;; s60_51 (Symbian^2)
+[0x20029a73], 0, 0, 0, {"Series60ProductID"} ;; s60_52 (Symbian^3)
+<% else %>
+;; S60 1st Edition (v0.9) Platform ID.
+;; Hence supporting all S60 1st and 2nd Edition devices.
+(0x101f6f88), 0, 0, 0, {"Series60ProductID"}
+<% end %>
+
+<% 
+tdllname = '%s_%s.dll' % [$basename, owner.uid.hex_string]
+%>
+<% if build.v9_up? %>
+if exists("z:\system\install\Series60v5.2.sis")
+  "<%= $basename %>_s60_52_<%= $rel %>.dll" - "!:\sys\bin\<%= tdllname %>"
+elseif (exists("z:\system\install\Series60v5.1.sis") or
+        exists("z:\system\install\Series60v5.0.sis"))
+  "<%= $basename %>_s60_50_<%= $rel %>.dll" - "!:\sys\bin\<%= tdllname %>"
+elseif exists("z:\system\install\Series60v3.2.sis")
+  "<%= $basename %>_s60_32_<%= $rel %>.dll" - "!:\sys\bin\<%= tdllname %>"
+elseif exists("z:\system\install\Series60v3.1.sis")
+  "<%= $basename %>_s60_31_<%= $rel %>.dll" - "!:\sys\bin\<%= tdllname %>"
+elseif exists("z:\system\install\Series60v3.0.sis")
+  "<%= $basename %>_s60_30_<%= $rel %>.dll" - "!:\sys\bin\<%= tdllname %>"
+else
+  "error.txt" - "", FT, TA
+endif
+<% else %>
+if exists("z:\system\install\Series60v2.8.sis")
+  "<%= $basename %>_s60_28_<%= $rel %>.dll" - "!:\system\libs\<%= tdllname %>"
+elseif exists("z:\system\install\Series60v2.6.sis")
+  "<%= $basename %>_s60_26_<%= $rel %>.dll" - "!:\system\libs\<%= tdllname %>"
+elseif exists("z:\system\install\Series60v2.1.sis")
+  "<%= $basename %>_s60_21_<%= $rel %>.dll" - "!:\system\libs\<%= tdllname %>"
+elseif exists("z:\system\install\Series60v2.0.sis")
+  "<%= $basename %>_s60_20_<%= $rel %>.dll" - "!:\system\libs\<%= tdllname %>"
+elseif (exists("z:\system\install\Series60v1.2.sis") or
+        exists("z:\system\install\Series60v1.1.sis") or
+        exists("z:\system\install\Series60v1.0.sis") or
+        exists("z:\system\install\Series60v0.9.sis"))
+  "<%= $basename %>_s60_12_<%= $rel %>.dll" - "!:\system\libs\<%= tdllname %>"
+else
+  "error.txt" - "", FT, TA
+endif
+<% end %>
+
+;; Copyright 2010 Helsinki Institute for Information Technology (HIIT)
+;; and the authors. All rights reserved.
+;; 
+;; Authors: Tero Hasu <tero.hasu@hut.fi>
+;; 
+;; Permission is hereby granted, free of charge, to any person
+;; obtaining a copy of this software and associated documentation files
+;; (the "Software"), to deal in the Software without restriction,
+;; including without limitation the rights to use, copy, modify, merge,
+;; publish, distribute, sublicense, and/or sell copies of the Software,
+;; and to permit persons to whom the Software is furnished to do so,
+;; subject to the following conditions:
+;; 
+;; The above copyright notice and this permission notice shall be
+;; included in all copies or substantial portions of the Software.
+;; 
+;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+;; EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+;; MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+;; NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+;; BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+;; ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+;; SOFTWARE.
