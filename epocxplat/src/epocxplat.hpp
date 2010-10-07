@@ -9,7 +9,31 @@ namespace epocxplat {
   };
 
   IMPORT_C TBool HasFeature(TFeature aFeature);
+
+  // --------------------------------------------------
+  // EFeatureAhleBrowser
+  // --------------------------------------------------
+  
+  namespace AhleBrowser {
+    class MObserver
+    {
+    public:
+      virtual void AhleBrowserEvent(const TDesC& aName, const TDesC& aUrl) = 0;
+    };
+    
+    class MNotifier
+    {
+    public:
+      inline virtual ~MNotifier();
+    };
+    
+    IMPORT_C MNotifier* NewNotifierL();
+  };
 };
+
+inline epocxplat::AhleBrowser::MNotifier::~MNotifier()
+{
+}
 
 #endif /* __epocxplat_hpp__ */
 

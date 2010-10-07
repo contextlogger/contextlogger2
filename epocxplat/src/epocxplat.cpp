@@ -1,22 +1,44 @@
 #include "epocxplat.hpp"
 
+#if (__S60_VERSION__ >= 30) && (__S60_VERSION__ < 50) 
+#define HAVE_AHLECLIENT 1
+#else
+#define HAVE_AHLECLIENT 0
+#endif
+
 EXPORT_C TBool epocxplat::HasFeature(TFeature aFeature)
 {
   switch (aFeature)
     {
     case EFeatureAhleBrowser:
       {
-#if (__S60_VERSION__ >= 30) && (__S60_VERSION__ < 50) 
-	return ETrue;
-#else
-	return EFalse;
-#endif
+	return HAVE_AHLECLIENT;
       }
     default:
       {
 	return EFalse;
       }
     }
+}
+
+using namespace epocxplat;
+
+// --------------------------------------------------
+// EFeatureAhleBrowser
+// --------------------------------------------------
+  
+/*
+http://wiki.forum.nokia.com/index.php/Adaptive_History_List_API
+http://wiki.forum.nokia.com/index.php/Adaptive_History_List_API_for_5th_Edition
+*/
+
+EXPORT_C AhleBrowser::MNotifier* AhleBrowser::NewNotifierL()
+{
+#if HAVE_AHLECLIENT
+  return NULL;
+#else
+  return NULL;
+#endif
 }
 
 /**
