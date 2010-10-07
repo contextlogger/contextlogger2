@@ -11,10 +11,10 @@
 
 #include <badesca.h>
 
-// Note that this sensor relies on a DLL that is not available on 5th
+#if __HAVE_AHLECLIENT_LIB__
+// Note that CAHLE relies on a DLL that is not available on 5th
 // edition devices. Hence dynamic linking fails, and the logger will
 // not even start.
-#if __HAVE_AHLECLIENT_LIB__
 #include <ahleclientobserver.h> 
 #include <ahle.h>
 typedef CAHLE AhleClientType;

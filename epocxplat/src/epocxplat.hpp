@@ -18,7 +18,8 @@ namespace epocxplat {
     class MObserver
     {
     public:
-      virtual void AhleBrowserEvent(const TDesC& aName, const TDesC& aUrl) = 0;
+      virtual void AhleBrowserError(TInt aError) = 0;
+      virtual void AhleBrowserData(const TDesC& aName, const TDesC& aUrl) = 0;
     };
     
     class MNotifier
@@ -27,7 +28,7 @@ namespace epocxplat {
       inline virtual ~MNotifier();
     };
     
-    IMPORT_C MNotifier* NewNotifierL();
+    IMPORT_C MNotifier* NewNotifierL(MObserver& aObserver);
   };
 };
 
