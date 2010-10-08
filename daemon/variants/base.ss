@@ -273,6 +273,8 @@ project must implement.
   
   (define/public (have-anim.attr) #t)
 
+  (define/public (have-epocxplat.attr) #t)
+
   (define/public (have-euserhl.attr) #t)
 
   ;; --------------------------------------------------
@@ -377,7 +379,8 @@ project must implement.
           (sublist? '(ReadDeviceData WriteDeviceData) (capabilities)))
      (and (send this have-ahle2client-lib.attr)
           (sublist? '(ReadUserData WriteUserData) (capabilities))))
-    #f ;; problematic sensor due to binary incompatibility
+    (and (send this have-epocxplat.attr)
+         (sublist? '(ReadDeviceData WriteDeviceData) (capabilities)))
     )
   
   (define/override (profile-enabled.attr)

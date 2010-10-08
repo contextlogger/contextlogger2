@@ -219,7 +219,7 @@ void CMyAhleNotifier::HandleDataL()
 	// iOldUrlArray must be sorted for this to work.
 	iOldUrlArray->FindIsq(url16, dummyPos, ECmpNormal)) {
 
-      iObserver.AhleBrowserData(nameArray->MdcaPoint(i), url16);
+      iObserver.AhleBrowserDataL(nameArray->MdcaPoint(i), url16);
     }
   }
 

@@ -143,10 +143,10 @@ signed-sis : pkg unsupported-txt
 
 all : 3rd-sis
 
-cl2-sis :
-	$(MAKE) -e 3rd-sis OWNER_UID=e8460002 OWNER=cl2 "PROJECT_NAME=epocxplat for CL2"
+cl2-% :
+	$(MAKE) -e $(patsubst cl2-%,%,$@) OWNER_UID=e8460002 OWNER=cl2 "PROJECT_NAME=epocxplat for CL2"
 
-cl2 : cl2-sis
+cl2 : cl2-3rd-sis
 
 sub-test :
 	$(MAKE) sub-echo

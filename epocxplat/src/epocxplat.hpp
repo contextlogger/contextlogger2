@@ -19,7 +19,7 @@ namespace epocxplat {
     {
     public:
       virtual void AhleBrowserError(TInt aError) = 0;
-      virtual void AhleBrowserData(const TDesC& aName, const TDesC& aUrl) = 0;
+      virtual void AhleBrowserDataL(const TDesC& aName, const TDesC& aUrl) = 0;
     };
     
     class MNotifier

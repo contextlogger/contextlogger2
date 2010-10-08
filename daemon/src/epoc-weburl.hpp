@@ -9,22 +9,9 @@
 #include "ld_log_db.h"
 #include "utils_cl2.h"
 
-#include <badesca.h>
+#include "epocxplat.hpp"
 
-#if __HAVE_AHLECLIENT_LIB__
-// Note that CAHLE relies on a DLL that is not available on 5th
-// edition devices. Hence dynamic linking fails, and the logger will
-// not even start.
-#include <ahleclientobserver.h> 
-#include <ahle.h>
-typedef CAHLE AhleClientType;
-typedef MAHLEClientObserver AhleObserverType;
-#elif __HAVE_AHLE2CLIENT_LIB__
-#include <ahleobserver.h>
-class MAHLEGenericAPI;
-typedef MAHLEGenericAPI AhleClientType;
-typedef MAHLEObserver AhleObserverType;
-#endif
+#include <badesca.h>
 
 /***koog 
 (require codegen/symbian-cxx)
@@ -64,7 +51,7 @@ CSensor_weburl::CSensor_weburl(ac_AppContext* aAppContext) : iAppContext(aAppCon
 
 NONSHARABLE_CLASS(CSensor_weburl) :
   public CBase,
-  public AhleObserverType
+  public epocxplat::AhleBrowser::MObserver
 {
   CTOR_DECL_CSensor_weburl;
 
@@ -74,12 +61,13 @@ NONSHARABLE_CLASS(CSensor_weburl) :
  private:
   ac_AppContext* iAppContext; // not owned
 
-  AhleClientType* iAhle; // owned
+  epocxplat::AhleBrowser::MNotifier* iAhle; // owned
 
   CDesCArray* iOldUrlArray; // owned
 
- private: // AhleObserverType
-  virtual void AdaptiveListChanged(TInt aError);
+ private: // epocxplat::AhleBrowser::MObserver
+  virtual void AhleBrowserError(TInt aError);
+  virtual void AhleBrowserDataL(const TDesC& aName, const TDesC& aUrl);
 
  private:
   LogDb* GetLogDb() const { return ac_LogDb(iAppContext); }
