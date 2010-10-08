@@ -9,7 +9,8 @@ targetpath      \system\libs\
 uid             <%= build.uid2.chex_string %> <%= build.uid3.chex_string %>
 
 nostrictdef
-exportunfrozen
+//exportunfrozen
+deffile		..\..\eabi\<%= $basename %>.def
 
 systeminclude	\epoc32\include
 

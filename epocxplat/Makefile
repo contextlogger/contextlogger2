@@ -32,6 +32,7 @@ CERT := dev
 # nickname
 DEVICE := default
 
+## We could also use the "export" directive, probably, to pass to sub-makes.
 DLL_PASS := CAPA=$(CAPA) CAPS=$(CAPS) DEBUG=$(DEBUG)
 SIS_PASS := CAPA=$(CAPA) OWNER_UID=$(OWNER_UID) SIGN=$(SIGN) CERT=$(CERT)
 
@@ -93,12 +94,15 @@ default : dll
 caps :
 	@echo $(CAPA): $(CAPLIST)
 
+FREEZE_COMMAND := ruby $(CURDIR)/../tools/bin/in-kit-env.rb -k $(KIT) abld freeze gcce
+
+freeze :
+	(cd build/$(DLL_VARIANT) && $(FREEZE_COMMAND))
+
 dll :
 	$(SAKE_COMMAND)
 	mkdir -p $(SIS_DIR)
 	cp build/$(DLL_VARIANT)/$(BASENAME).dll $(SIS_DIR)/$(BASENAME)_$(DLL_VARIANT).dll
-
-# xxx rule for freezing exports, and mmp adjustment
 
 SIS_VERSION := $(VERSION)
 OWNER_UID_SFX := $(and $(OWNER_UID),_$(OWNER_UID))
@@ -118,7 +122,7 @@ all : 3rd-sis
 	$(MAKE) dll KIT=s60_31 $(DLL_PASS)
 	$(MAKE) dll KIT=s60_32 $(DLL_PASS)
 	$(MAKE) dll KIT=s60_50 $(DLL_PASS)
-	$(MAKE) sis SISFMT=er9 $(SIS_PASS)
+	$(MAKE) sis SISFMT=er9 KIT=s60_50 $(SIS_PASS)
 
 sis : $(if $(SIGN),signed-sis,unsigned-sis)
 
