@@ -24,6 +24,7 @@ s60_30_self30 :
 	cd ../cxx-cl2-cli-lib && $(SAKE) cert=self30 kits=s60_30
 	cd ../py-cl2-cli-lib && $(SAKE) cert=self30 kits=s60_30
 	cd ../launcher && $(MAKE) CERT=self30 sis
+	cd ../epocxplat && $(MAKE) CERT=self30 cl2
 
 s60_30_dev_sub :
 	cd ../daemon && $(MAKE)
@@ -31,6 +32,7 @@ s60_30_dev_sub :
 	cd ../py-cl2-cli-lib && $(SAKE) cert=dev kits=s60_30
 	cd ../keyevents && $(SAKE) cert=dev kits=s60_30
 	cd ../watchdog && $(MAKE)
+	cd ../epocxplat && $(MAKE) CERT=dev cl2
 
 s60_30_dev : s60_30_dev_sub
 	cd ../launcher && $(MAKE) CERT=dev sis
@@ -43,6 +45,7 @@ s60_30_self32 :
 	cd ../cxx-cl2-cli-lib && $(SAKE) cert=self32 kits=s60_30
 	cd ../py-cl2-cli-lib && $(SAKE) cert=self32 kits=s60_30
 	cd ../launcher && $(MAKE) CERT=self32 sis
+	cd ../epocxplat && $(MAKE) CERT=self32 cl2
 
 hpe non-use : s60_30_dev
 

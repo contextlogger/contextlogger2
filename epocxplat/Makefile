@@ -16,9 +16,9 @@ export UID3 :=
 ## Build specific information.
 # nickname
 export KIT :=
-# nickname, or one of self, self32, devcert, publisher, manufacturer
-export CAPA := devcert
-# list of capabilities
+# nickname, or one of self30, self32, devcert, publisher, manufacturer
+export CAPA :=
+# list of capabilities, or none
 export CAPS :=
 # true or nothing
 export DEBUG := true
@@ -81,14 +81,32 @@ ifeq ($(UID3),)
   UID3 := $(if $(IS_V9),$(UID_V9),$(UID_V8))
 endif
 
-SELF_CAPS := LocalServices NetworkServices ReadUserData UserEnvironment WriteUserData
-SELF32_CAPS := $(SELF_CAPS) Location
+# Default capability sets for certain known cert names, otherwise
+# specify explicitly.
+ifeq ($(strip $(or $(CAPA),$(CAPS))),)
+  ifneq ($(CERT),)
+    ifeq ($(CERT),self)
+      CAPA := self30
+    else ifeq ($(CERT),self30)
+      CAPA := self30
+    else ifeq ($(CERT),self32)
+      CAPA := self32
+    else ifeq ($(CERT),dev)
+      CAPA := devcert
+    else ifeq ($(CERT),devx)
+      CAPA := publisher
+    endif
+  endif
+endif
+
+SELF30_CAPS := LocalServices NetworkServices ReadUserData UserEnvironment WriteUserData
+SELF32_CAPS := $(SELF30_CAPS) Location
 DEVCERT_CAPS := $(SELF32_CAPS) PowerMgmt ProtServ ReadDeviceData SurroundingsDD SwEvent TrustedUI WriteDeviceData
 PUBLISHER_CAPS := $(DEVCERT_CAPS) CommDD DiskAdmin NetworkControl MultimediaDD
 MANUFACTURER_CAPS := $(PUBLISHER_CAPS) AllFiles DRM TCB
 
-ifeq ($(CAPA),self)
-  CAPLIST := $(SELF_CAPS)
+ifeq ($(CAPA),self30)
+  CAPLIST := $(SELF30_CAPS)
 else ifeq ($(CAPA),self32)
   CAPLIST := $(SELF32_CAPS)
 else ifeq ($(CAPA),devcert)
@@ -111,6 +129,9 @@ VARSFX := $(REL)$(CAPASFX)
 DLL_VARIANT := $(VARPFX)_$(KIT)_$(VARSFX)
 DLL_FN_FMT := $(VARPFX)_%s_$(VARSFX).dll
 
+# We must actually build with this DLL name in order to get the LIB
+# file named right, it is not just a matter of renaming in the PKG
+# file.
 BIN_BASENAME := $(BASENAME)_$(UID3)
 BIN_FN := $(BIN_BASENAME).dll
 

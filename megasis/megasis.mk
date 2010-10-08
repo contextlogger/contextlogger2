@@ -8,8 +8,11 @@ TEMPLATE := template.pkg.in
 
 # For internal trials, include non-releasable SIS files as well. If
 # the SIS is unsigned, unpack the contents, as signing embedded SIS
-# files is not really possible anyway.
-FLAGS := $(and $(IS_TRIAL), --nr) $(and $(NOT__SIGNED), --unpack)
+# files is not really possible anyway. An alternative would be to
+# supply the endividual unsigned files and the PKG file, which might
+# actually be the more sensible option.
+FLAGS := $(and $(IS_TRIAL), --nr)
+# unpacking no longer supported $(and $(NOT__SIGNED), --unpack)
 
 # Note that $(DIST_VARIANT_NAME) is defined only for release variants.
 PKGFILE := $(BASENAME)-$(DIST_VARIANT_NAME).pkg

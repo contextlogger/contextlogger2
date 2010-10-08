@@ -51,6 +51,23 @@
 <% end %>
 
 ;;
+;; Epocxplat DLL.
+;;
+;; We cannot really $unpack_embedded without getting the PKG code
+;; for doing that from the component itself, as the rules are complex.
+;;
+<% 
+capa = (($CERT_NAME == "dev") ? "devcert" : $CERT_NAME)
+certsfx = ($SIGNED ? ("_" + $CERT_NAME) : "")
+ext = ($SIGNED ? "sisx" : "sis")
+sisxfile = '../epocxplat/packages/epocxplat_cl2_3rd_udeb_%s%s.%s' % [capa, certsfx, ext] 
+uid = lookup_uid sisxfile
+uid_s = ("0x%08x" % uid)
+sisfile = copy_with_sis_ext sisxfile
+%>
+@<%= sisfile.inspect %>, (<%= uid_s %>)
+
+;;
 ;; Key events ANIM DLLs. (OPTIONAL)
 ;;
 ;; Requires heavy permissions, so not in self-signed version.
