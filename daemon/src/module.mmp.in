@@ -91,7 +91,7 @@ library cntmodel.lib // CContactDatabase
 //library pbkeng.lib // CPbkContactEngine
 
 <% if $WEBURL_ENABLED %>
-library epocxplat_e8460002.lib
+library epocxplat_e846000e.lib
 <% end %>
 
 library euserhl.lib    // High-Level APIs

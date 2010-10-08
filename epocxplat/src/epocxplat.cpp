@@ -53,7 +53,15 @@ using namespace epocxplat;
   
 /*
 http://wiki.forum.nokia.com/index.php/Adaptive_History_List_API
+
+Only v3.0 (and earlier?) kits support this API, but also at least v3.1 is binary compatible with this API, possibly also v3.2.
+
+xxx We can try unpacking the v3.0 plugin to the v3.1 kit and see if it works.
+
 http://wiki.forum.nokia.com/index.php/Adaptive_History_List_API_for_5th_Edition
+
+v3.1-up kits support this API, but it cannot be used to access the web browsers data, it looks like, which is what we want.
+
 */
 
 #if FEATURE_AhleBrowser

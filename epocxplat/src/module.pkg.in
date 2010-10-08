@@ -44,39 +44,38 @@
 <% end %>
 
 <% 
-ssfx_v8 = '%s' % [REL]
-ssfx_v9 = '%s_%s' % [REL, CAPA]
-tdllname = '%s%s.dll' % [BASENAME, OWNER_UID_SFX]
+   sdllname = lambda {|kit| DLL_FN_FMT % kit}
 %>
+
 <% if is_v9 %>
 if exists("z:\system\install\Series60v5.2.sis")
-  "<%= BASENAME %>_s60_50_<%= ssfx_v9 %>.dll" - "!:\sys\bin\<%= tdllname %>" ;; xxx
+  "<%= sdllname.call("s60_50") %>" - "!:\sys\bin\<%= BIN_FN %>" ;; xxx
 elseif (exists("z:\system\install\Series60v5.1.sis") or
         exists("z:\system\install\Series60v5.0.sis"))
-  "<%= BASENAME %>_s60_50_<%= ssfx_v9 %>.dll" - "!:\sys\bin\<%= tdllname %>"
+  "<%= sdllname.call("s60_50") %>" - "!:\sys\bin\<%= BIN_FN %>"
 elseif exists("z:\system\install\Series60v3.2.sis")
-  "<%= BASENAME %>_s60_32_<%= ssfx_v9 %>.dll" - "!:\sys\bin\<%= tdllname %>"
+  "<%= sdllname.call("s60_32") %>" - "!:\sys\bin\<%= BIN_FN %>"
 elseif exists("z:\system\install\Series60v3.1.sis")
-  "<%= BASENAME %>_s60_31_<%= ssfx_v9 %>.dll" - "!:\sys\bin\<%= tdllname %>"
+  "<%= sdllname.call("s60_31") %>" - "!:\sys\bin\<%= BIN_FN %>"
 elseif exists("z:\system\install\Series60v3.0.sis")
-  "<%= BASENAME %>_s60_30_<%= ssfx_v9 %>.dll" - "!:\sys\bin\<%= tdllname %>"
+  "<%= sdllname.call("s60_30") %>" - "!:\sys\bin\<%= BIN_FN %>"
 else
   "unsupported.txt" - "", FT, TA
 endif
 <% else %>
 if exists("z:\system\install\Series60v2.8.sis")
-  "<%= BASENAME %>_s60_28_<%= ssfx_v8 %>.dll" - "!:\system\libs\<%= tdllname %>"
+  "<%= sdllname.call("s60_28") %>" - "!:\system\libs\<%= BIN_FN %>"
 elseif exists("z:\system\install\Series60v2.6.sis")
-  "<%= BASENAME %>_s60_26_<%= ssfx_v8 %>.dll" - "!:\system\libs\<%= tdllname %>"
+  "<%= sdllname.call("s60_26") %>" - "!:\system\libs\<%= BIN_FN %>"
 elseif exists("z:\system\install\Series60v2.1.sis")
-  "<%= BASENAME %>_s60_21_<%= ssfx_v8 %>.dll" - "!:\system\libs\<%= tdllname %>"
+  "<%= sdllname.call("s60_21") %>" - "!:\system\libs\<%= BIN_FN %>"
 elseif exists("z:\system\install\Series60v2.0.sis")
-  "<%= BASENAME %>_s60_20_<%= ssfx_v8 %>.dll" - "!:\system\libs\<%= tdllname %>"
+  "<%= sdllname.call("s60_20") %>" - "!:\system\libs\<%= BIN_FN %>"
 elseif (exists("z:\system\install\Series60v1.2.sis") or
         exists("z:\system\install\Series60v1.1.sis") or
         exists("z:\system\install\Series60v1.0.sis") or
         exists("z:\system\install\Series60v0.9.sis"))
-  "<%= BASENAME %>_s60_12_<%= ssfx_v8 %>.dll" - "!:\system\libs\<%= tdllname %>"
+  "<%= sdllname.call("s60_12") %>" - "!:\system\libs\<%= BIN_FN %>"
 else
   "unsupported.txt" - "", FT, TA
 endif

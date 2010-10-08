@@ -24,7 +24,7 @@ library		bafl.lib
 <% if build.trait_map[:has_ahleclient] %>
 library 	ahleclient.lib
 <% elsif build.trait_map[:has_ahle2client] %>
-//library		ahle2client.lib
+//library	ahle2client.lib
 <% end %>
 
 sourcepath 	..\..\src
