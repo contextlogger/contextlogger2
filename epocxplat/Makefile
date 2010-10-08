@@ -1,40 +1,38 @@
 # string
-PROJECT_NAME := epocxplat Library
+export PROJECT_NAME := epocxplat Library
 # nickname
-BASENAME := epocxplat
+export BASENAME := epocxplat
 # decimal number with two-digit fraction
-VERSION := 0.01
+export VERSION := 0.01
 # 8-digit hex number 
-UID_V8 := 0846000d
+export UID_V8 := 0846000d
 # 8-digit hex number 
-UID_V9 := e846000d
+export UID_V9 := e846000d
 
 # nickname
-KIT := s60_30
+export KIT := s60_30
 # nickname, or one of self, self32, devcert, publisher, manufacturer
-CAPA := devcert
+export CAPA := devcert
 # list of capabilities
-CAPS :=
+export CAPS :=
 # true or nothing
-DEBUG := true
+export DEBUG := true
 
 ## For packaging only.
 # er3, er6, or er9
-SISFMT := er9
+export SISFMT := er9
 # 8-digit hex number 
-OWNER_UID :=
-# true or nothing
-SIGN := true
+export OWNER_UID :=
 # nickname
-CERT := dev
+export OWNER := $(OWNER_UID)
+# true or nothing
+export SIGN := true
+# nickname
+export CERT := dev
 
 ## For file transfer only.
 # nickname
-DEVICE := default
-
-## We could also use the "export" directive, probably, to pass to sub-makes.
-DLL_PASS := CAPA=$(CAPA) CAPS=$(CAPS) DEBUG=$(DEBUG)
-SIS_PASS := CAPA=$(CAPA) OWNER_UID=$(OWNER_UID) SIGN=$(SIGN) CERT=$(CERT)
+export DEVICE := default
 
 # er3 = ER 3, 4, 5 (SIS UID 0x1000006d) unsupported
 # er6 = ER 6, 7, 8 (SIS UID 0x10003a12)   supported
@@ -75,12 +73,12 @@ DLL_VARIANT := $(KIT)_$(REL)_$(CAPA)
 PKGIN_FILE := src/module.pkg.in
 SIS_DIR := packages
 ifeq ($(SISFMT),er6)
-PKG_FILE := $(BASENAME)_2nd_$(REL).pkg
-SIS_FILE := $(BASENAME)_2nd_$(REL).sis
+PKG_FILE := $(BASENAME)_2nd_$(REL)_$(OWNER).pkg
+SIS_FILE := $(BASENAME)_2nd_$(REL)_$(OWNER).sis
 else
-PKG_FILE := $(BASENAME)_3rd_$(REL)_$(CAPA).pkg
-SIS_FILE := $(BASENAME)_3rd_$(REL)_$(CAPA).sis
-SISX_FILE := $(BASENAME)_3rd_$(REL)_$(CAPA)_$(CERT).sisx
+PKG_FILE := $(BASENAME)_3rd_$(REL)_$(OWNER)_$(CAPA).pkg
+SIS_FILE := $(BASENAME)_3rd_$(REL)_$(OWNER)_$(CAPA).sis
+SISX_FILE := $(BASENAME)_3rd_$(REL)_$(OWNER)_$(CAPA)_$(CERT).sisx
 endif
 
 SAKE_EXE := sake
@@ -104,6 +102,13 @@ dll :
 	mkdir -p $(SIS_DIR)
 	cp build/$(DLL_VARIANT)/$(BASENAME).dll $(SIS_DIR)/$(BASENAME)_$(DLL_VARIANT).dll
 
+define sake_template
+$(1) :
+	$(SAKE_COMMAND) $(1)
+endef
+SAKE_RULES := build_info makefiles
+$(foreach name,$(SAKE_RULES),$(eval $(call sake_template,$(name))))
+
 SIS_VERSION := $(VERSION)
 OWNER_UID_SFX := $(and $(OWNER_UID),_$(OWNER_UID))
 PKG_VARLIST := BASENAME CAPA OWNER_UID_SFX PROJECT_NAME REL SISFMT UID3 SIS_VERSION
@@ -114,15 +119,6 @@ pkg :
 	ruby -e '$(PKG_EXPORTS) require "erb"; puts(ERB.new(File.read("$(PKGIN_FILE)")).result(binding()))' > $(SIS_DIR)/$(PKG_FILE)
 
 SISTOOL := ../../megasis/do-sis-signing.rb -k $(KIT)
-
-all : 3rd-sis
-
-3rd-sis :
-	$(MAKE) dll KIT=s60_30 $(DLL_PASS)
-	$(MAKE) dll KIT=s60_31 $(DLL_PASS)
-	$(MAKE) dll KIT=s60_32 $(DLL_PASS)
-	$(MAKE) dll KIT=s60_50 $(DLL_PASS)
-	$(MAKE) sis SISFMT=er9 KIT=s60_50 $(SIS_PASS)
 
 sis : $(if $(SIGN),signed-sis,unsigned-sis)
 
@@ -136,12 +132,30 @@ unsigned-sis : pkg unsupported-txt
 signed-sis : pkg unsupported-txt
 	(cd $(SIS_DIR) && $(SISTOOL) --makesis --signsis --cert $(CERT) -o $(SISX_FILE) -i $(PKG_FILE))
 
-define sake_template
-$(1) :
-	$(SAKE_COMMAND) $(1)
-endef
-SAKE_RULES := build_info makefiles
-$(foreach name,$(SAKE_RULES),$(eval $(call sake_template,$(name))))
+# The -e switch exports "export" variables to the sub-make, except
+# where overridden by an explicit command-line definition.
+3rd-sis :
+	$(MAKE) -e dll KIT=s60_30
+	$(MAKE) -e dll KIT=s60_31
+	$(MAKE) -e dll KIT=s60_32
+	$(MAKE) -e dll KIT=s60_50
+	$(MAKE) -e sis SISFMT=er9 KIT=s60_50
+
+all : 3rd-sis
+
+cl2-sis :
+	$(MAKE) -e 3rd-sis OWNER_UID=e8460002 OWNER=cl2 "PROJECT_NAME=epocxplat for CL2"
+
+cl2 : cl2-sis
+
+sub-test :
+	$(MAKE) sub-echo
+	$(MAKE) DEVICE=foo sub-echo
+	$(MAKE) -e sub-echo
+	$(MAKE) -e DEVICE=foo sub-echo
+
+sub-echo :
+	@echo DEVICE is $(DEVICE).
 
 # Copyright 2010 Helsinki Institute for Information Technology (HIIT)
 # and the authors. All rights reserved.
