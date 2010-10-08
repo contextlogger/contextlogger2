@@ -1,0 +1,4 @@
+EXPORTS
+	_ZN9epocxplat10HasFeatureENS_8TFeatureE @ 1 NONAME ; CODE
+	_ZN9epocxplat11AhleBrowser12NewNotifierLERNS0_9MObserverE @ 2 NONAME ; CODE
+
