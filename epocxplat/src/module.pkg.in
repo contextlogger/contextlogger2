@@ -6,22 +6,31 @@
 ;;
 ;; At most we have one SIS file for each combination of these.
 
-#{"<%= build.name %>"}, (<%= build.uid.chex_string %>), <%= build.major_version %>, <%= build.minor_version %>, 0
+<%
+  require 'scanf'
+  version = SIS_VERSION.scanf("%d.%d")
+  major = version[0]
+  minor = version[1]
+  is_v9 = (SISFMT == "er9")
+  vendor = "HIIT"
+ %>
 
-<% if build.v9_up? %>
+#{"<%= PROJECT_NAME %>"}, (0x<%= UID3 %>), <%= major %>, <%= minor %>, 0
+
+<% if is_v9 %>
 ;; In S60 3rd ed SDKs, vendor name(s) are required.
 ;; Apparently both unique and localized versions.
 
 ;Localised Vendor name
-%{"<%= build.vendor %>"}
+%{"<%= vendor %>"}
 
 ;Unique Vendor name
-:"<%= build.vendor %>"
+:"<%= vendor %>"
 <% end %>
 
 ;; Platform dependency.
 ;; http://wiki.forum.nokia.com/index.php/S60_Platform_and_device_identification_codes
-<% if build.v9_up? %>
+<% if is_v9 %>
 [0x101f7961], 0, 0, 0, {"Series60ProductID"} ;; s60_30
 ;;[0x102032be], 0, 0, 0, {"Series60ProductID"} ;; s60_31
 ;;[0x102752ae], 0, 0, 0, {"Series60ProductID"} ;; s60_32
@@ -35,39 +44,40 @@
 <% end %>
 
 <% 
-tdllname = '%s_%s.dll' % [$basename, owner.uid.hex_string]
+tdllname = '%s%s.dll' % [BASENAME, OWNER_UID_SFX]
 %>
-<% if build.v9_up? %>
+<% if is_v9 %>
 if exists("z:\system\install\Series60v5.2.sis")
-  "<%= $basename %>_s60_52_<%= $rel %>.dll" - "!:\sys\bin\<%= tdllname %>"
+;; xxx  "<%= BASENAME %>_s60_52_<%= REL %>.dll" - "!:\sys\bin\<%= tdllname %>"
+  "unsupported.txt" - "", FT, TA
 elseif (exists("z:\system\install\Series60v5.1.sis") or
         exists("z:\system\install\Series60v5.0.sis"))
-  "<%= $basename %>_s60_50_<%= $rel %>.dll" - "!:\sys\bin\<%= tdllname %>"
+  "<%= BASENAME %>_s60_50_<%= REL %>.dll" - "!:\sys\bin\<%= tdllname %>"
 elseif exists("z:\system\install\Series60v3.2.sis")
-  "<%= $basename %>_s60_32_<%= $rel %>.dll" - "!:\sys\bin\<%= tdllname %>"
+  "<%= BASENAME %>_s60_32_<%= REL %>.dll" - "!:\sys\bin\<%= tdllname %>"
 elseif exists("z:\system\install\Series60v3.1.sis")
-  "<%= $basename %>_s60_31_<%= $rel %>.dll" - "!:\sys\bin\<%= tdllname %>"
+  "<%= BASENAME %>_s60_31_<%= REL %>.dll" - "!:\sys\bin\<%= tdllname %>"
 elseif exists("z:\system\install\Series60v3.0.sis")
-  "<%= $basename %>_s60_30_<%= $rel %>.dll" - "!:\sys\bin\<%= tdllname %>"
+  "<%= BASENAME %>_s60_30_<%= REL %>.dll" - "!:\sys\bin\<%= tdllname %>"
 else
-  "error.txt" - "", FT, TA
+  "unsupported.txt" - "", FT, TA
 endif
 <% else %>
 if exists("z:\system\install\Series60v2.8.sis")
-  "<%= $basename %>_s60_28_<%= $rel %>.dll" - "!:\system\libs\<%= tdllname %>"
+  "<%= BASENAME %>_s60_28_<%= REL %>.dll" - "!:\system\libs\<%= tdllname %>"
 elseif exists("z:\system\install\Series60v2.6.sis")
-  "<%= $basename %>_s60_26_<%= $rel %>.dll" - "!:\system\libs\<%= tdllname %>"
+  "<%= BASENAME %>_s60_26_<%= REL %>.dll" - "!:\system\libs\<%= tdllname %>"
 elseif exists("z:\system\install\Series60v2.1.sis")
-  "<%= $basename %>_s60_21_<%= $rel %>.dll" - "!:\system\libs\<%= tdllname %>"
+  "<%= BASENAME %>_s60_21_<%= REL %>.dll" - "!:\system\libs\<%= tdllname %>"
 elseif exists("z:\system\install\Series60v2.0.sis")
-  "<%= $basename %>_s60_20_<%= $rel %>.dll" - "!:\system\libs\<%= tdllname %>"
+  "<%= BASENAME %>_s60_20_<%= REL %>.dll" - "!:\system\libs\<%= tdllname %>"
 elseif (exists("z:\system\install\Series60v1.2.sis") or
         exists("z:\system\install\Series60v1.1.sis") or
         exists("z:\system\install\Series60v1.0.sis") or
         exists("z:\system\install\Series60v0.9.sis"))
-  "<%= $basename %>_s60_12_<%= $rel %>.dll" - "!:\system\libs\<%= tdllname %>"
+  "<%= BASENAME %>_s60_12_<%= REL %>.dll" - "!:\system\libs\<%= tdllname %>"
 else
-  "error.txt" - "", FT, TA
+  "unsupported.txt" - "", FT, TA
 endif
 <% end %>
 

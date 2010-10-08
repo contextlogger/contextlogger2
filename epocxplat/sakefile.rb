@@ -5,21 +5,21 @@ require 'sake4/component'
 
 $projname = $sake_op[:projname]
 $basename = "epocxplat"
-$uid_v8 = 0x0846000d
+$uid = Sake::Uid.new($sake_op[:uid_v8].hex, $sake_op[:uid_v9].hex)
 $version = $sake_op[:version].split(".").map {|x| x.to_i}
 $caps = $sake_op[:caps].split(/\s+/)
 
 $proj = Sake::Project.new(:basename => $basename,
                           :name => $projname,
                           :version => $version,
-                          :uid => Sake::Uid.v8($uid_v8),
+                          :uid => $uid,
                           :vendor => "HIIT")
 
 $app = Sake::Component.new(:project => $proj,
                            :target_type => :dll,
                            :basename => $basename,
                            :bin_basename => $basename,
-                           :uid3 => Sake::Uid.v8($uid_v8),
+                           :uid3 => $uid,
                            :caps => $caps)
 
 class <<$app
