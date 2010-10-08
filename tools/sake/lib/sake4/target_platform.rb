@@ -328,8 +328,10 @@ module Sake
 
         dlist.push :has_hwrmvibra if edition >= 3
 
-        dlist.push :has_ahleclient if edition == 3
-        dlist.push :has_ahle2client if edition == 5
+        dlist.push :has_ahleclient if edition == 3 and fp == 0
+        if (edition == 3 and (fp == 1 or fp == 2)) or (edition == 5)
+          dlist.push :has_ahle2client
+        end
       end
 
       vlist + Sake::define_value_map(dlist)

@@ -1,6 +1,6 @@
 ;; We have three orthogonal variable factors.
 ;;
-;; * whether v8 or v9 SIS file format
+;; * whether ER6 or ER9 SIS file format
 ;; * whether UREL or UDEB
 ;; * application UID of "owning" application
 ;;
@@ -44,38 +44,39 @@
 <% end %>
 
 <% 
+ssfx_v8 = '%s' % [REL]
+ssfx_v9 = '%s_%s' % [REL, CAPA]
 tdllname = '%s%s.dll' % [BASENAME, OWNER_UID_SFX]
 %>
 <% if is_v9 %>
 if exists("z:\system\install\Series60v5.2.sis")
-;; xxx  "<%= BASENAME %>_s60_52_<%= REL %>.dll" - "!:\sys\bin\<%= tdllname %>"
-  "unsupported.txt" - "", FT, TA
+  "<%= BASENAME %>_s60_50_<%= ssfx_v9 %>.dll" - "!:\sys\bin\<%= tdllname %>" ;; xxx
 elseif (exists("z:\system\install\Series60v5.1.sis") or
         exists("z:\system\install\Series60v5.0.sis"))
-  "<%= BASENAME %>_s60_50_<%= REL %>.dll" - "!:\sys\bin\<%= tdllname %>"
+  "<%= BASENAME %>_s60_50_<%= ssfx_v9 %>.dll" - "!:\sys\bin\<%= tdllname %>"
 elseif exists("z:\system\install\Series60v3.2.sis")
-  "<%= BASENAME %>_s60_32_<%= REL %>.dll" - "!:\sys\bin\<%= tdllname %>"
+  "<%= BASENAME %>_s60_32_<%= ssfx_v9 %>.dll" - "!:\sys\bin\<%= tdllname %>"
 elseif exists("z:\system\install\Series60v3.1.sis")
-  "<%= BASENAME %>_s60_31_<%= REL %>.dll" - "!:\sys\bin\<%= tdllname %>"
+  "<%= BASENAME %>_s60_31_<%= ssfx_v9 %>.dll" - "!:\sys\bin\<%= tdllname %>"
 elseif exists("z:\system\install\Series60v3.0.sis")
-  "<%= BASENAME %>_s60_30_<%= REL %>.dll" - "!:\sys\bin\<%= tdllname %>"
+  "<%= BASENAME %>_s60_30_<%= ssfx_v9 %>.dll" - "!:\sys\bin\<%= tdllname %>"
 else
   "unsupported.txt" - "", FT, TA
 endif
 <% else %>
 if exists("z:\system\install\Series60v2.8.sis")
-  "<%= BASENAME %>_s60_28_<%= REL %>.dll" - "!:\system\libs\<%= tdllname %>"
+  "<%= BASENAME %>_s60_28_<%= ssfx_v8 %>.dll" - "!:\system\libs\<%= tdllname %>"
 elseif exists("z:\system\install\Series60v2.6.sis")
-  "<%= BASENAME %>_s60_26_<%= REL %>.dll" - "!:\system\libs\<%= tdllname %>"
+  "<%= BASENAME %>_s60_26_<%= ssfx_v8 %>.dll" - "!:\system\libs\<%= tdllname %>"
 elseif exists("z:\system\install\Series60v2.1.sis")
-  "<%= BASENAME %>_s60_21_<%= REL %>.dll" - "!:\system\libs\<%= tdllname %>"
+  "<%= BASENAME %>_s60_21_<%= ssfx_v8 %>.dll" - "!:\system\libs\<%= tdllname %>"
 elseif exists("z:\system\install\Series60v2.0.sis")
-  "<%= BASENAME %>_s60_20_<%= REL %>.dll" - "!:\system\libs\<%= tdllname %>"
+  "<%= BASENAME %>_s60_20_<%= ssfx_v8 %>.dll" - "!:\system\libs\<%= tdllname %>"
 elseif (exists("z:\system\install\Series60v1.2.sis") or
         exists("z:\system\install\Series60v1.1.sis") or
         exists("z:\system\install\Series60v1.0.sis") or
         exists("z:\system\install\Series60v0.9.sis"))
-  "<%= BASENAME %>_s60_12_<%= REL %>.dll" - "!:\system\libs\<%= tdllname %>"
+  "<%= BASENAME %>_s60_12_<%= ssfx_v8 %>.dll" - "!:\system\libs\<%= tdllname %>"
 else
   "unsupported.txt" - "", FT, TA
 endif

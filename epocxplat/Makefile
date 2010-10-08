@@ -33,7 +33,7 @@ CERT := dev
 DEVICE := default
 
 DLL_PASS := CAPA=$(CAPA) CAPS=$(CAPS) DEBUG=$(DEBUG)
-SIS_PASS := OWNER_UID=$(OWNER_UID) SIGN=$(SIGN) CERT=$(CERT)
+SIS_PASS := CAPA=$(CAPA) OWNER_UID=$(OWNER_UID) SIGN=$(SIGN) CERT=$(CERT)
 
 # er3 = ER 3, 4, 5 (SIS UID 0x1000006d) unsupported
 # er6 = ER 6, 7, 8 (SIS UID 0x10003a12)   supported
@@ -74,12 +74,12 @@ DLL_VARIANT := $(KIT)_$(REL)_$(CAPA)
 PKGIN_FILE := src/module.pkg.in
 SIS_DIR := packages
 ifeq ($(SISFMT),er6)
-PKG_FILE := $(SIS_DIR)/$(BASENAME)_2nd_$(REL).pkg
-SIS_FILE := $(SIS_DIR)/$(BASENAME)_2nd_$(REL).sis
+PKG_FILE := $(BASENAME)_2nd_$(REL).pkg
+SIS_FILE := $(BASENAME)_2nd_$(REL).sis
 else
-PKG_FILE := $(SIS_DIR)/$(BASENAME)_3rd_$(REL)_$(CAPA).pkg
-SIS_FILE := $(SIS_DIR)/$(BASENAME)_3rd_$(REL)_$(CAPA).sis
-SISX_FILE := $(SIS_DIR)/$(BASENAME)_3rd_$(REL)_$(CAPA)_$(CERT).sisx
+PKG_FILE := $(BASENAME)_3rd_$(REL)_$(CAPA).pkg
+SIS_FILE := $(BASENAME)_3rd_$(REL)_$(CAPA).sis
+SISX_FILE := $(BASENAME)_3rd_$(REL)_$(CAPA)_$(CERT).sisx
 endif
 
 SAKE_EXE := sake
@@ -102,14 +102,14 @@ dll :
 
 SIS_VERSION := $(VERSION)
 OWNER_UID_SFX := $(and $(OWNER_UID),_$(OWNER_UID))
-RUBY_VARLIST := BASENAME OWNER_UID_SFX PROJECT_NAME REL SISFMT UID3 SIS_VERSION
-RUBY_EXPORTS := $(foreach name,$(RUBY_VARLIST),$(name) = "$($(name))";)
+PKG_VARLIST := BASENAME CAPA OWNER_UID_SFX PROJECT_NAME REL SISFMT UID3 SIS_VERSION
+PKG_EXPORTS := $(foreach name,$(PKG_VARLIST),$(name) = "$($(name))";)
 
 pkg :
-	mkdir -p $(dir $(PKG_FILE))
-	ruby -e '$(RUBY_EXPORTS) require "erb"; puts(ERB.new(File.read("$(PKGIN_FILE)")).result(binding()))' > $(PKG_FILE)
+	mkdir -p $(SIS_DIR)
+	ruby -e '$(PKG_EXPORTS) require "erb"; puts(ERB.new(File.read("$(PKGIN_FILE)")).result(binding()))' > $(SIS_DIR)/$(PKG_FILE)
 
-SISTOOL := ../megasis/do-sis-signing.rb -k $(KIT)
+SISTOOL := ../../megasis/do-sis-signing.rb -k $(KIT)
 
 all : 3rd-sis
 
@@ -127,11 +127,9 @@ unsupported-txt :
 	echo Unsupported platform. No DLL installed. Please abort installation. > $(SIS_DIR)/unsupported.txt
 
 unsigned-sis : pkg unsupported-txt
-	mkdir -p $(SIS_DIR)
 	(cd $(SIS_DIR) && $(SISTOOL) --makesis -o $(SIS_FILE) -i $(PKG_FILE))
 
 signed-sis : pkg unsupported-txt
-	mkdir -p $(SIS_DIR)
 	(cd $(SIS_DIR) && $(SISTOOL) --makesis --signsis --cert $(CERT) -o $(SISX_FILE) -i $(PKG_FILE))
 
 define sake_template
