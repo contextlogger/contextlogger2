@@ -133,6 +133,8 @@ SAKE_COMMAND := $(SAKE_EXE) --trace handle=$(DLL_VARIANT) kits=$(KIT) rel=$(REL)
 
 default : dll
 
+.PHONY : dll freeze pkg sis clean all
+
 -include local.mk
 
 caps :

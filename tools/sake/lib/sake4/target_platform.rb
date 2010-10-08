@@ -328,7 +328,7 @@ module Sake
 
         dlist.push :has_hwrmvibra if edition >= 3
 
-        dlist.push :has_ahleclient if edition == 3 and fp == 0
+        dlist.push :has_ahleclient if edition == 3 # and fp == 0 # xxx fp 0 and 1 yes, what about 2?
         if (edition == 3 and (fp == 1 or fp == 2)) or (edition == 5)
           dlist.push :has_ahle2client
         end

@@ -330,9 +330,9 @@ EOF
       task :bin => :pyd_wrapper
     end # op[:pyd_wrapper]
 
-    desc "Builds binaries for each targeted device."
     case $build_env
     when :cygwin, :gnupoc
+      desc "Builds binaries for each targeted device."
       task :bin => [:bld_inf, :mmp, :sconfig] do
         for build in builds
           blddir = build.to_proj_rel(build.build_dir).to_s

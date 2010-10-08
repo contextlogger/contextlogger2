@@ -66,7 +66,10 @@ v3.1-up kits support this API, but it cannot be used to access the web browsers 
 
 #if FEATURE_AhleBrowser
 
-#if __HAVE_AHLECLIENT_LIB__
+#define __USE_AHLECLIENT_LIB__ __HAVE_AHLECLIENT_LIB__
+#define __USE_AHLE2CLIENT_LIB__ 0
+
+#if __USE_AHLECLIENT_LIB__
 // Note that CAHLE relies on a DLL that is not available on 5th
 // edition devices. Hence dynamic linking fails, and the logger will
 // not even start.
@@ -74,7 +77,7 @@ v3.1-up kits support this API, but it cannot be used to access the web browsers 
 #include <ahle.h>
 typedef CAHLE AhleClientType;
 typedef MAHLEClientObserver AhleObserverType;
-#elif __HAVE_AHLE2CLIENT_LIB__
+#elif __USE_AHLE2CLIENT_LIB__
 #include <ahleobserver.h>
 class MAHLEGenericAPI;
 typedef MAHLEGenericAPI AhleClientType;
@@ -83,7 +86,7 @@ typedef MAHLEObserver AhleObserverType;
 #error feature AhleBrowser enabled without API
 #endif
 
-#if __HAVE_AHLE2CLIENT_LIB__
+#if __USE_AHLE2CLIENT_LIB__
 #include <ahlegenericapi.h>
 #endif
 
@@ -151,7 +154,7 @@ CTOR_IMPL_CMyAhleNotifier;
 
 void CMyAhleNotifier::ConstructL()
 {
-#if __HAVE_AHLECLIENT_LIB__
+#if __USE_AHLECLIENT_LIB__
   iAhle = CAHLE::NewL();
 #else
   // Can we find a list of these from somewhere? Not in API docs,
@@ -203,7 +206,7 @@ void CMyAhleNotifier::HandleDataL()
   // better than nothing, I guess.
   //logh();
   iAhle->AdaptiveListL(*urlArray, *nameArray, MAX_URLS, KNullDesC
-#if __HAVE_AHLECLIENT_LIB__
+#if __USE_AHLECLIENT_LIB__
 		       , 
 		       //EAHLEAdaptiveSiteList // (short url, short url) 
 		       EAHLEAdaptiveSiteDetails // (caption, long url)
