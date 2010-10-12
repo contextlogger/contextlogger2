@@ -18,6 +18,12 @@ The logger program.
 
 Can be built both for Symbian and Linux, but the Linux variant has somewhat less functionality. At present support for Linux builds really only exists to allow for some of the functionality to be tested on the PC rather than on mobile.
 
+h2. epocxplat/
+
+A dynamic library for isolating Symbian platform ABI incompatibilities, so that the same daemon binary can be installed on all supported Symbian devices.
+
+A separate epocxplat DLL is built for each Symbian release, but this fact is hidden by including all the different builds in a single epocxplat SIS file, and by picking a compatible DLL during installation.
+
 h2. iksemel/
 
 A port of the [Iksemel http://code.google.com/p/iksemel/] XML and Jabber/XMPP library for Symbian. This not quite your plain port, but rather it excludes some APIs and includes some new ones.
