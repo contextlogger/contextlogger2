@@ -2,7 +2,7 @@
 
 #|
 
-Sensible defaults for Linux/Qt builds.
+Sensible defaults for Linux/libev builds with qmake.
 
 |#
 
@@ -13,7 +13,6 @@ Sensible defaults for Linux/Qt builds.
 (define-variant qt-variant% linux-variant%
   (super-new)
   (define/override (with-qmake.attr) #t)
-  (define/override (with-qt.attr) #t)
   (define/override (feature-remokon.attr) #f)
   )
 

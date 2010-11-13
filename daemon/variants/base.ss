@@ -127,8 +127,14 @@ project must implement.
   (define/public (is-daemon.attr)
     (eq? (binary-type) 'daemon))
 
+  (define/public (with-qt.attr)
+    #f)
+
   (define/public (with-qmake.attr)
     #f)
+
+  (define/public (with-libev.attr)
+    (not (or (is-symbian.attr) (with-qt.attr))))
 
   (define/public (upload-time-expr.attr) "never")
 
