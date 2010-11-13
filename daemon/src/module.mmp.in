@@ -83,6 +83,14 @@ library euser.lib
 library flogger.lib
 <% end %>
 
+<% if $PROFILE_ENABLED %>
+<% if $HAVE_PROFILEENGINE_LIB %>
+library profileengine.lib
+<% else %>
+library profileeng.lib // SDK Plugins
+<% end %>
+<% end %>
+
 <% for libfile in $MMP_LIBRARIES %>
 library <%= libfile %>
 <% end %>

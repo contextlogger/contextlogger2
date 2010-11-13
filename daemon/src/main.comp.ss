@@ -27,9 +27,6 @@
   (new abld-component%
        (deps (compact-list
               (and on-symbian
-                   (attr 'profile-enabled)
-                   'epoc-profile)
-              (and on-symbian
                    (attr 'smsevent-enabled)
                    'epoc-smsevent)
               ))
