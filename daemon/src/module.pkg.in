@@ -24,7 +24,7 @@
 "epoc32/data/z/resource/apps/cl2app_aif.mif"		-"!:\resource\apps\cl2app_aif.mif"
 <% end %>
 
-"../../src/backup_registration.xml"						-"!:\private\<%= build.uid.hex_string %>\backup_registration.xml"
+"..\..\src\backup_registration.xml"						-"!:\private\<%= build.uid.hex_string %>\backup_registration.xml"
 <% elsif build.v6? %>
 ;; xxx note that these paths are urel build dependent
 "epoc32/release/armi/urel/cl2app.aif" - "!:\system\apps\cl2app\cl2app.aif"

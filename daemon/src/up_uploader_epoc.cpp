@@ -470,7 +470,10 @@ void CUploader::PosterEvent(TInt anError)
     case POSTER_SUCCESS:
       {
 	GError* localError = NULL;
+	//assert(iFileToPost);
+	//logf("removing file '%s'", iFileToPost);
 	if (!rm_file(iFileToPost, &localError)) {
+	  //logt("failure removing file");
 	  gx_txtlog_error_free(localError);
 	  FatalError(KErrGeneral);
 	} else {

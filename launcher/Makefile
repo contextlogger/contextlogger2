@@ -43,11 +43,12 @@ else
 DIST_COPY := cp $(BUILT_SIS) $(DIST_HOME)/$(BASENAME)-$(VERSION)-s60_30_py1_$(DIST_CERT).$(DIST_EXT)
 endif
 
-CERT_FILES := $(wildcard cl2-ca-cert.der)
+CA_FILE := cl2-ca-cert.der
+CERT_FILES := $(wildcard $(CA_FILE))
 ifeq ($(CERT_FILES),)
 CERT_COPY := @echo no certificate to package
 else
-CERT_COPY := cp --dereference cl2-ca-cert.der myfiles/extras/data/cl2/
+CERT_COPY := cp --dereference $(CA_FILE) myfiles/extras/data/cl2/
 endif
 
 default : sis
