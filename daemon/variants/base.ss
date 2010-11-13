@@ -127,6 +127,9 @@ project must implement.
   (define/public (is-daemon.attr)
     (eq? (binary-type) 'daemon))
 
+  (define/public (with-qmake.attr)
+    #f)
+
   (define/public (upload-time-expr.attr) "never")
 
   ;; This must be printable ASCII identifier, see "is_ascii_ident".

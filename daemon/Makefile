@@ -76,7 +76,9 @@ SAKE := ../tools/bin/sake
 KIT := $(or $(KIT_NAME), s60_30)
 CERT := $(or $(CERT_NAME), dev)
 
-default : epoc_codegen binary
+DEFAULTS := epoc_codegen binary-and-run
+
+default : $(DEFAULTS)
 
 src/current_config.mk :
 	$(PLT_ENV) ./configure.scm $(VARIANT_NAME)
@@ -90,13 +92,35 @@ config :
 
 -include .depend
 
-symbian :
+ifeq ($(WITH_QMAKE),true)
+  ifeq ($(IS_SYMBIAN),true)
+    BUILD_BINARY := binary-with-qmake
+  else
+    BUILD_BINARY := main-with-qmake
+  endif
+else
+  ifeq ($(IS_SYMBIAN),true)
+    BUILD_BINARY := binary-with-sake
+  else
+    BUILD_BINARY := main
+  endif
+endif
+
+binary-and-run : bin $(and $(NOT__IS_SYMBIAN), run)
+
+bin : $(BUILD_BINARY)
+
+run :
+	./main
+
+binary-with-sake :
 	$(SAKE) --trace kits=$(KIT) cert=$(CERT)
 
-binary : $(if $(IS_SYMBIAN), symbian, posix_test)
+binary-with-qmake : 
+	cd qt-group && qmake && make
 
-posix_test : main
-	./main
+main-with-qmake : binary-with-qmake
+	cp qt-group/main .
 
 main : $(ALL_OBJ_FILES)
 	g++ -o $@ $(ALL_OBJ_FILES) $(LDFLAGS)
