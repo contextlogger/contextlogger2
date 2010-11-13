@@ -79,6 +79,10 @@ staticlibrary libcurl.lib    // built by us
 
 library euser.lib
 
+<% if $DO_LOGGING %>
+library flogger.lib
+<% end %>
+
 <% for libfile in $MMP_LIBRARIES %>
 library <%= libfile %>
 <% end %>

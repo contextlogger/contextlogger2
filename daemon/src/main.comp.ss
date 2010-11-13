@@ -26,7 +26,6 @@
 
   (new abld-component%
        (deps (compact-list
-              'common/logging
               (and on-symbian
                    (attr 'profile-enabled)
                    'epoc-profile)
