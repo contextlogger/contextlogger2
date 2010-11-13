@@ -25,29 +25,6 @@
   (define (compact-list . x) (compact x))
 
   (new abld-component%
-       (mmp-libs
-        (symbian-list
-         "apgrfx.lib"
-         "apparc.lib"
-         "avkon.lib"
-         "bafl.lib"
-         "bluetooth.lib"
-         "btmanclient.lib"
-         "charconv.lib"
-         "commdb.lib"
-         "commonui.lib" ;; CErrorUI
-         "cone.lib"
-         "efsrv.lib"
-         "eikcoctl.lib"
-         "eikcore.lib"
-         "esock.lib"
-         "etel3rdparty.lib" ;; CTelephony
-         "http.lib"
-         "inetprotutil.lib" ;; URI parsers
-         "insock.lib" ;; Internet protocol support for esock
-         "lbs.lib"
-         "ws32.lib"
-         ))
        ))
 
 #|

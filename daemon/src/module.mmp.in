@@ -97,9 +97,26 @@ library msgs.lib // CMsvSession
 library smcm.lib // CSmsClientMtm
 <% end %>
 
-<% for libfile in $MMP_LIBRARIES %>
-library <%= libfile %>
-<% end %>
+library apgrfx.lib
+library apparc.lib
+library avkon.lib
+library bafl.lib
+library bluetooth.lib
+library btmanclient.lib
+library charconv.lib
+library commdb.lib
+library commonui.lib // CErrorUI
+library cone.lib
+library efsrv.lib
+library eikcoctl.lib
+library eikcore.lib
+library esock.lib
+library etel3rdparty.lib // CTelephony
+library http.lib
+library inetprotutil.lib // URI parsers
+library insock.lib // Internet protocol support for esock
+library lbs.lib
+library ws32.lib
 
 library aknnotify.lib eiksrv.lib // CAknGlobalNote
 library cntmodel.lib // CContactDatabase
