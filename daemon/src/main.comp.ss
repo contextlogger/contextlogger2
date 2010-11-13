@@ -25,11 +25,6 @@
   (define (compact-list . x) (compact x))
 
   (new abld-component%
-       (deps (compact-list
-              (and on-symbian
-                   (attr 'smsevent-enabled)
-                   'epoc-smsevent)
-              ))
        (mmp-libs
         (symbian-list
          "apgrfx.lib"

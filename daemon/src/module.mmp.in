@@ -91,6 +91,12 @@ library profileeng.lib // SDK Plugins
 <% end %>
 <% end %>
 
+<% if $SMSEVENT_ENABLED %>
+library gsmu.lib // CSmsPDU
+library msgs.lib // CMsvSession
+library smcm.lib // CSmsClientMtm
+<% end %>
+
 <% for libfile in $MMP_LIBRARIES %>
 library <%= libfile %>
 <% end %>
