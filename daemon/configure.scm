@@ -16,17 +16,6 @@ Yes, convoluted, but we want this file to be a module rather than a script.
 ;; result of the change in configuration; this is to allow this script
 ;; to better work with build tools whose dependency checking is based
 ;; on timestamps.
-;; 
-;; This script also has another, fairly orthogonal function, namely
-;; that of determining what must be built for the chosen (or current)
-;; configuration. Such resolution is always performed after changing
-;; the configuration variant, but it may (and should) also be
-;; performed after a change in component descriptions. The general
-;; idea is to select the set of components based on the configuration,
-;; and then from modular component descriptions resolve the full set
-;; of source files and libraries and macro definitions that are
-;; required for the build. And once again generate a bunch of include
-;; files that contain that information.
 
 (require common/usual-4)
 (require konffaile/class-attr)
@@ -74,23 +63,6 @@ Yes, convoluted, but we want this file to be a module rather than a script.
     (write-gmake-file gmake-config-file attrs)))
 
 ;; --------------------------------------------------
-;; dependency management
-;; --------------------------------------------------
-
-(define ruby-deps-file (build-path src-dir "dependencies.rb"))
-
-(define (write-deps-config rcomp)
-  (parameterize ((component-search-path
-                  (list src-dir
-                        (build-path "../shared"))))
-    (let* ((deps (resolve-deps rcomp))
-           (attrs (comps-combine-attrs deps)))
-      ;;(write-nl (comps-attr-combinator-list deps))
-      ;;(write-nl attrs)
-      (write-ruby-file ruby-deps-file attrs)
-      )))
-
-;; --------------------------------------------------
 ;; main
 ;; --------------------------------------------------
 
@@ -111,16 +83,6 @@ Yes, convoluted, but we want this file to be a module rather than a script.
     (write-variant-config varinfo)
     (write-variant-symlink varname)
 
-    (parameterize ((current-variant varinfo))
-      (write-deps-config 'main))
-    (void)))
-
-(define* (deps-main)
-  (let* ((varfile variant-symlink-file)
-         (varinfo-f (dynamic-require (path->string varfile) 'info))
-         (varinfo (varinfo-f)))
-    (parameterize ((current-variant varinfo))
-      (write-deps-config 'main))
     (void)))
 
 #|
