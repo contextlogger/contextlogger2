@@ -89,6 +89,7 @@ EXTERN_C void sa_Sensor_timer_destroy(sa_Sensor_timer* self)
 
 EXTERN_C gboolean sa_Sensor_timer_start(sa_Sensor_timer* self, GError** error)
 {
+  (void)error;
   if (!sa_Sensor_timer_is_active(self)) {
     setTimer(self);
   }

@@ -1024,6 +1024,9 @@ static void xneeded_callback_wrapper(void * cb_data, sqlite3 * sqlite3, int eTex
 {
   DB * 		db = CB_DATA(cb_data)->db;
   lua_State * 	L  = db->L;
+
+  (void)sqlite3;
+  (void)eTextRep;
   
   push_callback(L, db, KEY_XNEEDED(cb_data));
   lua_pushstring(L, collation_name);

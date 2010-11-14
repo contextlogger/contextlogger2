@@ -386,6 +386,7 @@ void kr_Controller_destroy(kr_Controller* self)
 // start event handling.
 gboolean kr_Controller_start(kr_Controller* self, GError** error)
 {
+  (void)error;
   sa_Array_start(self->scanner);
 #if __FEATURE_LOCALSERVER__
   if (!LocalServer_start(self->localServer, error))
@@ -417,6 +418,8 @@ void kr_Controller_stop(kr_Controller* self)
 // interrupt event is delivered.
 gboolean kr_Controller_run(kr_Controller* self, GError** error)
 {
+  (void)self;
+  (void)error;
 #if __WITH_LIBEV__
   ev_loop(EV_DEFAULT, 0);
 #else

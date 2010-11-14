@@ -1,7 +1,7 @@
 include(../src/current_config.pri)
 TEMPLATE = app
-CONFIG = debug
-!isEmpty(WITH_QT) {
+CONFIG += debug
+WITH_QT {
   CONFIG += qt
 }
 INCLUDEPATH = ../src ../../shared ../../time-spec
@@ -14,12 +14,12 @@ SOURCES += moment_parser.c time_utils.c
 DEFINES += G_DISABLE_DEPRECATED
 QMAKE_CFLAGS += -fexceptions
 QMAKE_CFLAGS += -Wall -Wmissing-declarations -Wsign-compare -Werror
-!isEmpty(WITH_QT) {
+WITH_QT {
   SOURCES += ut_timer_qt.cpp
   HEADERS += ut_timer_qt_private.hpp
   SOURCES += main_qt.cpp
 }
-!isEmpty(WITH_LIBEV) {
+WITH_LIBEV {
   SOURCES += ut_timer_libev.c
   LIBS += -lev
   SOURCES += posix-main.c

@@ -52,6 +52,8 @@ gboolean GMaybeString_assign(GMaybeString* m, const gchar* rval,
  fail:
   if (error) *error = gx_error_no_memory;
   return FALSE;
+#else
+  (void)error;
 #endif
 }
 
