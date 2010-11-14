@@ -23,7 +23,7 @@ WITH_QT {
 WITH_LIBEV {
   SOURCES += ut_timer_libev.c
   LIBS += -lev
-  SOURCES += posix-main.c
+  SOURCES += main_posix.c
 }
 unix {
   TARGET = main
