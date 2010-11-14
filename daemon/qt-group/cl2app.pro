@@ -12,8 +12,9 @@ SOURCES += error_list.c gx_maybe_string.c gxerror.c logging-time.c platform_erro
 SOURCES += assertions_cxx.cpp logging.cpp utilities_cxx.cpp
 SOURCES += moment_parser.c time_utils.c
 DEFINES += G_DISABLE_DEPRECATED
-QMAKE_CFLAGS += -fexceptions
-QMAKE_CFLAGS += -Wall -Wmissing-declarations -Wsign-compare -Werror
+WARNING_FLAGS = -Wall -Wmissing-declarations -Wsign-compare -Werror
+QMAKE_CFLAGS += -fexceptions $$WARNING_FLAGS
+QMAKE_CXXFLAGS += -fexceptions $$WARNING_FLAGS
 WITH_QT {
   SOURCES += ut_timer_qt.cpp
   HEADERS += ut_timer_qt_private.hpp

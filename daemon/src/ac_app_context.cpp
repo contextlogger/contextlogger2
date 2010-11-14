@@ -102,6 +102,8 @@ EXTERN_C gboolean ac_AppContext_configure(ac_AppContext* self,
  fail:
   if (error) *error = gx_error_no_memory;
   return FALSE;
+#else
+  (void)error;
 #endif
 }
 

@@ -63,6 +63,7 @@ static int f_throw_unsupported(lua_State* L)
 static int f_die_now(lua_State* L)
 /***end***/
 {
+  (void)L;
   EXIT_APPLICATION;
   return 0;
 }
@@ -71,6 +72,7 @@ static int f_die_now(lua_State* L)
 static int f_shutdown(lua_State* L)
 /***end***/
 {
+  (void)L;
   SHUTDOWN_APPLICATION;
   return 0;
 }

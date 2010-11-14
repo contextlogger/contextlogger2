@@ -343,6 +343,10 @@ extern "C" gboolean sa_Array_sensor_start(sa_Array* self, const gchar* name, GEr
 
 extern "C" gboolean sa_Array_reconfigure(sa_Array* self, const gchar* key, const gchar* value, GError** error)
 {
+  (void)self;
+  (void)value;
+  (void)error;
+
   {
     gboolean success;
     // This macro returns if it finds a match.

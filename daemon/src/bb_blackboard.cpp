@@ -33,6 +33,7 @@ bb_Blackboard* bb_Blackboard_new(GError** error)
 
 static void Registrant_free(gpointer self, gpointer dummy)
 {
+  (void)dummy;
   g_slice_free(Registrant, self);
 }
 
@@ -76,6 +77,8 @@ gboolean bb_Blackboard_register(bb_Blackboard* self,
   Registrant_free(elem);
   if (error) *error = gx_error_no_memory;
   return FALSE;
+#else
+  (void)error;
 #endif
 }
 

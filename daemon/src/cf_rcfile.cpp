@@ -90,6 +90,8 @@ static void ValidateAdjustConfig(lua_State *L)
 
 static gboolean ReadRcFile(cf_RcFile* self, lua_State *L, GError** error)
 {
+  (void)self;
+
   int errCode;
 
   if ((errCode = luaL_loadfile(L, RCFILE_FILE)) != 0) {

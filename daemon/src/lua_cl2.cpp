@@ -180,6 +180,7 @@ extern "C" int atpanic_txtlog_leave(lua_State* L)
 
 extern "C" int atpanic_throw(lua_State *L) 
 {
+  (void)L;
   throw LuaException();
   return 0;
 }
