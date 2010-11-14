@@ -79,7 +79,7 @@
 #endif
 #endif // __PROFILE_ENABLED__
 #if __TIMER_ENABLED__
-#include "sa_sensor_timer_libev.h"
+#include "sa_sensor_timer.h"
 #endif
 #if __MARK_ENABLED__
 #include "sa_sensor_mark.h"

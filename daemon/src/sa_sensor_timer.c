@@ -3,7 +3,7 @@
 // time intervals. It is implemented based on the internal,
 // platform-independent ut_Timer API.
 
-#include "sa_sensor_timer_libev.h" // xxx misnamed header
+#include "sa_sensor_timer.h"
 
 #if __TIMER_ENABLED__
 

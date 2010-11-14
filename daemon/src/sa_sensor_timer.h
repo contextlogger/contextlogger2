@@ -1,5 +1,5 @@
-#ifndef __sa_sensor_timer_libev_h__
-#define __sa_sensor_timer_libev_h__
+#ifndef __sa_sensor_timer_h__
+#define __sa_sensor_timer_h__
 
 #include "application_config.h"
 
@@ -31,11 +31,9 @@ extern "C" {
 
 #endif /* __TIMER_ENABLED__ */
 
-#endif /* __sa_sensor_timer_libev_h__ */
+#endif /* __sa_sensor_timer_h__ */
 
 /**
-
-sa_sensor_timer_libev.h
 
 Copyright 2009 Helsinki Institute for Information Technology (HIIT)
 and the authors. All rights reserved.
