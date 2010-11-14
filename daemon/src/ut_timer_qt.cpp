@@ -4,7 +4,11 @@
 
 #include "common/platform_config.h"
 
-void _ut_Timer::handleTimeout()
+struct _ut_Timer {
+  MyTimer* timer;
+};
+
+void MyTimer::handleTimeout()
 {
   (*cb)(userdata, NULL);
 }
@@ -12,8 +16,14 @@ void _ut_Timer::handleTimeout()
 extern "C"
 ut_Timer* ut_Timer_new(void* userdata, ut_TimerCallback* cb, GError** error)
 {
-  ut_Timer* self = new_nothrow _ut_Timer(userdata, cb);
+  ut_Timer* self = g_try_new0(ut_Timer, 1);
   if (G_UNLIKELY(!self)) {
+    if (error) *error = gx_error_no_memory;
+    return NULL;
+  }
+  self->timer = new_nothrow MyTimer(userdata, cb);
+  if (G_UNLIKELY(!(self->timer))) {
+    g_free(self);
     if (error) *error = gx_error_no_memory;
     return NULL;
   }
@@ -23,7 +33,10 @@ ut_Timer* ut_Timer_new(void* userdata, ut_TimerCallback* cb, GError** error)
 extern "C"
 void ut_Timer_destroy(ut_Timer* self)
 {
-  delete self;
+  if (self) {
+    delete self->timer;
+    g_free(self);
+  }
 }
 
 extern "C"
@@ -31,7 +44,7 @@ gboolean ut_Timer_set_after(ut_Timer* self, int secs, GError** error)
 {
   (void)error;
   if (!ut_Timer_is_active(self)) {
-    self->start(1000 * secs);
+    self->timer->start(1000 * secs);
   }
   return TRUE;
 }
@@ -39,13 +52,13 @@ gboolean ut_Timer_set_after(ut_Timer* self, int secs, GError** error)
 extern "C"
 void ut_Timer_cancel(ut_Timer* self)
 {
-  self->stop();
+  self->timer->stop();
 }
 
 extern "C"
 gboolean ut_Timer_is_active(ut_Timer* self)
 {
-  return self->isActive();
+  return self->timer->isActive();
 }
 
 /**

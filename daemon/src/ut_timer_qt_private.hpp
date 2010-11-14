@@ -5,15 +5,15 @@
 
 #include <QTimer>
 
-class _ut_Timer : public QTimer
+class MyTimer : public QTimer
 {
 Q_OBJECT
 
 public:
-  _ut_Timer(
-	    void* aUserdata,
-	    ut_TimerCallback* aCb
-	    ) : userdata(aUserdata), cb(aCb) {
+  MyTimer(
+	  void* aUserdata,
+	  ut_TimerCallback* aCb
+	  ) : userdata(aUserdata), cb(aCb) {
     setSingleShot(true);
   }
 
