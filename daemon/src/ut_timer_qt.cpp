@@ -4,9 +4,23 @@
 
 #include "common/platform_config.h"
 
+#include <QObject>
+
 struct _ut_Timer {
   MyTimer* timer;
 };
+
+MyTimer::MyTimer(
+	  void* aUserdata,
+	  ut_TimerCallback* aCb
+	  ) : userdata(aUserdata), cb(aCb) 
+{
+  setSingleShot(true);
+  // Be sure to remember to connect to something at least, was getting
+  // hardcore linked list errors from libc otherwise.
+  connect(this, SIGNAL(timeout()), 
+	  this, SLOT(handleTimeout()));
+}
 
 void MyTimer::handleTimeout()
 {

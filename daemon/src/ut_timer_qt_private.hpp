@@ -13,9 +13,7 @@ public:
   MyTimer(
 	  void* aUserdata,
 	  ut_TimerCallback* aCb
-	  ) : userdata(aUserdata), cb(aCb) {
-    setSingleShot(true);
-  }
+	  );
 
 private: 
   void* userdata; 

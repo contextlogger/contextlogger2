@@ -30,7 +30,7 @@ unix {
   INCLUDEPATH += /usr/include/lua5.1
   LIBS += -llua5.1
   CONFIG += link_pkgconfig
-  PKGCONFIG = gobject-2.0
+  PKGCONFIG = glib-2.0
 }
 symbian {
 }

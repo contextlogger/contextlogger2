@@ -9,7 +9,7 @@
 #include "common/assertions.h"
 #include "common/logging-stack.h"
 
-#include <glib-object.h> // g_type_init
+//#include <glib-object.h> // g_type_init
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -174,8 +174,8 @@ int cl2GlobalInit()
 
   srand(time(NULL));
 
-  // Required when using the GObject object system.
-  TRAP_OOM_ENOMEM(g_type_init());
+  // Required when using the GObject object system. We no longer are.
+  //TRAP_OOM_ENOMEM(g_type_init());
 
   GError* error = NULL;
 #if __FEATURE_UPLOADER__
