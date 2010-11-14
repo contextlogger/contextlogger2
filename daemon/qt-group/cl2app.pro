@@ -17,10 +17,12 @@ QMAKE_CFLAGS += -Wall -Wmissing-declarations -Wsign-compare -Werror
 !isEmpty(WITH_QT) {
   SOURCES += ut_timer_qt.cpp
   HEADERS += ut_timer_qt_private.hpp
+  SOURCES += main_qt.cpp
 }
 !isEmpty(WITH_LIBEV) {
   SOURCES += ut_timer_libev.c
   LIBS += -lev
+  SOURCES += posix-main.c
 }
 unix {
   TARGET = main
@@ -29,7 +31,6 @@ unix {
   LIBS += -llua5.1
   CONFIG += link_pkgconfig
   PKGCONFIG = gobject-2.0
-  SOURCES += posix-main.c
 }
 symbian {
 }
