@@ -126,6 +126,26 @@
      (regexp-replace* ident-censor-re (symbol->string sym) "_"))
     )))
 
+(define* (name-to-gmake/negate sym)
+  (string->symbol
+   (string-append
+    "NOT__"
+    (string-upcase
+     (regexp-replace* ident-censor-re (symbol->string sym) "_"))
+    )))
+
+(define (bool-attr? attr)
+  (boolean? (second attr)))
+
+;; Returns a list of symbols.
+(define (bool-attrs-to-gmake-list attrs)
+  (map
+   (lambda (entry)
+     (let ((name (first entry))
+           (value (second entry)))
+       ((if value name-to-gmake name-to-gmake/negate) name)))
+   (filter bool-attr? attrs)))
+
 (define* (display/c value)
   (cond
    ((or (attr-defined? value) (eqv? value #t))
@@ -320,6 +340,13 @@
            (display-attr/qmake name value)
            ))
        attrs)
+      ;; For convenience, we add all boolean variables (or their
+      ;; negations) to the CONFIG variable with the += operator.
+      (begin
+        (display "CONFIG += ")
+        (for-each-sep display (thunk (display " "))
+                      (bool-attrs-to-gmake-list attrs))
+        (newline))
       ))))
 
 #|
