@@ -12,8 +12,6 @@
 
 #ifdef __EPOC32__
 #include <e32std.h>
-#else
-#include <ev.h>
 #endif
 
 #include <string.h>

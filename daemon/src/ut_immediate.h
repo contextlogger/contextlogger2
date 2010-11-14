@@ -9,6 +9,9 @@ extern "C" {
 
 #if defined(__SYMBIAN32__)
 
+  // As we have an efficient Symbian-specific implementation, we use
+  // it in the Symbian case.
+
   typedef struct _ut_Immediate ut_Immediate;
 
   // A non-NULL immediateError indicates an error.
@@ -28,8 +31,8 @@ extern "C" {
 
 #else
 
-  // We just use a timer with zero timeout, since libev has no other
-  // facility for immediate event completion.
+  // We have no other platform/framework specific implementations, and
+  // shall instead use an implementation based on using a timer.
 
 #include "ut_timer.h"
 

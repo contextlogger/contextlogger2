@@ -11,9 +11,9 @@
 #include "common/platform_config.h"
 #include "common/utilities.h"
 
-#if !defined(__SYMBIAN32__)
+#if __WITH_LIBEV__
 #include <ev.h>
-#endif /* __SYMBIAN32__ */
+#endif
 
 // --------------------------------------------------
 // internal
@@ -227,7 +227,7 @@ kr_Controller* kr_Controller_new(GError** error)
   // AppContext at any time will tell you which objects exist.
   ac_AppContext_set_controller(self->appContext, self);
 
-#if !defined(__SYMBIAN32__)
+#if __WITH_LIBEV__
   // Creates the default event loop, unless already created.
   struct ev_loop* loop = ev_default_loop(0);
   if (!loop) {
@@ -235,7 +235,7 @@ kr_Controller* kr_Controller_new(GError** error)
     kr_Controller_destroy(self);
     return NULL;
   }
-#endif /* __SYMBIAN32__ */
+#endif
 
   self->rcFile = cf_RcFile_new(error);
   if (!(self->rcFile)) {
@@ -417,11 +417,11 @@ void kr_Controller_stop(kr_Controller* self)
 // interrupt event is delivered.
 gboolean kr_Controller_run(kr_Controller* self, GError** error)
 {
-#if defined(__SYMBIAN32__)
-  assert(0);
-#else
+#if __WITH_LIBEV__
   ev_loop(EV_DEFAULT, 0);
-#endif /* __SYMBIAN32__ */
+#else
+  assert(0 && "explicit running of event loop unsupported");
+#endif
   return TRUE;
 }
 
@@ -475,8 +475,6 @@ gboolean kr_Controller_reconfigure(kr_Controller* self,
 }
 
 /**
-
-kr_controller.c
 
 Copyright 2009 Helsinki Institute for Information Technology (HIIT)
 and the authors. All rights reserved.
