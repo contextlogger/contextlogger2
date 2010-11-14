@@ -183,9 +183,6 @@ source epoc-keypress-anim.cpp
 <% else %>
 source epoc-keypress.cpp
 <% end %>
-<% unless $IS_APPLICATION %>
-source epoc-main.cpp
-<% end %>
 <% if $HAVE_PROFILEENGINE_LIB %>
 source epoc-profile-31.cpp
 <% else %>
@@ -211,6 +208,9 @@ source lua_cl2.cpp
 source ld_log_db.c
 source ld_create.c
 source ld_logging.c
+<% unless $IS_APPLICATION %>
+source main_epoc.cpp
+<% end %>
 <% if $FEATURE_REMOKON %>
 source rk_jabber_session.c
 source rk_remokon.c
