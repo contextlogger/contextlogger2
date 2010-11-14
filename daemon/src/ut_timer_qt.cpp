@@ -16,8 +16,6 @@ MyTimer::MyTimer(
 	  ) : userdata(aUserdata), cb(aCb) 
 {
   setSingleShot(true);
-  // Be sure to remember to connect to something at least, was getting
-  // hardcore linked list errors from libc otherwise.
   connect(this, SIGNAL(timeout()), 
 	  this, SLOT(handleTimeout()));
 }

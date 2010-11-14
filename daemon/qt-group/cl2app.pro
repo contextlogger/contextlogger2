@@ -1,8 +1,16 @@
+# Make sure no "qt" is assumed by default. (Could also use -= qt)
+CONFIG =
+
 include(../src/current_config.pri)
 TEMPLATE = app
 CONFIG += debug
 WITH_QT {
+  message("with Qt")
+  # Note: Do not use Qt 4.7.0 on Linux, as there is an event loop memory bug.
   CONFIG += qt
+}
+!WITH_QT {
+  message("without Qt")
 }
 INCLUDEPATH = ../src ../../shared ../../time-spec
 DEPENDPATH = ../src ../../shared/common ../../time-spec
