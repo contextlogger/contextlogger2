@@ -7,7 +7,7 @@ require 'sake3/component'
 
 require 'src/current_config'
 
-$uid_v8 = 0x08460002
+$uid_v9 = $UID_V9
 $basename = $APP_BASENAME
 $version = [$MAJOR_VERSION, $MINOR_VERSION]
 
@@ -17,7 +17,7 @@ $pamp_curl = true
 $proj = Sake::Project.new(:basename => $basename,
                           :name => "CL2 App",
                           :version => $version,
-                          :uid => Sake::Uid.v8($uid_v8),
+                          :uid => Sake::Uid.v9($uid_v9),
                           :vendor => "HIIT")
 
 class <<$proj
@@ -31,7 +31,7 @@ $app = Sake::Component.new(:project => $proj,
                                             :application : :exe),
                            :basename => $basename,
                            :bin_basename => $basename,
-                           :uid3 => Sake::Uid.v8($uid_v8),
+                           :uid3 => Sake::Uid.v9($uid_v9),
                            :caps => Sake::ALL_CAPS)
 
 class <<$app

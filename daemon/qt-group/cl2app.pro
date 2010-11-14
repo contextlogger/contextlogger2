@@ -4,6 +4,7 @@ CONFIG =
 include(../src/current_config.pri)
 TEMPLATE = app
 CONFIG += debug
+VERSION = $$VERSION_STRING
 WITH_QT {
   message("with Qt")
   # Note: Do not use Qt 4.7.0 on Linux, as there is an event loop memory bug.
@@ -50,5 +51,71 @@ unix {
   PKGCONFIG = glib-2.0
 }
 symbian {
+  TARGET = cl2app
+  TARGET.UID2 = 0x00000000
+  TARGET.UID3 = 0x$$UID_V9__HEX
+  TARGET.EPOCSTACKSIZE = 0x10000
   TARGET.CAPABILITY = $$CAPABILITIES
+  LIBS += sqlite3h.lib
+  LIBS += euser.lib
+  DO_LOGGING {
+    LIBS += flogger.lib
+  }
+  PROFILE_ENABLED {
+    HAVE_PROFILEENGINE_LIB {
+      LIBS += profileengine.lib
+    }
+    !HAVE_PROFILEENGINE_LIB {
+      LIBS += profileeng.lib # SDK Plugins
+    }
+  }
+  SMSEVENT_ENABLED {
+    LIBS += gsmu.lib # CSmsPDU
+    LIBS += msgs.lib # CMsvSession
+    LIBS += smcm.lib # CSmsClientMtm
+  }
+  LIBS += apgrfx.lib
+  LIBS += apparc.lib
+  LIBS += avkon.lib
+  LIBS += bafl.lib
+  LIBS += bluetooth.lib
+  LIBS += btmanclient.lib
+  LIBS += charconv.lib
+  LIBS += commdb.lib
+  LIBS += commonui.lib # CErrorUI
+  LIBS += cone.lib
+  LIBS += efsrv.lib
+  LIBS += eikcoctl.lib
+  LIBS += eikcore.lib
+  LIBS += esock.lib
+  LIBS += etel3rdparty.lib # CTelephony
+  LIBS += http.lib
+  LIBS += inetprotutil.lib # URI parsers
+  LIBS += insock.lib # Internet protocol support for esock
+  LIBS += lbs.lib
+  LIBS += ws32.lib
+
+  LIBS += aknnotify.lib eiksrv.lib # CAknGlobalNote
+  LIBS += cntmodel.lib # CContactDatabase
+  #  LIBS += estor.lib # RReadStream
+  #  LIBS += etel.lib # RCall, RLine
+  #  LIBS += logcli.lib # CLogClient
+  #  LIBS += pbkeng.lib # CPbkContactEngine
+
+  WEBURL_ENABLED {
+    LIBS += epocxplat_e846000e.lib
+  }
+
+  LIBS += euserhl.lib    # High-Level APIs
+
+  LIBS += libc.lib       # PIPS
+  LIBS += libm.lib       # required for Lua
+  LIBS += libglib.lib    # Open C
+  LIBS += libgobject.lib # Open C
+  LIBS += libpthread.lib # Open C
+  #  LIBS += libstdcpp.lib  # Open C++
+
+  KEYPRESS_ENABLED:HAVE_ANIM {
+    LIBS += keyevents_client_2000af44.lib
+  }
 }
