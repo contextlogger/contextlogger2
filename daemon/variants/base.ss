@@ -131,7 +131,7 @@ project must implement.
     #f)
 
   (define/public (with-qmake.attr)
-    #f)
+    (with-qt.attr))
 
   (define/public (with-libev.attr)
     (not (or (is-symbian.attr) (with-qt.attr))))
