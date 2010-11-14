@@ -53,6 +53,7 @@ Yes, convoluted, but we want this file to be a module rather than a script.
 
 (define c-config-file (build-path src-dir "current_config.hrh"))
 (define gmake-config-file (build-path src-dir "current_config.mk"))
+(define qmake-config-file (build-path src-dir "current_config.pri"))
 (define ruby-config-file (build-path src-dir "current_config.rb"))
 
 (define (write-variant-config varinfo)
@@ -60,7 +61,9 @@ Yes, convoluted, but we want this file to be a module rather than a script.
     ;;(pretty-nl attrs)
     (write-c-file c-config-file attrs)
     (write-ruby-file ruby-config-file attrs)
-    (write-gmake-file gmake-config-file attrs)))
+    (write-gmake-file gmake-config-file attrs)
+    (write-qmake-file qmake-config-file attrs)
+    ))
 
 ;; --------------------------------------------------
 ;; main

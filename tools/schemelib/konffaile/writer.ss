@@ -235,6 +235,30 @@
       (newline)))
    ))
 
+(define* (display-attr/qmake name value)
+  (set! name (name-to-gmake name))
+  (cond
+   ((attr-undefined? value)
+    (void))
+   ((eqv? value #t)
+    (begin (disp-nl "~a = true" name)
+           (disp-nl "NOT__~a =" name)))
+   ((eqv? value #f)
+    (begin (disp-nl "~a =" name)
+           (disp-nl "NOT__~a = true" name)))
+   ((hexnum? value)
+    (begin
+      (disp-nl "~a__DEC = ~s" name (hexnum-num value))
+      (disp-nl "~a__HEX = ~a"
+               name (number->string (hexnum-num value) 16))))
+   (else
+    (begin
+      (display name)
+      (display " = ")
+      (display/gmake value)
+      (newline)))
+   ))
+
 (define* (write-c-file file attrs)
   (let ((harness-name (path-h-ifdefy file)))
     (write-changed-file
@@ -279,6 +303,21 @@
          (let ((name (first entry))
                (value (second entry)))
            (display-attr/gmake name value)
+           ))
+       attrs)
+      ))))
+
+(define* (write-qmake-file file attrs)
+  (begin
+    (write-changed-file
+     file
+     (capture
+      (display-generated-notice "#")
+      (for-each
+       (lambda (entry)
+         (let ((name (first entry))
+               (value (second entry)))
+           (display-attr/qmake name value)
            ))
        attrs)
       ))))
