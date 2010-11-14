@@ -12,9 +12,10 @@ SOURCES += error_list.c gx_maybe_string.c gxerror.c logging-time.c platform_erro
 SOURCES += assertions_cxx.cpp logging.cpp utilities_cxx.cpp
 SOURCES += moment_parser.c time_utils.c
 DEFINES += G_DISABLE_DEPRECATED
-WARNING_FLAGS = -Wall -Wmissing-declarations -Wsign-compare
-QMAKE_CFLAGS += -fexceptions $$WARNING_FLAGS
-QMAKE_CXXFLAGS += -fexceptions $$WARNING_FLAGS
+MY_WARNING_FLAGS = -Wall -Wmissing-declarations -Wsign-compare
+MY_CCFLAGS = -fexceptions $$MY_WARNING_FLAGS
+QMAKE_CFLAGS += $$MY_CCFLAGS
+QMAKE_CXXFLAGS += $$MY_CCFLAGS
 WITH_QT {
   SOURCES += ut_timer_qt.cpp
   HEADERS += ut_timer_qt_private.hpp
@@ -25,11 +26,18 @@ WITH_LIBEV {
   LIBS += -lev
   SOURCES += main_posix.c
 }
+!LUA_FROM_SOURCE {
+  INCLUDEPATH += /usr/include/lua5.1
+  LIBS += -llua5.1
+}
+LUA_FROM_SOURCE {
+  INCLUDEPATH += ../../lua/src ../../lua/etc
+  DEPENDPATH += ../../lua/src ../../lua/etc
+  SOURCES += lapi.c lauxlib.c lbaselib.c lcode.c ldblib.c ldebug.c ldo.cpp ldump.c lfunc.c lgc.c linit.c liolib.c llex.c lmathlib.c lmem.c loadlib.cpp lobject.c lopcodes.c loslib.c lparser.c lstate.c lstring.c lstrlib.c ltable.c ltablib.c ltm.c lundump.c lvm.c lzio.c print.c
+}
 unix {
   TARGET = main
   LIBS += -lpthread -lsqlite3
-  INCLUDEPATH += /usr/include/lua5.1
-  LIBS += -llua5.1
   CONFIG += link_pkgconfig
   PKGCONFIG = glib-2.0
 }

@@ -14,6 +14,7 @@ Sensible defaults for Linux/libev builds with qmake.
   (super-new)
   (define/override (with-qmake.attr) #t)
   (define/override (feature-remokon.attr) #f)
+  (define/override (lua-from-source.attr) #t)
   )
 
 (define* (info)

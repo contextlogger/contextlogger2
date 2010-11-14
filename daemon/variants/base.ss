@@ -136,6 +136,9 @@ project must implement.
   (define/public (with-libev.attr)
     (not (or (is-symbian.attr) (with-qt.attr))))
 
+  (define/public (lua-from-source.attr)
+    (is-symbian.attr))
+  
   (define/public (upload-time-expr.attr) "never")
 
   ;; This must be printable ASCII identifier, see "is_ascii_ident".
