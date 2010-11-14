@@ -1,7 +1,9 @@
 include(../src/current_config.pri)
 TEMPLATE = app
 CONFIG = debug
-LIBS = 
+!isEmpty(WITH_QT) {
+  CONFIG += qt
+}
 INCLUDEPATH = ../src ../../shared ../../time-spec
 DEPENDPATH = ../src ../../shared/common ../../time-spec
 SOURCES += cf_query.c client-run.c config_db.c db_creation.c er_errors.c kr_controller.c libluasqlite3.c ld_create.c ld_log_db.c ld_logging.c sa_sensor_list_log_db.c sa_sensor_mark.c sa_sensor_timer.c up_shared.c utils_cl2.c
@@ -12,6 +14,10 @@ SOURCES += moment_parser.c time_utils.c
 DEFINES += G_DISABLE_DEPRECATED
 QMAKE_CFLAGS += -fexceptions
 QMAKE_CFLAGS += -Wall -Wmissing-declarations -Wsign-compare -Werror
+!isEmpty(WITH_QT) {
+  SOURCES += ut_timer_qt.cpp
+  HEADERS += ut_timer_qt_private.hpp
+}
 !isEmpty(WITH_LIBEV) {
   SOURCES += ut_timer_libev.c
   LIBS += -lev

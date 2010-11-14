@@ -16,11 +16,12 @@
 #if defined(__cplusplus)
 #if defined(__SYMBIAN32__)
 
-// On Symbian, do not know if (std::nothrow) is supported, but the
-// <new> header is there. The semantics of Symbian's default plain
-// "new" are presently the same as for "new (std::nothrow)", and hence
-// this definition may suffice, with default settings in the MMP file.
-#define new_nothrow new (std::nothrow)
+// On Symbian, it seems that the (std::nothrow) is not supported,
+// although the <new> header is there. The semantics of Symbian's
+// default plain "new" are presently the same as for "new
+// (std::nothrow)", and hence this definition may suffice, with
+// default settings in the MMP file.
+#define new_nothrow new
 
 // To implement this, we probably want to define a global, but
 // overloaded "new" operator of our own, one that does throw
