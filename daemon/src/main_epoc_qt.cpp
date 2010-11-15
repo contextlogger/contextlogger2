@@ -45,7 +45,6 @@ NONSHARABLE_CLASS(CMainObj) :
  public:
   static CMainObj* NewL();
   ~CMainObj();
-  TInt ExecuteL();
  private:
   void ConstructL();
  private: // MAppContextInitObserver
@@ -70,16 +69,8 @@ CMainObj::~CMainObj()
 
 void CMainObj::ConstructL()
 {
-}
-
-TInt CMainObj::ExecuteL()
-{
   // Invokes AppContextReady upon completion.
   ac_AppContext_PlatInitAsyncL(ac_get_global_AppContext(), *this);
-
-  // For async requests to ever complete, we must start the event loop.
-  assert(qApp);
-  return qApp->exec();
 }
 
 void CMainObj::AppContextReady(TInt aError)
@@ -115,12 +106,15 @@ static TInt MainLoopL()
 
   // Will not return unless/until explicitly stopped by
   // ShutdownApplication.
-  TInt errCode = mainObj->ExecuteL();
+  assert(qApp);
+  TInt errCode = qApp->exec();
 
   CleanupStack::PopAndDestroy(1); // mainObj
 
   return errCode;
 }
+
+// xxx We may not be mixing Qt and Symbian exceptions safely below.
 
 static TInt QtMainL()
 {
