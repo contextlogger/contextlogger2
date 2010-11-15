@@ -1,7 +1,8 @@
 targettype     <%= build.mmp_target_type %>
 target         <%= build.binary_file.basename %>
 
-uid             <%= build.uid2.chex_string %> <%= build.uid3.chex_string %>
+uid	       <%= build.uid2.chex_string %> <%= build.uid3.chex_string %>
+secureid       <%= build.uid3.chex_string %>
 
 <% unless build.v9? %>
 targetpath     "\\system\\apps\\" + cl2app
@@ -12,7 +13,12 @@ targetpath     "\\system\\apps\\" + cl2app
 // running out of stack is likely to cause a KERN-EXEC 3...
 // not very informative, is it.
 // For Open C++ apps, the recommendation is 0x10000.
-epocstacksize 0x10000
+epocstacksize 	0x10000
+
+// qmake defaults to this setting
+<% if $WITH_QT %>
+EPOCHEAPSIZE	0x020000 0x800000
+<% end %>
 
 systeminclude \epoc32\include
 systeminclude \epoc32\include\stdapis
@@ -26,6 +32,13 @@ systeminclude     \epoc32\include\curl-7.16
   <% else %>
 systeminclude ..\..\..\<%= curl_dir %>\include
   <% end %>
+<% end %>
+
+<% if $WITH_QT %>
+<% qt_inc_list = %w{include/QtCore include/QtCore/tmp include/QtGui include/QtGui/tmp include include/tmp mkspecs/common/symbian/stl-off mkspecs/common/symbian/stl-off/tmp mkspecs/common/symbian mkspecs/common/symbian/tmp}
+   for inc in qt_inc_list %>
+systeminclude		../../../../../symbian-gp/qt-latest/<%= inc %>
+<% end %>
 <% end %>
 
 userinclude .
@@ -151,6 +164,13 @@ library sqlite3.lib
 
 <% if $KEYPRESS_ENABLED and $HAVE_ANIM %>
 library keyevents_client_2000af44.lib
+<% end %>
+
+<% if $WITH_QT %>
+LIBRARY		QtGui.lib
+LIBRARY		QtCore.lib
+LIBRARY		libdl.lib
+//STATICLIBRARY	qtmain.lib //xxx
 <% end %>
 
 sourcepath ..\..\src
@@ -521,6 +541,32 @@ CAPABILITY <%= $CAPABILITIES.join(" ") %>
 macro __HIDE_IPC_V1__
 
 macro __HAVE_APPLICATION_CONFIG__
+
+<% if $WITH_QT %>
+MACRO		UNICODE
+MACRO		QT_KEYPAD_NAVIGATION
+MACRO		QT_SOFTKEYS_ENABLED
+MACRO		QT_USE_MATH_H_FLOATS
+MACRO		QT_GUI_LIB
+MACRO		QT_CORE_LIB
+
+OPTION CW -cwd include
+OPTION ARMCC --visibility_inlines_hidden
+#if defined(ARMCC_4_0)
+OPTION ARMCC --import_all_vtbl
+#endif
+
+// Gives warnings for C files.
+// http://bugreports.qt.nokia.com/browse/QTBUG-11629
+// "To get rid of the other warning, it appears that changes are required to the makmake tool modules (specifically, cl_bpapi.pm), or the gcce.mk base file."
+OPTION GCCE -fvisibility-inlines-hidden
+
+PAGED
+
+BYTEPAIRCOMPRESSTARGET
+
+OPTION_REPLACE ARMCC --export_all_vtbl -D__QT_NOEFFECTMACRO_DONOTUSE
+<% end %>
 
 <% if false and build.target.edition >= 3 and build.target.fp >= 1 %>
 // Required for Open C++, say the Qt guys, but our code will not compile with these. Not with either S60 3.0 MR SDK or S60 3.1 SDK. Presumably the Qt guys are using the S60 3.1 SDK. And possibly it is just the Qt codebase that requires these, and not necessarily ours.
