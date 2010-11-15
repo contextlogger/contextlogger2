@@ -20,12 +20,12 @@ static CActiveSchedulerWait* globalLoop = NULL;
 extern "C" void ExitApplication()
 {
   logt("ExitApplication");
-  // This should make sure that the process gets killed, assuming it
-  // is the main process that calls this.
   User::Exit(KErrGeneral);
 }
 
-// Orderly shutdown.
+// Orderly shutdown. This is only done via a Lua binding, and there it
+// is useful to be able to send a response before exiting, hence a
+// proper shutdown.
 extern "C" void ShutdownApplication()
 {
   logt("ShutdownApplication");
@@ -63,12 +63,10 @@ CMainObj* CMainObj::NewL()
 
 CMainObj::~CMainObj()
 {
-  // Note that calling kr_Controller_stop is unnecessary since
-  // destruction is quite sufficient for stopping.
   kr_Controller_destroy(client);
 }
 
-void CMainObj::ConstructL() // activates the object
+void CMainObj::ConstructL()
 {
   // Invokes AppContextReady upon completion.
   ac_AppContext_PlatInitAsyncL(ac_get_global_AppContext(), *this);
@@ -98,26 +96,21 @@ void CMainObj::AppContextReady(TInt aError)
   }
 }
 
-static TInt MainLoop()
+static TInt MainLoopL()
 {
-  globalLoop = new CActiveSchedulerWait;
-  if (!globalLoop) {
-    return KErrNoMemory;
-  }
+  globalLoop = new (ELeave) CActiveSchedulerWait;
+  CleanupStack::PushL(globalLoop);
 
-  CMainObj* mainObj = NULL;
-  TRAPD(errCode, mainObj = CMainObj::NewL());
-  if (errCode) {
-    delete globalLoop;
-    return errCode;
-  }
+  // Mere creation schedules async initialization tasks. If and when
+  // those complete, the logger proper is started.
+  CMainObj* mainObj = CMainObj::NewL();
+  CleanupStack::PushL(mainObj);
 
   // Will not return unless/until explicitly stopped by
   // ShutdownApplication.
   globalLoop->Start();
 
-  delete globalLoop;
-  delete mainObj;
+  CleanupStack::PopAndDestroy(2); // mainObj, globalLoop
 
   return 0;
 }
@@ -128,29 +121,11 @@ static TInt SubMain()
   errCode = cl2GlobalInit();
   if (errCode)
     return errCode;
-  TRAPD(leaveCode, errCode = MainLoop());
-  if (leaveCode) {
-    assert(0 && "leave where not expected");
-  }
+  TRAP(errCode, errCode = MainLoopL());
   cl2GlobalCleanup();
   return errCode;
 }
 
-// On Symbian at least we might want to name this process so that it
-// is easier to identify and kill. But actually we should have a
-// sensible name to begin with, since we should get something like
-// ekern.exe[100041af]0001, where we have the executable name, UID,
-// and instance number.
-// 
-// Apparently also some Open C functions require that they are running
-// under a TRAP. Naturally then a cleanup stack is surely also
-// required. At present we are defining an E32Main rather than a main,
-// so we shall do things explicitly.
-// 
-// In the Symbian case we must create an active scheduler within which
-// to run; our event delivery mechanism requires this, and most
-// certainly a lot of our system access code requires it. Note that to
-// start the event loop, we must call CActiveScheduler::Start().
 GLDEF_C TInt E32Main()
 {
   TInt errCode = 0;

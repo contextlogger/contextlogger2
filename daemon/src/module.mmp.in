@@ -167,10 +167,12 @@ library keyevents_client_2000af44.lib
 <% end %>
 
 <% if $WITH_QT %>
+LIBRARY		libdl.lib
 LIBRARY		QtGui.lib
 LIBRARY		QtCore.lib
-LIBRARY		libdl.lib
-//STATICLIBRARY	qtmain.lib //xxx
+// See Qt src/s60main to see what this library contains.
+// Looks like it essentially just sets up cleanup stack and then calls 'main'.
+//STATICLIBRARY	qtmain.lib
 <% end %>
 
 sourcepath ..\..\src
@@ -229,7 +231,11 @@ source ld_log_db.c
 source ld_create.c
 source ld_logging.c
 <% unless $IS_APPLICATION %>
+<% if $WITH_QT %>
+source main_epoc_qt.cpp
+<% else %>
 source main_epoc.cpp
+<% end %>
 <% end %>
 <% if $FEATURE_REMOKON %>
 source rk_jabber_session.c
