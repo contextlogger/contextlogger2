@@ -17,7 +17,7 @@
 #include <estlib.h> // __crt0
 
 #include <qglobal.h> // QT_TRYCATCH_LEAVING
-#include <QApplication>
+#include <QtCore/QCoreApplication>
 #include <QTimer>
 
 #include <stdlib.h> // abort
@@ -75,6 +75,7 @@ void CMainObj::ConstructL()
 // xxx Do we need to catch C++ exceptions or anything here where we have Qt code?
 TInt CMainObj::ExecuteL()
 {
+  /*
   int argc = 1;
   char* argv[] = {__APP_BASENAME__ ".exe"};
   // This apparently installs an active scheduler as well, and expects
@@ -84,6 +85,8 @@ TInt CMainObj::ExecuteL()
   // Invokes AppContextReady upon completion.
   ac_AppContext_PlatInitAsyncL(ac_get_global_AppContext(), *this);
   return app.exec();
+  */
+  return 0;
 }
 
 void CMainObj::AppContextReady(TInt aError)
@@ -110,6 +113,7 @@ void CMainObj::AppContextReady(TInt aError)
   }
 }
 
+#if 0
 static TInt MainLoopL()
 {
   // Handles async initialization tasks. If and when those complete,
@@ -125,31 +129,26 @@ static TInt MainLoopL()
 
   return errCode;
 }
+#endif
 
 static TInt QtMainL()
 {
-#if 1
   int argc = 0;
   char **argv = 0;
   char **envp = 0;
   __crt0(argc, argv, envp);
-#else
-  int argc = 1;
-  char* argv[] = {__APP_BASENAME__ ".exe"};
-#endif
 
   logg("argc is %d", argc);
   for (int i=0; i<argc; i++)
     logg("arg %d is '%s'", i, argv[i]);
 
-  QApplication app(argc, argv);
+  QCoreApplication app(argc, argv);
 
   TInt errCode = 0;
 
-#if 0
+#if 1
   logt("waiting");
   QTimer::singleShot(10000, &app, SLOT(quit()));
-  ///xxx
   errCode = app.exec();
   logt("done waiting");
 #endif
@@ -165,12 +164,6 @@ static TInt SubMain()
     return errCode;
   }
 
-#if 0
-  TRAP(errCode, QT_TRYCATCH_LEAVING(errCode = QtMainL()));
-  if (errCode) {
-    logt("error in Qt code");
-  }
-#else
 #define checkErrCode(_msg) { if (errCode) { logt(_msg); goto fail; } }
   TRAP(errCode,
        {
@@ -184,7 +177,6 @@ static TInt SubMain()
 	 }   
        });
   checkErrCode("Qt error leave");
-#endif
 
   fail:
   cl2GlobalCleanup();
@@ -195,7 +187,7 @@ GLDEF_C TInt E32Main()
 {
   TInt errCode = 0;
   __UHEAP_MARK;
-  // It seems that Qt tries to install a scheduler at some point. And possibly might want a specific subclass of it. Hence we do not install one here.
+  // It seems that QApplication tries to install a scheduler at some point. And possibly might want a specific subclass of it. Hence we do not install one here.
   //WITH_CLEANUP_STACK(WITH_ACTIVE_SCHEDULER(errCode = SubMain()));
   WITH_CLEANUP_STACK(errCode = SubMain());
   logg("exit code %d", errCode);

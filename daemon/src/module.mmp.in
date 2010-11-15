@@ -20,6 +20,8 @@ epocstacksize 	0x10000
 EPOCHEAPSIZE	0x020000 0x800000
 <% end %>
 
+<% qt_gui = false %>
+
 systeminclude \epoc32\include
 systeminclude \epoc32\include\stdapis
 systeminclude \epoc32\include\stdapis\glib-2.0
@@ -39,7 +41,7 @@ systeminclude ..\..\..\<%= curl_dir %>\include
 
 <% if $WITH_QT %>
 <% qt_inc_list = %w{include/QtCore include/QtCore/tmp include/QtGui include/QtGui/tmp include include/tmp mkspecs/common/symbian/stl-off mkspecs/common/symbian/stl-off/tmp mkspecs/common/symbian mkspecs/common/symbian/tmp}
-   qt_inc_list = %w{include/QtCore include/QtGui include mkspecs/common/symbian/stl-off mkspecs/common/symbian}
+   qt_inc_list = %w{include/QtCore include mkspecs/common/symbian/stl-off mkspecs/common/symbian}
    for inc in qt_inc_list %>
 systeminclude		../../../../../symbian-gp/qt-latest/<%= inc %>
 <% end %>
@@ -176,7 +178,9 @@ library keyevents_client_2000af44.lib
 <% if $WITH_QT %>
 LIBRARY		libdl.lib
 LIBRARY		QtCore.lib
+<% if true or qt_gui %>
 LIBRARY		QtGui.lib
+<% end %>
 <% end %>
 
 sourcepath ..\..\src
@@ -514,7 +518,12 @@ MACRO       HAVE_LIBZ
 <% if $WITH_QT %>
 // See Qt src/s60main to see what this library contains.
 // Looks like it essentially just sets up cleanup stack and then calls 'main'.
+// We want neither if our main_ implementation has an E32Main.
+<% if qt_gui %>
 //staticlibrary	qtmain.lib
+<% else %>
+//staticlibrary	libcrt0.lib
+<% end %>
 <% end %>
 
 // This sourcepath also applies to the resource files.
@@ -563,7 +572,9 @@ MACRO		UNICODE
 MACRO		QT_KEYPAD_NAVIGATION
 MACRO		QT_SOFTKEYS_ENABLED
 MACRO		QT_USE_MATH_H_FLOATS
-//MACRO		QT_GUI_LIB
+<% if qt_gui %>
+MACRO		QT_GUI_LIB
+<% end %>
 MACRO		QT_CORE_LIB
 
 OPTION CW -cwd include

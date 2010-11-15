@@ -9,6 +9,7 @@ WITH_QT {
   message("with Qt")
   # Note: Do not use Qt 4.7.0 on Linux, as there is an event loop memory bug.
   CONFIG += qt
+  QT -= gui
 }
 !WITH_QT {
   message("without Qt")
