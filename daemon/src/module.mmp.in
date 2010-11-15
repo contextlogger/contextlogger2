@@ -74,12 +74,13 @@ userinclude ..\..\..\time-spec
 userinclude ..\..\..\keyevents\inc
 <% end %>
 
+// Any STATICLIBRARY declarations should come before other
+// stuff that is linked.
+
 <% if $sqlite == :static %>
 staticlibrary sqlite3h.lib
 <% end %>
 
-// Any STATICLIBRARY declarations should come before other
-// stuff that is linked.
 <% if $UPLOAD_WITH_CURL %>
   <% unless $curl_as_source %>
     <% if $pamp_curl %>
@@ -174,11 +175,8 @@ library keyevents_client_2000af44.lib
 
 <% if $WITH_QT %>
 LIBRARY		libdl.lib
-LIBRARY		QtGui.lib
 LIBRARY		QtCore.lib
-// See Qt src/s60main to see what this library contains.
-// Looks like it essentially just sets up cleanup stack and then calls 'main'.
-//STATICLIBRARY	qtmain.lib
+LIBRARY		QtGui.lib
 <% end %>
 
 sourcepath ..\..\src
@@ -513,6 +511,12 @@ MACRO       HAVE_LIBZ
   <% end %>
 <% end %>
 
+<% if $WITH_QT %>
+// See Qt src/s60main to see what this library contains.
+// Looks like it essentially just sets up cleanup stack and then calls 'main'.
+//staticlibrary	qtmain.lib
+<% end %>
+
 // This sourcepath also applies to the resource files.
 sourcepath ..\..\src
 
@@ -559,7 +563,7 @@ MACRO		UNICODE
 MACRO		QT_KEYPAD_NAVIGATION
 MACRO		QT_SOFTKEYS_ENABLED
 MACRO		QT_USE_MATH_H_FLOATS
-MACRO		QT_GUI_LIB
+//MACRO		QT_GUI_LIB
 MACRO		QT_CORE_LIB
 
 OPTION CW -cwd include

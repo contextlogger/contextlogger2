@@ -10,9 +10,15 @@
 
 #include "common/utilities.h"
 
-#include <e32base.h> // CTrapCleanup
+#include <e32std.h>
+#include <exception>
+#include <e32base.h>
 
+#include <estlib.h> // __crt0
+
+#include <qglobal.h> // QT_TRYCATCH_LEAVING
 #include <QApplication>
+#include <QTimer>
 
 #include <stdlib.h> // abort
 
@@ -120,13 +126,67 @@ static TInt MainLoopL()
   return errCode;
 }
 
+static TInt QtMainL()
+{
+#if 1
+  int argc = 0;
+  char **argv = 0;
+  char **envp = 0;
+  __crt0(argc, argv, envp);
+#else
+  int argc = 1;
+  char* argv[] = {__APP_BASENAME__ ".exe"};
+#endif
+
+  logg("argc is %d", argc);
+  for (int i=0; i<argc; i++)
+    logg("arg %d is '%s'", i, argv[i]);
+
+  QApplication app(argc, argv);
+
+  TInt errCode = 0;
+
+#if 0
+  logt("waiting");
+  QTimer::singleShot(10000, &app, SLOT(quit()));
+  ///xxx
+  errCode = app.exec();
+  logt("done waiting");
+#endif
+
+  return errCode;
+}
+
 static TInt SubMain()
 {
-  TInt errCode = 0;
-  errCode = cl2GlobalInit();
-  if (errCode)
+  TInt errCode = cl2GlobalInit();
+  if (errCode) {
+    logt("error in global init");
     return errCode;
-  TRAP(errCode, errCode = MainLoopL());
+  }
+
+#if 0
+  TRAP(errCode, QT_TRYCATCH_LEAVING(errCode = QtMainL()));
+  if (errCode) {
+    logt("error in Qt code");
+  }
+#else
+#define checkErrCode(_msg) { if (errCode) { logt(_msg); goto fail; } }
+  TRAP(errCode,
+       {
+	 try {                                               
+	   errCode = QtMainL();
+	   checkErrCode("Qt error return");
+	 } catch (const std::exception &ex) {
+	   logg("Qt error exception: %s", ex.what());
+	   errCode = qt_symbian_exception2Error(ex);
+	   goto fail;
+	 }   
+       });
+  checkErrCode("Qt error leave");
+#endif
+
+  fail:
   cl2GlobalCleanup();
   return errCode;
 }
@@ -135,14 +195,15 @@ GLDEF_C TInt E32Main()
 {
   TInt errCode = 0;
   __UHEAP_MARK;
+  // It seems that Qt tries to install a scheduler at some point. And possibly might want a specific subclass of it. Hence we do not install one here.
+  //WITH_CLEANUP_STACK(WITH_ACTIVE_SCHEDULER(errCode = SubMain()));
   WITH_CLEANUP_STACK(errCode = SubMain());
+  logg("exit code %d", errCode);
   __UHEAP_MARKEND;
   return errCode;
 }
 
 /**
-
-epoc-main.cpp
 
 Copyright 2009 Helsinki Institute for Information Technology (HIIT)
 and the authors. All rights reserved.
