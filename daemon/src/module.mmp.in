@@ -231,7 +231,7 @@ source ut_retry_epoc.cpp
 source ut_sms_epoc.cpp
 <% end %>
 source ut_telephony_epoc.cpp
-<% if $CALLSTATUS or $SMSEVENT_ENABLED %>
+<% if $CALLSTATUS_ENABLED or $SMSEVENT_ENABLED %>
 source ut_telno_epoc.cpp
 <% end %>
 //source ut_timeout_epoc.cpp   //xxx experimental
