@@ -121,7 +121,7 @@ void CSensor_keypress::DoCancel()
 void CSensor_keypress::RunL()
 {  
   TInt errCode = iStatus.Int();
-  //logf("keypress (anim) RunL error %d", errCode);
+  //logg("keypress (anim) RunL error %d", errCode);
 
   if (errCode) {
     // This error really should not occur, but since it has, we will
@@ -135,7 +135,7 @@ void CSensor_keypress::RunL()
       log_db_log_status(iLogDb, NULL, "INACTIVATE: keypress: RProperty access error: %s (%d)", plat_error_strerror(errCode), errCode);
       Stop();
     } else {
-      //logf("keypress: eventCount is %d", eventCount);
+      //logg("keypress: eventCount is %d", eventCount);
       { // record event time
 	time_t now = time(NULL);
 	if (now == -1) {

@@ -146,7 +146,7 @@ static void LogBearerTypesL()
       bearerType8.Copy(bearerType);
       tableView->ReadTextL(TPtrC(IAP_SERVICE_TYPE), serviceType);
       serviceType8.Copy(serviceType);
-      logf("iap %u, '%s', bearer '%s', service '%s'", iapId, 
+      logg("iap %u, '%s', bearer '%s', service '%s'", iapId, 
 	   iapName8.PtrZ(), bearerType8.PtrZ(), serviceType8.PtrZ());
     }
     CleanupStack::PopAndDestroy(tableView);
@@ -162,7 +162,7 @@ void epoc_log_bearer_types()
 #if __DO_LOGGING__
   TRAPD(errCode, LogBearerTypesL());
   if (errCode)
-    logf("error %d logging bearer types", errCode);
+    logg("error %d logging bearer types", errCode);
 #endif
 }
 

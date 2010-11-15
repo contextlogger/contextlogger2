@@ -97,9 +97,9 @@ static void resetstack (lua_State *L, int status) {
 
 
 void luaD_throw (lua_State *L, int errcode) {
-  logf("luaD_throw errCode %d", errcode);
+  //logg("luaD_throw errCode %d", errcode);
   if (L->errorJmp) {
-    logt("have errorJmp");
+    //logt("have errorJmp");
     L->errorJmp->status = errcode;
     LUAI_THROW(L, L->errorJmp);
   }

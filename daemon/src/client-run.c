@@ -92,36 +92,36 @@ int cl2GlobalInit()
 {
   log_clear(PRIMARY_LOG_FILENAME);
   log_text(PRIMARY_LOG_FILENAME, "initializing");
-  logf("app '%s' v%s variant '%s'", 
+  logg("app '%s' v%s variant '%s'", 
        __APP_NAME__, __VERSION_STRING__, __VARIANT_NAME__);
 #if defined(__ABLD_VARIANT__)
-  logf("Symbian ABLD build variant is '%s'", __ABLD_VARIANT__);
+  logg("Symbian ABLD build variant is '%s'", __ABLD_VARIANT__);
 #endif
 #if defined(__GNUC__)
-  logf("compiled with %s version %d.%d.%d (%06d)",
+  logg("compiled with %s version %d.%d.%d (%06d)",
        __COMPILER_NAME__,
        __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__,
        __GCC_VERSION__);
 #endif
 #if defined(__SYMBIAN32__)
-  logf("compiled against PIPS version %03u", PIPS_VERSION);
+  logg("compiled against PIPS version %03u", PIPS_VERSION);
 #endif /* __SYMBIAN32__ */
-  logf("compiled against GLib %u.%u.%u", 
+  logg("compiled against GLib %u.%u.%u", 
        GLIB_MAJOR_VERSION, GLIB_MINOR_VERSION, 
        GLIB_MICRO_VERSION);
 #if !defined(__SYMBIAN32__)
   // These are not available on Symbian, as variables cannot be exported.
-  logf("running with GLib %u.%u.%u", 
+  logg("running with GLib %u.%u.%u", 
        glib_major_version, glib_minor_version, 
        glib_micro_version);
 #endif /* __SYMBIAN32__ */
-  logf("built on %s at %s", __DATE__, __TIME__);
+  logg("built on %s at %s", __DATE__, __TIME__);
 
   log_ctx(PRIMARY_LOG_FILENAME, "context test");
 #if __DO_LOGGING__
   TRAP_OOM_ENOMEM({
       gchar* eData = g_strescape("hello", NULL);
-      logf("'hello' is '%s'", eData);
+      logg("'hello' is '%s'", eData);
       g_free(eData);
     });
 #endif
@@ -140,9 +140,9 @@ int cl2GlobalInit()
   {
     SET_TRAP_OOM_VALUE(ENOMEM);
     double td = 6.38000011;
-    logf("printf %%f %f", td);
-    logf("printf %%g %g", td);
-    logf("printf %%.6f %.6f", td);
+    logg("printf %%f %f", td);
+    logg("printf %%g %g", td);
+    logg("printf %%.6f %.6f", td);
     char tdb[50];
     snprintf(tdb, 50, "snprintf %%f %f", td); logt(tdb);
     snprintf(tdb, 50, "snprintf %%g %g", td); logt(tdb);
@@ -160,9 +160,9 @@ int cl2GlobalInit()
     logt("invoking g_strnfill");
     gchar* s = g_strnfill(100000000 /*gsize length*/,
 			  'a' /*gchar fill_char*/);
-    logf("s is %d", (int)s);
+    logg("s is %d", (int)s);
     s[5] = '\0';
-    logf("s contains '%s'", s);
+    logg("s contains '%s'", s);
     g_free(s);
     UNSET_TRAP_OOM();
   }
@@ -180,7 +180,7 @@ int cl2GlobalInit()
   GError* error = NULL;
 #if __FEATURE_UPLOADER__
   if (!up_global_init(&error)) {
-    logf("uploader global init failure");
+    logg("uploader global init failure");
     gx_txtlog_error_clear(&error);
     return -1;
   }

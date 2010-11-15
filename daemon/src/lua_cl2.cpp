@@ -149,7 +149,7 @@ extern "C" void lua_set_gerror(lua_State* L, GError** error)
 static void txtlog_lua_error(lua_State* L)
 {
   const char* luaErr = lua_tostring(L, -1);
-  logf("unprotected error in Lua: %s", luaErr);
+  logg("unprotected error in Lua: %s", luaErr);
 }
 #else
 #define txtlog_lua_error(_x)

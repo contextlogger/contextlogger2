@@ -36,7 +36,7 @@ extern "C" void ShutdownApplication()
   // http://developer.symbian.com/forum/thread.jspa?messageID=76366&#76366
   TRAPD(errCode,
 	((CCl2appAppUi*)(CEikonEnv::Static()->EikAppUi()))->Exit());
-  logf("ShutdownApplication (%d)", errCode);
+  logg("ShutdownApplication (%d)", errCode);
 #else
   // Exiting an application from a RunL is tricky, but luckily in S60
   // there is a facility that takes care of this difficulty. We can
@@ -121,14 +121,14 @@ void CCl2appAppUi::AppContextReady(TInt aError)
   {
     GError* localError = NULL;
     iClient = kr_Controller_new(&localError);
-    logf("client init %s", iClient ? "ok" : "failed");
+    logg("client init %s", iClient ? "ok" : "failed");
     if (!iClient) {
       er_log_gerror(er_FATAL|er_FREE, localError, "error in client creation");
       return; // not reached
     }
   }
 
-  logf("scheduler running %d", (CEikonEnv::Static()->IsSchedulerRunning()) ? 1 : 0);
+  logg("scheduler running %d", (CEikonEnv::Static()->IsSchedulerRunning()) ? 1 : 0);
 
   Start();
 }

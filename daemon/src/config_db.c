@@ -33,7 +33,7 @@ static gboolean ensure_config_db_created(GError** error)
   assert_error_unset(error);
 
   if (!g_file_test(CONFIGDB_FILE, G_FILE_TEST_EXISTS)) {
-    logf("file '%s' does not exist", CONFIGDB_FILE);
+    logg("file '%s' does not exist", CONFIGDB_FILE);
     return create_config_db(error);
   }
 
@@ -88,7 +88,7 @@ static void close_config_db_session(ConfigDb* self)
     if (errCode) {
       // A close failure is probably a programming error, so we
       // shall log it.
-      logf("sqlite3_close failure %d", errCode);
+      logg("sqlite3_close failure %d", errCode);
     }
 #endif
     self->db = NULL;

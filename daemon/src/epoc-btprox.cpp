@@ -23,7 +23,7 @@
 static void PrintElement(gpointer data, gpointer user_data)
 {
   btprox_item* item = (btprox_item*)data;
-  logf("element '%s' '%s'", item->address, item->name);
+  logg("element '%s' '%s'", item->address, item->name);
 }
 
 static void PrintElements(GPtrArray* array)
@@ -201,7 +201,7 @@ TBool CSensor_btprox::EnsureBtInit()
     return TRUE;
   }
 
-  dblogf("BT init failed in btprox scanner: %s (%d)", plat_error_strerror(errCode), errCode);
+  dblogg("BT init failed in btprox scanner: %s (%d)", plat_error_strerror(errCode), errCode);
   return FALSE;
 }
 
@@ -234,7 +234,7 @@ void CSensor_btprox::RefreshBaseScanIntervalSecs()
   try_get_ConfigDb_int("sensor.btprox.interval",
 		       &iBaseScanIntervalSecs,
 		       NULL, NULL);
-  dblogf("btprox scan interval set to %d secs", iBaseScanIntervalSecs);
+  dblogg("btprox scan interval set to %d secs", iBaseScanIntervalSecs);
 }
 
 void CSensor_btprox::SetTimer() 
@@ -242,7 +242,7 @@ void CSensor_btprox::SetTimer()
   assert(iState == EScanWaiting || iState == ERetryWaiting);
   int secs = iBaseScanIntervalSecs * (1 + iNumScanFailures) + (rand() % 10);
   TTimeIntervalMicroSeconds32 interval = SecsToUsecs(secs);
-  logf("btprox timer set to %d secs / %d usecs", secs, interval.Int());
+  logg("btprox timer set to %d secs / %d usecs", secs, interval.Int());
   iTimer.After(iStatus, interval);
   SetActive();
 }
@@ -323,7 +323,7 @@ gboolean CSensor_btprox::HandleScanEventL(TInt errCode, GError** error)
   else if (errCode) // some error
     {
       iNumScanFailures++;
-      dblogf("%dth consecutive failure in btprox: %s (%d)", 
+      dblogg("%dth consecutive failure in btprox: %s (%d)", 
 	     iNumScanFailures, plat_error_strerror(errCode), errCode);
       iState = ERetryWaiting;
       SetTimer();
@@ -351,7 +351,7 @@ gboolean CSensor_btprox::HandleScanEventL(TInt errCode, GError** error)
 	item->address = g_strdup((gchar*)(addrBuf8.PtrZ()));
 	g_ptr_array_add(iResult, item);
 	UNSET_TRAP_OOM();
-	//logf("discovered bt device '%s' '%s'", item->address, item->name);
+	//logg("discovered bt device '%s' '%s'", item->address, item->name);
       }
       BtNext();
     }

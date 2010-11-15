@@ -52,7 +52,7 @@ void CSensor_weburl::AhleBrowserDataL(const TDesC& aName, const TDesC& aUrl)
 
   const char* name = (const char*)(name8->Ptr());
   const char* url = (const char*)(url8->Ptr());
-  logf("name is '%s', URL is '%s'", name, url);
+  logg("name is '%s', URL is '%s'", name, url);
   log_db_log_weburl(GetLogDb(), name, url, NULL);
 
   delete url8;

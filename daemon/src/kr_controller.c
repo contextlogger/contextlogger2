@@ -66,7 +66,7 @@ static gboolean current_iap_is_cellular()
     log_db_log_status(logDb, NULL, "WARNING: no IAP ID %u", iapId);
     return TRUE; // play it safe
   }
-  logf("iap %u is modem bearer: %d", iapId, yes);
+  logg("iap %u is modem bearer: %d", iapId, yes);
   return yes;
 #else
   return FALSE;
@@ -75,7 +75,7 @@ static gboolean current_iap_is_cellular()
 
 static void log_uploads_allowed(kr_Controller* self)
 {
-  //logf("uploads allowed: %d", self->are_uploads_allowed);
+  //logg("uploads allowed: %d", self->are_uploads_allowed);
   LogDb* logDb = ac_global_LogDb;
   // http://en.wikipedia.org/wiki/Signal_strength says
   // "decibels above a reference level of one milliwatt (dBm)"
@@ -113,8 +113,8 @@ static void init_uploads_allowed_state(kr_Controller* self)
   // becomes available.
   self->are_uploads_allowed = !self->is_cellular_ap;
 
-  logf("non-roaming MCC: %d", self->non_roaming_mcc);
-  WHEN_LOGGING({if (self->non_roaming_operator_name) logf("non-roaming operator: '%s'", self->non_roaming_operator_name);});
+  logg("non-roaming MCC: %d", self->non_roaming_mcc);
+  WHEN_LOGGING({if (self->non_roaming_operator_name) logg("non-roaming operator: '%s'", self->non_roaming_operator_name);});
   uploads_allowed_changed(self);
 }
 
@@ -126,7 +126,7 @@ static void free_uploads_allowed_state(kr_Controller* self)
 static void recompute_uploads_allowed(kr_Controller* self)
 {
   gboolean old_flag = self->are_uploads_allowed;
-  //logf("recomputing uploads allowed (now %d)", old_flag);
+  //logg("recomputing uploads allowed (now %d)", old_flag);
   self->are_uploads_allowed = TRUE;
   if (self->is_cellular_ap) {
     if ((self->current_signal_strength == 1) ||
@@ -175,7 +175,7 @@ static void iap_config_changed(kr_Controller* self)
 // pass +1 for no network
 void kr_Controller_set_signal_strength(kr_Controller* self, int strength)
 {
-  //logf("setting strength to %d", strength);
+  //logg("setting strength to %d", strength);
   if (strength != self->current_signal_strength) {
     self->current_signal_strength = strength;
     recompute_uploads_allowed(self);
@@ -185,7 +185,7 @@ void kr_Controller_set_signal_strength(kr_Controller* self, int strength)
 // pass -1 for no network
 void kr_Controller_set_current_mcc(kr_Controller* self, int mcc)
 {
-  logf("setting mcc to %d", mcc);
+  logg("setting mcc to %d", mcc);
   if (mcc != self->current_mcc) {
     self->current_mcc = mcc;
     recompute_uploads_allowed(self);
@@ -199,7 +199,7 @@ void kr_Controller_set_operator_name(kr_Controller* self, const char* name)
   // affects our roaming analysis.
   if (self->non_roaming_operator_name) {
     if (!GMaybeString_is(&self->current_operator_name, name)) {
-      logf("setting operator to %s", name ? name : "<none>");
+      logg("setting operator to %s", name ? name : "<none>");
       er_log_oom_on_false(GMaybeString_assign(&self->current_operator_name, name, NULL));
       recompute_uploads_allowed(self);
     }

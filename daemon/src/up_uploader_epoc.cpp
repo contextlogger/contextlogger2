@@ -254,11 +254,11 @@ void CUploader::ConstructL()
     logt("uploads disabled: no upload URL");
   } else {
     iUploadUrl.Set((TUint8*)upload_url, strlen(upload_url)); 
-    logf("upload URL: %s", upload_url);
+    logg("upload URL: %s", upload_url);
   }
 
   RefreshIap(EFalse);
-  logf("uploader using IAP %d", iIapId);
+  logg("uploader using IAP %d", iIapId);
 
   // Ensure that uploads directory exists.
   GError* mdError = NULL;
@@ -296,7 +296,7 @@ void CUploader::ConstructL()
   RefreshSnapshotTimeExpr(EFalse);
   iSnapshotTimeCtx = time(NULL); //xxx needs to come from ConfigDb -- but actually ones the next time is computed by a Lua expression, that expression can contain any required fixpoint as a constant
   if (iSnapshotTimeCtx == -1) User::Leave(KErrGeneral);
-  //logf("using snapshot time '%s'", iSnapshotTimeExpr);
+  //logg("using snapshot time '%s'", iSnapshotTimeExpr);
 
   // Note that if this ConstructL() leaves, the dtor of this will
   // unregister us.
@@ -411,7 +411,7 @@ void CUploader::SetPostTimer()
   // Roughly num_failures * 5 mins.     xxx perhaps this should be computed by a Lua function coming from ConfigDb
   int secs = 5 * 60 * iNumPostFailures + (rand() % 60);
   TTimeIntervalMicroSeconds32 interval = SecsToUsecs(secs);
-  dblogf("retrying upload in %d secs / %d usecs", secs, interval.Int());
+  dblogg("retrying upload in %d secs / %d usecs", secs, interval.Int());
 
   // Note that these timers should not complete with KErrAbort, since
   // a wait for an interval should not be affected by a system time
@@ -422,7 +422,7 @@ void CUploader::SetPostTimer()
 // Make sure this method does not leave.
 void CUploader::HandleTimerEvent(CTimerAo* aTimerAo, TInt errCode)
 {
-  logf("timer event (%d)", errCode);
+  logg("timer event (%d)", errCode);
 
   if (errCode == KErrAbort) {
     // System time changed. We should recompute the snapshot time, as
@@ -463,7 +463,7 @@ void CUploader::HandleTimerEvent(CTimerAo* aTimerAo, TInt errCode)
 
 void CUploader::PosterEvent(TInt anError)
 {
-  dblogf("poster reports %d", anError);
+  dblogg("poster reports %d", anError);
 
   switch (anError)
     {
@@ -471,7 +471,7 @@ void CUploader::PosterEvent(TInt anError)
       {
 	GError* localError = NULL;
 	//assert(iFileToPost);
-	//logf("removing file '%s'", iFileToPost);
+	//logg("removing file '%s'", iFileToPost);
 	if (!rm_file(iFileToPost, &localError)) {
 	  //logt("failure removing file");
 	  gx_txtlog_error_free(localError);
@@ -569,7 +569,7 @@ void CUploader::HandleCommsError(TInt anError)
 	// We do not yet have logic for handling this kind of
 	// error, so inactivate. Future versions may implement
 	// this better.
-	dblogf("inactivating uploader due to Symbian error %d", anError);
+	dblogg("inactivating uploader due to Symbian error %d", anError);
 	Inactivate();
 	break;
       }
@@ -622,7 +622,7 @@ TInt CUploader::CreatePosterAo()
 
   TRAPD(errCode, iPosterAo = CPosterAo::NewL(*this, iIapId));
   if (errCode) {
-    logf("poster creation failed with %d", errCode);
+    logg("poster creation failed with %d", errCode);
   }
 
   return errCode;
@@ -659,7 +659,7 @@ void CUploader::PostNowL()
   TFileName fileNameDes;
   // Our names should all be ASCII, so this may be overkill.
   User::LeaveIfError(CnvUtfConverter::ConvertToUnicodeFromUtf8(fileNameDes, fileName));
-  dblogf("asking poster to post '%s'", iFileToPost);
+  dblogg("asking poster to post '%s'", iFileToPost);
   iPosterAo->PostFileL(iUploadUrl, fileNameDes);
 }
 
@@ -677,9 +677,9 @@ void CUploader::TakeSnapshotNowL()
   gboolean wasRenamed = FALSE;
   GError* snapError = NULL;
   if (!log_db_take_snapshot(iLogDb, pathname, &wasRenamed, &snapError)) {
-    logf("failure taking snapshot to file '%s'", pathname);
+    logg("failure taking snapshot to file '%s'", pathname);
     free(pathname);
-    logf("snapshot file was%s created", wasRenamed ? "" : " not");
+    logg("snapshot file was%s created", wasRenamed ? "" : " not");
     er_log_gerror(er_FATAL|er_FREE, snapError, "taking snapshot");
   }
 

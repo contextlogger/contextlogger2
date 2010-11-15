@@ -29,7 +29,7 @@ static void timerCallback(void* userdata, GError* timerError);
 static void setTimer(sa_Sensor_timer* self)
 {
   int wait_secs = ((rand() % 30) + 1);
-  logf("waiting for %d secs", wait_secs);
+  logg("waiting for %d secs", wait_secs);
   
   GError* timerError = NULL;
   if (!ut_Timer_set_after(self->timer, wait_secs, &timerError)) {

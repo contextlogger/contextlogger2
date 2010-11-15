@@ -313,11 +313,11 @@ void CCliapiSession::ServiceL(const RMessage2& aMessage)
 	TInt evalErr = 0;
 	TRAPD(leaveErr, evalErr = luaL_loadstring(L, srcC));
 	if (leaveErr) {
-	  logf("leave %d in luaL_loadstring!", leaveErr);
+	  logg("leave %d in luaL_loadstring!", leaveErr);
 	  evalErr = leaveErr;
 	  luaResult = "<Symbian exception in load>";
 	} else if (evalErr) {
-	  logf("luaL_loadstring error %d", evalErr);
+	  logg("luaL_loadstring error %d", evalErr);
 	  switch (evalErr) {
 	  case LUA_ERRSYNTAX:
 	    {
@@ -349,11 +349,11 @@ void CCliapiSession::ServiceL(const RMessage2& aMessage)
 	  TRAP(leaveErr, evalErr = lua_pcall(L, 0, 1, 0));
 	  if (leaveErr) {
 	    // This should not happen.
-	    logf("leave %d escaped lua_pcall!", leaveErr);
+	    logg("leave %d escaped lua_pcall!", leaveErr);
 	    evalErr = leaveErr;
 	    luaResult = "<escaped Symbian exception in eval>";
 	  } else if (evalErr) {
-	    logf("lua_pcall err %d", evalErr);
+	    logg("lua_pcall err %d", evalErr);
 	    if (!lua_isnone(L, -1)) // if acceptable index
 	      luaResult = lua_tostring(L, -1);
 	    if (!luaResult) {

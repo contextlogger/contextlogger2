@@ -90,13 +90,13 @@ static int doNext(rk_JabberSession* self, letter evCode);
 #define check_send_rval(_rval) \
   { \
     if (_rval) {		    \
-      logf("iks return %d", _rval);		\
+      logg("iks return %d", _rval);		\
       handle_severe_error("messaging failure"); \
     } \
   }
 
 #define got_event(_evcode) {   \
-  logf("got event " #_evcode); \
+  logg("got event " #_evcode); \
   _err_IKS = doNext(self, _evcode); \
   if (_err_IKS == IKS_BADXML) handle_parse_error(_evcode); \
   if (_err_IKS) goto fail; \
@@ -230,7 +230,7 @@ static int doNext(rk_JabberSession* self, letter evCode)
 {
   int _err_IKS = IKS_OK;
 
-  //logf("doNext %d", evCode);
+  //logg("doNext %d", evCode);
   const letter* p = &evCode;
   const letter* pe = p + 1;
   //const int* eof = NULL;
@@ -254,9 +254,9 @@ static int tagHook(void *user_data, int type, iks *node)
   rk_JabberSession* self = (rk_JabberSession*)user_data;
 
 #if __DO_LOGGING__
-  //logf("tag event %d", type);
+  //logg("tag event %d", type);
   if (node)
-    logf("tag name '%s'", iks_name(node));
+    logg("tag name '%s'", iks_name(node));
 #endif
 
   switch (type)
@@ -292,7 +292,7 @@ static int tagHook(void *user_data, int type, iks *node)
 	  }
 
 	  else if (strcmp("success", iks_name(node)) == 0) {
-	    logf("jabber session ready");
+	    logg("jabber session ready");
 	    got_event(success_tag);
 	  }
 
@@ -361,7 +361,7 @@ static int ctrlHook(void *user_data, int type, int data)
   int _err_IKS = IKS_OK;
   rk_JabberSession* self = (rk_JabberSession*)user_data;
 
-  logf("status event %d", type);
+  logg("status event %d", type);
 
   switch (type)
     {
@@ -377,13 +377,13 @@ static int ctrlHook(void *user_data, int type, int data)
       }
     case ikss_IKS_ERROR:
       {
-	logf("transport error: iksemel %d", data);
+	logg("transport error: iksemel %d", data);
 	handle_severe_error("transport error");
 	break;
       }
     case ikss_PLAT_ERROR:
       {
-	logf("transport error: %s (%d)", plat_error_strerror(data), data);
+	logg("transport error: %s (%d)", plat_error_strerror(data), data);
 	handle_severe_error("transport error");
 	break;
       }

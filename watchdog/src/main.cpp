@@ -172,7 +172,7 @@ static void MainL()
 {
   log_clear(PRIMARY_LOG_FILENAME);
   log_text(PRIMARY_LOG_FILENAME, "initializing");
-  logf("value is %d", 555);
+  logg("value is %d", 555);
   log_ctx(PRIMARY_LOG_FILENAME, "context test");
 
   // Note that if our program does not run for at least five seconds

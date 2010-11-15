@@ -33,7 +33,7 @@ static CContactItem* FindContactItemByPhoneNoL(const TDesC& phoneNo)
 
     CContactIdArray* idArray = database.MatchPhoneNumberL(phoneNo, KNumberOfDigitsToMatch);
     CleanupStack::PushL(idArray);
-    logf("number of contact matches: %d", idArray->Count());
+    logg("number of contact matches: %d", idArray->Count());
     if (idArray->Count() == 1) {
       TContactItemId itemId = (*idArray)[0];
       TRAPD(errCode, item = database.ReadMinimalContactL(itemId));
@@ -61,7 +61,7 @@ static gchar* GetNameFromContactItemL(const CContactItem& item)
   TInt familyIx = fieldSet.Find(KUidContactFieldFamilyName);
   TBool gotFamily = (familyIx != KErrNotFound);
 
-  logf("got given name %d, surname %d", gotGiven, gotFamily);
+  logg("got given name %d, surname %d", gotGiven, gotFamily);
 
   _LIT(KSpace, " ");
 
@@ -83,7 +83,7 @@ gchar* GetContactNameByPhoneNoL(const TDesC& phoneNo)
   if (!item) return NULL;
   CleanupStack::PushL(item);
   name = GetNameFromContactItemL(*item);
-  if (name) { logf("got contact name '%s'", name); }
+  if (name) { logg("got contact name '%s'", name); }
   else { logt("got no contact name"); }
   CleanupStack::PopAndDestroy(item);
   return name;

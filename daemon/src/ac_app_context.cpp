@@ -76,7 +76,7 @@ EXTERN_C gboolean ac_AppContext_configure(ac_AppContext* self,
   const gchar* database_dir = get_config_database_dir(self);
 
   self->logdb_dir = database_dir;
-  logf("log db stored in directory '%s'", self->logdb_dir);
+  logg("log db stored in directory '%s'", self->logdb_dir);
 
   {
     TRAP_OOM(goto fail,
@@ -95,7 +95,7 @@ EXTERN_C gboolean ac_AppContext_configure(ac_AppContext* self,
 	     );
   }
 
-  logf("uploads stored in directory '%s'", self->log_uploads_dir);
+  logg("uploads stored in directory '%s'", self->log_uploads_dir);
   return TRUE;
 
 #if HAVE_TRAP_OOM

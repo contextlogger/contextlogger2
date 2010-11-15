@@ -156,7 +156,7 @@ void CSmsEventNotifier::HandleSessionEventL(TMsvSessionEvent aEvent,
 					    TAny* aArg1, TAny* aArg2, TAny* aArg3)
 {
   CALLSTACKITEM_N(_CL("CSmsEventNotifier"), _CL("HandleSessionEventL"));
-  //logf("TMsvSessionEvent %d", (int)aEvent);
+  //logg("TMsvSessionEvent %d", (int)aEvent);
   TRAPD(errCode, DoHandleSessionEventL(aEvent, aArg1, aArg2, aArg3));
   if (errCode)
     HandleErrorL(errCode);

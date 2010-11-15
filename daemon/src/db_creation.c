@@ -29,11 +29,11 @@ gboolean create_database(const char* db_dir,
       *error = gx_error_new(domain_cl2app, code_database_open, "error opening database '%s': %s (%d)", db_file, sqlite_get_error_string(db), errCode);
     goto fail;
   }
-  //logf("database opened %d", errCode);
+  //logg("database opened %d", errCode);
 
   logt(sql);
   errCode = sqlite3_exec(db, sql, NULL, NULL, NULL);
-  //logf("errCode is %d", errCode);
+  //logg("errCode is %d", errCode);
   if (errCode) {
     if (error)
       *error = gx_error_new(domain_cl2app, code_database_command, "error creating tables for database '%s': %s (%d)", db_file, sqlite_get_error_string(db), errCode);

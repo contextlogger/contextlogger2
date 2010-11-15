@@ -22,7 +22,7 @@ static gboolean eval_lua_str(const gchar* luaStr, lua_State** pL, GError** error
       if (error) *error = gx_error_no_memory;
       return FALSE;
     }
-    //logf("will load string '%s'", luaStr);
+    //logg("will load string '%s'", luaStr);
 
     int res = (luaL_loadstring(L, luaStr) || lua_pcall(L, 0, 1, 0));
     if (res != 0) {

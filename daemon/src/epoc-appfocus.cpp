@@ -156,7 +156,7 @@ gboolean CSensor_appfocus::RunGL(GError** error)
 
   TInt errCode = iStatus.Int();
 
-  //logf("appfocus event %d", errCode);
+  //logg("appfocus event %d", errCode);
 
   //Leave(gx_error_no_memory); // test
 
@@ -184,7 +184,7 @@ gboolean CSensor_appfocus::RunGL(GError** error)
     ConvToUtf8CString(appName, 32, nameDes);
     delete gn;
     
-    //logf("appfocus: '%s' %08x", appName, appUid);
+    //logg("appfocus: '%s' %08x", appName, appUid);
 
     if (!log_db_log_appfocus(iLogDb, appUid64, appName, error)) {
       return FALSE;

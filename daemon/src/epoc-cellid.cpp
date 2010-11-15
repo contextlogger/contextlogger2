@@ -64,7 +64,7 @@ void CSensor_cellid::PostNewDataL(const CTelephony::TNetworkInfoV1& aData)
   // solution is to log nothing unless all of that information is
   // available.
   if (!aData.iAccess) {
-    //logf("cellid info: no network access: iAreaKnown=%d", (int)aData.iAreaKnown);
+    //logg("cellid info: no network access: iAreaKnown=%d", (int)aData.iAreaKnown);
   } else {
     // Here we are assuming that the initial "zero" iOldData is not
     // a valid reading, and likely this is true as it would mean no
@@ -101,7 +101,7 @@ void CSensor_cellid::PostNewDataL(const CTelephony::TNetworkInfoV1& aData)
 			(char*)(countryCode->Ptr()), 
 			(char*)(networkCode->Ptr()), 
 			areaCode, cellId, NULL);
-      //logf("new cellid: (%s, %s, %d, %d)", (char*)(countryCode->Ptr()), (char*)(networkCode->Ptr()), areaCode, cellId);
+      //logg("new cellid: (%s, %s, %d, %d)", (char*)(countryCode->Ptr()), (char*)(networkCode->Ptr()), areaCode, cellId);
 
       CleanupStack::PopAndDestroy(2); // networkCode, countryCode
     }

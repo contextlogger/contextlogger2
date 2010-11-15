@@ -30,7 +30,7 @@ log_db_close_session (LogDb * self)
     if (errCode) {
       // A close failure is probably a programming error, so we
       // shall log it.
-      logf("sqlite3_close failure %d", errCode);
+      logg("sqlite3_close failure %d", errCode);
     }
 #endif
     self->db = NULL;
@@ -201,7 +201,7 @@ log_db_take_snapshot (LogDb * self, gchar * pathname,
   *renamed = TRUE;
 
   if (g_file_test(LOGDB_FILE, G_FILE_TEST_EXISTS)) {
-    logf("Oops, file '%s' still exists!", LOGDB_FILE);
+    logg("Oops, file '%s' still exists!", LOGDB_FILE);
     er_fatal_general;
   }
 

@@ -60,7 +60,7 @@ void CSensor_smsevent::Disactivate()
 
 void CSensor_smsevent::LogEvent(const char* evType, const TDesC& aTelNoDes)
 {
-  logf("sms event type: '%s'", evType);
+  logg("sms event type: '%s'", evType);
 
   gchar* telNo = NULL;
   gchar* contactName = NULL;
@@ -71,10 +71,10 @@ void CSensor_smsevent::LogEvent(const char* evType, const TDesC& aTelNoDes)
       ex_txtlog_fatal_error(KErrNoMemory);
       return;
     }
-    logf("sms remote party number is '%s'", telNo);
+    logg("sms remote party number is '%s'", telNo);
     contactName = GetContactNameByPhoneNo(aTelNoDes);
     if (contactName) {
-      logf("sms remote party name is '%s'", contactName);
+      logg("sms remote party name is '%s'", contactName);
     } else {
       logt("could not get sms remote party name");
     }

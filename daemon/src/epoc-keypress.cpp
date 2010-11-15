@@ -93,7 +93,7 @@ void CSensor_keypress::RequestAllKeys()
   const int* code = &allKeyCodes[0];
   iNumCaptureHandles = 0;
   while (*code) {
-    //logf("asking for key code %d", (*code));
+    //logg("asking for key code %d", (*code));
     iCaptureHandles[iNumCaptureHandles] = SetKeyToBeCaptured(*code);
     code++;
     iNumCaptureHandles++;
@@ -183,7 +183,7 @@ gboolean CSensor_keypress::RunGL(GError** error)
 
   TInt errCode = iStatus.Int();
 
-  //logf("keypress event %d", errCode);
+  //logg("keypress event %d", errCode);
 
   if (errCode) {
     // This error really should not occur, but since it has, we will
@@ -196,7 +196,7 @@ gboolean CSensor_keypress::RunGL(GError** error)
     iSession->GetEvent(event);
     
     //TInt32 lastCapturedKey = event.Key()->iCode;
-    //logf("last captured key was %d", lastCapturedKey);
+    //logg("last captured key was %d", lastCapturedKey);
 
     time_t now = time(NULL); 
     if (now != -1) { // if no error getting time

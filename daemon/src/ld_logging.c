@@ -67,16 +67,16 @@ gboolean log_db_log_btprox(LogDb* self,
   assert(items);
   //logst;
   int count;
-  //logf("numItems = %d", items->len);
+  //logg("numItems = %d", items->len);
   for (count = 0; count < items->len; count++) {
     btprox_item* item = (btprox_item*)g_ptr_array_index(items, count);
-    //logf("count = %d", count);
+    //logg("count = %d", count);
     assert(item);
-    //logf("addr '%s'", item->address);
+    //logg("addr '%s'", item->address);
     assert(item->address);
     assert(item->name);
-    //logf("name '%s'", item->name);
-    //logf("bt device '%s' '%s'", item->address, item->name);
+    //logg("name '%s'", item->name);
+    //logg("bt device '%s' '%s'", item->address, item->name);
 
     if (sqlite3_bind_int64(self->stmts.btproxItemStmt, 1, scanId))
       goto sql_fail;

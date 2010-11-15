@@ -99,7 +99,7 @@ void er_log_base(int opt, void* errObj,
     } else {
       if (!log_db_log_status_direct(logDb, NULL, log_msg)) {
 	logt("logging failure in er_log_base");
-	logf("tried to log: %s", log_msg); // at least txtlog, then
+	logg("tried to log: %s", log_msg); // at least txtlog, then
 	opt |= er_FATAL;
       }
     }
@@ -362,7 +362,7 @@ void px_dblog_fatal_errno(LogDb* logDb)
 
 void px_txtlog_fatal_error(int errCode)
 {
-  logf("FATAL: POSIX error: %s (%d)", strerror(errCode), errCode);
+  logg("FATAL: POSIX error: %s (%d)", strerror(errCode), errCode);
   er_fatal();
 }
 
@@ -385,7 +385,7 @@ void ex_fatal_error(int errCode)
 
 void ex_txtlog_error(int errCode)
 {
-  logf("ERROR: Symbian error: %s (%d)", plat_error_strerror(errCode), errCode);
+  logg("ERROR: Symbian error: %s (%d)", plat_error_strerror(errCode), errCode);
 }
 
 gboolean ex_dblog_error(LogDb* logDb, int errCode, GError** error)
@@ -400,7 +400,7 @@ gboolean ex_dblog_error_msg(LogDb* logDb, const char* msg, int errCode, GError**
 
 void ex_txtlog_fatal_error(int errCode)
 {
-  logf("FATAL: Symbian error: %s (%d)", plat_error_strerror(errCode), errCode);
+  logg("FATAL: Symbian error: %s (%d)", plat_error_strerror(errCode), errCode);
   ex_fatal_error(errCode);
 }
 

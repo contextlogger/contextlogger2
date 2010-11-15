@@ -91,7 +91,7 @@ void CDiskObserver::DiskSpaceNotify(TInt aDrive, TInt errCode)
   if (errCode) {
     // We are not really expecting any errors here, not any that are
     // in the API docs, anyway.
-    logf("unexpected error in disk observer: %d", errCode);
+    logg("unexpected error in disk observer: %d", errCode);
   } else {
     // There are a number of causes why we might get an
     // RFs::NotifyDiskSpace() event, so we have to do some further
@@ -188,7 +188,7 @@ This::~CRegistrationObserver()
 void This::ObservedData_NetworkRegistration(TData_NetworkRegistration const &aData)
 {
   int status = aData.iRegStatus;
-  logf("network registration status: %d", status);
+  logg("network registration status: %d", status);
   LogDb* logDb = ac_global_LogDb;
   if (logDb) {
     log_db_log_registration(logDb, status, NULL);
@@ -301,7 +301,7 @@ void This::ObservedData_NetworkInfo(TData_NetworkInfo const &aData)
       LogDb* logDb = ac_global_LogDb;
       HBufC8* text8 = ConvToUtf8ZL(aData.iLongName);
       CleanupStack::PushL(text8);
-      //logf("operator name: '%s'", (char*)text8->Ptr());
+      //logg("operator name: '%s'", (char*)text8->Ptr());
       log_db_log_operator(logDb, (const char*)text8->Ptr(), NULL);
       kr_Controller_set_operator_name(ac_global_Controller, 
 				      (const char*)text8->Ptr());
@@ -568,7 +568,7 @@ void This::HandleSignal(TInt aError,
 
     int dbm = -(aData.iSignalStrength);
     int bars = aData.iBar;
-    //logf("network signal strength: %d dBm (%d bars)", dbm, bars);
+    //logg("network signal strength: %d dBm (%d bars)", dbm, bars);
     log_db_log_signal(logDb, dbm, bars, NULL);
     iNotifier->MakeRequest();
 

@@ -101,7 +101,7 @@ void CDiskSpaceNotifier::RunL()
 
   /*
   if (err != KErrNone) {
-    logf("Unexpected, got error %d in DiskSpaceNotifier!", err);
+    logg("Unexpected, got error %d in DiskSpaceNotifier!", err);
   }
   */
 

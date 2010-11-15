@@ -177,7 +177,7 @@ CMyAhleNotifier::~CMyAhleNotifier()
 
 void CMyAhleNotifier::AdaptiveListChanged(TInt errCode)
 {
-  //logf("AdaptiveListChanged(%d)", errCode);
+  //logg("AdaptiveListChanged(%d)", errCode);
 
   if (errCode) {
     iObserver.AhleBrowserError(errCode);
@@ -216,7 +216,7 @@ void CMyAhleNotifier::HandleDataL()
   //logh();
 
   TInt numItems = urlArray->Count();
-  //logf("read total of %d adaptive history items", numItems);
+  //logg("read total of %d adaptive history items", numItems);
 
   for (TInt i = 0; i < numItems; i++) {
     TPtrC url16(urlArray->MdcaPoint(i));

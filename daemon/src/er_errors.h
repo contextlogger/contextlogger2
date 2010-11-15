@@ -100,9 +100,9 @@ extern "C" {
 
   void er_log_status_fmt(const char* fmt, ...);
 
-  // For compatibility with logt and logf macros.
+  // For compatibility with logt and logg macros.
 #define dblogt(s) er_log_status_string(s)
-#define dblogf(f...) er_log_status_fmt(f)
+#define dblogg(f...) er_log_status_fmt(f)
 
   // --------------------------------------------------
   // GLib extras

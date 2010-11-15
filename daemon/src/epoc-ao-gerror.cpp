@@ -29,7 +29,7 @@ TInt CActiveLogErr::RunError(TInt errCode)
 CActiveLogErrG::~CActiveLogErrG()
 {
   //logt("~CActiveLogErrG() enter");
-  //logf("iError is %d", (int)iError);
+  //logg("iError is %d", (int)iError);
   gx_error_free(iError);
   //logt("~CActiveLogErrG() exit");
 }

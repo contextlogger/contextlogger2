@@ -66,10 +66,15 @@ void CMainObj::ConstructL()
 {
 }
 
-TInt CMainObj::Execute()
+// xxx Do we need to catch C++ exceptions or anything here where we have Qt code?
+TInt CMainObj::ExecuteL()
 {
+  int argc = 1;
   char* argv[] = {__APP_BASENAME__ ".exe"};
-  QApplication app(1, argv);
+  // This apparently installs an active scheduler as well, and expects
+  // there not to be an active scheduler yet, otherwise we get
+  // E32USER-CBase 43.
+  QApplication app(argc, argv);
   // Invokes AppContextReady upon completion.
   ac_AppContext_PlatInitAsyncL(ac_get_global_AppContext(), *this);
   return app.exec();
@@ -130,7 +135,7 @@ GLDEF_C TInt E32Main()
 {
   TInt errCode = 0;
   __UHEAP_MARK;
-  WITH_CLEANUP_STACK(WITH_ACTIVE_SCHEDULER(errCode = SubMain()));
+  WITH_CLEANUP_STACK(errCode = SubMain());
   __UHEAP_MARKEND;
   return errCode;
 }

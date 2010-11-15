@@ -98,7 +98,7 @@ static gboolean ReadRcFile(cf_RcFile* self, lua_State *L, GError** error)
     if (errCode == LUA_ERRFILE) {
       // Could not open or read the file. This is okay since a
       // configuration file is not compulsory.
-      logf("no (readable) configuration file '%s'", RCFILE_FILE);
+      logg("no (readable) configuration file '%s'", RCFILE_FILE);
       ValidateAdjustConfig(L);
       return TRUE;
     }
@@ -115,7 +115,7 @@ static gboolean ReadRcFile(cf_RcFile* self, lua_State *L, GError** error)
       *error = gx_error_new(domain_cl2app, code_unspecified_error, "error parsing configuration file '%s'", RCFILE_FILE);
     return FALSE;
   }
-  logf("config file '%s' parsed OK", RCFILE_FILE);
+  logg("config file '%s' parsed OK", RCFILE_FILE);
 
   if (lua_pcall(L, 0, 1, 0)) {
     if (error)

@@ -567,15 +567,15 @@ static int isinstack (CallInfo *ci, const TValue *o) {
 
 
 void luaG_typeerror (lua_State *L, const TValue *o, const char *op) {
-  logt("luaG_typeerror");
-  logf("operation is '%s'", op ? op : "NULL");
+  //logt("luaG_typeerror");
+  //logg("operation is '%s'", op ? op : "NULL");
   const char *name = NULL;
   const char *t = luaT_typenames[ttype(o)];
-  logf("type name is '%s'", t ? t : "NULL");
+  //logg("type name is '%s'", t ? t : "NULL");
   const char *kind = (isinstack(L->ci, o)) ?
                          getobjname(L, L->ci, cast_int(o - L->base), &name) :
                          NULL;
-  logf("kind is '%s'", kind ? kind : "NULL");
+  //logg("kind is '%s'", kind ? kind : "NULL");
   if (kind)
     luaG_runerror_m(L, "attempt to %s %s " LUA_QS " (a %s value)",
                 op, kind, name, t);

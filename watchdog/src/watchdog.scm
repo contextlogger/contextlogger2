@@ -73,8 +73,8 @@ SOFTWARE.
 (define program-name (find-system-path 'run-file))
 (define program-basename (path-drop-extension (path-basename program-name) ".scm"))
 
-(define (logf fmt . args)
-  (call 'logf (cons (cstr fmt) args)))
+(define (logg fmt . args)
+  (call 'logg (cons (cstr fmt) args)))
 
 ;; This defines the actual watchdog program.
 (define program-1
@@ -202,7 +202,7 @@ SOFTWARE.
                  (init (call-on 'iProcess 'Create
                                 (list (lit "\\sys\\bin\\cl2app.exe")
                                       'KNullDesC))))
-            (logf "RProcess.Create %d" 'errCode)
+            (logg "RProcess.Create %d" 'errCode)
             (sswitch 'errCode
                      (case 'KErrNone
                        (cxx-line "iProcessOpen = ETrue;")
@@ -228,7 +228,7 @@ SOFTWARE.
             (cxx-line "assert((!iProcessOpen) && \"logic error\");")
             (cxx-line "_LIT(KProcessName, \"cl2app\");")
             (cxx-line "TInt errCode = iProcess.Open(KProcessName, EOwnerThread);")
-            (cxx-line "logf(\"RProcess.Open(KProcessName) %d\", errCode);")
+            (cxx-line "logg(\"RProcess.Open(KProcessName) %d\", errCode);")
             (sswitch 'errCode
                      (case 'KErrNone
                        (cxx-line "iProcessOpen = ETrue;")
@@ -244,18 +244,18 @@ SOFTWARE.
             (cxx-line "TFindProcess processFinder(KProcessSpec);")
             (cxx-line "TFullName processName;")
             (cxx-line "TInt errCode = processFinder.Next(processName);")
-            (cxx-line "logf(\"TFindProcess.Next(KProcessSpec) %d\", errCode);")
+            (cxx-line "logg(\"TFindProcess.Next(KProcessSpec) %d\", errCode);")
             (sswitch 'errCode
                      (case 'KErrNone
                        (cxx-line "
 #if __DO_LOGGING__
     TBuf8<KMaxFullName+1> buf8;
     buf8.Copy(processName); // convert to ASCII
-    logf(\"found '%s'\", (char*)buf8.PtrZ());
+    logg(\"found '%s'\", (char*)buf8.PtrZ());
 #endif
 ")
                        (cxx-line "errCode = iProcess.Open(processFinder, EOwnerThread);")
-                       (cxx-line "logf(\"RProcess.Open(TFindProcess) %d\", errCode);")
+                       (cxx-line "logg(\"RProcess.Open(TFindProcess) %d\", errCode);")
                        (sswitch 'errCode
                                 (case 'KErrNone
                                   (cxx-line "iProcessOpen = ETrue;")
@@ -316,7 +316,7 @@ SOFTWARE.
             ;; ExitType may be of interest here. It would be nice to
             ;; make this information available to the logger process
             ;; itself.
-            (cxx-line "logf(\"process observation result %d\", errCode);")
+            (cxx-line "logg(\"process observation result %d\", errCode);")
             
             ;; This ensures that we are in a known state after this
             ;; call. Note that we must collect any exit reason
@@ -350,7 +350,7 @@ SOFTWARE.
             ;; event loop from stopping. A mere Cancel should
             ;; certainly make that happen in this case.
             (call 'Cancel)
-            (logf "exiting watchdog due to error: %s (%d)" 'errText 'errCode)
+            (logg "exiting watchdog due to error: %s (%d)" 'errText 'errCode)
             (call-on 'iLoop 'AsyncStop)
             ))
 

@@ -219,7 +219,7 @@ void CPosterAo::MHFRunL(RHTTPTransaction aTransaction,
 	// Get HTTP status code from header (e.g. 200)
 	RHTTPResponse resp = aTransaction.Response();
 	iHttpStatus = resp.StatusCode();
-	logf("HTTP status %d", iHttpStatus);
+	logg("HTTP status %d", iHttpStatus);
 
         // xxx if we got a redirect we should really make a new
         // request, see http://mobbler.googlecode.com/
@@ -248,7 +248,7 @@ void CPosterAo::MHFRunL(RHTTPTransaction aTransaction,
 	// GetNextDataPart() returns ETrue, if the received part is the last
 	// one.
 	TBool isLast = body->GetNextDataPart(dataChunk);
-	logf("body data chunk of %d bytes received", dataChunk.Length());
+	logg("body data chunk of %d bytes received", dataChunk.Length());
 
 	// NOTE: isLast may not be ETrue even if last data part received.
 	// (e.g. multipart response without content length field)
@@ -295,7 +295,7 @@ void CPosterAo::MHFRunL(RHTTPTransaction aTransaction,
 
     default:
       {
-	logf("THTTPEvent (%d)", eventStatus);
+	logg("THTTPEvent (%d)", eventStatus);
 	Cancel(); // xxx not right if for progress events
         // Any negative value presumably is a Symbian error, otherwise
         // we are just guessing here.
@@ -316,7 +316,7 @@ TInt CPosterAo::MHFRunError(TInt aError,
 			    RHTTPTransaction /*aTransaction*/,
 			    const THTTPEvent& /*aEvent*/)
 {
-  logf("leave %d in HTTP handler", aError);
+  logg("leave %d in HTTP handler", aError);
   Cancel(); // no more events if could not handle that one
   iObserver.PosterEvent(aError);
   return KErrNone;
@@ -420,11 +420,11 @@ void CFileDataSupplier::OpenL(const TDesC& aFileName)
 {
   Close();
 
-  //logf("lens %d %d %d", KMaxFileName, iFileName.MaxLength(), aFileName.Length());
+  //logg("lens %d %d %d", KMaxFileName, iFileName.MaxLength(), aFileName.Length());
   iFileName = aFileName;
 
   const gchar* username = get_config_username();
-  logf("uploader using username '%s'", username);
+  logg("uploader using username '%s'", username);
 
   // _LIT8(KPrelude, "-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"logdata\"; filename=\"" __USERNAME__ ".db\"\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: binary\r\n\r\n");
   _LIT8(KPrelude1, "Content-Disposition: form-data; name=\"logdata\"; filename=\"");
@@ -480,7 +480,7 @@ const TDesC8& CFileDataSupplier::Boundary() const
 // error-prone source.
 TBool CFileDataSupplier::GetNextDataPart(TPtrC8& aDataPart) // May leave!
 {
-  //logf("next data part in phase %d", iPhase);
+  //logg("next data part in phase %d", iPhase);
   switch (iPhase)
     {
     case 0:
@@ -493,7 +493,7 @@ TBool CFileDataSupplier::GetNextDataPart(TPtrC8& aDataPart) // May leave!
     case 1:
       {
 	User::LeaveIfError(iFile.Read(iBuffer));
-	//logf("read %d bytes of file data", iBuffer.Length());
+	//logg("read %d bytes of file data", iBuffer.Length());
 	if (iBuffer.Length() > 0) {
 	  aDataPart.Set(iBuffer);
 	  break;
@@ -515,7 +515,7 @@ TBool CFileDataSupplier::GetNextDataPart(TPtrC8& aDataPart) // May leave!
         break;
       }
     }
-  //logf("non-last data part has length %d", aDataPart.Length());
+  //logg("non-last data part has length %d", aDataPart.Length());
   return EFalse;
 }
 
@@ -537,7 +537,7 @@ TInt CFileDataSupplier::Reset()
 
 TInt CFileDataSupplier::OverallDataSize()
 {
-  //logf("OverallDataSize is %d", iDataLen);
+  //logg("OverallDataSize is %d", iDataLen);
   return iDataLen;
 }
 

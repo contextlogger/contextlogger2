@@ -132,7 +132,7 @@ void CSensor_callstatus::GotData_FlightMode(TInt errCode)
     Cancel();
   } else {
     gboolean value = TFlightModeV1ToBoolean(iFlightModeGetter->Data());
-    logf("current flight mode setting: %d", value);
+    logg("current flight mode setting: %d", value);
     if (value) {
       iState = EInFlightMode;
     } else {
@@ -214,10 +214,10 @@ void CSensor_callstatus::ChangedData_CallStatus(TInt errCode)
     if (errCode) {
       // Certainly this is true for idle line (1), and probably for
       // unknown status (0) as well.
-      logf("failed to get call info for status %d: %s (%d)", 
+      logg("failed to get call info for status %d: %s (%d)", 
 	   callStatus, plat_error_strerror(errCode), errCode);
     } else {
-      logf("got call info for status %d", callStatus);
+      logg("got call info for status %d", callStatus);
     }
     TBool gotCallInfo = (errCode == 0);
 
@@ -228,12 +228,12 @@ void CSensor_callstatus::ChangedData_CallStatus(TInt errCode)
 	const TDateTime& dt = callInfo.iStartTime;
 	TTime epocStartTime(dt);
 	if (epocStartTime.Int64() != 0) {
-	  logf("call start datetime is %d.%d.%d %d:%d:%d.%d",
+	  logg("call start datetime is %d.%d.%d %d:%d:%d.%d",
 	       dt.Year(), dt.Month(), dt.Day(),
 	       dt.Hour(), dt.Minute(), dt.Second(), dt.MicroSecond());
 	  startTime = LocalEpocTimeToUnixTime(epocStartTime);
-	  logf("call start time is %d", startTime);
-	  logf("time now is %d", time(NULL));
+	  logg("call start time is %d", startTime);
+	  logg("time now is %d", time(NULL));
 	}
       }
 
@@ -241,10 +241,10 @@ void CSensor_callstatus::ChangedData_CallStatus(TInt errCode)
 	if (numberW.Length() > 0) { \
 	  numberBuf.Copy(numberW); \
 	  number = (const char*)(numberBuf.PtrZ()); \
-	  logf("call remote party number is '%s'", number); \
+	  logg("call remote party number is '%s'", number); \
 	  contactName = GetContactNameByPhoneNo(numberW); \
 	  if (contactName) { \
-	    logf("call remote party name is '%s'", contactName); \
+	    logg("call remote party name is '%s'", contactName); \
 	  } else { \
 	    logt("could not get call remote party name"); \
 	  } \
@@ -341,7 +341,7 @@ void CSensor_callstatus::ChangedData_CallStatus(TInt errCode)
             // xxx Dangerous. Compiler-specific behavior.
 	    netCode = (exitCode >> 16);
 #endif
-	    logf("disconnect reason: code=%d, etel=%d, net=%d", exitCode, etelCode, netCode);
+	    logg("disconnect reason: code=%d, etel=%d, net=%d", exitCode, etelCode, netCode);
 	    /*
 	    char extraBuf[50];
 	    g_sprintf(extraBuf, "os=%d/net=%d", etelCode, netCode);

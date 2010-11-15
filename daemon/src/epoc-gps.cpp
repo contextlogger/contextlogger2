@@ -140,7 +140,7 @@ void CPositioner_gps::ConstructL()
 
   User::LeaveIfError(iPositioner.SetUpdateOptions(iUpdateOptions));
 
-  dblogf("gps scan interval set to %d secs", iUpdateIntervalSecs);
+  dblogg("gps scan interval set to %d secs", iUpdateIntervalSecs);
 }
 
 CPositioner_gps::~CPositioner_gps()
@@ -273,7 +273,7 @@ TBool CSensor_gps::ChooseBestPositionerL(TPositionModuleId& aBestId)
       TBuf<KPositionMaxModuleName> moduleName;
       moduleInfo.GetModuleName(moduleName);
       gchar* nameString = ConvToUtf8CStringL(moduleName);
-      logf("considering positioning module '%s'", nameString);
+      logg("considering positioning module '%s'", nameString);
       g_free(nameString);
     }
 #endif
@@ -302,7 +302,7 @@ TBool CSensor_gps::ChooseBestPositionerL(TPositionModuleId& aBestId)
       }
       if (moduleInfo.TechnologyType() == TPositionModuleInfo::ETechnologyAssisted)
 	score += 1;
-      logf("module score is %d", score);
+      logg("module score is %d", score);
       if (score > bestScore) {
 	bestScore = score;
 	bestIndex = i;
@@ -316,7 +316,7 @@ TBool CSensor_gps::ChooseBestPositionerL(TPositionModuleId& aBestId)
       TBuf<KPositionMaxModuleName> moduleName;
       moduleInfo.GetModuleName(moduleName);
       gchar* nameString = ConvToUtf8CStringL(moduleName);
-      dblogf("chose positioning module '%s'", nameString);
+      dblogg("chose positioning module '%s'", nameString);
       g_free(nameString);
     }
 
@@ -363,7 +363,7 @@ gboolean CSensor_gps::RunGL(GError** error)
   assert_error_unset(error);
 
   TInt errCode = iStatus.Int();
-  dblogf("positioning module status event (%d)", errCode);
+  dblogg("positioning module status event (%d)", errCode);
 
   if (errCode) {
     Stop();
@@ -393,10 +393,10 @@ gboolean CSensor_gps::RunGL(GError** error)
     iPositionModuleStatusEvent.GetModuleStatus(moduleStatus);
     
     TPositionModuleStatusEventBase::TModuleEvent occurredEvents = iPositionModuleStatusEvent.OccurredEvents();
-    logf("occurred position events: %d", (int)occurredEvents);
+    logg("occurred position events: %d", (int)occurredEvents);
     if (occurredEvents & TPositionModuleStatusEventBase::EEventDeviceStatus) {
       TPositionModuleStatus::TDeviceStatus deviceStatus = moduleStatus.DeviceStatus();
-      dblogf("device status now %d", (int)deviceStatus);
+      dblogg("device status now %d", (int)deviceStatus);
       if (aboutCurrent && 
 	  ((deviceStatus == TPositionModuleStatus::EDeviceDisabled) ||
 	   (deviceStatus == TPositionModuleStatus::EDeviceError) ||
@@ -422,7 +422,7 @@ gboolean CSensor_gps::RunGL(GError** error)
     // optimal way necessarily.
     if (occurredEvents & TPositionModuleStatusEventBase::EEventSystemModuleEvent) {
       TPositionModuleStatusEventBase::TSystemModuleEvent systemModuleEvent = iPositionModuleStatusEvent.SystemModuleEvent();
-      dblogf("system module event was %d", (int)systemModuleEvent);
+      dblogg("system module event was %d", (int)systemModuleEvent);
       if (aboutCurrent &&
 	  ((systemModuleEvent == TPositionModuleStatusEventBase::ESystemError) || (systemModuleEvent == TPositionModuleStatusEventBase::ESystemModuleRemoved))) {
 	CurrentModuleUnavailable();
@@ -466,7 +466,7 @@ gboolean CSensor_gps::PositionerEventL(GError** error)
     // there may be immediate error returns in cases such as a
     // positioning module being or having become unavailable.
     iNumScanFailures++;
-    dblogf("%dth consecutive failure in gps: %s (%d)", iNumScanFailures, plat_error_strerror(errCode), errCode);
+    dblogg("%dth consecutive failure in gps: %s (%d)", iNumScanFailures, plat_error_strerror(errCode), errCode);
     // xxx maybe should support KErrServerBusy by trying again only after a small delay
     switch (errCode) {
     case KErrAccessDenied: // Perhaps some capability thing.
@@ -500,7 +500,7 @@ gboolean CSensor_gps::PositionerEventL(GError** error)
       // can be done with assert(loadstring(s))().
 #if __DO_LOGGING__
       TBool isPartial = (errCode == KPositionPartialUpdate);
-      logf("got %s gps reading", isPartial ? "partial" : "full");
+      logg("got %s gps reading", isPartial ? "partial" : "full");
 #endif
 
       // Is it so that if some module does not support satellite info
@@ -537,7 +537,7 @@ gboolean CSensor_gps::PositionerEventL(GError** error)
 	gchar satTime8[TIME_STRING_MAX + 1];
 	ConvToUtf8CString(satTime8, TIME_STRING_MAX, satTime16);
 
-	logf("satellite info: num satellites in view %d, num used satellites %d, hdop %g, vdop %g, tdop %g, satellite time %s", satellites, used_satellites, horizontal_dop, vertical_dop, time_dop, satTime8);
+	logg("satellite info: num satellites in view %d, num used satellites %d, hdop %g, vdop %g, tdop %g, satellite time %s", satellites, used_satellites, horizontal_dop, vertical_dop, time_dop, satTime8);
 #endif
 
 	// We convert Symbian time to Unix time for consistency.
@@ -594,7 +594,7 @@ gboolean CSensor_gps::PositionerEventL(GError** error)
 	TReal32 speed_accuracy = course.SpeedAccuracy();
 	TReal32 heading_accuracy = course.HeadingAccuracy();
 	TReal32 course_accuracy = course.CourseAccuracy();
-	logf("course info: speed %g m/s, heading %g deg, course %g, speed_accuracy %g m/s, heading_accuracy %d deg, course_accuracy %g", speed, heading, course_value, speed_accuracy, heading_accuracy, course_accuracy);
+	logg("course info: speed %g m/s, heading %g deg, course %g, speed_accuracy %g m/s, heading_accuracy %d deg, course_accuracy %g", speed, heading, course_value, speed_accuracy, heading_accuracy, course_accuracy);
 
 	// "course": {"speed": 6.0, "heading": 305.880004882812, "heading_accuracy": 5.80999994277954, "speed_accuracy": 8.35999965667725
 	{
@@ -632,7 +632,7 @@ gboolean CSensor_gps::PositionerEventL(GError** error)
 	TReal32 alt = position.Altitude();
 	TReal32 vacc = position.VerticalAccuracy();
 	TReal32 hacc = position.HorizontalAccuracy();
-	logf("position info: latitude %lg deg, longitude %lg deg, altitude %g m, vertical_accuracy %g m, horizontal_accuracy %g m", lat, lon, alt, vacc, hacc);
+	logg("position info: latitude %lg deg, longitude %lg deg, altitude %g m, vertical_accuracy %g m, horizontal_accuracy %g m", lat, lon, alt, vacc, hacc);
 	if (!Math::IsNaN(lat) &&
 	    !Math::IsNaN(lon)) {
 	  if (!log_db_log_gps(iLogDb, lat, lon, alt, vacc, hacc, couString, satString, error)) {
@@ -643,7 +643,7 @@ gboolean CSensor_gps::PositionerEventL(GError** error)
 	}
       }
     } else {
-      dblogf("warning, unknown gps request status code (%d)", errCode);
+      dblogg("warning, unknown gps request status code (%d)", errCode);
     }
     iPositioner->MakeRequest();
   }

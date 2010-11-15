@@ -63,7 +63,7 @@ static void setRetryTimer(rk_Remokon* self)
   (self->num_failures)++;
 
   int secs = 2 * 60 * self->num_failures + (rand() % 60);
-  logf("retrying Jabber connection in %d secs", secs);
+  logg("retrying Jabber connection in %d secs", secs);
 
   GError* localError = NULL;
   if (!ut_Timer_set_after(self->timer, secs, &localError)) {
@@ -122,7 +122,7 @@ static int cb_gotEof(void* userdata)
 static int cb_severeError(void* userdata, const char* msg)
 {
   rk_Remokon* self = (rk_Remokon*)userdata;
-  logf("Jabber error: %s", msg);
+  logg("Jabber error: %s", msg);
   stopSession(self);
   setRetryTimer(self);
   return rk_HALT;
@@ -141,7 +141,7 @@ static int cb_gotMsg(void* userdata, const char* fromJid, const char* luaStr)
   rk_Remokon* self = (rk_Remokon*)userdata;
   lua_State* L = self->L;
 
-  logf("remote message from %s: %s", fromJid, luaStr);
+  logg("remote message from %s: %s", fromJid, luaStr);
 
   const gchar* replyText = NULL;
   int level = lua_gettop(L);
@@ -166,7 +166,7 @@ static int cb_gotMsg(void* userdata, const char* fromJid, const char* luaStr)
   // require a bit of work to have it use some safe sprintf instead.
   // Some macro magic in print.c could work.
   pop = lua_gettop(L) - level;
-  logf("nresults is %d", pop);
+  logg("nresults is %d", pop);
   if (pop > 0) {
     if (pop > 1) {
       replyText = "<multiple results>";
@@ -233,7 +233,7 @@ rk_Remokon* rk_Remokon_new(GError** error)
   self->autostart_enabled = (force_get_ConfigDb_bool("remokon.autostart", TRUE));
 
   if (self->have_config) {
-    logf("Jabber config: server %s:%d, username '%s', jid '%s', auto %d",
+    logg("Jabber config: server %s:%d, username '%s', jid '%s', auto %d",
 	 self->params.server, self->params.port,
 	 self->params.username, self->params.jid,
 	 self->autostart_enabled);

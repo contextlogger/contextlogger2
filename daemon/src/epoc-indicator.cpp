@@ -65,7 +65,7 @@ void CSensor_indicator::SetTimer()
 {
   int secs = 5 * (1 + iNumScanFailures) + (rand() % 10);
   TTimeIntervalMicroSeconds32 interval = SecsToUsecs(secs);
-  logf("indicator timer set to %d secs / %d usecs", secs, interval.Int());
+  logg("indicator timer set to %d secs / %d usecs", secs, interval.Int());
   iTimer.After(iStatus, interval);
   SetActive();
   iState = ERetryWaiting;
@@ -108,10 +108,10 @@ void CSensor_indicator::HandleRead()
 
   if (errCode) {
     iNumScanFailures++;
-    logf("%dth consecutive failure in indicator", iNumScanFailures);
+    logg("%dth consecutive failure in indicator", iNumScanFailures);
 
     if (iNumScanFailures < 100) {
-      dblogf("ERROR: %dth consecutive failure reading indicator sensor: %s (%d)", 
+      dblogg("ERROR: %dth consecutive failure reading indicator sensor: %s (%d)", 
 	     iNumScanFailures, plat_error_strerror(errCode), errCode);
 
       SetTimer();
@@ -126,10 +126,10 @@ void CSensor_indicator::HandleRead()
     iNumScanFailures = 0;
 
     if (!(INDICATOR_EQ(iIndicator, iOldIndicator))) {
-      logf("new indicator value: %u/%u", 
+      logg("new indicator value: %u/%u", 
 	   iIndicator.iIndicator,
 	   iIndicator.iCapabilities);
-      logf("indicators: charger=%c network=%c call=%c", 
+      logg("indicators: charger=%c network=%c call=%c", 
 	   IND2CH(CTelephony::KIndChargerConnected),
 	   IND2CH(CTelephony::KIndNetworkAvailable),
 	   IND2CH(CTelephony::KIndCallInProgress));

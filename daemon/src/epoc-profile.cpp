@@ -102,7 +102,7 @@ void CSensor_profile::HandleActiveProfileEventL(TProfileEvent aProfileEvent,
     char* profileName;
     if (errCode) {
       profileName = "";
-      dblogf("could not get profile name for profile %d: %s (%d)", aProfileId, plat_error_strerror(errCode), errCode);
+      dblogg("could not get profile name for profile %d: %s (%d)", aProfileId, plat_error_strerror(errCode), errCode);
     } else {
       profileName = (char*)pnDes->Ptr();
     }

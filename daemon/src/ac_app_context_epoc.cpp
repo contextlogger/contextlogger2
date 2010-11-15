@@ -122,7 +122,7 @@ void CBatteryObserver::HandleBattery(TInt aError,
   } else {
     int status = aData.iStatus;
     int level = aData.iChargeLevel;
-    logf("battery status: %d (%d%%)", status, level);
+    logg("battery status: %d (%d%%)", status, level);
 
     LogDb* logDb = ac_global_LogDb;
     if (logDb) {
@@ -258,7 +258,7 @@ void CFlightModeObserver::HandleFlightMode(TInt aError,
   } else {
     gboolean on = TFlightModeV1ToBoolean(aData);
 
-    logf("flightmode: %s", boolstr_on(on));
+    logg("flightmode: %s", boolstr_on(on));
 
     LogDb* logDb = ac_global_LogDb;
     if (logDb) {

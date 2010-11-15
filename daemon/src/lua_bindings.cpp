@@ -155,7 +155,7 @@ static int f_config_set(lua_State* L)
 {
   const char* name = luaL_checklstring(L, 1, NULL);
   const char* value = luaL_checklstring(L, 2, NULL);
-  logf("config set '%s' -> '%s'", name, value);
+  logg("config set '%s' -> '%s'", name, value);
   GError* setError = NULL;
   gboolean success = ac_DYNAMIC_SET_ERR(name, value, &setError);
   lua_pop(L, 2); // name, value (perhaps unnecessary)
