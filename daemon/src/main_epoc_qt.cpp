@@ -12,9 +12,9 @@
 
 #include <e32base.h> // CTrapCleanup
 
-#include <stdlib.h> // abort
+#include <QApplication>
 
-static CActiveSchedulerWait* globalLoop = NULL;
+#include <stdlib.h> // abort
 
 // Immediate process exit.
 extern "C" void ExitApplication()
@@ -29,12 +29,7 @@ extern "C" void ExitApplication()
 extern "C" void ShutdownApplication()
 {
   logt("ShutdownApplication");
-  if (globalLoop) {
-    globalLoop->AsyncStop();
-  } else {
-    logt("error, no scheduler");
-    ExitApplication();
-  }
+  QCoreApplication::quit();
 }
 
 NONSHARABLE_CLASS(CMainObj) : 
@@ -44,6 +39,7 @@ NONSHARABLE_CLASS(CMainObj) :
  public:
   static CMainObj* NewL();
   ~CMainObj();
+  TInt ExecuteL();
  private:
   void ConstructL();
  private: // MAppContextInitObserver
@@ -68,8 +64,15 @@ CMainObj::~CMainObj()
 
 void CMainObj::ConstructL()
 {
+}
+
+TInt CMainObj::Execute()
+{
+  char* argv[] = {__APP_BASENAME__ ".exe"};
+  QApplication app(1, argv);
   // Invokes AppContextReady upon completion.
   ac_AppContext_PlatInitAsyncL(ac_get_global_AppContext(), *this);
+  return app.exec();
 }
 
 void CMainObj::AppContextReady(TInt aError)
@@ -98,21 +101,18 @@ void CMainObj::AppContextReady(TInt aError)
 
 static TInt MainLoopL()
 {
-  globalLoop = new (ELeave) CActiveSchedulerWait;
-  CleanupStack::PushL(globalLoop);
-
-  // Mere creation schedules async initialization tasks. If and when
-  // those complete, the logger proper is started.
+  // Handles async initialization tasks. If and when those complete,
+  // the logger proper is started.
   CMainObj* mainObj = CMainObj::NewL();
   CleanupStack::PushL(mainObj);
 
   // Will not return unless/until explicitly stopped by
   // ShutdownApplication.
-  globalLoop->Start();
+  TInt errCode = mainObj->ExecuteL();
 
-  CleanupStack::PopAndDestroy(2); // mainObj, globalLoop
+  CleanupStack::PopAndDestroy(1); // mainObj
 
-  return 0;
+  return errCode;
 }
 
 static TInt SubMain()
