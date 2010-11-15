@@ -72,21 +72,14 @@ void CMainObj::ConstructL()
 {
 }
 
-// xxx Do we need to catch C++ exceptions or anything here where we have Qt code?
 TInt CMainObj::ExecuteL()
 {
-  /*
-  int argc = 1;
-  char* argv[] = {__APP_BASENAME__ ".exe"};
-  // This apparently installs an active scheduler as well, and expects
-  // there not to be an active scheduler yet, otherwise we get
-  // E32USER-CBase 43.
-  QApplication app(argc, argv);
   // Invokes AppContextReady upon completion.
   ac_AppContext_PlatInitAsyncL(ac_get_global_AppContext(), *this);
-  return app.exec();
-  */
-  return 0;
+
+  // For async requests to ever complete, we must start the event loop.
+  assert(qApp);
+  return qApp->exec();
 }
 
 void CMainObj::AppContextReady(TInt aError)
@@ -113,7 +106,6 @@ void CMainObj::AppContextReady(TInt aError)
   }
 }
 
-#if 0
 static TInt MainLoopL()
 {
   // Handles async initialization tasks. If and when those complete,
@@ -129,7 +121,6 @@ static TInt MainLoopL()
 
   return errCode;
 }
-#endif
 
 static TInt QtMainL()
 {
@@ -146,11 +137,13 @@ static TInt QtMainL()
 
   TInt errCode = 0;
 
-#if 1
+#if 0
   logt("waiting");
   QTimer::singleShot(10000, &app, SLOT(quit()));
   errCode = app.exec();
   logt("done waiting");
+#else
+  errCode = MainLoopL();
 #endif
 
   return errCode;
