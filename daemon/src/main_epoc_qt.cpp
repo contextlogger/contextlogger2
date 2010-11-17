@@ -97,6 +97,8 @@ void CMainObj::AppContextReady(TInt aError)
   }
 }
 
+// xxx We may not be mixing Qt and Symbian exceptions safely below.
+
 static TInt MainLoopL()
 {
   // Handles async initialization tasks. If and when those complete,
@@ -113,8 +115,6 @@ static TInt MainLoopL()
 
   return errCode;
 }
-
-// xxx We may not be mixing Qt and Symbian exceptions safely below.
 
 static TInt QtMainL()
 {

@@ -4,6 +4,7 @@
 #include "application_config.h"
 #include "er_errors.h"
 #include "ld_create.h"
+#include "ut_compress.h"
 
 #include "common/logging.h"
 #include "common/platform_config.h"
@@ -204,6 +205,13 @@ log_db_take_snapshot (LogDb * self, gchar * pathname,
     logg("Oops, file '%s' still exists!", LOGDB_FILE);
     er_fatal_general;
   }
+
+#if __FEATURE_COMPRESS_LOGS__
+  logt("compressing logfile");
+  if (!compress_file(pathname, error)) {
+    return FALSE;
+  }
+#endif
 
   if (!create_log_db(error)) {
     return FALSE;

@@ -40,8 +40,8 @@ systeminclude ..\..\..\<%= curl_dir %>\include
 <% end %>
 
 <% if $WITH_QT %>
-<% qt_inc_list = %w{include/QtCore include/QtCore/tmp include/QtGui include/QtGui/tmp include include/tmp mkspecs/common/symbian/stl-off mkspecs/common/symbian/stl-off/tmp mkspecs/common/symbian mkspecs/common/symbian/tmp}
-   qt_inc_list = %w{include/QtCore include mkspecs/common/symbian/stl-off mkspecs/common/symbian}
+<% qt_inc_list = %w{include/QtCore include mkspecs/common/symbian/stl-off mkspecs/common/symbian}
+   qt_inc_list.push('include/QtGui') if qt_gui
    for inc in qt_inc_list %>
 systeminclude		../../../../../symbian-gp/qt-latest/<%= inc %>
 <% end %>
@@ -178,7 +178,7 @@ library keyevents_client_2000af44.lib
 <% if $WITH_QT %>
 LIBRARY		libdl.lib
 LIBRARY		QtCore.lib
-<% if true or qt_gui %>
+<% if qt_gui %>
 LIBRARY		QtGui.lib
 <% end %>
 <% end %>
@@ -256,6 +256,9 @@ source sa_sensor_mark.c
 source symbian_auto_ptr.cpp
 <% if $FEATURE_UPLOADER %>
 source timer_generic_epoc.cpp
+<% end %>
+<% if $FEATURE_COMPRESS_LOGS %>
+source ut_compress.c
 <% end %>
 source ut_diskspace_epoc.cpp
 //source ut_immediate_epoc.cpp   //xxx experimental
@@ -588,9 +591,11 @@ OPTION ARMCC --import_all_vtbl
 // "To get rid of the other warning, it appears that changes are required to the makmake tool modules (specifically, cl_bpapi.pm), or the gcce.mk base file."
 OPTION GCCE -fvisibility-inlines-hidden
 
-PAGED
+// http://library.forum.nokia.com/topic/S60_3rd_Edition_Cpp_Developers_Library/GUID-35228542-8C95-4849-A73F-2B4F082F0C44/html/SDL_93/doc_source/ToolsAndUtilities93/Build-ref/Mmp-ref/paged.html#Mmp-ref.paged
+//PAGED
 
-BYTEPAIRCOMPRESSTARGET
+// http://library.forum.nokia.com/topic/S60_3rd_Edition_Cpp_Developers_Library/GUID-35228542-8C95-4849-A73F-2B4F082F0C44/html/SDL_93/doc_source/ToolsAndUtilities93/Build-ref/Mmp-ref/bytepaircompresstarget.html#Mmp-ref.bytepaircompresstarget
+//BYTEPAIRCOMPRESSTARGET
 
 OPTION_REPLACE ARMCC --export_all_vtbl -D__QT_NOEFFECTMACRO_DONOTUSE
 <% end %>

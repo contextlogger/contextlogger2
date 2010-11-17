@@ -176,6 +176,9 @@ project must implement.
   (define/public (feature-remokon.attr)
     #t)
 
+  (define/public (feature-compress-logs.attr)
+    #f)
+  
   ;; --------------------------------------------------
   ;; sensors
   ;; --------------------------------------------------
