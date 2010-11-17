@@ -2,6 +2,7 @@
 CONFIG =
 
 include(../src/current_config.pri)
+
 TEMPLATE = app
 CONFIG += debug
 VERSION = $$VERSION_STRING
@@ -14,6 +15,7 @@ WITH_QT {
 !WITH_QT {
   message("without Qt")
 }
+INCLUDEPATH = ../src ../../shared ../../time-spec
 DEPENDPATH = ../src ../../shared/common ../../time-spec
 SOURCES += cf_query.c client-run.c config_db.c db_creation.c er_errors.c kr_controller.c libluasqlite3.c ld_create.c ld_log_db.c ld_logging.c sa_sensor_list_log_db.c sa_sensor_mark.c sa_sensor_timer.c up_shared.c utils_cl2.c
 SOURCES += ac_app_context.cpp bb_blackboard.cpp cf_rcfile.cpp lua_bindings.cpp lua_cl2.cpp sa_array.cpp
@@ -41,8 +43,6 @@ LUA_FROM_SOURCE {
   SOURCES += lapi.c lauxlib.c lbaselib.c lcode.c ldblib.c ldebug.c ldo.cpp ldump.c lfunc.c lgc.c linit.c liolib.c llex.c lmathlib.c lmem.c loadlib.cpp lobject.c lopcodes.c loslib.c lparser.c lstate.c lstring.c lstrlib.c ltable.c ltablib.c ltm.c lundump.c lvm.c lzio.c print.c
 }
 !symbian {
-  INCLUDEPATH = ../src ../../shared ../../time-spec
-
   MY_WARNING_FLAGS = -Wall -Wmissing-declarations -Wsign-compare
   MY_CCFLAGS = -fexceptions $$MY_WARNING_FLAGS
   QMAKE_CFLAGS += $$MY_CCFLAGS
@@ -54,21 +54,16 @@ LUA_FROM_SOURCE {
   PKGCONFIG = glib-2.0
 }
 symbian {
+  INCLUDEPATH += ../inc
+  INCLUDEPATH += ../../epocxplat/src
+  INCLUDEPATH += ../../keyevents/inc
+  INCLUDEPATH += ../../sqlite3h/src/sqlite3
+
+  # xxx What is the right way to specify such kit relative paths?
   MMP_RULES += "SYSTEMINCLUDE \\epoc32\\include\\stdapis\\glib-2.0"
-  MMP_RULES += "USERINCLUDE ..\\build\\$$VARIANT_NAME" # xxx sconfig.hrh missing unless we invoke sake first
-  MMP_RULES += "USERINCLUDE ..\\inc"
-  MMP_RULES += "USERINCLUDE ..\\src"
-  MMP_RULES += "USERINCLUDE ..\\..\\shared"
-  MMP_RULES += "USERINCLUDE ..\\..\\lua\\src"
-  MMP_RULES += "USERINCLUDE ..\\..\\lua\\etc"
-  MMP_RULES += "USERINCLUDE ..\\..\\sqlite3h\\src\\sqlite3"
-  MMP_RULES += "USERINCLUDE ..\\..\\epocxplat\\src"
-  FEATURE_UPLOADER {
-    MMP_RULES += "USERINCLUDE ..\\..\\time-spec"
-  }
-  HAVE_ANIM {
-    MMP_RULES += "USERINCLUDE ..\\..\\keyevents\\inc"
-  }
+
+  # xxx sconfig.hrh missing unless we invoke sake first -- We might actually do without by deducing the same information in platform_config.h based on platform version
+  MMP_RULES += "USERINCLUDE ..\\build\\$$VARIANT_NAME"
 
   DESTDIR = ../build/$$VARIANT_NAME
   TARGET = cl2app
@@ -136,7 +131,9 @@ symbian {
   LIBS += -llibglib.dll    # Open C
   LIBS += -llibgobject.dll # Open C
   # LIBS += -llibpthread.dll # Open C (included by qmake)
-  #  LIBS += -llibstdcpp.dll  # Open C++
+  WITH_QT {
+    LIBS += -llibstdcpp.dll  # Open C++
+  }
 
   KEYPRESS_ENABLED:HAVE_ANIM {
     LIBS += -lkeyevents_client_2000af44.dll
@@ -164,16 +161,14 @@ symbian {
   KEYPRESS_ENABLED {
     HAVE_ANIM {
       SOURCES += epoc-keypress-anim.cpp
-    }
-    !HAVE_ANIM {
+    } else {
       SOURCES += epoc-keypress.cpp
     }
   }
   PROFILE_ENABLED {
     HAVE_PROFILEENGINE_LIB {
       SOURCES += epoc-profile-31.cpp
-    }
-    !HAVE_PROFILEENGINE_LIB {
+    } else {
       SOURCES += epoc-profile.cpp
     }
   }
@@ -188,9 +183,16 @@ symbian {
     SOURCES += local_server.cpp
   }
   !IS_APPLICATION {
-    SOURCES += main_epoc.cpp
+    WITH_QT {
+      SOURCES += main_epoc_qt.cpp
+    } else {
+      SOURCES += main_epoc.cpp
+    }
   }
   SOURCES += symbian_auto_ptr.cpp
+  FEATURE_COMPRESS_LOGS {
+    SOURCES += ut_compress.c
+  }
   SOURCES += ut_diskspace_epoc.cpp
   SOURCES += ut_retry_epoc.cpp
   SMSEVENT_ENABLED {
