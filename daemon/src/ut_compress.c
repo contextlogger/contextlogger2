@@ -1,6 +1,10 @@
 /*
   To decompress, use
     ./zpipe -d < compressed-file > plain-file
+
+  To allow gunzip to be used, we might want to use its file format.
+    http://en.wikipedia.org/wiki/Gzip#File_format
+    http://tools.ietf.org/html/rfc1952
  */
 
 #include "ut_compress.h"
