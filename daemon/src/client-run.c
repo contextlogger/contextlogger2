@@ -11,12 +11,9 @@
 
 //#include <glib-object.h> // g_type_init
 
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#ifndef __EPOC32__
-#include <signal.h>
-#endif
 
 #if !defined(__SYMBIAN32__)
 
@@ -168,9 +165,8 @@ int cl2GlobalInit()
   }
 #endif
 
-#ifndef __EPOC32__
+  // Symbian^3 does support signals, so we invoke this on Symbian as well.
   signal(SIGPIPE, SIG_IGN); // return EPIPE instead
-#endif
 
   srand(time(NULL));
 

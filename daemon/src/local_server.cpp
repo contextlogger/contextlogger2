@@ -48,6 +48,7 @@ extern "C" gboolean 	LocalServer_start	(LocalServer * self,
 
     errCode = server->Start();
     if (errCode) {
+      logt("failed to start Symbian local server");
       delete server;
       if (error)
 	*error = gx_error_new(domain_symbian, errCode, "Symbian client/server start failure: %s (%d)", plat_error_strerror(errCode), errCode);
