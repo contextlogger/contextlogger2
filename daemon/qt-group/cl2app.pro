@@ -23,16 +23,6 @@ SOURCES += error_list.c gx_maybe_string.c gxerror.c logging-time.c platform_erro
 SOURCES += assertions_cxx.cpp logging.cpp utilities_cxx.cpp
 SOURCES += moment_parser.c time_utils.c
 DEFINES += G_DISABLE_DEPRECATED
-WITH_QT {
-  SOURCES += ut_timer_qt.cpp
-  HEADERS += ut_timer_qt_private.hpp
-  SOURCES += main_qt.cpp
-}
-WITH_LIBEV {
-  SOURCES += ut_timer_libev.c
-  LIBS += -lev
-  SOURCES += main_posix.c
-}
 !LUA_FROM_SOURCE {
   INCLUDEPATH += /usr/include/lua5.1
   LIBS += -llua5.1
@@ -52,14 +42,28 @@ LUA_FROM_SOURCE {
   LIBS += -lpthread -lsqlite3
   CONFIG += link_pkgconfig
   PKGCONFIG = glib-2.0
+
+  WITH_QT {
+    SOURCES += ut_timer_qt.cpp
+    HEADERS += ut_timer_qt_private.hpp
+    SOURCES += main_qt.cpp
+  }
+  WITH_LIBEV {
+    SOURCES += ut_timer_libev.c
+    LIBS += -lev
+    SOURCES += main_posix.c
+  }
 }
 symbian {
+  # xxx Does not work for Symbian yet.
+
   INCLUDEPATH += ../inc
   INCLUDEPATH += ../../epocxplat/src
   INCLUDEPATH += ../../keyevents/inc
   INCLUDEPATH += ../../sqlite3h/src/sqlite3
 
   # xxx What is the right way to specify such kit relative paths?
+  MMP_RULES += "SYSTEMINCLUDE \\epoc32\\include\\stdapis"
   MMP_RULES += "SYSTEMINCLUDE \\epoc32\\include\\stdapis\\glib-2.0"
 
   # xxx sconfig.hrh missing unless we invoke sake first -- We might actually do without by deducing the same information in platform_config.h based on platform version
@@ -138,6 +142,9 @@ symbian {
   KEYPRESS_ENABLED:HAVE_ANIM {
     LIBS += -lkeyevents_client_2000af44.dll
   }
+
+  # xxx We do not want this but how can we remove it?
+  #LIBS -= -llibcrt0.lib
 
   # shared
   SOURCES += epoc-time.cpp
