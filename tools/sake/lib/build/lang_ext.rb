@@ -46,6 +46,8 @@ class Array
   def third
     self[2]
   end
+
+  include Comparable
 end
 
 module Kernel

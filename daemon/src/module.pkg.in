@@ -1,6 +1,6 @@
 #{"<%= build.name %>"}, (<%= build.uid.chex_string %>), <%= build.major_version %>, <%= build.minor_version %>, 0
 
-<% if build.v9? %>
+<% if build.v9_up? %>
 ;; In S60 3rd ed SDKs, vendor name(s) are required.
 ;; Apparently both unique and localized versions.
 
@@ -16,7 +16,7 @@
 [0x1028315F], 0, 0, 0, {"Series605thProductID"}
 [0x20022E6D], 0, 0, 0, {"Symbian3ProductID"}
 
-<% if build.v9? %>
+<% if build.v9_up? %>
 "cl2app.exe"                 -"!:\sys\bin\cl2app.exe"
 
 <% if $IS_APPLICATION %>
@@ -26,7 +26,7 @@
 <% end %>
 
 "..\..\src\backup_registration.xml"						-"!:\private\<%= build.uid.hex_string %>\backup_registration.xml"
-<% elsif build.v6? %>
+<% elsif build.v8_down? %>
 ;; xxx note that these paths are urel build dependent
 "epoc32/release/armi/urel/cl2app.aif" - "!:\system\apps\cl2app\cl2app.aif"
 "epoc32/release/armi/urel/cl2app.app" - "!:\system\apps\cl2app\cl2app.app"

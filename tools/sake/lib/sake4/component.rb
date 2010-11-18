@@ -371,13 +371,33 @@ class Sake::ProjBuild
     make_delegating_methods(@project, :exclude => self.class.instance_methods)
   end
 
+  # This allows for setting the signing information based on the
+  # EPOCLOCALRB settings. You just need to provide a certificate name,
+  # possibly passed in via $sake_op[:cert], for instance.
+  def set_epoclocalrb_cert_info name
+    if target.major_epoc_version < 9
+      sign = false
+    else
+      epoclocalrb = ENV['EPOCLOCALRB'] or raise "EPOCLOCALRB not set"
+      require ENV['EPOCLOCALRB']
+      ci = epoc_cert_info name, @devkit.handle
+      self.max_caps = ci.max_caps
+      self.sign = ci.sign
+      if ci.sign
+        self.cert_file = ci.cert_file
+        self.key_file = ci.key_file
+        self.passphrase = ci.passphrase
+      end
+    end
+  end
+
   def basename
     @handle
   end
 
   def uid
     if @project.uid
-      v9? ? @project.uid.v9 : @project.uid.v8
+      v9_up? ? @project.uid.v9 : @project.uid.v8
     end
   end
 
@@ -441,11 +461,11 @@ class Sake::ProjBuild
   end
 
   def v9?
-    (target.f_version.first == 9)
+    (target.major_epoc_version == 9)
   end
 
   def v9_up?
-    (target.f_version.first >= 9)
+    (target.major_epoc_version >= 9)
   end
 
   def v8_down?
@@ -510,7 +530,7 @@ class Sake::CompBuild
   def uid2
     uu = @component.uid2
     if uu
-      v9? ? uu.v9 : uu.v8
+      v9_up? ? uu.v9 : uu.v8
     end
   end
 
@@ -518,7 +538,7 @@ class Sake::CompBuild
     return Sake::Uid::OneUid.new(0) if target_type == :staticlibrary
     uu = @component.uid3
     if uu
-      v9? ? uu.v9 : uu.v8
+      v9_up? ? uu.v9 : uu.v8
     end
   end
 
@@ -540,9 +560,9 @@ class Sake::CompBuild
     when :pyd, :dll
       "dll"
     when :application
-      v9? ? "exe" : "app"
+      v9_up? ? "exe" : "app"
     when :exedll
-      v9? ? "exe" : "exedll"
+      v9_up? ? "exe" : "exedll"
     when :exe, :executable
       "exe"
     when :staticlibrary

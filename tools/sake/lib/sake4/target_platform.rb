@@ -42,8 +42,7 @@ module Sake
     include Memoize
 
     attr_reader :handle, :handle_version
-    attr_reader :epoc_version, :s60_version, :sf_version
-    attr_reader :f_version # "forced" version
+    attr_reader :epoc_version, :s60_version
 
     def initialize handle
       @handle = handle
@@ -74,35 +73,27 @@ module Sake
           @s60_version = [3, 2]
         when "50"
           @s60_version = [5, 0]
+        when "51"
+          @s60_version = [5, 1]
+        when "52"
+          @s60_version = [5, 2]
         else
-          raise
+          raise "unknown S60 version handle #{handle_version.second}"
         end
-        determine_epoc_version
-      elsif handle_version.first == "sf"
-        @sf_version = handle_version.second.to_i
       else
-        raise
+        raise "unknown platform handle #{handle_version.first}"
       end
 
-      if sf_version
-        if sf_version == 1
-          @f_version = [9, 4]
-        elsif sf_version >= 2
-          @f_version = [9 + sf_version] # at least 10
-        else
-          raise
-        end
-      elsif epoc_version
-        @f_version = epoc_version
-      else
-        raise
-      end
+      determine_epoc_version
     end
 
+    # Based on the S60 version, determines the version of the
+    # underlying Symbian platform. We use the version number 10 to
+    # denote Symbian^ in order to allow for integer data types.
     def determine_epoc_version
       case edition
       when 0, 1
-        @epoc_version = [6]
+        @epoc_version = [6, 0] # really just version 6, no minor version
       when 2
         case fp
         when 0, 1
@@ -128,7 +119,11 @@ module Sake
       when 5
         case fp
         when 0
-          @epoc_version = [9, 4]
+          @epoc_version = [9, 4] # also known as Symbian^1
+        when 1
+          @epoc_version = [10, 2, "Symbian^2"]
+        when 2
+          @epoc_version = [10, 3, "Symbian^3"]
         else
           raise
         end
@@ -145,36 +140,25 @@ module Sake
       s60_version != nil
     end
 
-    def sf?
-      sf_version != nil
-    end
-
     def s60_3rd_up?
-      (s60? and edition >= 3) or sf?
+      (s60? and edition >= 3)
     end
 
     def major_epoc_version
-      return nil unless epoc_version
       epoc_version.first
     end
 
     def minor_epoc_version
-      return nil unless epoc_version
-      ver = epoc_version.second
-      (ver && ver.is_a?(Integer)) ? ver : 0
+      epoc_version.second
     end
 
     def epoc_version_suffix
-      return nil unless epoc_version
-      ver = epoc_version.last
-      (ver && ver.is_a?(String)) ? ver : nil
+      epoc_version.third
     end
 
     # Returns 1 for EKA1, and 2 for EKA2.
     def eka_version
-      if sf?
-        2
-      elsif major_epoc_version < 8
+      if major_epoc_version < 8
         1
       elsif major_epoc_version > 8
         2
@@ -189,13 +173,11 @@ module Sake
 
     # S60 edition.
     def edition
-      return nil unless s60_version
       s60_version.first
     end
 
     # Feature pack.
     def fp
-      return nil unless s60_version
       s60_version.second
     end
 
@@ -204,7 +186,7 @@ module Sake
     end
 
     def pkg_dependency_syntax
-      if epoc? and major_epoc_version < 9
+      if major_epoc_version < 9
         '(0x%08x), %d, %d, %d, {"%s"}'
       else
         # Platform dependency considered a hardware dependency.
@@ -222,35 +204,33 @@ module Sake
 
     # Each (Edition, FP) combo has its own ID.
     def platform_id
-      if s60?
-        case [edition, fp]
-        when [0, 9]
-          0x101f6f88
-        when [1, 0]
-          0x101f795f
-        when [1, 2]
-          0x101f8202
-        when [2, 0]
-          0x101f7960
-        when [2, 1]
-          0x101f9115
-        when [2, 6]
-          0x101f9115
-        when [2, 8]
-          0x10200bab
-        when [3, 0]
-          0x101f7961
-        when [3, 1]
-          0x102032be
-        when [3, 2]
-          0x102752ae
-        when [5, 0]
-          0x1028315f
-        else
-          raise "unsupported S60 version"
-        end
+      case [edition, fp]
+      when [0, 9]
+        0x101f6f88
+      when [1, 0]
+        0x101f795f
+      when [1, 2]
+        0x101f8202
+      when [2, 0]
+        0x101f7960
+      when [2, 1]
+        0x101f9115
+      when [2, 6]
+        0x101f9115
+      when [2, 8]
+        0x10200bab
+      when [3, 0]
+        0x101f7961
+      when [3, 1]
+        0x102032be
+      when [3, 2]
+        0x102752ae
+      when [5, 0]
+        0x1028315f
+      when [5, 2]
+        0x20022e6d
       else
-        raise "unsupported platform version"
+        raise "unsupported S60 version"
       end
     end
 
@@ -263,10 +243,13 @@ module Sake
       version = version.dup
       idlist = [name.to_s]
       until version.empty?
-        idlist.push(version.shift.to_s)
+        comp = version.shift.to_s
+        break if comp !~ /^[[:alnum:]]+$/
+        idlist.push(comp)
         list.push(idlist.join("_"))
       end
       list.map! {|x| x.to_sym}
+      #p list
       return list
     end
 
@@ -274,42 +257,38 @@ module Sake
       vlist = {:eka_version => (eka_version * 10)}
       dlist = ["eka#{eka_version}".to_sym]
 
-      if epoc?
-        vlist[:symbian_version] = (major_epoc_version * 10 +
-                                   minor_epoc_version)
-        dlist += platform_id_list("symbian", epoc_version)
-      end
+      vlist[:symbian_version] = (major_epoc_version * 10 +
+                                 minor_epoc_version)
+      dlist += platform_id_list("symbian", epoc_version)
 
-      if s60?
-        vlist[:s60_version] = (edition * 10 + fp)
-        dlist += platform_id_list("s60", s60_version)
-      end
+      vlist[:s60_version] = (edition * 10 + fp)
+      dlist += platform_id_list("s60", s60_version)
 
       # RFileLogger available on 7.0s-up
-      dlist.push(:has_flogger) if (f_version <=> [7, 0, "s"]) >= 0
+      dlist.push(:has_flogger) if (epoc_version <=> [7, 0, "s"]) >= 0
 
       # CCamera available on 7.0s-up
-      dlist.push(:has_ccamera) if (f_version <=> [7, 0, "s"]) >= 0
+      dlist.push(:has_ccamera) if (epoc_version <=> [7, 0, "s"]) >= 0
 
       # Bluetooth stack and hardware settings managed with
       # the Publish and Subscribe API
-      dlist.push(:has_bt_subscribe) if (f_version <=> [8]) >= 0
+      dlist.push(:has_bt_subscribe) if (epoc_version <=> [8]) >= 0
 
       if [6, 7].include?(major_epoc_version)
         dlist.push(:btdevicename_in_btmanclient)
       end
 
       # KRFCOMMPassiveAutoBind, etc.
-      dlist.push(:has_bt_auto_bind) if (f_version <=> [8]) >= 0
+      dlist.push(:has_bt_auto_bind) if (epoc_version <=> [8]) >= 0
 
       # TRfcommSockAddr::SetSecurity
-      dlist.push(:has_bt_set_security) if (f_version <=> [8]) >= 0
+      dlist.push(:has_bt_set_security) if (epoc_version <=> [8]) >= 0
 
       # TInt64 macros
-      dlist.push(:has_i64_macros) if (f_version <=> [7, 0, "s"]) >= 0
+      dlist.push(:has_i64_macros) if (epoc_version <=> [7, 0, "s"]) >= 0
 
       # TThreadStackInfo
-      dlist.push(:has_thread_stack_info) if (f_version <=> [9]) >= 0
+      dlist.push(:has_thread_stack_info) if (epoc_version <=> [9]) >= 0
 
       if s60?
         # SysStartup
@@ -324,12 +303,12 @@ module Sake
         # for instance, have no vibractrl.dll, or at least not all of
         # them do, so here we are assuming that it is only available
         # from Series 60 v2.6 onwards.
-        dlist.push :has_vibractrl if ((s60_version <=> [2, 2]) >= 0)
+        dlist.push :has_vibractrl if s60_version >= [2, 6]
 
         dlist.push :has_hwrmvibra if edition >= 3
 
         dlist.push :has_ahleclient if edition == 3 # and fp == 0 # xxx fp 0 and 1 yes, what about 2?
-        if (edition == 3 and (fp == 1 or fp == 2)) or (edition == 5)
+        if s60_version >= [3, 1]
           dlist.push :has_ahle2client
         end
       end
@@ -340,8 +319,8 @@ module Sake
 end
 
 if $0 == __FILE__
-  for hand in %w{s60_09 s60_10 s60_32 sf_3}
+  for hand in %w{s60_09 s60_10 s60_32 s60_52}
     plat = Sake::TargetPlatform.new(hand)
-    p [plat, plat.eka_version, plat.edition, plat.fp]
+    p [plat, plat.eka_version, plat.edition, plat.fp, plat.c_defines]
   end
 end

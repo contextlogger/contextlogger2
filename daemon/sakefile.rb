@@ -1,9 +1,10 @@
 # -*- ruby -*-
-# sake variant sake3
+# sake variant sake4
 
-# The build tool driving this makefile is a custom one.
+# This makefile for a custom build tool drives the ABLD-based Symbian
+# builds. In other build configurations you may safely ignore this file.
 
-require 'sake3/component'
+require 'sake4/component'
 
 require 'src/current_config'
 
@@ -40,6 +41,9 @@ class <<$app
   end
 end
 
+#require 'pp'
+#pp [$proj, $app]; exit
+
 $comp_list = [$app].compact
 
 $kits = Sake::DevKits::get_exact_set([$KIT_NAME])
@@ -55,7 +59,7 @@ $builds = $kits.map do |kit|
   build = Sake::ProjBuild.new(:project => $proj,
                               :handle => $VARIANT_NAME,
                               :devkit => kit)
-  build.abld_platform = (build.v9? ? "gcce" : "armi")
+  build.abld_platform = (build.v9_up? ? "gcce" : "armi")
   build.abld_build = ($ABLD_VARIANT || raise)
   #build.handle = (build.handle + "_udeb") if $sake_op[:udeb]
   build
@@ -129,8 +133,7 @@ task :build_info do
     puts "  cert file     #{build.cert_file}"
     puts "  privkey file  #{build.key_file}"
     puts "  cert caps     #{build.max_caps.inspect}"
-    puts "  components    #{build.comp_builds.map {|x| x.component.basename}.ins
-pect}"
+    puts "  components    #{build.comp_builds.map {|x| x.component.basename}.inspect}"
   end
 end
 
@@ -196,7 +199,7 @@ end
 
 task :default => [:bin, :sis]
 
-require 'sake3/tasks'
+require 'sake4/tasks'
 
 Sake::Tasks::def_list_devices_tasks(:builds => $builds)
 
