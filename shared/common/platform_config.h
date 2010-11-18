@@ -64,37 +64,26 @@
 // toolchain
 // --------------------------------------------------
 
-// Based on __EKA_VERSION__ and __SYMBIAN_VERSION__ and
-// __S60_VERSION__ we can compute a numerous platform-specific
-// definitions based on the version numbers. We can expect this
-// component to be directly usable in a number of projects, as we are
-// not including any application specifics in this header file. Keep
-// those in "application_config.h".
+// Based on platform version we can compute a numerous
+// platform-specific definitions based on the version numbers. We can
+// also make use of the definitions in the __PRODUCT_INCLUDE__ should
+// that be useful.
+// 
+// We can expect this component to be directly usable in a number of
+// projects, as we are not including any application specifics in this
+// header file. Keep those in "application_config.h".
 // 
 // When checking for boolean style conditionals, you should favor #if
 // rather than #ifdef style checks to make it easier to notice if this
 // file is not #included where it should.
-// 
-// Note that Sake already defines some Symbian specifics for us, and
-// we are not recomputing those here, although we could.
 
 #ifdef __SYMBIAN32__
 
-// We will eventually deprecate sconfig.hrh use altogether, but for
-// now we assume its availability unless certain platform version
-// identifiers have been #defined.
-#if defined(__XXX_S60_VERSION__)
-// xxx Define the sconfig.hrh stuff here.
-#elif defined(__SYMBIANHAT_VERSION__)
-// xxx Define the sconfig.hrh stuff here. based on Symbian^version
-#else
-#include "sconfig.hrh"
-#endif
+// xxx check if __S60_VERNUM__ is defined, and if so, deduce all the
+// information that sake gives us here rather than requiring
+// sconfig.hrh, or at least the information that we require in CL2
 
-// xxx Is this set in sconfig.hrh?
-#ifndef __SYMBIAN_VERSION__
-#error incompatible build tool chain
-#endif
+#include "sconfig.hrh"
 
 #endif // __SYMBIAN32__
 
@@ -108,8 +97,8 @@
 #define DIR_SEP "/"
 #endif
 
-// xxx Is this already included automatically by the toolchain? Looks
-// like it is #if defined(__PRODUCT_INCLUDE__).
+// This header is apparently included automatically by the toolchain,
+// provided that it holds that #if defined(__PRODUCT_INCLUDE__).
 #if 0
 #ifdef __SYMBIAN32__
 #if defined(__SERIES60_30__)

@@ -565,6 +565,11 @@ CAPABILITY <%= $CAPABILITIES.join(" ") %>
 <% end %>
 <% end %>
 
+<% if false %>
+// This is required for Symbian^3 SDK, apparently.
+APP_LAYER_SYSTEMINCLUDE
+<% end %>
+
 // No using the old client-server API.
 macro __HIDE_IPC_V1__
 
@@ -588,8 +593,9 @@ OPTION ARMCC --import_all_vtbl
 
 // Gives warnings for C files.
 // http://bugreports.qt.nokia.com/browse/QTBUG-11629
-// "To get rid of the other warning, it appears that changes are required to the makmake tool modules (specifically, cl_bpapi.pm), or the gcce.mk base file."
-OPTION GCCE -fvisibility-inlines-hidden
+// "To get rid of the other warning, it appears that changes are required to the makmake tool modules (specifically, cl_bpabi.pm), or the gcce.mk base file."
+// This only really matters for libraries (with exports).
+//OPTION GCCE -fvisibility-inlines-hidden
 
 // http://library.forum.nokia.com/topic/S60_3rd_Edition_Cpp_Developers_Library/GUID-35228542-8C95-4849-A73F-2B4F082F0C44/html/SDL_93/doc_source/ToolsAndUtilities93/Build-ref/Mmp-ref/paged.html#Mmp-ref.paged
 //PAGED

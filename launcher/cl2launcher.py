@@ -202,6 +202,8 @@ class GUI:
         """
         Launches the daemon.
         """
+        if self.is_cl2_running():
+            appuifw.note(u"CL2 already running", "info")
         daemon = (self.app_drive + u"\\sys\\bin\\cl2app.exe")
         # The args are: executable path, command string, and whether
         # to wait for the started process to exit.
