@@ -5,7 +5,7 @@ SAKE := ../tools/bin/sake
 
 default : symbian
 
-symbian : symbian30 symbian31 symbian32 symbian50
+symbian : symbian30 symbian31 symbian32 symbian50 symbian52
 
 # Presently building a DLL is not an option, unless one has the
 # expensive ARM compiler, or tweaks lots of Symbian headers.
@@ -21,6 +21,9 @@ symbian32 :
 
 symbian50 :
 	$(SAKE) --trace static=true kits=s60_50 udeb=true cert=$(CERT)
+
+symbian52 :
+	$(SAKE) --trace static=true kits=s60_52 udeb=true cert=$(CERT)
 
 symbian_rel :
 	$(SAKE) --trace static=true kits=s60_30 cert=$(CERT)

@@ -4,7 +4,7 @@ target         <%= build.binary_file.basename %>
 uid	       <%= build.uid2.chex_string %> <%= build.uid3.chex_string %>
 secureid       <%= build.uid3.chex_string %>
 
-<% unless build.v9? %>
+<% unless build.v9_up? %>
 targetpath     "\\system\\apps\\" + cl2app
 <% end %>
 
@@ -536,7 +536,7 @@ LANG sc
 
 <% if $IS_APPLICATION %>
 
-<% if build.v9? %>
+<% if build.v9_up? %>
 start resource    cl2app.rss
 header
 targetpath resource\apps
@@ -550,13 +550,13 @@ RESOURCE cl2app.rss
 RESOURCE cl2app_caption.rss
 <% end %>
 
-<% unless build.v9? %>
+<% unless build.v9_up? %>
 AIF cl2app.aif ..\..\src cl2appaif.rss c8 context_pane_icon.bmp context_pane_icon_mask.bmp list_icon.bmp list_icon_mask.bmp
 <% end %>
 
 <% end %>
 
-<% if build.v9? %>
+<% if build.v9_up? %>
 VENDORID 0
 <% if $CAPABILITIES.empty? %>
 CAPABILITY NONE
@@ -565,7 +565,7 @@ CAPABILITY <%= $CAPABILITIES.join(" ") %>
 <% end %>
 <% end %>
 
-<% if $KIT_NAME == "s60_50" %>
+<% if $KIT_NAME == "s60_52" %>
 // This is required for Symbian^3 SDK, apparently.
 APP_LAYER_SYSTEMINCLUDE
 <% end %>

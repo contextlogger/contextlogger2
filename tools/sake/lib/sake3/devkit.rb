@@ -152,6 +152,9 @@ module Sake
       when "ns60_5th"
         # 5th Edition
         Sake::S60Platform.new(:version => [5,0])
+      when "ns60_v52"
+        # 5th Edition
+        Sake::S60Platform.new(:version => [5,2])
       else
         raise "cannot determine platform from #{chnd}"
       end

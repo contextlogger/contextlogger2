@@ -461,7 +461,8 @@ class Sake::ProjBuild
   end
 
   def v9?
-    (target.major_epoc_version == 9)
+    puts "WARNING: method v9? is deprecated in sake4"
+    v9_up?
   end
 
   def v9_up?

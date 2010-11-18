@@ -2,14 +2,14 @@
 // platform is not supported.
 
 PRJ_PLATFORMS
-<% if build.v9? %>
+<% if build.v9_up? %>
 winscw gcce
 <% else %>
 wins thumb armi
 <% end %>
 
 PRJ_MMPFILES
-<% if build.v9? and $IS_APPLICATION %>
+<% if build.v9_up? and $IS_APPLICATION %>
 gnumakefile ..\..\src\icons.mk
 <% end %>
 <% for cb in build.comp_builds %>

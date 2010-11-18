@@ -236,6 +236,8 @@ module Sake
         case fp
         when 0
           SymbianPlatform.new(:version => [9, 4])
+        when 2
+          SymbianPlatform.new(:version => [10, 2])
         else
           raise
         end

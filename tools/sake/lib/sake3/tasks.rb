@@ -370,7 +370,10 @@ EOF
               do_abld = proc do |aplat, abuild|
                 built_files = build.comp_builds.map do |compb|
                   aabi = aplat
-                  if compb.target_type == :staticlibrary
+                  #require 'pp'
+                  #pp ["INFO", build, aabi]
+                  if compb.target_type == :staticlibrary and
+                      build.devkit.native_target.version < [5,2]
                     aabi = "armv5"
                   end
 
