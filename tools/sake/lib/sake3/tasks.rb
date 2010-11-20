@@ -390,6 +390,18 @@ EOF
                 cmd = "abld build -v #{aplat} #{abuild}"
                 sh_check_build_errors cmd
 
+                #p ['VERSION', build.devkit.native_target.version]
+                if build.devkit.native_target.version >= [5,2]
+                  for built_file in built_files
+                    bf = built_file
+                    bt = bf.sub("/gcce/", "/armv5/")
+                    #p [bf, bt]
+                    if bt != bf
+                      cp(bf, bt)
+                    end
+                  end
+                end
+
                 # One should note that the that the path is not
                 # specific enough: if we do two or more variant builds
                 # of the same component with the same SDK, then both

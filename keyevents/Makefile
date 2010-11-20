@@ -19,6 +19,9 @@ symbian32 :
 symbian50 :
 	$(SAKE) --trace kits=s60_50 udeb=true cert=$(CERT)
 
+symbian52 :
+	$(SAKE) --trace kits=s60_52 udeb=true cert=$(CERT)
+
 makefiles :
 	$(SAKE) --trace kits=s60_30 udeb=true cert=$(CERT) makefiles
 
