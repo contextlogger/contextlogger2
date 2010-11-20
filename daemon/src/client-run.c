@@ -11,7 +11,10 @@
 
 //#include <glib-object.h> // g_type_init
 
+#if __HAVE_SIGNAL__
 #include <signal.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -166,7 +169,9 @@ int cl2GlobalInit()
 #endif
 
   // Symbian^3 does support signals, so we invoke this on Symbian as well.
+#if __HAVE_SIGNAL__
   signal(SIGPIPE, SIG_IGN); // return EPIPE instead
+#endif
 
   srand(time(NULL));
 

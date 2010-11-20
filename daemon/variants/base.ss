@@ -127,6 +127,9 @@ project must implement.
   (define/public (is-daemon.attr)
     (eq? (binary-type) 'daemon))
 
+  (define/public (have-signal.attr)
+    #t)
+  
   (define/public (with-qt.attr)
     #f)
 
@@ -242,6 +245,15 @@ project must implement.
   (define/public (kit-name.attr)
     (symbol->string (kit-name)))
 
+  (define/public (kit-vernum.attr)
+    (let ((s (kit-name.attr)))
+      (aif m (regexp-match #px"_([0-9]{2})$" s)
+           (string->number (second m))
+           (error "cannot determine kit version" s))))
+  
+  (define/override (have-signal.attr)
+    (> (kit-vernum.attr) 50))
+  
   ;; Abld build type. These days the options generally are "udeb",
   ;; "urel", and "all", but here only either udeb or urel is allowed.
   (define/public (abld-variant)

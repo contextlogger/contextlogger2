@@ -50,7 +50,7 @@ NONSHARABLE_CLASS(CMainObj) :
  private: // MAppContextInitObserver
   void AppContextReady(TInt aError);
  private:
-  kr_Controller* client;
+  kr_Controller* controller;
 };
 
 CMainObj* CMainObj::NewL()
@@ -64,7 +64,11 @@ CMainObj* CMainObj::NewL()
 
 CMainObj::~CMainObj()
 {
-  kr_Controller_destroy(client);
+  if (controller) {
+    logt("destroying controller");
+    kr_Controller_destroy(controller);
+    logt("controller destroyed");
+  }
 }
 
 void CMainObj::ConstructL()
@@ -84,21 +88,20 @@ void CMainObj::AppContextReady(TInt aError)
 
   GError* localError = NULL;
 
-  client = kr_Controller_new(&localError);
-  if (!client) {
-    er_log_gerror(er_FATAL|er_FREE, localError, "error in client creation");
+  controller = kr_Controller_new(&localError);
+  if (!controller) {
+    er_log_gerror(er_FATAL|er_FREE, localError, "error in controller creation");
     return; // not reached
   }
     
-  if (!kr_Controller_start(client, &localError)) {
-    kr_Controller_destroy(client);
-    er_log_gerror(er_FATAL|er_FREE, localError, "error starting client");
+  if (!kr_Controller_start(controller, &localError)) {
+    kr_Controller_destroy(controller);
+    er_log_gerror(er_FATAL|er_FREE, localError, "error starting controller");
     return; // not reached
   }
 }
 
-// xxx We may not be mixing Qt and Symbian exceptions safely below.
-
+// May leave, but not throw an exception.
 static TInt MainLoopL()
 {
   // Handles async initialization tasks. If and when those complete,
@@ -109,14 +112,17 @@ static TInt MainLoopL()
   // Will not return unless/until explicitly stopped by
   // ShutdownApplication.
   assert(qApp);
-  TInt errCode = qApp->exec();
+  TInt errCode = 0;
+  QT_TRYCATCH_LEAVING(qApp->exec());
+  logg("qApp->exec() returned with %d", errCode);
 
   CleanupStack::PopAndDestroy(1); // mainObj
 
   return errCode;
 }
 
-static TInt QtMainL()
+// May throw an exception, but not leave.
+static TInt QtMainE()
 {
   int argc = 0;
   char **argv = 0;
@@ -137,12 +143,13 @@ static TInt QtMainL()
   errCode = app.exec();
   logt("done waiting");
 #else
-  errCode = MainLoopL();
+  QT_TRAP_THROWING(errCode = MainLoopL());
 #endif
 
   return errCode;
 }
 
+// No exceptions or leaves from here.
 static TInt SubMain()
 {
   TInt errCode = cl2GlobalInit();
@@ -151,22 +158,17 @@ static TInt SubMain()
     return errCode;
   }
 
-#define checkErrCode(_msg) { if (errCode) { logt(_msg); goto fail; } }
-  TRAP(errCode,
-       {
-	 try {                                               
-	   errCode = QtMainL();
-	   checkErrCode("Qt error return");
-	 } catch (const std::exception &ex) {
-	   logg("Qt error exception: %s", ex.what());
-	   errCode = qt_symbian_exception2Error(ex);
-	   goto fail;
-	 }   
-       });
-  checkErrCode("Qt error leave");
+  try {                                               
+    errCode = QtMainE();
+    if (errCode) logt("Qt error return");
+  } catch (const std::exception &ex) {
+    logg("Qt error exception: %s", ex.what());
+    errCode = qt_symbian_exception2Error(ex);
+  }
 
-  fail:
+  logt("doing global cleanup");
   cl2GlobalCleanup();
+  logt("global cleanup done");
   return errCode;
 }
 
@@ -177,8 +179,8 @@ GLDEF_C TInt E32Main()
   // It seems that QApplication tries to install a scheduler at some point. And possibly might want a specific subclass of it. Hence we do not install one here.
   //WITH_CLEANUP_STACK(WITH_ACTIVE_SCHEDULER(errCode = SubMain()));
   WITH_CLEANUP_STACK(errCode = SubMain());
-  logg("exit code %d", errCode);
   __UHEAP_MARKEND;
+  logg("exit code %d", errCode);
   return errCode;
 }
 
