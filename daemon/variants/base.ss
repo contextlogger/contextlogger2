@@ -139,6 +139,16 @@ project must implement.
   (define/public (with-libev.attr)
     (not (or (is-symbian.attr) (with-qt.attr))))
 
+  (define/public (have-sqlite3.attr)
+    ;; The Symbian Qt SDK plugin also exposes the standard SQLite3
+    ;; API, and Qt itself depends on the library. Symbian also used to
+    ;; provide an SQLite3 (without Qt), but not sure what platform
+    ;; versions it was compatible with.
+    (or (not (is-symbian.attr)) (with-qt.attr)))
+
+  (define/public (use-sqlite3h.attr)
+    (not (have-sqlite3.attr)))
+  
   (define/public (lua-from-source.attr)
     (is-symbian.attr))
   
@@ -253,6 +263,9 @@ project must implement.
   
   (define/override (have-signal.attr)
     (> (kit-vernum.attr) 50))
+  
+  (define/public (sqlite3h-as.attr)
+    "static") ;; "static", "dynamic", or "source"
   
   ;; Abld build type. These days the options generally are "udeb",
   ;; "urel", and "all", but here only either udeb or urel is allowed.

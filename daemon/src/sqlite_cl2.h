@@ -6,13 +6,15 @@
 
 #include "application_config.h"
 
-#ifdef __USE_SQLITE3H__
-#include "sqlite3.h"
-#ifndef __SQLITE3H__
-#error include paths are wrong
-#endif
+#if __USE_SQLITE3H__
+#  include "sqlite3.h"
+#  ifndef __SQLITE3H__
+#    error include paths are wrong
+#  endif
+#elif __HAVE_SQLITE3__
+#  include <sqlite3.h>
 #else
-#include <sqlite3.h>
+#  error configuration without sqlite
 #endif
 
 #define sqlite_get_error_string(db) \

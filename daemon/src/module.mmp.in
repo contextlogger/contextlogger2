@@ -53,7 +53,7 @@ userinclude ..\..\src
 userinclude ..\..\..\shared
 userinclude ..\..\..\lua\src
 userinclude ..\..\..\lua\etc // for lua.hpp
-<% if $use_sqlite3h %>
+<% if $USE_SQLITE3H %>
 userinclude ..\..\..\sqlite3h\src\sqlite3
 <% end %>
 userinclude ..\..\..\epocxplat\src
@@ -79,7 +79,7 @@ userinclude ..\..\..\keyevents\inc
 // Any STATICLIBRARY declarations should come before other
 // stuff that is linked.
 
-<% if $sqlite == :static %>
+<% if $USE_SQLITE3H and ($SQLITE3H_AS == "static") %>
 staticlibrary sqlite3h.lib
 <% end %>
 
@@ -166,8 +166,12 @@ library libssl.lib     // Open C, for Curl (maybe needed later)
 library libcrypto.lib  // Open C, for Curl (maybe needed later)
 <% end %>
 
+<% if $HAVE_SQLITE3 %>
+library sqlite3.lib // Qt
+<% end %>
+
 // Only static linking is supported for now, not tested with Symbian version.
-<% if $sqlite == :dynamic %>
+<% if $USE_SQLITE3H and ($SQLITE3H_AS == "dynamic") %>
 library sqlite3.lib
 <% end %>
 
@@ -228,7 +232,7 @@ source er_errors_cxx.cpp
 source kr_controller.c
 source kr_diskspace.cpp
 source kr_plat_ao_epoc.cpp
-source libluasqlite3.c // note, built in, but not yet supported
+//source libluasqlite3.c // but not yet supported
 <% if $FEATURE_LOCALSERVER %>
 source local_server.cpp
 <% end %>
@@ -357,7 +361,7 @@ source			lvm.c
 source 			lzio.c
 source			print.c
 
-<% if $sqlite == :source %>
+<% if $USE_SQLITE3H and ($SQLITE3H_AS == "source") %>
 sourcepath ..\..\..\sqlite3h\src\sqlite3
 source alter.c
 source analyze.c

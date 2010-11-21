@@ -90,21 +90,6 @@ $builds.delete_if do |build|
   (build.sign and !build.cert_file)
 end
 
-# This option will eventually move from here to cl2embed.
-case ($sqlite = $sake_op[:sqlite])
-when nil, "source"
-  # This option causes SQLite to be built from source and linked in
-  # statically into the application.
-  $sqlite = :source
-when "symbian"
-  # Symbian provides an SQLite port, but it is not available for all
-  # S60 3rd edition devices. This option indicates whether to use
-  # their DLL.
-  $sqlite = sq.intern
-else
-  raise "sqlite=#{$sqlite.inspect} not supported"
-end
-
 if $sake_op[:builds]
   blist = $sake_op[:builds]
   $builds.delete_if do |build|
@@ -147,13 +132,6 @@ class HexNum
   end
 end
 
-$sqlite = :source # safer option (if relevant headers should change)
-$sqlite = :static # faster option (relevant headers rarely change in a relevant way)
-
-if $sqlite == :static or $sqlite == :source
-  $use_sqlite3h = true
-end
-
 # Defines site-specific $default_ values.
 # Which we do not want into any released binaries.
 if $sake_op[:site]
@@ -167,11 +145,6 @@ for build in $builds
   # To define __UID__ for header files.
   if build.uid
     map[:uid] = HexNum.new(build.uid.number)
-  end
-
-  # This define will allow us to pick the correct header.
-  if $use_sqlite3h
-    map[:use_sqlite3h] = :define
   end
 
   # NDEBUG controls whether asserts are to be compiled in (NDEBUG is

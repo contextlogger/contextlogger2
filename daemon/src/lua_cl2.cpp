@@ -22,7 +22,7 @@
 
 static const luaL_Reg my_lualibs[] = {
   {LUA_CL2LIBNAME, luaopen_cl2},
-  {"sqlite3", luaopen_sqlite3},
+  //  {"sqlite3", luaopen_sqlite3},
   {NULL, NULL}
 };
 
