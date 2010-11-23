@@ -16,13 +16,15 @@ Sensible defaults for Symbian/Qt builds.
     (super-new)
     
     (define/override (binary-type) 'daemon)
-    (define/override (s60-vernum.attr) 52)
-    (define/override (kit-name) 's60_52)
+    (define/override (s60-vernum.attr) 31)
+    (define/override (kit-name) 's60_31)
 
     ;; qmake is not quite there yet for Symbian; we can refer to the generated .mmp to see what we need, and invoke moc ourselves as required
     (define/override (with-qmake.attr) #f)
     
     (define/override (with-qt.attr) #t)
+
+    ;;(define/override (have-sqlite3.attr) #f)
 
     (define/override (appfocus-enabled.attr) #t)
     (define/override (appmessage-enabled.attr) #t)

@@ -1,8 +1,12 @@
+#include "cl2appapp.h"
+
+#include "cl2appdocument.h"
+
+#include "common/logging.h"
+
 #ifdef __SERIES60_3X__
 #include <eikstart.h>
 #endif
-#include "cl2appapp.h"
-#include "cl2appdocument.h"
 
 TUid CCl2appApp::AppDllUid() const
 {
@@ -22,7 +26,9 @@ EXPORT_C CApaApplication* NewApplication()
 #ifdef __SERIES60_3X__
 GLDEF_C TInt E32Main()
 {
-  return EikStart::RunApplication(NewApplication);
+  TInt exitCode = EikStart::RunApplication(NewApplication);
+  logg("exiting app with code %d", exitCode);
+  return exitCode;
 }
 # else
 GLDEF_C TInt E32Dll( TDllReason )

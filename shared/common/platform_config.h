@@ -79,9 +79,11 @@
 
 #ifdef __SYMBIAN32__
 
-// xxx check if __S60_VERNUM__ is defined, and if so, deduce all the
-// information that sake gives us here rather than requiring
-// sconfig.hrh, or at least the information that we require in CL2
+// We might check if __S60_VERNUM__ is defined, and if so, deduce all
+// the information that sake gives us here rather than requiring
+// sconfig.hrh. For configuring builds this is only sufficient if this
+// file can then be included in an .mmp file (assuming that is what we
+// are using).
 
 #include "sconfig.hrh"
 
