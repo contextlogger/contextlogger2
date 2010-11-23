@@ -301,39 +301,17 @@ void CSensor_callstatus::ChangedData_CallStatus(TInt errCode)
 	  {
 	    // KErrNone if the call ended normally.
 	    TInt& exitCode = callInfo.iExitCode;
-#if 0
-            // "The result of a right shift of a signed negative
-            // quantity is implementation dependent." Do not know of
-            // any C++ compilers that implement right shift as a
-            // logical rather than arithmetic shift, but still, we can
-            // rely on an unsigned shift instead. And with casting
-            // rather than logical ORing we can also make these macros
-            // work for both positive and negative arguments. And
-            // note, these macros produce a 32-bit result, not 16-bit
-            // (even though they would fit).
-#if sizeof(exitCode) != 4
-#error unexpected exitCode size
-#endif
-#define INT32LEFTWORD(x) ((TInt32)((TInt16)((TUint16)(((TUint32)(x)) >> 16))))
-#define INT32RIGHTWORD(x) ((TInt32)((TInt16)((TUint16)(((TUint32)(x))))))
-
-	    // This is KErrNotFound (-1) if no call is in progress,
-	    // and KErrGeneral (-2) unless there is an appropriate
-	    // E32 or core ETel error code.
-	    etelCode = INT32RIGTHWORD(exitCode);
-
-	    // This code is network-specific, but it may be that in
-	    // the event of the call terminating due to a network
-	    // error or the remote party's actions, the code should
-	    // be documented in the "exterror.h" Symbian header
-	    // file, available in some SDKs.
-	    netCode = INT32LEFTWORD(exitCode);
-
-            // Left shift is well defined, so let us use it to verify
-            // the results.
-	    if (exitCode != ((netCode << 16) | (etelCode & 0xffff))) {
-	      logt("WARNING: exitCode consistency check failed");
-            }
+#if 1
+	    {
+              // We want to interpret the two words as negative
+              // values, as that is how error values generally are in
+              // Symbian. Note that a right shift is well defined only
+              // for unsigned values.
+	      TInt16 lower = ((TUint32)exitCode) & 0xffffu;
+	      TInt16 upper = ((TUint32)exitCode) >> 16;
+	      etelCode = lower;
+	      netCode = upper;
+	    }
 #else
             // xxx Only works right for negative values, for zero this
             // gives -65536.
