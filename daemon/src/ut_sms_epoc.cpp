@@ -235,7 +235,7 @@ TUid CSmsEventNotifier::loadmessageL(const TMsvId& entry_id, TMsvEntry& entry)
 
   TInt err;
 	
-  auto_ptr<CMsvEntry> realentry(0);
+  e_auto_ptr<CMsvEntry> realentry(0);
   CC_TRAP(err, realentry.reset(iReceiveSession->GetEntryL(entry_id)) );
   if (err != KErrNone) 
     {

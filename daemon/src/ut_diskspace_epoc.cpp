@@ -53,7 +53,7 @@
 CDiskSpaceNotifier* CDiskSpaceNotifier::NewL(RFs& fs, TInt aDrive, 
 					     MDiskSpace* aNotifier, TInt64 aThreshold)
 {
-  auto_ptr<CDiskSpaceNotifier> ret(new (ELeave) CDiskSpaceNotifier(fs, aDrive, 
+  e_auto_ptr<CDiskSpaceNotifier> ret(new (ELeave) CDiskSpaceNotifier(fs, aDrive, 
 								   aNotifier, aThreshold));
   ret->ConstructL();
   return ret.release();

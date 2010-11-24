@@ -44,19 +44,19 @@
 
 #include "symbian_auto_ptr.hpp"
 
-EXPORT_C void CloseCBaseIndirect(TAny* aPtr)
+void CloseCBaseIndirect(TAny* aPtr)
 {
         CBase **p=(CBase**)aPtr;
         delete *p;
 }
 
-EXPORT_C void CloseHBufC16Indirect(TAny* aPtr)
+void CloseHBufC16Indirect(TAny* aPtr)
 {
         HBufC16 **p=(HBufC16**)aPtr;
         delete *p;
 }
 
-EXPORT_C void CloseHBufC8Indirect(TAny* aPtr)
+void CloseHBufC8Indirect(TAny* aPtr)
 {
         HBufC8 **p=(HBufC8**)aPtr;
         delete *p;

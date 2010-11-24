@@ -270,7 +270,7 @@ void CCliapiSession::ServiceL(const RMessage2& aMessage)
 	HBufC8* srcBuf8 = ConvToUtf8ZL(srcDes);
         CleanupStack::PopAndDestroy(srcBuf);
 
-	auto_ptr<HBufC8> cleanupSrcBuf8(srcBuf8); // takes ownership
+	e_auto_ptr<HBufC8> cleanupSrcBuf8(srcBuf8); // takes ownership
 	const TUint8* srcU = srcBuf8->Ptr();
 	const char* srcC = (const char*)srcU;
 	logt(srcC);
@@ -393,7 +393,7 @@ void CCliapiSession::ServiceL(const RMessage2& aMessage)
 
 	// Convert to Unicode descriptor.
 	TPtrC8 resultDes8((TUint8*)luaResult);
-	auto_ptr<HBufC> resultBuf16(ConvFromUtf8L(resultDes8)); // takes ownership
+	e_auto_ptr<HBufC> resultBuf16(ConvFromUtf8L(resultDes8)); // takes ownership
 	TPtrC resultDes(*resultBuf16);
 
         // I think we shall return an overflow error if the result

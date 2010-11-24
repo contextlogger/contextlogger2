@@ -42,44 +42,43 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
-#ifndef __AUTO_PTR_H__
-#define __AUTO_PTR_H__  
-
+#ifndef __E_AUTO_PTR_H__
+#define __E_AUTO_PTR_H__  
 
 #ifndef __E32BASE_H__
 #include <e32base.h>
 #endif
 
-IMPORT_C void CloseCBaseIndirect(TAny* aPtr);
-IMPORT_C void CloseHBufC16Indirect(TAny* aPtr);
-IMPORT_C void CloseHBufC8Indirect(TAny* aPtr);
+void CloseCBaseIndirect(TAny* aPtr);
+void CloseHBufC16Indirect(TAny* aPtr);
+void CloseHBufC8Indirect(TAny* aPtr);
 
-template<class Y> struct auto_ptr_ref
+template<class Y> struct e_auto_ptr_ref
 {
   Y* iPtr;
-  auto_ptr_ref(Y* aPtr) : iPtr(aPtr) {}
+  e_auto_ptr_ref(Y* aPtr) : iPtr(aPtr) {}
 };
 
-template<class X> class auto_ptr
+template<class X> class e_auto_ptr
 {
 public:  
   typedef X element_type;
 
-  auto_ptr(X* aPtr = 0): iBasePtr(aPtr)
+  e_auto_ptr(X* aPtr = 0): iBasePtr(aPtr)
   {
 #ifndef __LEAVE_EQUALS_THROW__
     CleanupStack::PushL(TCleanupItem(CloseCBaseIndirect, (void*)&iBasePtr));
 #endif
   }  
   
-  auto_ptr(auto_ptr& aPtr): iBasePtr(aPtr.release())
+  e_auto_ptr(e_auto_ptr& aPtr): iBasePtr(aPtr.release())
   {
 #ifndef __LEAVE_EQUALS_THROW__
     CleanupStack::PushL(TCleanupItem(CloseCBaseIndirect, (void*)&iBasePtr));
 #endif
   }
 
-  auto_ptr<X>& operator=(auto_ptr<X>& aRhs)
+  e_auto_ptr<X>& operator=(e_auto_ptr<X>& aRhs)
   {
     if (&aRhs != this)
     {
@@ -89,7 +88,7 @@ public:
     return (*this); 
   }
 
-  ~auto_ptr() 
+  ~e_auto_ptr() 
   { 
 #ifndef __LEAVE_EQUALS_THROW__
     CleanupStack::Pop();
@@ -117,7 +116,7 @@ public:
   }
 
 
-  auto_ptr(auto_ptr_ref<X> aRef): iBasePtr(aRef.iBasePtr)
+  e_auto_ptr(e_auto_ptr_ref<X> aRef): iBasePtr(aRef.iBasePtr)
   {
 #ifndef __LEAVE_EQUALS_THROW__
     CleanupStack::PushL(TCleanupItem(CloseCBaseIndirect, (void*)&iBasePtr));
@@ -125,32 +124,32 @@ public:
   }
 
 
-  template <class Y> operator auto_ptr_ref<Y>() 
-    { return auto_ptr_ref<Y>(this->release()); }
+  template <class Y> operator e_auto_ptr_ref<Y>() 
+    { return e_auto_ptr_ref<Y>(this->release()); }
 
 private:
   CBase* iBasePtr;
 };
 
-template<> class auto_ptr<HBufC16>
+template<> class e_auto_ptr<HBufC16>
 {
 public:  
 
-  auto_ptr(HBufC16* aPtr = 0): iPtr(aPtr)
+  e_auto_ptr(HBufC16* aPtr = 0): iPtr(aPtr)
   {
 #ifndef __LEAVE_EQUALS_THROW__
     CleanupStack::PushL(TCleanupItem(CloseHBufC16Indirect, (void*)&iPtr));
 #endif
   }  
   
-  auto_ptr(auto_ptr& aPtr): iPtr(aPtr.release())
+  e_auto_ptr(e_auto_ptr& aPtr): iPtr(aPtr.release())
   {
 #ifndef __LEAVE_EQUALS_THROW__
     CleanupStack::PushL(TCleanupItem(CloseHBufC16Indirect, (void*)&iPtr));
 #endif
   }
 
-  auto_ptr<HBufC16>& operator=(auto_ptr<HBufC16>& aRhs)
+  e_auto_ptr<HBufC16>& operator=(e_auto_ptr<HBufC16>& aRhs)
   {
     if (&aRhs != this)
     {
@@ -160,7 +159,7 @@ public:
     return (*this); 
   }
 
-  ~auto_ptr() 
+  ~e_auto_ptr() 
   { 
 #ifndef __LEAVE_EQUALS_THROW__
     CleanupStack::Pop();
@@ -188,7 +187,7 @@ public:
   }
 
 
-  auto_ptr(auto_ptr_ref<HBufC16> aRef): iPtr(aRef.iPtr)
+  e_auto_ptr(e_auto_ptr_ref<HBufC16> aRef): iPtr(aRef.iPtr)
   {
 #ifndef __LEAVE_EQUALS_THROW__
     CleanupStack::PushL(TCleanupItem(CloseHBufC16Indirect, (void*)&iPtr));
@@ -196,32 +195,32 @@ public:
   }
 
 
-  template <class Y> operator auto_ptr_ref<Y>() 
-    { return auto_ptr_ref<Y>(this->release()); }
+  template <class Y> operator e_auto_ptr_ref<Y>() 
+    { return e_auto_ptr_ref<Y>(this->release()); }
   
 private:
   HBufC16* iPtr;  
 };
 
-template<> class auto_ptr<HBufC8>
+template<> class e_auto_ptr<HBufC8>
 {
 public:  
 
-  auto_ptr(HBufC8* aPtr = 0): iPtr(aPtr)
+  e_auto_ptr(HBufC8* aPtr = 0): iPtr(aPtr)
   {
 #ifndef __LEAVE_EQUALS_THROW__
     CleanupStack::PushL(TCleanupItem(CloseHBufC8Indirect, (void*)&iPtr));
 #endif
   }  
   
-  auto_ptr(auto_ptr& aPtr): iPtr(aPtr.release())
+  e_auto_ptr(e_auto_ptr& aPtr): iPtr(aPtr.release())
   {
 #ifndef __LEAVE_EQUALS_THROW__
     CleanupStack::PushL(TCleanupItem(CloseHBufC8Indirect, (void*)&iPtr));
 #endif
   }
 
-  auto_ptr<HBufC8>& operator=(auto_ptr<HBufC8>& aRhs)
+  e_auto_ptr<HBufC8>& operator=(e_auto_ptr<HBufC8>& aRhs)
   {
     if (&aRhs != this)
     {
@@ -231,7 +230,7 @@ public:
     return (*this); 
   }
 
-  ~auto_ptr() 
+  ~e_auto_ptr() 
   { 
 #ifndef __LEAVE_EQUALS_THROW__
     CleanupStack::Pop();
@@ -259,7 +258,7 @@ public:
   }
 
 
-  auto_ptr(auto_ptr_ref<HBufC8> aRef): iPtr(aRef.iPtr)
+  e_auto_ptr(e_auto_ptr_ref<HBufC8> aRef): iPtr(aRef.iPtr)
   {
 #ifndef __LEAVE_EQUALS_THROW__
     CleanupStack::PushL(TCleanupItem(CloseHBufC8Indirect, (void*)&iPtr));
@@ -267,8 +266,8 @@ public:
   }
 
 
-  template <class Y> operator auto_ptr_ref<Y>() 
-    { return auto_ptr_ref<Y>(this->release()); }
+  template <class Y> operator e_auto_ptr_ref<Y>() 
+    { return e_auto_ptr_ref<Y>(this->release()); }
   
 private:
   HBufC8* iPtr;  

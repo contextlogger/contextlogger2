@@ -315,7 +315,9 @@ project must implement.
 
   (define/public (have-epocxplat.attr) #t)
 
-  (define/public (have-euserhl.attr) #t)
+  ;; We have no dependency on the DLL anymore, perhaps on some of the
+  ;; headers.
+  (define/public (have-euserhl.attr) #f)
 
   ;; --------------------------------------------------
   ;; features

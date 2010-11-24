@@ -48,8 +48,6 @@
 
 #include "application_config.h"
 
-#include "symbian_auto_ptr.hpp"
-
 #include <mtclbase.h>
 #include <msvapi.h>
 #include <mtclreg.h>
