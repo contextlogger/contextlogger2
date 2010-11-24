@@ -149,7 +149,9 @@ library cntmodel.lib // CContactDatabase
 library epocxplat_e846000e.lib
 <% end %>
 
+<% if $HAVE_EUSERHL %>
 library euserhl.lib    // High-Level APIs
+<% end %>
 
 library libc.lib       // PIPS
 library libm.lib       // required for Lua

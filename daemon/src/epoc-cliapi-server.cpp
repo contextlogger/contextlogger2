@@ -6,9 +6,12 @@
 // 
 
 #include "epoc-cliapi-server.hpp"
+
 #include "epoc-cl2app-clientserver.hpp"
+
 #include "lua_cl2.h"
 #include "utils_cl2.h" // for string conversions
+#include "symbian_auto_ptr.hpp"
 
 #include "common/gxlowmem.h"
 #include "common/logging.h"
@@ -16,10 +19,6 @@
 #include "common/sh_utils.h"
 
 #include <glib.h>
-
-#if __HAVE_EUSERHL__
-#include <euserhl.h>
-#endif
 
 // --------------------------------------------------
 // utilities
@@ -233,24 +232,13 @@ void CCliapiSession::ServiceL(const RMessage2& aMessage)
 
         // Must allocate a srcLen size buffer into which to read the
         // data.
-#if __HAVE_EUSERHL__
-        LString s(srcLen);
-        aMessage.ReadL(0, s);
-#else
         HBufC* sc = HBufC::NewLC(srcLen);
         TPtr s(sc->Des());
         aMessage.ReadL(0, s);
         CleanupStack::PopAndDestroy(sc);
-#endif
 
-        // Now must have a Lua VM evaluate the data.
-        // The expression should evaluate to a string.
-        // I wonder if Lua supports Unicode strings or not.
-        // Surely so.
-
-        // Must truncate the data first to be at most dstLen.
-        //void WriteL(1, dstData);
-
+        // This service message is reserved for experiments. Now we
+        // happen to do this instead of anything useful.
         TPckg<TInt> srcLenPk(dstLen);
         aMessage.WriteL(1, srcLenPk);
 
@@ -275,12 +263,15 @@ void CCliapiSession::ServiceL(const RMessage2& aMessage)
 	TInt dstLen = aMessage.GetDesMaxLengthL(2);
 
         // Must allocate a srcLen size buffer into which to read the
-        // data. LString makes this quite convenient, see <estring.h>.
-	LString srcDes(srcLen);
-	aMessage.ReadL(0, srcDes);
+        // data.
+        HBufC* srcBuf = HBufC::NewLC(srcLen);
+        TPtr srcDes(srcBuf->Des());
+        aMessage.ReadL(0, srcDes);
 	HBufC8* srcBuf8 = ConvToUtf8ZL(srcDes);
-	LString8 srcDes8(srcBuf8); // takes ownership of HBufC8
-	const TUint8* srcU = srcDes8.Ptr();
+        CleanupStack::PopAndDestroy(srcBuf);
+
+	auto_ptr<HBufC8> cleanupSrcBuf8(srcBuf8); // takes ownership
+	const TUint8* srcU = srcBuf8->Ptr();
 	const char* srcC = (const char*)srcU;
 	logt(srcC);
 
@@ -295,13 +286,8 @@ void CCliapiSession::ServiceL(const RMessage2& aMessage)
 	lua_State_auto_ptr cleanupLuaState(L);
 
 	const char* luaResult = NULL;
-/***koog 
-(require codegen/c)
-(def-array "luaResultBuf" "gchar" 100)
-***/
 #define luaResultBuf_size 100
 	gchar luaResultBuf[luaResultBuf_size];
-/***end***/
 
         // When we don't get an actual Symbian error, we set the error
         // code KErrLuaErr; this way all the errors we write to the
@@ -407,8 +393,8 @@ void CCliapiSession::ServiceL(const RMessage2& aMessage)
 
 	// Convert to Unicode descriptor.
 	TPtrC8 resultDes8((TUint8*)luaResult);
-	HBufC* resultBuf16 = ConvFromUtf8L(resultDes8);
-	LString resultDes(resultBuf16); // takes ownership
+	auto_ptr<HBufC> resultBuf16(ConvFromUtf8L(resultDes8)); // takes ownership
+	TPtrC resultDes(*resultBuf16);
 
         // I think we shall return an overflow error if the result
         // does not fit into the client-side buffer, but must check
@@ -432,8 +418,10 @@ void CCliapiSession::ServiceL(const RMessage2& aMessage)
       }
 
     default:
-      PanicClient(aMessage,EPanicIllegalFunction);
-      break;
+      {
+	PanicClient(aMessage, EPanicIllegalFunction);
+	break;
+      }
     }
 }
 

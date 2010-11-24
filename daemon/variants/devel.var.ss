@@ -15,10 +15,10 @@ For development and testing.
     symbian-variant%
     (super-new)
     
-    (define/override (binary-type) 'application)
-    ;;(define/override (binary-type) 'daemon)
-    (define/override (s60-vernum.attr) 52)
-    (define/override (kit-name) 's60_52)
+    ;;(define/override (binary-type) 'application)
+    (define/override (binary-type) 'daemon)
+    (define/override (s60-vernum.attr) 50)
+    (define/override (kit-name) 's60_50)
     
     (define/override (have-sqlite3.attr) #t)
     
