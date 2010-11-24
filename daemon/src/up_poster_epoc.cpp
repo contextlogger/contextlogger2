@@ -426,6 +426,9 @@ void CFileDataSupplier::OpenL(const TDesC& aFileName)
   const gchar* username = get_config_username();
   logg("uploader using username '%s'", username);
 
+  iPrelude.CreateMax(200);
+  iEpilogue.CreateMax(100);
+
   // _LIT8(KPrelude, "-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"logdata\"; filename=\"" __USERNAME__ ".db\"\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: binary\r\n\r\n");
   _LIT8(KPrelude1, "Content-Disposition: form-data; name=\"logdata\"; filename=\"");
   _LIT8(KPrelude2, ".db\"\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: binary\r\n\r\n");
@@ -461,6 +464,8 @@ void CFileDataSupplier::Close()
 {
   SESSION_CLOSE_IF_OPEN(iFile);
   SESSION_CLOSE_IF_OPEN(iFs);
+  iPrelude.Close();
+  iEpilogue.Close();
 }
 
 const TDesC8& CFileDataSupplier::Boundary() const

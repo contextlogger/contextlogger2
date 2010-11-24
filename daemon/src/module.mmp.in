@@ -296,6 +296,7 @@ source up_shared.c
 
 sourcepath ..\..\..\shared\common
 source assertions_cxx.cpp
+source epoc_rs_buf8.cpp
 source epoc-time.cpp
 source error_list.c
 source gxerror.c

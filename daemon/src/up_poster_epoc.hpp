@@ -12,7 +12,7 @@
 
 #include "utils_cl2.h"
 
-#include <estring.h> // EUserHL
+#include "common/epoc_rs_buf8.hpp"
 
 #include <e32base.h>
 #include <es_sock.h>
@@ -65,8 +65,8 @@ NONSHARABLE_CLASS(CFileDataSupplier) :
   TFileName iFileName;
   DEF_SESSION(RFs, iFs);
   DEF_SESSION(RFile, iFile);
-  LString8 iPrelude;
-  LString8 iEpilogue;
+  RRsBuf8 iPrelude;
+  RRsBuf8 iEpilogue;
   TBuf8<512> iBuffer;
   TInt iDataLen;
   TInt iPhase; // 0 = start, 1 = in file content, 2 = file content done (and suffix left)
