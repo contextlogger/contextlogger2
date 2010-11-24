@@ -43,6 +43,8 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+#include "sconfig.hrh"
+
 TARGET          <%= build.binary_file.basename %>
 TARGETTYPE      dll
 UID             0x1000008D <%= build.uid3.chex_string %>
@@ -61,3 +63,7 @@ LIBRARY         ws32.lib
 EXPORTUNFROZEN
 
 CAPABILITY      <%= build.caps_string %>
+
+#if __S60_VERSION__ >= 52
+APP_LAYER_SYSTEMINCLUDE
+#endif

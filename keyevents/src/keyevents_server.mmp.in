@@ -43,6 +43,8 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+#include "sconfig.hrh"
+
 TARGET          <%= build.binary_file.basename %>
 TARGETTYPE      dll  // ANI not supported on 3rd ed WINSCW
 UID             0x10003b22 <%= build.uid3.chex_string %>
@@ -60,3 +62,6 @@ EXPORTUNFROZEN  // There's only one export.
 
 CAPABILITY      ReadDeviceData WriteDeviceData PowerMgmt ProtServ SwEvent
 
+#if __S60_VERSION__ >= 52
+APP_LAYER_SYSTEMINCLUDE
+#endif

@@ -213,6 +213,7 @@ signed-sis : pkg unsupported-txt
 	$(MAKE) -e dll KIT=s60_31
 	$(MAKE) -e dll KIT=s60_32
 	$(MAKE) -e dll KIT=s60_50
+	$(MAKE) -e dll KIT=s60_52
 	$(MAKE) -e sis ER=9
 
 all : 3rd-sis

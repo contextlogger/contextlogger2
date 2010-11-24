@@ -569,7 +569,7 @@ CAPABILITY <%= $CAPABILITIES.join(" ") %>
 <% end %>
 <% end %>
 
-<% if $KIT_NAME == "s60_52" %>
+<% if $KIT_VERNUM >= 52 %>
 // This is required for Symbian^3 SDK, apparently.
 APP_LAYER_SYSTEMINCLUDE
 <% end %>

@@ -459,7 +459,6 @@ void CFileDataSupplier::OpenL(const TDesC& aFileName)
 
 void CFileDataSupplier::Close()
 {
-  //SESSION_CLOSE_IF_OPEN(iStream);
   SESSION_CLOSE_IF_OPEN(iFile);
   SESSION_CLOSE_IF_OPEN(iFs);
 }

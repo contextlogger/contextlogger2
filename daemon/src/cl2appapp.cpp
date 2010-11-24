@@ -1,10 +1,11 @@
 #include "cl2appapp.h"
 
+#include "application_config.h"
 #include "cl2appdocument.h"
 
 #include "common/logging.h"
 
-#ifdef __SERIES60_3X__
+#if __S60_VERNUM__ >= 30
 #include <eikstart.h>
 #endif
 
@@ -23,7 +24,7 @@ EXPORT_C CApaApplication* NewApplication()
   return new CCl2appApp;
 }
 
-#ifdef __SERIES60_3X__
+#if __S60_VERNUM__ >= 30
 GLDEF_C TInt E32Main()
 {
   TInt exitCode = EikStart::RunApplication(NewApplication);
