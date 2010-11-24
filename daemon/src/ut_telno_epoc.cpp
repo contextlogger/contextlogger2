@@ -14,8 +14,6 @@
 #include <cntfldst.h> 
 #include <cntitem.h>
 
-#include <estring.h> // euserhl
-
 // The caller is to free any returned object.
 static CContactItem* FindContactItemByPhoneNoL(const TDesC& phoneNo)
 {
@@ -51,8 +49,6 @@ static CContactItem* FindContactItemByPhoneNoL(const TDesC& phoneNo)
 
 static gchar* GetNameFromContactItemL(const CContactItem& item)
 {
-  LString s;
-
   CContactItemFieldSet& fieldSet = item.CardFields();
 
   TInt givenIx = fieldSet.Find(KUidContactFieldGivenName);
@@ -65,14 +61,29 @@ static gchar* GetNameFromContactItemL(const CContactItem& item)
 
   _LIT(KSpace, " ");
 
+  TInt bufLen = 0;
   if (gotGiven)
-    s.AppendL(fieldSet[givenIx].TextStorage()->Text());
+    bufLen += fieldSet[givenIx].TextStorage()->Text().Length();
   if (gotGiven && gotFamily)
-    s.AppendL(KSpace);
+    bufLen += KSpace().Length();
   if (gotFamily)
-    s.AppendL(fieldSet[familyIx].TextStorage()->Text());
+    bufLen += (fieldSet[familyIx].TextStorage()->Text().Length());
 
-  return ConvToUtf8CStringL(s);
+  HBufC* buf = HBufC::NewLC(bufLen);
+  TPtr s(buf->Des());
+
+  if (gotGiven)
+    s.Append(fieldSet[givenIx].TextStorage()->Text());
+  if (gotGiven && gotFamily)
+    s.Append(KSpace);
+  if (gotFamily)
+    s.Append(fieldSet[familyIx].TextStorage()->Text());
+
+  gchar* ret = ConvToUtf8CStringL(s);
+
+  CleanupStack::PopAndDestroy(buf);
+
+  return ret;
 }
 
 // The caller is to free any returned buffer.
