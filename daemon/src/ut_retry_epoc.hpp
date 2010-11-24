@@ -5,8 +5,6 @@
 
 #include <e32base.h>
 
-#include <emanaged.h>
-
 // --------------------------------------------------
 // CRetryAo
 // --------------------------------------------------
@@ -22,14 +20,20 @@ NONSHARABLE_CLASS(CRetryAo) :
   public CActive
 {
  public:
-  CONSTRUCTORS_MAY_LEAVE;
+  static CRetryAo* NewL(MRetryAoObserver& aObserver,
+			TInt aMaxNumRetries,
+			TInt aBaseInterval /* secs */);
 
+  ~CRetryAo();
+
+ private:
   CRetryAo(MRetryAoObserver& aObserver,
 	   TInt aMaxNumRetries,
 	   TInt aBaseInterval /* secs */);
 
-  ~CRetryAo();
+  void ConstructL();
 
+ public:
   // Returns a false value if a retry timer was not set (due to
   // maximum number of retries having been reached).
   TBool Retry() __attribute__ ((warn_unused_result));
@@ -48,7 +52,7 @@ NONSHARABLE_CLASS(CRetryAo) :
   TInt iMaxNumRetries;
   TInt iBaseInterval;
   
-  LManagedHandle<RTimer> iTimer;
+  DEF_SESSION(RTimer, iTimer);
 
   TInt iNumScanFailures;
 

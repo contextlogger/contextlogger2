@@ -236,7 +236,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
                  (call 'BbRegisterL))
             (ic retries?
                 (assign 'iRetryAo
-                        (leaving-new "CRetryAo"
+                        (call "CRetryAo::NewL"
                                      (list self 20 60))))
             (assign 'iGetter
                     (leaving-new (format "CGetterAo_~a" data-name)

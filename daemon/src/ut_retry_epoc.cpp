@@ -4,13 +4,23 @@
 
 #include "common/epoc-time.h"
 
-#include <emisc.h> // OR_LEAVE
-
 #include <stdlib.h> // rand
 
 // --------------------------------------------------
 // CRetryAo
 // --------------------------------------------------
+
+CRetryAo* CRetryAo::NewL(MRetryAoObserver& aObserver,
+			 TInt aMaxNumRetries,
+			 TInt aBaseInterval /* secs */)
+{
+  CRetryAo* obj = new (ELeave) CRetryAo(aObserver, aMaxNumRetries,
+					aBaseInterval);
+  CleanupStack::PushL(obj);
+  obj->ConstructL();
+  CleanupStack::Pop();
+  return obj;
+}
 
 CRetryAo::CRetryAo(MRetryAoObserver& aObserver,
 		   TInt aMaxNumRetries,
@@ -21,13 +31,18 @@ CRetryAo::CRetryAo(MRetryAoObserver& aObserver,
   iBaseInterval(aBaseInterval)
   
 {
-  iTimer->CreateLocal() OR_LEAVE;
   CActiveScheduler::Add(this);
+}
+
+void CRetryAo::ConstructL()
+{
+  LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iTimer, iTimer.CreateLocal()); 
 }
 
 CRetryAo::~CRetryAo()
 {
   Cancel();
+  SESSION_CLOSE_IF_OPEN(iTimer);
 }
 
 TBool CRetryAo::Retry()
@@ -38,7 +53,7 @@ TBool CRetryAo::Retry()
     return EFalse;
   } else {
     TTimeIntervalMicroSeconds32 interval = WaitInterval();
-    iTimer->After(iStatus, interval);
+    iTimer.After(iStatus, interval);
     SetActive();
     return ETrue;
   }
@@ -51,7 +66,7 @@ void CRetryAo::RunL()
 
 void CRetryAo::DoCancel()
 {
-  iTimer->Cancel();
+  iTimer.Cancel();
 }
 
 TTimeIntervalMicroSeconds32 CRetryAo::WaitInterval()

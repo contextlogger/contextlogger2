@@ -510,7 +510,7 @@ void This::ConstructL()
 
   ac_AppContext* ac = ac_get_global_AppContext();
 
-  iRetryAo = new (ELeave) CRetryAo(*this, 20, 60);
+  iRetryAo = CRetryAo::NewL(*this, 20, 60);
 
   iGetter = new (ELeave) CGetterAo_SignalStrength(ac_Telephony(ac), *this);
   iNotifier = new (ELeave) CNotifyAo_SignalStrength(ac_Telephony(ac), *this);
