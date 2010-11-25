@@ -95,7 +95,6 @@ void CMainObj::AppContextReady(TInt aError)
   }
     
   if (!kr_Controller_start(controller, &localError)) {
-    kr_Controller_destroy(controller);
     er_log_gerror(er_FATAL|er_FREE, localError, "error starting controller");
     return; // not reached
   }
@@ -113,6 +112,8 @@ static TInt MainLoopL()
   // ShutdownApplication.
   assert(qApp);
   TInt errCode = 0;
+  // "On some platforms the QCoreApplication::exec() call may not
+  // return."
   QT_TRYCATCH_LEAVING(qApp->exec());
   logg("qApp->exec() returned with %d", errCode);
 
@@ -124,6 +125,7 @@ static TInt MainLoopL()
 // May throw an exception, but not leave.
 static TInt QtMainE()
 {
+  // These must persist for as long as QCoreApplication does.
   int argc = 0;
   char **argv = 0;
   char **envp = 0;
@@ -133,7 +135,13 @@ static TInt QtMainE()
   for (int i=0; i<argc; i++)
     logg("arg %d is '%s'", i, argv[i]);
 
+  // This seems a fairly heavy-duty class. It may be unsafe to try to
+  // do anything really after it gets destroyed.
   QCoreApplication app(argc, argv);
+
+  // xxx We might connect clean-up code to the aboutToQuit() signal,
+  // or we might use qAddPostRoutine. Leaving things to main() may not
+  // be safe.
 
   TInt errCode = 0;
 
@@ -145,6 +153,7 @@ static TInt QtMainE()
 #else
   QT_TRAP_THROWING(errCode = MainLoopL());
 #endif
+  logg("MainLoopL returned with %d", errCode);
 
   return errCode;
 }
@@ -158,13 +167,15 @@ static TInt SubMain()
     return errCode;
   }
 
-  try {                                               
+  try {
     errCode = QtMainE();
+    logg("QtMainE returned (%d)", errCode);
     if (errCode) logt("Qt error return");
   } catch (const std::exception &ex) {
     logg("Qt error exception: %s", ex.what());
     errCode = qt_symbian_exception2Error(ex);
   }
+  logg("QtMainE done (%d)", errCode);
 
   logt("doing global cleanup");
   cl2GlobalCleanup();
