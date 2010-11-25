@@ -1,5 +1,11 @@
 // Defines a main function for running CL2 standalone, without being
 // attached to any application.
+// 
+// It is difficult to get init and cleanup right in such a way that
+// QtCoreApplication is happy, and some of the code here closely
+// mirrors code in Qt's s60main.
+
+#include <exception> // for uncaught exception (keep this first)
 
 #include "application_config.h"
 #include "ac_app_context_private.h"
@@ -11,7 +17,6 @@
 #include "common/utilities.h"
 
 #include <e32std.h>
-#include <exception>
 #include <e32base.h>
 
 #include <estlib.h> // __crt0
@@ -100,98 +105,74 @@ void CMainObj::AppContextReady(TInt aError)
   }
 }
 
-// May leave, but not throw an exception.
-static TInt MainLoopL()
+// May throw exceptions, but not leave.
+static TInt QtMainE(int argc, char *argv[], char *envp[])
 {
-  // Handles async initialization tasks. If and when those complete,
-  // the logger proper is started.
-  CMainObj* mainObj = CMainObj::NewL();
-  CleanupStack::PushL(mainObj);
-
-  // Will not return unless/until explicitly stopped by
-  // ShutdownApplication.
-  assert(qApp);
+  // This seems a fairly heavy-duty class. It may be unsafe to try to
+  // do anything really after it gets destroyed. Hence we complete
+  // cleanup for CL2 engine before letting it fall out of scope.
+  QCoreApplication app(argc, argv);
+  
   TInt errCode = 0;
-  // "On some platforms the QCoreApplication::exec() call may not
-  // return."
-  QT_TRYCATCH_LEAVING(qApp->exec());
-  logg("qApp->exec() returned with %d", errCode);
+  CMainObj* mainObj = NULL;
 
-  CleanupStack::PopAndDestroy(1); // mainObj
+  // Creates application context.
+  errCode = cl2GlobalInit();
+  if (errCode) {
+    logt("error in global init");
+    goto gifail;
+  }
 
+  // Handles async initialization tasks. If and when those complete,
+  // the controller is created and set up with things to do.
+  TRAP(errCode, mainObj = CMainObj::NewL());
+  if (errCode) {
+    logt("error creating main object");
+    goto mofail;
+  }
+
+  // This invokation actually runs the controller in an event loop.
+  try {
+    errCode = qApp->exec();
+    logg("qApp->exec() returned with %d", errCode);
+  } catch (const std::exception &ex) {
+    logg("Qt error exception: %s", ex.what());
+    errCode = qt_symbian_exception2Error(ex);
+  }
+
+  // Deletes controller.
+  delete mainObj;
+
+ mofail:
+  // Deletes application context.
+  cl2GlobalCleanup();
+
+ gifail:
+  logg("exit code %d", errCode);
   return errCode;
 }
 
-// May throw an exception, but not leave.
-static TInt QtMainE()
+static TInt QtMainWrapper()
 {
   // These must persist for as long as QCoreApplication does.
   int argc = 0;
   char **argv = 0;
   char **envp = 0;
   __crt0(argc, argv, envp);
-
   logg("argc is %d", argc);
   for (int i=0; i<argc; i++)
     logg("arg %d is '%s'", i, argv[i]);
-
-  // This seems a fairly heavy-duty class. It may be unsafe to try to
-  // do anything really after it gets destroyed.
-  QCoreApplication app(argc, argv);
-
-  // xxx We might connect clean-up code to the aboutToQuit() signal,
-  // or we might use qAddPostRoutine. Leaving things to main() may not
-  // be safe.
-
-  TInt errCode = 0;
-
-#if 0
-  logt("waiting");
-  QTimer::singleShot(10000, &app, SLOT(quit()));
-  errCode = app.exec();
-  logt("done waiting");
-#else
-  QT_TRAP_THROWING(errCode = MainLoopL());
-#endif
-  logg("MainLoopL returned with %d", errCode);
-
-  return errCode;
-}
-
-// No exceptions or leaves from here.
-static TInt SubMain()
-{
-  TInt errCode = cl2GlobalInit();
-  if (errCode) {
-    logt("error in global init");
-    return errCode;
-  }
-
-  try {
-    errCode = QtMainE();
-    logg("QtMainE returned (%d)", errCode);
-    if (errCode) logt("Qt error return");
-  } catch (const std::exception &ex) {
-    logg("Qt error exception: %s", ex.what());
-    errCode = qt_symbian_exception2Error(ex);
-  }
-  logg("QtMainE done (%d)", errCode);
-
-  logt("doing global cleanup");
-  cl2GlobalCleanup();
-  logt("global cleanup done");
+  TRAPD(errCode, QT_TRYCATCH_LEAVING(errCode = QtMainE(argc, argv, envp);));
+  delete[] argv;
+  delete[] envp;
   return errCode;
 }
 
 GLDEF_C TInt E32Main()
 {
-  TInt errCode = 0;
-  __UHEAP_MARK;
-  // It seems that QApplication tries to install a scheduler at some point. And possibly might want a specific subclass of it. Hence we do not install one here.
-  //WITH_CLEANUP_STACK(WITH_ACTIVE_SCHEDULER(errCode = SubMain()));
-  WITH_CLEANUP_STACK(errCode = SubMain());
-  __UHEAP_MARKEND;
-  logg("exit code %d", errCode);
+  CTrapCleanup *cleanupStack = q_check_ptr(CTrapCleanup::New());
+  TRAPD(errCode, errCode = QtMainWrapper());
+  delete cleanupStack;
   return errCode;
 }
 
