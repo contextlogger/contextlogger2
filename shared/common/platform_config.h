@@ -79,13 +79,11 @@
 
 #ifdef __SYMBIAN32__
 
-// We might check if __S60_VERNUM__ is defined, and if so, deduce all
-// the information that sake gives us here rather than requiring
-// sconfig.hrh. For configuring builds this is only sufficient if this
-// file can then be included in an .mmp file (assuming that is what we
-// are using).
-
+// The __S60_VERNUM__ value being defined implies a configure system
+// that makes sconfig.hrh unnecessary.
+#if !defined(__S60_VERNUM__)
 #include "sconfig.hrh"
+#endif
 
 #endif // __SYMBIAN32__
 

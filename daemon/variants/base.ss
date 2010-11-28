@@ -232,6 +232,9 @@ project must implement.
     
   (define/public (uid-v9.attr)
     (make-hexnum #xe8460002))
+
+  (define/public (uid.attr)
+    (uid-v9.attr))
   
   (define/public (signed.attr)
     #t)
@@ -263,6 +266,10 @@ project must implement.
   
   (define/override (have-signal.attr)
     (> (kit-vernum.attr) 50))
+
+  ;; TThreadStackInfo
+  (define/public (has-thread-stack-info.attr)
+    (>= (s60-vernum.attr) 30))
   
   (define/public (sqlite3h-as.attr)
     "static") ;; "static", "dynamic", or "source"
