@@ -32,6 +32,7 @@ class Sensor_light :
 
  private slots:
   void handleSensorEv();
+  void handleSensorError(int errCode);
 };
 
 #endif /* __LIGHT_ENABLED__ */

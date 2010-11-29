@@ -136,7 +136,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
               (binding (index 2) (type text) (value "operatorName, strlen(operatorName)") (dispose static)))))
 
     ;; ambient light (based on Qt Mobility)
-    (sensor (name light) (platforms symbian)
+    (sensor (name light) (platforms)
             (cpp-condition "__LIGHT_ENABLED__")
             ;; enum LightLevel { Undefined, Dark, Twilight, Light, Bright, Sunny }
             (sql-schema "create table light_scan (unixtime INTEGER, level INTEGER);")

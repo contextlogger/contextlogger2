@@ -9,6 +9,7 @@ Sensor_light::Sensor_light(ac_AppContext* aAppContext) :
 {
   iSensor = q_check_ptr(new QAmbientLightSensor());
   connect(iSensor, SIGNAL(readingChanged()), this, SLOT(handleSensorEv()));
+  connect(iSensor, SIGNAL(sensorError(int)), this, SLOT(handleSensorError(int)));
   iSensor->start();
 }
 
@@ -24,6 +25,17 @@ void Sensor_light::handleSensorEv()
     int level = data->lightLevel();
     logg("got light reading: %d", level);
     log_db_log_light(GetLogDb(), level, NULL);
+  }
+}
+
+void Sensor_light::handleSensorError(int errCode)
+{
+  if (iSensor->isActive()) {
+    log_db_log_status(GetLogDb(), NULL, 
+		      "WARNING: transient error %d in light sensor", errCode);
+  } else {
+    log_db_log_status(GetLogDb(), NULL, 
+		      "ERROR: light sensor stopped due to error %d", errCode);
   }
 }
 
