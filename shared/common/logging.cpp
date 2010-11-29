@@ -15,25 +15,9 @@ DEFINE_ASSERT_LOG_FILENAME; // KAssertLogFile _LIT definition
 extern "C"
 void log_clear(const char *logfile)
 {
-#if 0
-  TFileName wLogFile;
-  wLogFile.Copy(TPtrC8(reinterpret_cast<const TUint8*>(logfile)));
-
-#if 0
-  RFileLogger::Write(KLogFileDir, wLogFile, EFileLoggingModeOverwrite, KNullDesC8);
-#else
-  // This code does truncate the log file on 3rd ed, but not on 3rd FP1.
-  RFileLogger logger;
-  TInt error = logger.Connect();
-  if (!error) {
-    // Neither CreateLog nor CloseLog can error return.
-    logger.CreateLog(KLogFileDir, wLogFile, EFileLoggingModeOverwrite);
-    logger.CloseLog();
-    logger.Close();
-  }
-#endif
-#else
-  // This certainly should "truncate" the file on any Symbian version.
+  // We had some trouble with higher-level APIs on some Symbian
+  // versions. This certainly should "truncate" the file on any
+  // Symbian version.
   RFs fs;
   if (fs.Connect() == KErrNone) {
     TFileName wLogFile;
@@ -45,10 +29,18 @@ void log_clear(const char *logfile)
     TBuf<32> buf;
     buf.Copy(TPtrC8(reinterpret_cast<const TUint8*>(logfile)));
     wLogFile.Append(buf);
-    fs.Delete(wLogFile); // ignoring any error
+    TInt errCode = fs.Delete(wLogFile);
     fs.Close();
+
+    if (errCode && (errCode != KErrNotFound)) {
+      if (errCode == KErrInUse)
+        // If you get this, make sure you do not log anything _before_
+        // calling log_clear.
+	log_fmt(logfile, "logfile truncation failed: in use (%d)", errCode);
+      else
+	log_fmt(logfile, "logfile truncation failed: %d", errCode);
+    }
   }
-#endif
 }
 
 extern "C"

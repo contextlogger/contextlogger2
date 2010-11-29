@@ -123,6 +123,10 @@ static TInt QtMainE(int argc, char *argv[], char *envp[])
     goto gifail;
   }
 
+  logg("argc is %d", argc);
+  for (int i=0; i<argc; i++)
+    logg("arg %d is '%s'", i, argv[i]);
+
   // Handles async initialization tasks. If and when those complete,
   // the controller is created and set up with things to do.
   TRAP(errCode, mainObj = CMainObj::NewL());
@@ -159,9 +163,6 @@ static TInt QtMainWrapper()
   char **argv = 0;
   char **envp = 0;
   __crt0(argc, argv, envp);
-  logg("argc is %d", argc);
-  for (int i=0; i<argc; i++)
-    logg("arg %d is '%s'", i, argv[i]);
   TRAPD(errCode, QT_TRYCATCH_LEAVING(errCode = QtMainE(argc, argv, envp);));
   delete[] argv;
   delete[] envp;
