@@ -136,6 +136,9 @@ project must implement.
   (define/public (with-qmake.attr)
     (with-qt.attr))
 
+  (define/public (with-qt-mobility.attr)
+    (and (with-qt.attr) (is-symbian.attr)))
+
   (define/public (with-libev.attr)
     (not (or (is-symbian.attr) (with-qt.attr))))
 

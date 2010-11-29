@@ -1,8 +1,8 @@
 #ifndef __application_config_h__
 #define __application_config_h__
 
-#include "common/platform_config.h"
 #include "current_config.hrh"
+#include "common/platform_config.h"
 
 // NDEBUG controls whether asserts are to be compiled in (NDEBUG is
 // defined automatically for Symbian UDEB builds). Normally an assert

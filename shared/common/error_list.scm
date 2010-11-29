@@ -34,6 +34,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
    "lua"     ;; indicates that "code" will be a Lua C API error code
    "iksemel" ;; indicates that "code" will be an Iksemel C API error code
    "zlib"    ;; indicates that "code" will be a zlib error code
+   "qt"
    ))
 
 ;; List of error codes. Each will get a dedicated gint.

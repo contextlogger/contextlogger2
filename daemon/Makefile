@@ -40,6 +40,11 @@ endif
 C_FILES := $(patsubst %, $(SRC_PATH)/%, $(APP_C_FILES)) $(patsubst %, $(SHARED_PATH)/common/%, $(SHARED_C_FILES)) $(patsubst %, $(TIMESPEC_PATH)/%, $(TIMESPEC_C_FILES)) $(FULL_IKSEMEL_C_FILES)
 CXX_FILES := $(patsubst %, $(SRC_PATH)/%, $(APP_CXX_FILES)) $(patsubst %, $(SHARED_PATH)/common/%, $(SHARED_CXX_FILES))
 
+APP_QT_HEADERS := sa_sensor_light_qt.hpp
+APP_MOC_FILES := $(patsubst %.hpp,moc_%.cpp,$(APP_QT_HEADERS))
+QT_HEADERS := $(patsubst %, $(SRC_PATH)/%, $(APP_QT_HEADERS))
+MOC_FILES := $(patsubst %, $(SRC_PATH)/%, $(APP_MOC_FILES))
+
 GEN_FILES := $(RAGEL_GEN_FILES)
 
 BUILD_LUA := true
@@ -60,7 +65,7 @@ ALL_C_FILES := $(C_FILES) $(LUA_C_FILES)
 ALL_CXX_FILES := $(CXX_FILES)
 ALL_OBJ_FILES := $(patsubst %.c, %.o, $(ALL_C_FILES)) $(patsubst %.cpp, %.o, $(ALL_CXX_FILES))
 
-DEP_FLAGS := -I$(SRC_PATH) -I$(SHARED_PATH) -I$(TIMESPEC_PATH) $(CURL_CFLAGS) $(LUA_CFLAGS) $(KEYEVENTS_CFLAGS) $(IKSEMEL_DEP_FLAGS)
+DEP_FLAGS := -I$(SRC_PATH) -I$(SHARED_PATH) -I$(TIMESPEC_PATH) $(CURL_CFLAGS) $(LUA_CFLAGS) $(KEYEVENTS_CFLAGS) $(IKSEMEL_DEP_FLAGS) -I../epocxplat/src
 COMMON_FLAGS := $(DEP_FLAGS) -fexceptions
 GNOME_FLAGS := `pkg-config --cflags gobject-2.0` -DG_DISABLE_DEPRECATED=1
 FEATURES := 
@@ -68,6 +73,7 @@ WARNINGS := -Wall -Wmissing-declarations -Wsign-compare -Werror
 CFLAGS := $(WARNINGS) $(COMMON_FLAGS) $(GNOME_FLAGS) $(FEATURES)
 CXXFLAGS := $(CFLAGS)
 LDFLAGS := $(CURL_LSFLAGS) -lev -lpthread `pkg-config --libs gobject-2.0` -lsqlite3 $(LUA_LDFLAGS)
+MOC_FLAGS := $(DEP_FLAGS) $(GNOME_FLAGS)
 
 PLT_ENV := PLTCOLLECTS=`pwd`/../tools/schemelib:
 
@@ -108,7 +114,7 @@ endif
 
 binary-and-run : bin $(and $(NOT__IS_SYMBIAN), run)
 
-bin : $(BUILD_BINARY)
+bin : $(and $(WITH_QT),$(NOT__WITH_QMAKE),moc) $(BUILD_BINARY)
 
 run :
 	./main
@@ -126,6 +132,11 @@ main : $(ALL_OBJ_FILES)
 	g++ -o $@ $(ALL_OBJ_FILES) $(LDFLAGS)
 
 GOB_FLAGS := --always-private-header --output-dir $(SRC_PATH)
+
+moc : $(MOC_FILES)
+
+$(MOC_FILES) : $(SRC_PATH)/moc_%.cpp : $(SRC_PATH)/%.hpp
+	moc $(MOC_FLAGS) $< -o $@
 
 %.c %.h %-private.h : %.gob
 	gob2 $(GOB_FLAGS) $<

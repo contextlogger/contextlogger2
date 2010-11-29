@@ -39,6 +39,23 @@
     success = TRUE;							\
 }
 
+#define sa_set_qt_error(ex, msg)					\
+{									\
+  if (error)								\
+    *error = gx_error_new(domain_qt, -1, "Qt error: %s", ex.what());	\
+}
+
+#define sa_typical_qt_sensor_create(expr, msg)	\
+{						\
+  try {						\
+    expr ;					\
+    success = TRUE;				\
+  } catch (const std::exception &_ex) {		\
+    sa_set_qt_error(_ex, msg);			\
+    success = FALSE;				\
+  }						\
+}
+    
 #define sa_reconfigure_ignore_all_keys { success = TRUE; }
 
 /* Sensor implementation includes.
@@ -88,6 +105,8 @@
 #include "epoc-smsevent.hpp"
 #include "epoc-weburl.hpp"
 
+#include "sa_sensor_light_qt.hpp"
+
 // This file is generated, and included only once here. Code for
 // creating, destroying, starting, and stopping sensors comes from
 // here. The code is designed to mesh well with this file.
@@ -131,6 +150,7 @@ extern "C" struct _sa_Array
 #endif
   DECLARE_SENSOR_callstatus;
   DECLARE_SENSOR_cellid;
+  DECLARE_SENSOR_light;
   DECLARE_SENSOR_smsevent;
   DECLARE_SENSOR_weburl;
 };

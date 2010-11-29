@@ -16,10 +16,12 @@ Sensible defaults for Symbian/Qt builds.
     (super-new)
     
     (define/override (binary-type) 'daemon)
-    (define/override (s60-vernum.attr) 31)
-    (define/override (kit-name) 's60_31)
+    (define/override (s60-vernum.attr) 50)
+    (define/override (kit-name) 's60_50)
 
-    ;; qmake is not quite there yet for Symbian; we can refer to the generated .mmp to see what we need, and invoke moc ourselves as required
+    ;; qmake is not quite there yet for Symbian; we can refer to the
+    ;; generated .mmp to see what we need, and invoke moc ourselves as
+    ;; required
     (define/override (with-qmake.attr) #f)
     
     (define/override (with-qt.attr) #t)
@@ -36,6 +38,7 @@ Sensible defaults for Symbian/Qt builds.
     (define/override (keypress-enabled.attr) #f)
     (define/override (inactivity-enabled.attr) #t)
     (define/override (weburl-enabled.attr) #t)
+    (define/override (light-enabled.attr) #t)
 
     (define/override (feature-remokon.attr) #f)
     (define/override (feature-uploader.attr) #f)
