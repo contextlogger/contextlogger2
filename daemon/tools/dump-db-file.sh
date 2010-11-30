@@ -51,6 +51,9 @@ sqlite3 $1 "select datetime(unixtime, 'unixepoch'), evtype, number, contact_name
 echo STATUS INDICATORS
 sqlite3 $1 "select datetime(unixtime, 'unixepoch'), value, caps from indicator_scan;"
 
+echo TAPPING
+sqlite3 $1 "select datetime(unixtime, 'unixepoch'), direction, is_dbl from tap_scan;"
+
 echo WEBURL
 sqlite3 $1 "select datetime(unixtime, 'unixepoch'), name, url from weburl_scan;" 
 

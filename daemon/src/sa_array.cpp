@@ -106,6 +106,7 @@
 #include "epoc-weburl.hpp"
 
 #include "sa_sensor_light_qt.hpp"
+#include "sa_sensor_tap_qt.hpp"
 
 // This file is generated, and included only once here. Code for
 // creating, destroying, starting, and stopping sensors comes from
@@ -151,6 +152,7 @@ extern "C" struct _sa_Array
   DECLARE_SENSOR_callstatus;
   DECLARE_SENSOR_cellid;
   DECLARE_SENSOR_light;
+  DECLARE_SENSOR_tap;
   DECLARE_SENSOR_smsevent;
   DECLARE_SENSOR_weburl;
 };

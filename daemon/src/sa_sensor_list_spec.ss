@@ -146,6 +146,19 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
              (bindings
               (binding (index 2) (type int) (value "level")))))
     
+    ;; tap sensor (based on Qt Mobility)
+    (sensor (name tap) (platforms)
+            (cpp-condition "__TAP_ENABLED__")
+            (sql-schema "create table tap_scan (unixtime INTEGER, direction INTEGER, is_dbl INTEGER);")
+            (sql-statements "insert into tap_scan (unixtime, direction, is_dbl) values (?, ?, ?);")
+            (log-insert-api
+             (args ,(arg (type 'int) (name 'direction))
+                   ,(arg (type 'gboolean) (name 'isDouble)))
+             (bindings
+              (binding (index 2) (type int) (value "direction"))
+              (binding (index 3) (type int) (value "isDouble"))
+              )))
+    
     ;; weburl
     (sensor (name weburl) (platforms symbian)
             (cpp-condition "__WEBURL_ENABLED__")

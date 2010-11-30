@@ -65,31 +65,6 @@ project must implement.
                      on/off)))
              (active-sensors-for (syntax->datum (syntax plat))))))))
 
-#|
-(define (make-sensor-attrs/sensor-pred p?)
-  (for/hasheq
-   ((sensor FULL-SENSOR-LIST))
-   (alet name (get-sensor-name sensor)
-         (values (sensor-enabled-symbol name)
-                 (p? sensor)))))
-
-(define essential-sensor-attrs
-  (make-sensor-attrs/sensor-pred sensor-essential?))
-
-;; Includes essential ones.
-(define (make-sensor-attrs/name-pred p?)
-  (for/hasheq
-   ((sensor FULL-SENSOR-LIST))
-   (alet name (get-sensor-name sensor)
-         (values (sensor-enabled-symbol name)
-                 (or (sensor-essential? sensor)
-                     (p? name))))))
-
-;; Includes essential ones.
-(define (make-sensor-attrs/name-lst lst)
-  (make-sensor-attrs/name-pred (lambda (name) (include? name lst))))
-|#
-
 ;; --------------------------------------------------
 ;; base variants
 ;; --------------------------------------------------

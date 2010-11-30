@@ -39,6 +39,7 @@ Sensible defaults for Symbian/Qt builds.
     (define/override (inactivity-enabled.attr) #t)
     (define/override (weburl-enabled.attr) #t)
     (define/override (light-enabled.attr) #t)
+    (define/override (tap-enabled.attr) #t)
 
     (define/override (feature-remokon.attr) #f)
     (define/override (feature-uploader.attr) #f)
