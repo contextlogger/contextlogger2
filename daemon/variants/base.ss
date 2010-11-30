@@ -193,8 +193,6 @@ project must implement.
 (define* DEV-CAPS (symbol-sort (append SELF-CAPS-32 '(PowerMgmt ProtServ ReadDeviceData SurroundingsDD SwEvent TrustedUI WriteDeviceData))))
 (define* PUBLID-CAPS (symbol-sort (append DEV-CAPS '(CommDD DiskAdmin NetworkControl MultimediaDD))))
 
-(define* ALL-SYMBIAN-SENSORS (active-sensor-names-for 'symbian))
-
 (define-variant* symbian-variant% project-variant%
   (super-new)
   

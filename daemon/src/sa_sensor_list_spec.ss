@@ -364,18 +364,6 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
 (define* essential-sensor-names
   (map get-sensor-name (filter sensor-essential? FULL-SENSOR-LIST)))
 
-(define* (sensor-active-on? plat sensor)
-  (and (not (sensor-inactive? sensor))
-       (alet platforms (fget-opt-nlist-elem sensor 'platforms)
-             (or (not platforms)
-                 (true? (memq plat (cdr platforms)))))))
-
-(define* (active-sensors-for plat)
-  (filter (fix sensor-active-on? plat) FULL-SENSOR-LIST))
-
-(define* (active-sensor-names-for plat)
-  (map get-sensor-name (filter (fix sensor-active-on? plat) FULL-SENSOR-LIST)))
-
 (define* (sensor-enabled-symbol name)
   (string->symbol (format "~a-enabled" name)))
 
