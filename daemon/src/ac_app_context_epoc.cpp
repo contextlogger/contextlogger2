@@ -260,10 +260,12 @@ void CFlightModeObserver::HandleFlightMode(TInt aError,
 
     logg("flightmode: %s", boolstr_on(on));
 
+#if __FLIGHTMODE_ENABLED__
     LogDb* logDb = ac_global_LogDb;
     if (logDb) {
       log_db_log_flightmode(logDb, on, NULL);
     }
+#endif
 
     // Post to blackboard if changed (compare against blackboard).
     {

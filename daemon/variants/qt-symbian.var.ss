@@ -12,7 +12,7 @@ Sensible defaults for Symbian/Qt builds.
 
 (define* klass%
    (variant-class
-    symbian/all-passive-variant%
+    symbian/all-event-variant%
     (super-new)
     
     (define/override (binary-type) 'daemon)

@@ -68,12 +68,8 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     
     ;; flightmode
     ;; 
-    ;; We have code for a dedicated "flightmode" sensor, but that is
-    ;; rather redundant as the "callstatus" sensor can easily log
-    ;; flightmode changes as well.
+    ;; Symbian-specific app context code observes (and logs) this.
     (sensor (name flightmode) (inactive #t) (platforms)
-            ;;(cpp-condition "__FLIGHTMODE_ENABLED__")
-            ;;(cpp-condition "__CALLSTATUS_ENABLED__")
             (cpp-condition "defined(__EPOC32__)")
             (sql-schema "create table flightmode_scan (unixtime INTEGER, value INTEGER);")
             (sql-statements "insert into flightmode_scan (unixtime, value) values (?, ?);")

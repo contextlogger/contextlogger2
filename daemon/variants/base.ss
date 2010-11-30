@@ -322,6 +322,17 @@ project must implement.
 (define-variant* symbian/all-passive-variant% symbian-variant%
   (super-new)
 
+  (define/override (battery-enabled.attr) #t)
+  (define/override (flightmode-enabled.attr) #t)
+  (define/override (operator-enabled.attr) #t)
+  (define/override (registration-enabled.attr) #t)
+  (define/override (signal-enabled.attr) #t)
+  )
+
+;; Enables all event-based active sensors that can be enabled.
+(define-variant* symbian/all-event-variant% symbian/all-passive-variant%
+  (super-new)
+
   (define/public (have-caps? lst)
     (sublist? lst (send this capabilities)))
   
@@ -367,8 +378,8 @@ project must implement.
          (have-caps? '(ReadDeviceData WriteDeviceData))))
   )
 
-;; Enables all active and passive sensors that can be enabled.
-(define-variant* symbian/all-active-variant% symbian/all-passive-variant%
+;; Enables all sensors that can be enabled.
+(define-variant* symbian/all-variant% symbian/all-event-variant%
   (super-new)
 
   (define/override (gps-enabled.attr)
