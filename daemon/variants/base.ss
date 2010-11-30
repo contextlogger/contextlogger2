@@ -134,7 +134,8 @@ project must implement.
 
   ;; Whether any tap sensor is enabled.
   (define/public (with-tap-sensors.attr)
-    (or (doubletap-enabled.attr)))
+    (or (singletap-enabled.attr)
+        (doubletap-enabled.attr)))
   
   (define/public (use-qt-mobility.attr)
     (or (light-enabled.attr)
@@ -168,6 +169,9 @@ project must implement.
   (define/public (feature-compress-logs.attr)
     #f)
 
+  (define/public (quit-on-low-battery.attr)
+    #t)
+  
   )
 
 ;; --------------------------------------------------
@@ -185,6 +189,7 @@ project must implement.
   (define/override (mark-enabled.attr) #t)
   (define/override (timer-enabled.attr) #t)
   (define/override (light-enabled.attr) (send this with-qt-mobility.attr))
+  (define/override (singletap-enabled.attr) (send this with-qt-mobility.attr))
   (define/override (doubletap-enabled.attr) (send this with-qt-mobility.attr))
   )
 
@@ -367,6 +372,12 @@ project must implement.
 
   (define/override (smsevent-enabled.attr)
     #t)
+
+  ;; It seems that on Symbian we only get readings from the singletap
+  ;; sensor when double taps occur. Not sure of the exact semantics
+  ;; there, but this sensor is not very useful on Symbian then.
+  (define/override (singletap-enabled.attr)
+    #f)
 
   (define/override (doubletap-enabled.attr)
     (and (send this with-qt-mobility.attr)

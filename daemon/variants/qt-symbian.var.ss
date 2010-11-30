@@ -44,6 +44,7 @@ Sensible defaults for Symbian/Qt builds.
     (define/override (feature-remokon.attr) #f)
     (define/override (feature-uploader.attr) #f)
 
+    (define/override (quit-on-low-battery.attr) #f)
     )) ;; end class
 
 (define* (info)

@@ -155,8 +155,8 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
               (binding (index 3) (type int) (value "isDouble"))
               )))
 
-;;    (sensor (name singletap)
-;;            (cpp-condition "__SINGLETAP_ENABLED__"))
+    (sensor (name singletap)
+            (cpp-condition "__SINGLETAP_ENABLED__"))
     
     (sensor (name doubletap)
             (cpp-condition "__DOUBLETAP_ENABLED__"))

@@ -183,6 +183,9 @@ clean :
 apidoc :
 	doxygen src/doxyfile-int
 
+rm-apidoc :
+	-rm -r private-cxx-api
+
 # Some of the Ubuntu packages required for building.
 ubuntu-dev :
 	sudo aptitude install libglib2.0-dev libsqlite3-dev liblua5.1-dev

@@ -6,12 +6,12 @@
 
 // http://doc.qt.nokia.com/qtmobility-1.1.0/qtapsensor.html
 
-Sensor_tap::Sensor_tap(ac_AppContext* aAppContext) :
-  iAppContext(aAppContext)
+Sensor_tap::Sensor_tap(ac_AppContext* aAppContext,
+		       bool aDouble, const char* aName) :
+  iAppContext(aAppContext), iDouble(aDouble), iName(aName)
 {
-  // Whether we are interested in single or double taps. Cannot
-  // observe both with a single sensor object.
-  setProperty("returnDoubleTapEvents", true);
+  // Whether we are interested in single or double taps.
+  setProperty("returnDoubleTapEvents", aDouble);
 
   // Signals cannot be "overridden" directly like methods, but we can
   // connect to slots locally.
@@ -51,7 +51,7 @@ void Sensor_tap::handleReadingChanged()
   QTapReading* data(reading()); // not owned
   if (data) {
     int dir = data->tapDirection();
-    gboolean isDbl = data->isDoubleTap();
+    int isDbl = data->isDoubleTap();
     logg("got %s reading: %d (%s)", Name(),
 	 dir, isDbl ? "double" : "single");
     log_db_log_tap(GetLogDb(), dir, isDbl, NULL);

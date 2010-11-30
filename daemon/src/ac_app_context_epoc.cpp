@@ -129,18 +129,23 @@ void CBatteryObserver::HandleBattery(TInt aError,
       log_db_log_battery(logDb, status, level, NULL);
     }
 
-    if (level < 20) {
-      er_log_none(0, "battery running low (at %d%%): exiting", level);
-      if (logDb) {
-	er_fatal_battery_low;
-      } else {
-        // This is to avoid repeated error dialogs when the logger
-        // does not get as far as properly running due to low battery.
-	er_fatal_quiet();
+#if __QUIT_ON_LOW_BATTERY__
+    if (level < 20) 
+      {
+	er_log_none(0, "battery running low (at %d%%): exiting", level);
+	if (logDb) {
+	  er_fatal_battery_low;
+	} else {
+	  // This is to avoid repeated error dialogs when the logger
+	  // does not get as far as properly running due to low battery.
+	  er_fatal_quiet();
+	}
+      } 
+    else 
+#endif
+      {
+	iBatteryInfoNotifier->MakeRequest();
       }
-    } else {
-      iBatteryInfoNotifier->MakeRequest();
-    }
   }
 }
 
