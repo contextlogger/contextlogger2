@@ -12,7 +12,7 @@ Sensible defaults for Symbian/Qt builds.
 
 (define* klass%
    (variant-class
-    symbian-variant%
+    symbian/all-passive-variant%
     (super-new)
     
     (define/override (binary-type) 'daemon)
@@ -26,7 +26,7 @@ Sensible defaults for Symbian/Qt builds.
     
     (define/override (with-qt.attr) #t)
 
-    ;;(define/override (have-sqlite3.attr) #f)
+    (define/override (have-sqlite3.attr) #t)
 
     (define/override (appfocus-enabled.attr) #t)
     (define/override (appmessage-enabled.attr) #t)

@@ -52,6 +52,7 @@
 
 #include "er_errors.h"
 #include "jaiku_compat.hpp"
+#include "symbian_auto_ptr.hpp"
 #include "utils_cl2.h"
 
 #include <mtclreg.h>                        // for CClientMtmRegistry 

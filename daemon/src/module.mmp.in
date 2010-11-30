@@ -29,7 +29,7 @@ systeminclude \epoc32\include\stdapis\glib-2.0
 // Qt headers do refer to STL headers.
 systeminclude \epoc32\include\stdapis\stlport
 <% end %>
-<% if $WITH_QT_MOBILITY %>
+<% if $USE_QT_MOBILITY %>
 systeminclude \epoc32\include\middleware
 <% end %>
 
@@ -156,7 +156,7 @@ library epocxplat_e846000e.lib
 library euserhl.lib    // High-Level APIs
 <% end %>
 
-<% if $LIGHT_ENABLED %>
+<% if $USE_QT_MOBILITY %>
 library QtSensors.lib  // Qt Mobility
 <% end %>
 

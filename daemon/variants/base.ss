@@ -49,22 +49,6 @@ project must implement.
                      #,(datum->syntax stx (sensor-essential? sensor)))))
              FULL-SENSOR-LIST)))))
 
-(define-syntax (override-sensor-methods stx)
-  (syntax-case stx ()
-    ((_ plat on/off)
-     #`(begin
-         ;; Debugging aid.
-         ;;(define/public (#,(datum->syntax stx 'foo))
-         ;;(list #,@(map (lambda (sym) #`'#,sym)
-         ;;(active-sensor-names-for (syntax->datum (syntax plat))))))
-         #,@(map
-             (lambda (sensor)
-               (let* ((sensor-name (get-sensor-name sensor))
-                      (method-sym (sensor-enabled-method-name sensor-name)))
-                 #`(define/override (#,(datum->syntax stx method-sym))
-                     on/off)))
-             (active-sensors-for (syntax->datum (syntax plat))))))))
-
 ;; --------------------------------------------------
 ;; base variants
 ;; --------------------------------------------------
@@ -143,6 +127,12 @@ project must implement.
   (define/public (iap-id-expr.attr) "-1")
   
   ;; --------------------------------------------------
+  ;; sensors
+  ;; --------------------------------------------------
+
+  (define-sensor-methods)
+
+  ;; --------------------------------------------------
   ;; features
   ;; --------------------------------------------------
 
@@ -169,12 +159,11 @@ project must implement.
 
   (define/public (feature-compress-logs.attr)
     #f)
-  
-  ;; --------------------------------------------------
-  ;; sensors
-  ;; --------------------------------------------------
 
-  (define-sensor-methods)
+  (define/public (use-qt-mobility.attr)
+    (or (light-enabled.attr)
+        (tap-enabled.attr)))
+  
   )
 
 ;; --------------------------------------------------
@@ -189,7 +178,10 @@ project must implement.
   ;; No finished Linux implementation.
   (define/override (feature-uploader.attr) #f)
 
-  (override-sensor-methods linux #t)
+  (define/override (mark-enabled.attr) #t)
+  (define/override (timer-enabled.attr) #t)
+  (define/override (light-enabled.attr) (send this with-qt-mobility.attr))
+  (define/override (tap-enabled.attr) (send this with-qt-mobility.attr))
   )
 
 ;; --------------------------------------------------
@@ -241,7 +233,17 @@ project must implement.
       (aif m (regexp-match #px"_([0-9]{2})$" s)
            (string->number (second m))
            (error "cannot determine kit version" s))))
-  
+
+  ;; This is intended for megasis builds only, and can be used to
+  ;; specify the way the SIS and PKG files are to be named.
+  (define/public (dist-variant-name.attr)
+    (send this variant-name.attr))
+
+  ;; This may affect some of the deployment options. Private trial
+  ;; releases may be packaged and deployed differently than public
+  ;; releases.
+  (define/public (is-trial.attr) #f)
+         
   (define/override (have-signal.attr)
     (> (kit-vernum.attr) 50))
 
@@ -312,109 +314,68 @@ project must implement.
   (define/public (need-contact-database.attr)
     #t) ;; xxx
   
+  (define/override (mark-enabled.attr) #t)
+
   ) ;; end symbian-variant%
 
-(define-variant* symbian/all-variant% symbian-variant%
-  (super-new)
-  (override-sensor-methods symbian #t)
-  )
-
-(define-variant* devel-variant% symbian-variant%
-  (init-field (binary-type/o 'application)
-              (s60-vernum/o 30)
-              (kit/o 's60_30)
-              )
-  
+;; Enables all passive sensors that can be enabled.
+(define-variant* symbian/all-passive-variant% symbian-variant%
   (super-new)
 
-  (define/override (binary-type) binary-type/o)
+  (define/public (have-caps? lst)
+    (sublist? lst (send this capabilities)))
   
-  (define/override (s60-vernum.attr) s60-vernum/o)
-    
-  (define/override (kit-name) kit/o)
-  )
+  (define/override (appfocus-enabled.attr)
+    #t)
 
-(define-variant* devel/all-variant% devel-variant%
-  (super-new)
-  (override-sensor-methods symbian #t)
-  )
+  (define/override (callstatus-enabled.attr)
+    #t)
 
-(define* (symbian-sensor-include ilist)
-  ilist)
-
-(define* (symbian-sensor-exclude elist)
-  (filter
-   (lambda (x) (not (memq x elist)))
-   ALL-SYMBIAN-SENSORS))
-  
-(define-variant* release-variant% symbian/all-variant%
-  (init-field caps/o
-              cert/o
-              (signed/o #t)
-              (dist-variant-name #f)
-              (s60-vernum/o 30)
-              (binary-type/o 'daemon)
-              (kit/o 's60_30))
-
-  (super-new)
-
-  (define/override (s60-vernum.attr) s60-vernum/o)
-    
-  (define/override (kit-name) kit/o)
-    
-  (define/override (binary-type) binary-type/o)
-
-  (define/override (capabilities) caps/o)
-
-  (define/override (signed.attr) signed/o)
-  
-  (define/override (cert-name) cert/o)
-
-  (define/public (dist-variant-name.attr)
-    (aif n dist-variant-name
-         (symbol->string n)
-         (send this variant-name.attr)))
-
-  ;; This may affect some of the deployment options. Private trial
-  ;; releases may be packaged and deployed differently than public
-  ;; releases.
-  (define/public (is-trial.attr) #f)
-         
-  ;; --------------------------------------------------
-  ;; sensors
-  ;; --------------------------------------------------
-
-  ;; In release builds we enable all sensors that we can, assuming
-  ;; they make some sense. Redundant sensors and test sensors and such
-  ;; we do not enable.
-  
-  (define/override (keypress-enabled.attr)
-    (sublist? '(ReadDeviceData WriteDeviceData PowerMgmt ProtServ SwEvent)
-              (capabilities)))
-  
-  (define/override (gps-enabled.attr)
-    (sublist? '(Location)
-              (capabilities)))
-  
   (define/override (cellid-enabled.attr)
-    (sublist? '(ReadDeviceData)
-              (capabilities)))
+    (have-caps? '(ReadDeviceData)))
 
-  (define/override (weburl-enabled.attr)
-    (or
-     (and (send this have-ahleclient-lib.attr)
-          (sublist? '(ReadDeviceData WriteDeviceData) (capabilities)))
-     (and (send this have-ahle2client-lib.attr)
-          (sublist? '(ReadUserData WriteUserData) (capabilities))))
-    (and (send this have-epocxplat.attr)
-         (sublist? '(ReadDeviceData WriteDeviceData) (capabilities)))
-    )
+  (define/override (inactivity-enabled.attr)
+    #t)
+
+  (define/override (indicator-enabled.attr)
+    #t)
+
+  (define/override (keypress-enabled.attr)
+    ;;xxx have two implementations to consider
+    (have-caps? '(ReadDeviceData WriteDeviceData PowerMgmt ProtServ SwEvent)))
   
+  (define/override (light-enabled.attr)
+    (and (send this with-qt-mobility.attr)
+         (have-caps? '(ReadDeviceData))))
+
   (define/override (profile-enabled.attr)
     (or (send this have-profileengine-lib.attr)
-        (sublist? '(ReadDeviceData) (capabilities))))
-  
-  ) ;; end release-variant%
+        (have-caps? '(ReadDeviceData))))
+
+  (define/override (smsevent-enabled.attr)
+    #t)
+
+  (define/override (tap-enabled.attr)
+    (and (send this with-qt-mobility.attr)
+         (have-caps? '(ReadDeviceData))))
+
+  (define/override (weburl-enabled.attr)
+    (and (send this have-epocxplat.attr)
+         (or
+          (send this have-ahleclient-lib.attr)
+          (send this have-ahle2client-lib.attr))
+         (have-caps? '(ReadDeviceData WriteDeviceData))))
+  )
+
+;; Enables all active and passive sensors that can be enabled.
+(define-variant* symbian/all-active-variant% symbian/all-passive-variant%
+  (super-new)
+
+  (define/override (gps-enabled.attr)
+    (send this have-caps? '(Location)))
+
+  (define/override (btprox-enabled.attr)
+    #t))
 
 #|
 
