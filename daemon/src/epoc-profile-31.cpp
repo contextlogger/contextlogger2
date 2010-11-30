@@ -58,7 +58,7 @@ gboolean CSensor_profile::StartL(GError** error)
   if (!iIsActive) {
     iNotifyHandler->RequestProfileActivationNotificationsL(*this);
     iIsActive = ETrue;
-    log_db_log_status(iLogDb, NULL, "profile sensor started");
+    //log_db_log_status(iLogDb, NULL, "profile sensor started");
   }
   return TRUE;
 }
@@ -68,7 +68,7 @@ void CSensor_profile::Stop()
   if (iIsActive) {
     iNotifyHandler->CancelActiveProfileNotifications();
     iIsActive = EFalse;
-    log_db_log_status(iLogDb, NULL, "profile sensor stopped");
+    //log_db_log_status(iLogDb, NULL, "profile sensor stopped");
   }
 }
 

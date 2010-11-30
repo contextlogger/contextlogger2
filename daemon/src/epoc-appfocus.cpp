@@ -122,7 +122,7 @@ gboolean CSensor_appfocus::StartL(GError** error)
   }
   if (!IsActive()) {
     MakeRequest();
-    log_db_log_status(iLogDb, NULL, "appfocus sensor started");
+    //log_db_log_status(iLogDb, NULL, "appfocus sensor started");
   }
   return TRUE;
 }
@@ -131,7 +131,7 @@ void CSensor_appfocus::Stop()
 {
   if (IsActive()) {
     Cancel();
-    log_db_log_status(iLogDb, NULL, "appfocus sensor stopped");
+    //log_db_log_status(iLogDb, NULL, "appfocus sensor stopped");
   }
 
   if (iFocusChangeEventsEnabled) {

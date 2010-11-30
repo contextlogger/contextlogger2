@@ -76,7 +76,7 @@ gboolean CSensor_inactivity::StartL(GError** error)
   if (!IsActive()) {
     GetState();
     MakeRequest();
-    log_db_log_status(iLogDb, NULL, "inactivity sensor started");
+    //log_db_log_status(iLogDb, NULL, "inactivity sensor started");
   }
   return TRUE;
 }
@@ -85,7 +85,7 @@ void CSensor_inactivity::Stop()
 {
   if ((IsActive())) {
     Cancel();
-    log_db_log_status(iLogDb, NULL, "inactivity sensor stopped");
+    //log_db_log_status(iLogDb, NULL, "inactivity sensor stopped");
   }
 }
 

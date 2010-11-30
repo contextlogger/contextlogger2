@@ -140,6 +140,11 @@ project must implement.
   (define/public (use-qt-mobility.attr)
     (or (light-enabled.attr)
         (with-tap-sensors.attr)))
+
+  ;; Whether to link against QtSensors and to build in our QtSensors
+  ;; utility code.
+  (define/public (use-qt-sensors.attr)
+    (use-qt-mobility.attr))
   
   ;; --------------------------------------------------
   ;; features

@@ -40,7 +40,7 @@ gboolean CSensor_indicator::StartL(GError** error)
   iNumScanFailures = 0;
   if (!IsActive()) {
     MakeRequest();
-    log_db_log_status(iLogDb, NULL, "indicator sensor started");
+    //log_db_log_status(iLogDb, NULL, "indicator sensor started");
   }
   return TRUE;
 }
@@ -49,7 +49,7 @@ void CSensor_indicator::Stop()
 {
   if ((IsActive())) {
     Cancel();
-    log_db_log_status(iLogDb, NULL, "indicator sensor stopped");
+    //log_db_log_status(iLogDb, NULL, "indicator sensor stopped");
   }
 }
 

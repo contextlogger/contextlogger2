@@ -109,7 +109,7 @@ gboolean CSensor_callstatus::StartL(GError** error)
     iRetryAo->ResetFailures();
     iFlightModeGetter->MakeRequest();
     iState = EQueryingFlightMode;
-    log_db_log_status(GetLogDb(), NULL, "callstatus sensor started");
+    //log_db_log_status(GetLogDb(), NULL, "callstatus sensor started");
   }
   return TRUE;
 }
@@ -118,7 +118,7 @@ void CSensor_callstatus::Stop()
 {
   if ((IsActive())) {
     Cancel();
-    log_db_log_status(GetLogDb(), NULL, "callstatus sensor stopped");
+    //log_db_log_status(GetLogDb(), NULL, "callstatus sensor stopped");
   }
 }
 

@@ -40,7 +40,7 @@ endif
 C_FILES := $(patsubst %, $(SRC_PATH)/%, $(APP_C_FILES)) $(patsubst %, $(SHARED_PATH)/common/%, $(SHARED_C_FILES)) $(patsubst %, $(TIMESPEC_PATH)/%, $(TIMESPEC_C_FILES)) $(FULL_IKSEMEL_C_FILES)
 CXX_FILES := $(patsubst %, $(SRC_PATH)/%, $(APP_CXX_FILES)) $(patsubst %, $(SHARED_PATH)/common/%, $(SHARED_CXX_FILES))
 
-APP_QT_HEADERS := sa_sensor_light_qt.hpp sa_sensor_tap_qt.hpp
+APP_QT_HEADERS := sa_qt_sensors.hpp sa_sensor_light_qt.hpp sa_sensor_tap_qt.hpp
 APP_MOC_FILES := $(patsubst %.hpp,moc_%.cpp,$(APP_QT_HEADERS))
 QT_HEADERS := $(patsubst %, $(SRC_PATH)/%, $(APP_QT_HEADERS))
 MOC_FILES := $(patsubst %, $(SRC_PATH)/%, $(APP_MOC_FILES))

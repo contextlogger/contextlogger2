@@ -4,38 +4,26 @@
 #include "ld_logging.h"
 #include "sa_sensor_list_log_db.h"
 
+#include <qambientlightsensor.h>
+
 Sensor_light::Sensor_light(ac_AppContext* aAppContext) :
-  iAppContext(aAppContext), iSensor(NULL)
+  ClQtEventSensorBase(QAmbientLightSensor::type, aAppContext)
 {
-  iSensor = q_check_ptr(new QAmbientLightSensor());
-  connect(iSensor, SIGNAL(readingChanged()), this, SLOT(handleSensorEv()));
-  connect(iSensor, SIGNAL(sensorError(int)), this, SLOT(handleSensorError(int)));
-  iSensor->start();
+  run();
 }
 
-Sensor_light::~Sensor_light()
+const char* Sensor_light::Name() const
 {
-  delete iSensor;
+  return "light";
 }
 
-void Sensor_light::handleSensorEv()
+void Sensor_light::handleReadingChanged()
 {
-  QAmbientLightReading* data(iSensor->reading()); // not owned
+  QAmbientLightReading *data(static_cast<QAmbientLightReading*>(reading()));
   if (data) {
     int level = data->lightLevel();
     logg("got light reading: %d", level);
     log_db_log_light(GetLogDb(), level, NULL);
-  }
-}
-
-void Sensor_light::handleSensorError(int errCode)
-{
-  if (iSensor->isActive()) {
-    log_db_log_status(GetLogDb(), NULL, 
-		      "WARNING: transient error %d in light sensor", errCode);
-  } else {
-    log_db_log_status(GetLogDb(), NULL, 
-		      "ERROR: light sensor stopped due to error %d", errCode);
   }
 }
 

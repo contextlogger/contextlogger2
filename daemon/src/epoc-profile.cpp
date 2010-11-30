@@ -68,7 +68,7 @@ gboolean CSensor_profile::StartL(GError** error)
     // This starts observing right away, and we cannot cancel our
     // "subscription" without destroying the object.
     iReader = CProfileChangeNotifyHandler::NewL(this);
-    log_db_log_status(iLogDb, NULL, "profile sensor started");
+    //log_db_log_status(iLogDb, NULL, "profile sensor started");
   }
   return TRUE;
 }
@@ -77,7 +77,7 @@ void CSensor_profile::Stop()
 {
   delete iReader;
   iReader = NULL;
-  log_db_log_status(iLogDb, NULL, "profile sensor stopped");
+  //log_db_log_status(iLogDb, NULL, "profile sensor stopped");
 }
 
 void CSensor_profile::HandleActiveProfileEventL(TProfileEvent aProfileEvent,

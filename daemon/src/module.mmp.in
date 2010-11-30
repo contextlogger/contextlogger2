@@ -156,7 +156,7 @@ library epocxplat_e846000e.lib
 library euserhl.lib    // High-Level APIs
 <% end %>
 
-<% if $USE_QT_MOBILITY %>
+<% if $USE_QT_SENSORS %>
 library QtSensors.lib  // Qt Mobility
 <% end %>
 
@@ -263,6 +263,9 @@ source rk_jabber_session.c
 source rk_remokon.c
 <% end %>
 source sa_array.cpp 
+<% if $USE_QT_SENSORS %>
+source sa_qt_sensors.cpp moc_sa_qt_sensors.cpp
+<% end %>
 <% if $LIGHT_ENABLED %>
 source sa_sensor_light_qt.cpp moc_sa_sensor_light_qt.cpp
 <% end %>

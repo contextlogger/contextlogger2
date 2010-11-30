@@ -135,7 +135,7 @@ gboolean CSensor_keypress::StartL(GError** error)
   if (!IsActive()) {
     RequestAllKeys();
     MakeRequest();
-    log_db_log_status(iLogDb, NULL, "keypress sensor started");
+    //log_db_log_status(iLogDb, NULL, "keypress sensor started");
   }
   return TRUE;
 }
@@ -144,7 +144,7 @@ void CSensor_keypress::Stop()
 {
   if (IsActive()) {
     Cancel();
-    log_db_log_status(iLogDb, NULL, "keypress sensor stopped");
+    //log_db_log_status(iLogDb, NULL, "keypress sensor stopped");
   }
   LogAndClear(NULL); // best effort, already being stopped
 }

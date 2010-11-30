@@ -34,7 +34,7 @@ gboolean CSensor_smsevent::StartL(GError** error)
 {
   if (!IsActive()) {
     ActivateL();
-    log_db_log_status(iLogDb, NULL, "smsevent sensor started");
+    //log_db_log_status(iLogDb, NULL, "smsevent sensor started");
   }
   return TRUE;
 }
@@ -43,7 +43,7 @@ void CSensor_smsevent::Stop()
 {
   if ((IsActive())) {
     Disactivate();
-    log_db_log_status(iLogDb, NULL, "smsevent sensor stopped");
+    //log_db_log_status(iLogDb, NULL, "smsevent sensor stopped");
   }
 }
 

@@ -1,52 +1,48 @@
-#ifndef __sa_sensor_light_h__
-#define __sa_sensor_light_h__
+#ifndef __sa_qt_sensors_h__
+#define __sa_qt_sensors_h__
 
 #include "application_config.h"
 
-#if __LIGHT_ENABLED__
+#if __USE_QT_SENSORS__
+
+/** QtSensors related utilities. 
+ */
 
 #include "ac_app_context.h"
-#include "sa_qt_sensors.hpp"
+
+#include <qsensor.h>
 
 QTM_USE_NAMESPACE
 
-// Note: We cannot say NONSHARABLE_CLASS here as it would confuse "moc".
-class Sensor_light :
-  public ClQtEventSensorBase
+class ClQtEventSensorBase :
+  public QSensor
 {
   Q_OBJECT
 
  public:
-  Sensor_light(ac_AppContext* aAppContext);
+  ClQtEventSensorBase(const QByteArray & type,
+		      ac_AppContext* aAppContext);
 
- private:
-  virtual const char* Name() const;
+ protected:
+  ac_AppContext* iAppContext; // not owned
+  
+ protected:
+  LogDb* GetLogDb() const { return ac_LogDb(iAppContext); }
 
- private:
-  virtual void handleReadingChanged();
+  virtual const char* Name() const = 0;
+
+  void run();
+
+ public slots:
+  void handleActiveChanged();
+  void handleBusyChanged();
+  void handleSensorError(int errCode);
+  virtual void handleReadingChanged() = 0;
 };
 
-#endif /* __LIGHT_ENABLED__ */
+#endif /* __USE_QT_SENSORS__ */
 
-// --------------------------------------------------
-// sensor array integration
-// --------------------------------------------------
-
-#if defined(SA_ARRAY_INTEGRATION)
-#if __LIGHT_ENABLED__
-#define DECLARE_SENSOR_light Sensor_light* iSensor_light
-#define SENSOR_LIGHT_DESTROY DELETE_Z(self->iSensor_light)
-#define SENSOR_LIGHT_CREATE sa_typical_qt_sensor_create(self->iSensor_light = q_check_ptr(new Sensor_light(self->ac)), "light sensor initialization")
-#define SENSOR_LIGHT_START SENSOR_LIGHT_CREATE
-#define SENSOR_LIGHT_STOP SENSOR_LIGHT_DESTROY
-#define SENSOR_LIGHT_IS_RUNNING (self->iSensor_light != NULL)
-#define SENSOR_LIGHT_RECONFIGURE(key, value) sa_reconfigure_ignore_all_keys
-#else
-#define DECLARE_SENSOR_light
-#endif
-#endif /* SA_ARRAY_INTEGRATION */
-
-#endif /* __sa_sensor_light_h__ */
+#endif /* __sa_qt_sensors_h__ */
 
 /**
 
