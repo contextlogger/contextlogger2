@@ -33,7 +33,7 @@
             (report-if-bad 'attribute
                            (alt <inactive-attr>
                                 <name-attr>
-                                <platforms-attr>
+                                <essential-attr>
                                 <cpp-attr>
                                 <sql-schema>
                                 <sql-stmts>
@@ -42,17 +42,13 @@
 
            (<inactive-attr> (lst 'inactive <boolean>))
            
+           (<essential-attr> (lst 'essential <boolean>))
+
            ;; The name of the sensor. A lot of names are derived based
            ;; on this name. A unique identifier for this sensor.
            ;; Should be alphanumeric, all lowercase, and starting with
            ;; a letter.
            (<name-attr> (lst 'name <name>))
-
-           ;; This can be used to specify the platforms for which this
-           ;; sensor is available. Available on all of them if not
-           ;; given, and on none if specified as an empty (platforms).
-           ;; This only matters for active sensors.
-           (<platforms-attr> (lst 'platforms (star <name>)))
 
            ;; Indicates for the build condition for the sensor is
            ;; available. This is a CPP expression. There may be
