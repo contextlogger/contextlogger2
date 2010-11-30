@@ -132,6 +132,14 @@ project must implement.
 
   (define-sensor-methods)
 
+  ;; Whether any tap sensor is enabled.
+  (define/public (with-tap-sensors.attr)
+    (or (doubletap-enabled.attr)))
+  
+  (define/public (use-qt-mobility.attr)
+    (or (light-enabled.attr)
+        (with-tap-sensors.attr)))
+  
   ;; --------------------------------------------------
   ;; features
   ;; --------------------------------------------------
@@ -160,10 +168,6 @@ project must implement.
   (define/public (feature-compress-logs.attr)
     #f)
 
-  (define/public (use-qt-mobility.attr)
-    (or (light-enabled.attr)
-        (tap-enabled.attr)))
-  
   )
 
 ;; --------------------------------------------------
@@ -181,7 +185,7 @@ project must implement.
   (define/override (mark-enabled.attr) #t)
   (define/override (timer-enabled.attr) #t)
   (define/override (light-enabled.attr) (send this with-qt-mobility.attr))
-  (define/override (tap-enabled.attr) (send this with-qt-mobility.attr))
+  (define/override (doubletap-enabled.attr) (send this with-qt-mobility.attr))
   )
 
 ;; --------------------------------------------------
@@ -364,7 +368,7 @@ project must implement.
   (define/override (smsevent-enabled.attr)
     #t)
 
-  (define/override (tap-enabled.attr)
+  (define/override (doubletap-enabled.attr)
     (and (send this with-qt-mobility.attr)
          (have-caps? '(ReadDeviceData))))
 

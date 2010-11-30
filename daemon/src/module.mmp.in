@@ -268,7 +268,7 @@ source sa_sensor_light_qt.cpp moc_sa_sensor_light_qt.cpp
 <% end %>
 source sa_sensor_list_log_db.c
 source sa_sensor_mark.c
-<% if $TAP_ENABLED %>
+<% if $WITH_TAP_SENSORS %>
 source sa_sensor_tap_qt.cpp moc_sa_sensor_tap_qt.cpp
 <% end %>
 //source sa_sensor_util_epoc.cpp

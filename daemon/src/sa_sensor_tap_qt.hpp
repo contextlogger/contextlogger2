@@ -3,7 +3,7 @@
 
 #include "application_config.h"
 
-#if __TAP_ENABLED__
+#if __WITH_TAP_SENSORS__
 
 #include "ac_app_context.h"
 
@@ -28,7 +28,7 @@ class Sensor_tap :
  private:
   LogDb* GetLogDb() const { return ac_LogDb(iAppContext); }
 
-  const char* Name() const { return "tap"; }
+  const char* Name() const { return "doubletap"; }
 
  private slots:
   void handleActiveChanged();
@@ -37,23 +37,23 @@ class Sensor_tap :
   void handleSensorError(int errCode);
 };
 
-#endif /* __TAP_ENABLED__ */
+#endif /* __WITH_TAP_SENSORS__ */
 
 // --------------------------------------------------
 // sensor array integration
 // --------------------------------------------------
 
 #if defined(SA_ARRAY_INTEGRATION)
-#if __TAP_ENABLED__
-#define DECLARE_SENSOR_tap Sensor_tap* iSensor_tap
-#define SENSOR_TAP_DESTROY DELETE_Z(self->iSensor_tap)
-#define SENSOR_TAP_CREATE sa_typical_qt_sensor_create(self->iSensor_tap = q_check_ptr(new Sensor_tap(self->ac)), "tap sensor initialization")
-#define SENSOR_TAP_START SENSOR_TAP_CREATE
-#define SENSOR_TAP_STOP SENSOR_TAP_DESTROY
-#define SENSOR_TAP_IS_RUNNING (self->iSensor_tap != NULL)
-#define SENSOR_TAP_RECONFIGURE(key, value) sa_reconfigure_ignore_all_keys
+#if __DOUBLETAP_ENABLED__
+#define DECLARE_SENSOR_doubletap Sensor_tap* iSensor_doubletap
+#define SENSOR_DOUBLETAP_DESTROY DELETE_Z(self->iSensor_doubletap)
+#define SENSOR_DOUBLETAP_CREATE sa_typical_qt_sensor_create(self->iSensor_doubletap = q_check_ptr(new Sensor_tap(self->ac)), "doubletap sensor initialization")
+#define SENSOR_DOUBLETAP_START SENSOR_DOUBLETAP_CREATE
+#define SENSOR_DOUBLETAP_STOP SENSOR_DOUBLETAP_DESTROY
+#define SENSOR_DOUBLETAP_IS_RUNNING (self->iSensor_doubletap != NULL)
+#define SENSOR_DOUBLETAP_RECONFIGURE(key, value) sa_reconfigure_ignore_all_keys
 #else
-#define DECLARE_SENSOR_tap
+#define DECLARE_SENSOR_doubletap
 #endif
 #endif /* SA_ARRAY_INTEGRATION */
 

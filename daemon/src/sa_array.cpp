@@ -146,7 +146,7 @@ extern "C" struct _sa_Array
   DECLARE_SENSOR_callstatus;
   DECLARE_SENSOR_cellid;
   DECLARE_SENSOR_light;
-  DECLARE_SENSOR_tap;
+  DECLARE_SENSOR_doubletap;
   DECLARE_SENSOR_smsevent;
   DECLARE_SENSOR_weburl;
 };

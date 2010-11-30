@@ -143,8 +143,8 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
               (binding (index 2) (type int) (value "level")))))
     
     ;; tap sensor (based on Qt Mobility)
-    (sensor (name tap)
-            (cpp-condition "__TAP_ENABLED__")
+    (sensor (name tap) (inactive #t)
+            (cpp-condition "__WITH_TAP_SENSORS__")
             (sql-schema "create table tap_scan (unixtime INTEGER, direction INTEGER, is_dbl INTEGER);")
             (sql-statements "insert into tap_scan (unixtime, direction, is_dbl) values (?, ?, ?);")
             (log-insert-api
@@ -154,6 +154,12 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
               (binding (index 2) (type int) (value "direction"))
               (binding (index 3) (type int) (value "isDouble"))
               )))
+
+;;    (sensor (name singletap)
+;;            (cpp-condition "__SINGLETAP_ENABLED__"))
+    
+    (sensor (name doubletap)
+            (cpp-condition "__DOUBLETAP_ENABLED__"))
     
     ;; weburl
     (sensor (name weburl)
