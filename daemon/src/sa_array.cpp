@@ -103,6 +103,7 @@
 #include "epoc-weburl.hpp"
 
 #include "sa_sensor_light_qt.hpp"
+#include "sa_sensor_proximity_qt.hpp"
 #include "sa_sensor_tap_qt.hpp"
 
 // This file is generated, and included only once here. Code for
@@ -147,6 +148,7 @@ extern "C" struct _sa_Array
   DECLARE_SENSOR_cellid;
   DECLARE_SENSOR_light;
   DECLARE_SENSOR_doubletap;
+  DECLARE_SENSOR_proximity;
   DECLARE_SENSOR_singletap;
   DECLARE_SENSOR_smsevent;
   DECLARE_SENSOR_weburl;

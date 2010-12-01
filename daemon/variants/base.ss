@@ -139,6 +139,7 @@ project must implement.
   
   (define/public (use-qt-mobility.attr)
     (or (light-enabled.attr)
+        (proximity-enabled.attr)
         (with-tap-sensors.attr)))
 
   ;; Whether to link against QtSensors and to build in our QtSensors
@@ -196,6 +197,7 @@ project must implement.
   (define/override (light-enabled.attr) (send this with-qt-mobility.attr))
   (define/override (singletap-enabled.attr) (send this with-qt-mobility.attr))
   (define/override (doubletap-enabled.attr) (send this with-qt-mobility.attr))
+  (define/override (proximity-enabled.attr) (send this with-qt-mobility.attr))
   )
 
 ;; --------------------------------------------------
@@ -368,6 +370,10 @@ project must implement.
     (have-caps? '(ReadDeviceData WriteDeviceData PowerMgmt ProtServ SwEvent)))
   
   (define/override (light-enabled.attr)
+    (and (send this with-qt-mobility.attr)
+         (have-caps? '(ReadDeviceData))))
+
+  (define/override (proximity-enabled.attr)
     (and (send this with-qt-mobility.attr)
          (have-caps? '(ReadDeviceData))))
 

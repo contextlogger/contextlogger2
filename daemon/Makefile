@@ -7,6 +7,7 @@ CC := gcc
 SRC_PATH := src
 APP_C_FILES := cf_query.c client-run.c config_db.c db_creation.c er_errors.c kr_controller.c libluasqlite3.c ld_create.c ld_log_db.c ld_logging.c main_posix.c rk_jabber_session.c rk_remokon.c sa_sensor_list_log_db.c sa_sensor_mark.c sa_sensor_timer.c up_shared.c up_uploader_curl.c ut_timer_libev.c utils_cl2.c
 APP_CXX_FILES := ac_app_context.cpp bb_blackboard.cpp cf_rcfile.cpp lua_bindings.cpp lua_cl2.cpp sa_array.cpp
+APP_QT_HEADERS := sa_qt_sensors.hpp sa_sensor_light_qt.hpp sa_sensor_proximity_qt.hpp sa_sensor_tap_qt.hpp
 
 SHARED_PATH := ../shared
 SHARED_C_FILES := error_list.c gx_maybe_string.c gxerror.c logging-time.c platform_error.c utilities.c
@@ -40,7 +41,6 @@ endif
 C_FILES := $(patsubst %, $(SRC_PATH)/%, $(APP_C_FILES)) $(patsubst %, $(SHARED_PATH)/common/%, $(SHARED_C_FILES)) $(patsubst %, $(TIMESPEC_PATH)/%, $(TIMESPEC_C_FILES)) $(FULL_IKSEMEL_C_FILES)
 CXX_FILES := $(patsubst %, $(SRC_PATH)/%, $(APP_CXX_FILES)) $(patsubst %, $(SHARED_PATH)/common/%, $(SHARED_CXX_FILES))
 
-APP_QT_HEADERS := sa_qt_sensors.hpp sa_sensor_light_qt.hpp sa_sensor_tap_qt.hpp
 APP_MOC_FILES := $(patsubst %.hpp,moc_%.cpp,$(APP_QT_HEADERS))
 QT_HEADERS := $(patsubst %, $(SRC_PATH)/%, $(APP_QT_HEADERS))
 MOC_FILES := $(patsubst %, $(SRC_PATH)/%, $(APP_MOC_FILES))

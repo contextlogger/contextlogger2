@@ -161,6 +161,16 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     (sensor (name doubletap)
             (cpp-condition "__DOUBLETAP_ENABLED__"))
     
+    ;; proximity sensor (based on Qt Mobility)
+    (sensor (name proximity)
+            (cpp-condition "__PROXIMITY_ENABLED__")
+            (sql-schema "create table proximity_scan (unixtime INTEGER, close INTEGER);")
+            (sql-statements "insert into proximity_scan (unixtime, close) values (?, ?);")
+            (log-insert-api
+             (args ,(arg (type 'gboolean) (name 'isClose)))
+             (bindings
+              (binding (index 2) (type int) (value "isClose")))))
+    
     ;; weburl
     (sensor (name weburl)
             (cpp-condition "__WEBURL_ENABLED__")
