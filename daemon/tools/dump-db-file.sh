@@ -45,6 +45,9 @@ sqlite3 $1 "select datetime(unixtime, 'unixepoch'), name from operator_scan;"
 echo PROFILE CHANGE
 sqlite3 $1 "select datetime(unixtime, 'unixepoch'), value, name from profile_scan;"
 
+echo PROXIMITY
+sqlite3 $1 "select datetime(unixtime, 'unixepoch'), close from proximity_scan;"
+
 echo SMS EVENT
 sqlite3 $1 "select datetime(unixtime, 'unixepoch'), evtype, number, contact_name from smsevent_scan;"
 
