@@ -6,6 +6,8 @@
 
 #include <qproximitysensor.h>
 
+// http://doc.qt.nokia.com/qtmobility-1.1.0/qproximitysensor.html
+
 Sensor_proximity::Sensor_proximity(ac_AppContext* aAppContext) :
   ClQtEventSensorBase(QProximitySensor::type, aAppContext)
 {

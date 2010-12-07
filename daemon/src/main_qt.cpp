@@ -2,11 +2,11 @@
 #include "er_errors.h"
 #include "kr_controller.h"
 
-#include <QApplication>
+#include <QtCore/QCoreApplication>
 
 int main(int argc, char *argv[])
 {
-  QApplication app(argc, argv);
+  QCoreApplication app(argc, argv);
 
   int errCode = cl2GlobalInit();
   if (errCode) {
