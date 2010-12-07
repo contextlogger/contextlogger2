@@ -1,163 +1,27 @@
-#include "up_private.h"
+#include "up_uploader_qt_private.hpp"
 
-#if __FEATURE_UPLOADER__
-
-#include "up_poster_epoc.hpp"
-
-#include "ac_app_context.h"
 #include "cf_query.h"
-#include "epoc-iap.h"
 #include "er_errors.h"
 #include "ld_log_db.h"
-#include "timer_generic_epoc.h"
 #include "utils_cl2.h"
 
 #include "moment_parser.h"
 
 #include "common/assertions.h"
-#include "common/epoc-time.h"
 #include "common/error_list.h"
 #include "common/logging-stack.h"
 #include "common/logging-time.h"
 #include "common/logging.h"
 #include "common/platform_error.h"
 
-#include <e32base.h>
-#include <e32std.h>
-#include <utf.h>
-
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-// --------------------------------------------------
-// controller class
-// --------------------------------------------------
-
-/***koog 
-(require codegen/symbian-cxx)
-(ctor-defines/spec
- "CUploader" ;; name
- "LogDb* aLogDb" ;; args
- "iLogDb(aLogDb)" ;; inits
- "" ;; ctor
- #t ;; ConstructL
-)
- ***/
-#define CTOR_DECL_CUploader  \
-public: static CUploader* NewLC(LogDb* aLogDb); \
-public: static CUploader* NewL(LogDb* aLogDb); \
-private: CUploader(LogDb* aLogDb); \
-private: void ConstructL();
-
-#define CTOR_IMPL_CUploader  \
-CUploader* CUploader::NewLC(LogDb* aLogDb) \
-{ \
-  CUploader* obj = new (ELeave) CUploader(aLogDb); \
-  CleanupStack::PushL(obj); \
-  obj->ConstructL(); \
-  return obj; \
-} \
- \
-CUploader* CUploader::NewL(LogDb* aLogDb) \
-{ \
-  CUploader* obj = CUploader::NewLC(aLogDb); \
-  CleanupStack::Pop(obj); \
-  return obj; \
-} \
- \
-CUploader::CUploader(LogDb* aLogDb) : iLogDb(aLogDb) \
-{}
-/***end***/
-
-// Controls a timer AO (based on RTimer) and a "poster" AO (based on
-// RHTTPSession). Our goal here is to have enough state that we can at
-// any given time inspect that state and decide what to do next. There
-// are essentially two strands of execution as well, one for the
-// snapshot timing, and one for the upload control.
-// 
-// Initially, we start the snapshot timer if there is any future time.
-// When the time is reached, we flag it as reached. Whenever a
-// snapshot is actually taken, we clear the reached flag, and set a
-// new timer as appropriate. The snapshot reached flag is also marked
-// when explicitly requested via the API.
-// 
-// Initially, we also check if there are any old files. If so, we keep
-// uploading them one by one until exhausted. We set the no more old
-// files flag at that point. If an upload fails, we wait for a bit
-// before a retry. When there are no more old files, we only do
-// uploads after a snapshot has been taken. A snapshot is never taken
-// while there are old files remaining.
-NONSHARABLE_CLASS(CUploader) : 
-  public CBase,
-  public MTimerObserver,
-  public MPosterObserver
-{
-  CTOR_DECL_CUploader;
-  
- public:
-  ~CUploader();
-
-  void RefreshIap(TBool aNotInitial);
-  void RefreshSnapshotTimeExpr(TBool aNotInitial);
-
-  void RequestSnapshot();
-
- private: // MTimerObserver
-  void HandleTimerEvent(CTimerAo* aTimerAo, TInt errCode);
-
- private: // MPosterObserver
-  void PosterEvent(TInt anError);
-
- private: // methods
-  void Inactivate();
-  void StateChanged();
-  void StateChangedL();
-  void NextOldFileL();
-  TInt CreatePosterAo();
-  void DestroyPosterAo();
-  TBool PosterAoIsActive() { return (iPosterAo && iPosterAo->IsActive()); }
-  void HandleCommsError(TInt errCode);
-  void PostNowL();
-  void SetPostTimer();
-  void SetSnapshotTimerL();
-  void TakeSnapshotNowL();
-  void FatalError(TInt anError);
-
- private: // property
-
-  LogDb* iLogDb; // not owned
-
-  TBool iNoConfig; // no upload URL
-  TPtrC8 iUploadUrl; // data not owned
-  TUint32 iIapId;
-
-  //// posting state
-  CPosterAo* iPosterAo;
-  CTimerAo* iPostTimerAo;
-  gchar* iFileToPost; // pathname of file to upload
-  TBool iNoOldFiles; // getNextOldLogFile found nothing
-  TInt iNumPostFailures; // affects retry timing
-
-  //// snapshot taking state
-  CTimerAo* iSnapshotTimerAo;
-  TBool iSnapshotTimePassed;
-  gchar* iSnapshotTimeExpr;
-  time_t iSnapshotTimeCtx;
-  TBool iNoNextSnapshotTime;
-
-  //// blackboard
- public:
-  void Set_uploads_allowed(TBool val);
- private:
-  TBool i_uploads_allowed; // from blackboard
-  bb_Closure iClosure;
-  void BbRegisterL();
-  void BbUnregister();
-
-};
-
-CTOR_IMPL_CUploader;
+#if defined(__SYMBIAN32__)
+#include "epoc-iap.h"
+#include "common/epoc-time.h"
+#endif /* __SYMBIAN32__ */
 
 static void DataChanged(bb_Blackboard* bb, enum bb_DataType dt,
 			gpointer data, int len, gpointer arg)
@@ -267,30 +131,6 @@ void CUploader::ConstructL()
     User::Leave(KErrGeneral);
   }
 
-  //CreatePosterAo();
-
-#if 0
-  // Test code with a single part post. Just to see if can actually connect somewhere.
-  if (iPosterAo) {
-    _LIT8(KRequestBody, "Hello World!");
-    iPosterAo->PostBufferL(iUploadUrl, KRequestBody);
-  }
-#endif
-#if 0
-  // Test code with a manually constructed multi part post.
-  if (iPosterAo) {
-    _LIT8(boundary, "-----AaB03xeql7dsxeql7ds");
-    _LIT8(KRequestBody, "-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"metadata\"; filename=\"metadata.json\"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n{\"log filename\": \"test_log.db\", \"time\": {\"timezone\": -7200, \"daylight\": true, \"altzone\": -10800, \"time\": 1247093454.8903401}}\r\n-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"logdata\"; filename=\"test_log.db\"\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: binary\r\n\r\nHello World!\r\n-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"logdata_submit\"\r\n\r\nUpload\r\n-------AaB03xeql7dsxeql7ds--\r\n");
-    iPosterAo->PostMultiPartBufferL(iUploadUrl, boundary, KRequestBody);
-  }
-#endif
-#if 0
-  // Test code with a file based post.
-  if (iPosterAo) {
-    _LIT(KFileName, "e:\\data\\atwink.png");
-    iPosterAo->PostFileL(iUploadUrl, KFileName);
-  }
-#endif
   iPostTimerAo = CTimerAo::NewL(*this, CActive::EPriorityStandard);
   iSnapshotTimerAo = CTimerAo::NewL(*this, CActive::EPriorityStandard);
   RefreshSnapshotTimeExpr(EFalse);
@@ -728,10 +568,10 @@ EXTERN_C gboolean up_Uploader_reconfigure(up_Uploader* object,
   return TRUE;
 }
 
-EXTERN_C up_Uploader* up_Uploader_new(ac_AppContext* aAppContext, GError** error)
+EXTERN_C up_Uploader* up_Uploader_new(LogDb* logDb, GError** error)
 {
   CUploader* object = NULL;
-  TRAPD(errCode, object = CUploader::NewL(ac_LogDb(aAppContext)));
+  TRAPD(errCode, object = CUploader::NewL(logDb));
   if (errCode) {
     if (error)
       *error = gx_error_new(domain_symbian, errCode, "Uploader init failure: %s (%d)", plat_error_strerror(errCode), errCode);
@@ -745,11 +585,7 @@ EXTERN_C void up_Uploader_destroy(up_Uploader* object)
   delete ((CUploader*)object);
 }
 
-#endif // __FEATURE_UPLOADER__
-
 /**
-
-up_uploader_epoc.cpp
 
 Copyright 2009 Helsinki Institute for Information Technology (HIIT)
 and the authors. All rights reserved.

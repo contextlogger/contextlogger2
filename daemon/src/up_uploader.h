@@ -5,7 +5,7 @@
 
 #if __FEATURE_UPLOADER__
 
-#include "ld_log_db.h"
+#include "ac_app_context.h"
 
 #include "common/error_list.h"
 
@@ -35,7 +35,7 @@ extern "C" {
   typedef void* up_Uploader; 
 #endif
 
-  up_Uploader* up_Uploader_new(LogDb* logDb, GError** error);
+  up_Uploader* up_Uploader_new(ac_AppContext* aAppContext, GError** error);
 
   void up_Uploader_destroy(up_Uploader* object);
 
