@@ -7,6 +7,10 @@
 
 #include <glib.h>
 
+#include <QFile>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
 #include <QTimer>
 
 class CUploader : 
@@ -35,9 +39,9 @@ class CUploader :
   void StateChanged();
   void StateChangedL();
   void NextOldFileL();
-  int CreatePosterAo();
+  void CreatePosterAoL();
   void DestroyPosterAo();
-  bool PosterAoIsActive() { return (iPosterAo && iPosterAo->IsActive()); }
+  bool PosterAoIsActive();
   void HandleCommsError(int errCode);
   void PostNowL();
   void SetPostTimer();
@@ -50,13 +54,14 @@ class CUploader :
   ac_AppContext* iAppContext; // not owned
 
   bool iNoConfig; // no upload URL
-  QByteArray iUploadUrl; // data not owned
 #if defined(__SYMBIAN32__)
   TUint32 iIapId;
 #endif /* __SYMBIAN32__ */
 
   //// posting state
-  CPosterAo* iPosterAo;
+  QNetworkAccessManager iNetworkAccessManager;
+  QNetworkRequest iNetworkRequest;
+  QNetworkReply* iNetworkReply;
   QTimer iPostTimerAo; // interval timer
   gchar* iFileToPost; // pathname of file to upload
   bool iNoOldFiles; // getNextOldLogFile found nothing
@@ -71,6 +76,7 @@ class CUploader :
 
  private:
   LogDb* GetLogDb() const { return ac_LogDb(iAppContext); }
+  QUrl GetUrl() const { return iNetworkRequest.url(); }
 
   //// blackboard
  public:

@@ -131,13 +131,18 @@ CUploader::CUploader(ac_AppContext* aAppContext) :
 		  "failure creating uploads directory");
   }
 
+  // Note that we might be able to use
+  // QNetworkRequest::setSslConfiguration to specify the SSL cert we
+  // want to use, even one that is not installed. This would ease
+  // deployment.
+
   const gchar* upload_url = ac_STATIC_GET(upload_url);
   if (!upload_url) {
     iNoConfig = true;
     logt("uploads disabled: no upload URL");
   } else {
-    iUploadUrl = upload_url;
     logg("upload URL: %s", upload_url);
+    iNetworkRequest.setUrl(QUrl(upload_url));
   }
 
   RefreshIap(false);
@@ -173,7 +178,7 @@ CUploader::~CUploader()
 
 void CUploader::Inactivate()
 {
-  if (iPosterAo) iPosterAo->Cancel(); //xxx
+  DestroyPosterAo();
   if (iSnapshotTimerAo.isActive()) 
     iSnapshotTimerAo.stop();
   if (iPostTimerAo.isActive()) 
@@ -300,6 +305,11 @@ void CUploader::handleSnapshotTimerEvent()
   StateChanged();
 }
 
+bool CUploader::PosterAoIsActive()
+{
+  return (iNetworkReply != NULL) && iNetworkReply->isRunning();
+}
+
 void CUploader::PosterEvent(int anError)
 {
   dblogg("poster reports %d", anError);
@@ -411,27 +421,27 @@ void CUploader::HandleCommsError(int anError)
     } // end switch
 }
 
-//xxx
-int CUploader::CreatePosterAo()
-{
-  assert(!iPosterAo);
-
-  TRAPD(errCode, iPosterAo = CPosterAo::NewL(*this, iIapId));
-  if (errCode) {
-    logg("poster creation failed with %d", errCode);
-  }
-
-  return errCode;
-}
-
-//xxx
 void CUploader::DestroyPosterAo()
 {
-  if (iPosterAo) {
-    delete iPosterAo;
-    iPosterAo = NULL;
-    logt("poster destroyed");
+  if (iNetworkReply) {
+    iNetworkReply->abort();
+    DELETE_Z(iNetworkReply);
   }
+}
+
+void CUploader::CreatePosterAoL()
+{
+  assert(!iNetworkReply);
+
+#if defined(__SYMBIAN32__)
+  // Requires Qt 4.7.
+  //QNetworkConfiguration cfg = iNetworkAccessManager.defaultConfiguration();
+  QList<QNetworkConfiguration> cfgList = iNetworkAccessManager.allConfigurations();
+  // We want to print out the list of configurations. Perhaps we can select one by platform specific ID, which we already have. xxx
+  //iNetworkAccessManager.setConfiguration(cfg);
+#endif /* __SYMBIAN32__ */
+
+  iNetworkReply = iNetworkAccessManager.post(iNetworkRequest, iIoDevice);
 }
 
 //xxx
@@ -439,13 +449,8 @@ void CUploader::PostNowL()
 {
   logt("trying to post file now");
 
-  if (!iPosterAo) {
-    int errCode = CreatePosterAo();
-    if (errCode) {
-      HandleCommsError(errCode);
-      return;
-    }
-  }
+  DestroyPosterAo();
+  CreatePosterAoL();
 
   TPtrC8 fileName((TUint8*)iFileToPost);
   TFileName fileNameDes;
