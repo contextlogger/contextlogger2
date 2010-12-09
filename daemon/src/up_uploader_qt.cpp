@@ -9,6 +9,7 @@
 
 #include "common/assertions.h"
 #include "common/error_list.h"
+#include "common/gx_exception.hpp"
 #include "common/logging-stack.h"
 #include "common/logging-time.h"
 #include "common/logging.h"
@@ -172,7 +173,7 @@ CUploader::~CUploader()
 {
   BbUnregister();
   DestroyPosterAo();
-  g_free(iFileToPost); // safe when NULL
+  delete iFileToPost;
   g_free(iSnapshotTimeExpr); // safe when NULL
 }
 
@@ -207,12 +208,13 @@ void CUploader::NextOldFileL()
 {
   if (iNoOldFiles) return;
 
-  g_free(iFileToPost); // safe when NULL
-  iFileToPost = NULL;
+  DELETE_Z(iFileToPost);
 
   GError* error = NULL;
-  if (getNextOldLogFile(&iFileToPost, &error)) {
-    if (iFileToPost) {
+  gchar* pathname = NULL;
+  if (getNextOldLogFile(&pathname, &error)) {
+    if (pathname) {
+      iFileToPost = q_check_ptr(new QFile(QString::fromUtf8(pathname)));
       return;
     } else {
       iNoOldFiles = true;
@@ -321,14 +323,15 @@ void CUploader::PosterEvent(int anError)
 	GError* localError = NULL;
 	//assert(iFileToPost);
 	//logg("removing file '%s'", iFileToPost);
-	if (!rm_file(iFileToPost, &localError)) {
+	const char* pathname = iFileToPost->fileName().toUtf8().data();
+	if (!rm_file(pathname, &localError)) {
 	  //logt("failure removing file");
 	  gx_txtlog_error_free(localError);
 	  FatalError(KErrGeneral);
 	} else {
-	  log_db_log_status(GetLogDb(), NULL, "posted log file '%s'", iFileToPost);
+	  log_db_log_status(GetLogDb(), NULL, "posted log file '%s'", pathname);
 	  iNumPostFailures = 0;
-	  iFileToPost = NULL;
+	  DELETE_Z(iFileToPost);
 
 	  {
 	    time_t t = TimeNow();
@@ -441,23 +444,31 @@ void CUploader::CreatePosterAoL()
   //iNetworkAccessManager.setConfiguration(cfg);
 #endif /* __SYMBIAN32__ */
 
-  iNetworkReply = iNetworkAccessManager.post(iNetworkRequest, iIoDevice);
+  //xxx honor compilation option indicating whether to compress the file
+
+  // xxx username/filename to iNetworkRequest.setHeader
+  // xxx multipart content, cannot pass file directly
+
+  assert(iFileName);
+  const char* pathname = iFileToPost->fileName().toUtf8().data();
+  dblogg("asking poster to post '%s'", pathname);
+
+  if (!iFileToPost->open(QIODevice::ReadOnly)) {
+    int errCode = iFileToPost->error;
+    gx_throw(gx_error_new(domain_qt, errCode, 
+			  "failed to open file '%s': QFile::FileError %d", 
+			  pathname, errCode));
+  }
+
+  // Note that the file object (or the file) may not be deleted until
+  // we get the finished() signal for this reply.
+  iNetworkReply = iNetworkAccessManager.post(iNetworkRequest, iFileToPost);
 }
 
-//xxx
 void CUploader::PostNowL()
 {
-  logt("trying to post file now");
-
   DestroyPosterAo();
   CreatePosterAoL();
-
-  TPtrC8 fileName((TUint8*)iFileToPost);
-  TFileName fileNameDes;
-  // Our names should all be ASCII, so this may be overkill.
-  User::LeaveIfError(CnvUtfConverter::ConvertToUnicodeFromUtf8(fileNameDes, fileName));
-  dblogg("asking poster to post '%s'", iFileToPost);
-  iPosterAo->PostFileL(iUploadUrl, fileNameDes);
 }
 
 void CUploader::TakeSnapshotNowL()
@@ -482,7 +493,8 @@ void CUploader::TakeSnapshotNowL()
 
   log_db_log_status(GetLogDb(), NULL, "snapshot taken as '%s'", pathname);
 
-  iFileToPost = pathname;
+  assert(!iFileToPost);
+  iFileToPost = q_check_ptr(new QFile(QString::fromUtf8(pathname)));
   iSnapshotTimePassed = false;
   StateChangedL();
 }

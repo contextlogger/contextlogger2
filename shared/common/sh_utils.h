@@ -66,6 +66,12 @@ class name \
 #define UNLESS_SYMBIAN_CXX(stmt) { stmt ; }
 #endif
 
+#ifdef __cplusplus
+#if !defined(__SYMBIAN32__)
+#define NONSHARABLE_CLASS(_name) class _name
+#endif /* __SYMBIAN32__ */
+#endif
+
 #endif /* __sh_utils_h__ */
 
 /**

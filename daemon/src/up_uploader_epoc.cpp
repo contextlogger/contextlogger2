@@ -479,6 +479,7 @@ void CUploader::PosterEvent(TInt anError)
 	} else {
 	  log_db_log_status(iLogDb, NULL, "posted log file '%s'", iFileToPost);
 	  iNumPostFailures = 0;
+	  g_free(iFileToPost);
 	  iFileToPost = NULL;
 
 	  {
@@ -685,6 +686,7 @@ void CUploader::TakeSnapshotNowL()
 
   log_db_log_status(iLogDb, NULL, "snapshot taken as '%s'", pathname);
 
+  assert(!iFileToPost);
   iFileToPost = pathname;
   iSnapshotTimePassed = EFalse;
   StateChangedL();

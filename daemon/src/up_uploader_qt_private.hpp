@@ -63,7 +63,7 @@ class CUploader :
   QNetworkRequest iNetworkRequest;
   QNetworkReply* iNetworkReply;
   QTimer iPostTimerAo; // interval timer
-  gchar* iFileToPost; // pathname of file to upload
+  QFile* iFileToPost; // pathname of file to upload
   bool iNoOldFiles; // getNextOldLogFile found nothing
   int iNumPostFailures; // affects retry timing
 
