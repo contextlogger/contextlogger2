@@ -23,6 +23,14 @@
 #include "common/epoc-time.h"
 #endif /* __SYMBIAN32__ */
 
+static time_t TimeNow()
+{
+  time_t now = time(NULL);
+  if (now == -1)
+    er_log_errno(er_FATAL, "time(NULL) failed");
+  return now;
+}
+
 static void DataChanged(bb_Blackboard* bb, enum bb_DataType dt,
 			gpointer data, int len, gpointer arg)
 {
@@ -30,11 +38,11 @@ static void DataChanged(bb_Blackboard* bb, enum bb_DataType dt,
   (void)len;
   CUploader* self = (CUploader*)arg;
   bb_Board* bd = bb_Blackboard_board(bb);
-  TBool val = bd->uploads_allowed;
+  bool val = bd->uploads_allowed;
   self->Set_uploads_allowed(val);
 }
 
-void CUploader::Set_uploads_allowed(TBool val)
+void CUploader::Set_uploads_allowed(bool val)
 {
   i_uploads_allowed = val;
   StateChanged();
@@ -55,7 +63,7 @@ void CUploader::BbRegisterL()
   if (!bb_Blackboard_register(bb,
 			      bb_dt_uploads_allowed,
 			      iClosure, NULL))
-    User::LeaveNoMemory();
+    throw std::badalloc();
 }
 
 void CUploader::BbUnregister()
@@ -68,15 +76,17 @@ void CUploader::BbUnregister()
 // 
 // We do logging here to make it possible to find out if the setting
 // change succeeded.
-void CUploader::RefreshIap(TBool aNotInitial)
+void CUploader::RefreshIap(bool aNotInitial)
 {
+#if defined(__SYMBIAN32__)
   // TUint32 coercion hopefully okay.
   iIapId = (TUint32)get_config_iap_id();
   if (aNotInitial)
-    log_db_log_status(iLogDb, NULL, "Uploader IAP changed to %d", iIapId);
+    log_db_log_status(GetLogDb(), NULL, "Uploader IAP changed to %d", iIapId);
+#endif /* __SYMBIAN32__ */
 }
 
-void CUploader::RefreshSnapshotTimeExpr(TBool aNotInitial)
+void CUploader::RefreshSnapshotTimeExpr(bool aNotInitial)
 {
   GError* localError = NULL;
   gchar* newOne = NULL;
@@ -84,7 +94,7 @@ void CUploader::RefreshSnapshotTimeExpr(TBool aNotInitial)
 			&newOne, __UPLOAD_TIME_EXPR__, 
 			&localError)) {
     if (aNotInitial)
-      gx_dblog_error_free_check(iLogDb, localError, NULL);
+      gx_dblog_error_free_check(GetLogDb(), localError, NULL);
     else
       gx_error_free(localError);
   } else {
@@ -94,7 +104,7 @@ void CUploader::RefreshSnapshotTimeExpr(TBool aNotInitial)
     logt("got time expression");
     logt(iSnapshotTimeExpr);
     if (aNotInitial) {
-      log_db_log_status(iLogDb, NULL, "Upload time expression set to '%s'",
+      log_db_log_status(GetLogDb(), NULL, "Upload time expression set to '%s'",
 			newOne);
 
       // We may need to recompute the next snapshot time based on the
@@ -102,40 +112,48 @@ void CUploader::RefreshSnapshotTimeExpr(TBool aNotInitial)
       // passed, then that is not affected by the expression change.
       // What is past is past.
       {
-	iSnapshotTimerAo->Cancel();
-	iNoNextSnapshotTime = EFalse;
+	if (iSnapshotTimerAo.isActive())
+	  iSnapshotTimerAo.stop();
+	iNoNextSnapshotTime = false;
 	StateChanged();
       }
     }
   }
 }
 
-void CUploader::ConstructL()
+CUploader::CUploader(ac_AppContext* aAppContext) :
+  iAppContext(aAppContext)
 {
-  const gchar* upload_url = ac_STATIC_GET(upload_url);
-  if (!upload_url) {
-    iNoConfig = ETrue;
-    logt("uploads disabled: no upload URL");
-  } else {
-    iUploadUrl.Set((TUint8*)upload_url, strlen(upload_url)); 
-    logg("upload URL: %s", upload_url);
-  }
-
-  RefreshIap(EFalse);
-  logg("uploader using IAP %d", iIapId);
-
   // Ensure that uploads directory exists.
   GError* mdError = NULL;
   if (!mkdir_p(LOG_UPLOADS_DIR, &mdError)) {
-    gx_txtlog_error_free(mdError);
-    User::Leave(KErrGeneral);
+    er_log_gerror(er_FATAL|er_FREE, mdError, 
+		  "failure creating uploads directory");
   }
 
-  iPostTimerAo = CTimerAo::NewL(*this, CActive::EPriorityStandard);
-  iSnapshotTimerAo = CTimerAo::NewL(*this, CActive::EPriorityStandard);
-  RefreshSnapshotTimeExpr(EFalse);
-  iSnapshotTimeCtx = time(NULL); //xxx needs to come from ConfigDb -- but actually ones the next time is computed by a Lua expression, that expression can contain any required fixpoint as a constant
-  if (iSnapshotTimeCtx == -1) User::Leave(KErrGeneral);
+  const gchar* upload_url = ac_STATIC_GET(upload_url);
+  if (!upload_url) {
+    iNoConfig = true;
+    logt("uploads disabled: no upload URL");
+  } else {
+    iUploadUrl = upload_url;
+    logg("upload URL: %s", upload_url);
+  }
+
+  RefreshIap(false);
+#if defined(__SYMBIAN32__)
+  logg("uploader using IAP %d", iIapId);
+#endif /* __SYMBIAN32__ */
+
+  iPostTimerAo.setSingleShot(true);
+  iSnapshotTimerAo.setSingleShot(true);
+  connect(&iPostTimerAo, SIGNAL(timeout()), 
+	  this, SLOT(handlePosterTimerEvent()));
+  connect(&iSnapshotTimerAo, SIGNAL(timeout()), 
+	  this, SLOT(handleSnapshotTimerEvent()));
+
+  RefreshSnapshotTimeExpr(false);
+  iSnapshotTimeCtx = TimeNow();
   //logg("using snapshot time '%s'", iSnapshotTimeExpr);
 
   // Note that if this ConstructL() leaves, the dtor of this will
@@ -148,8 +166,6 @@ void CUploader::ConstructL()
 CUploader::~CUploader()
 {
   BbUnregister();
-  delete iPostTimerAo;
-  delete iSnapshotTimerAo;
   DestroyPosterAo();
   g_free(iFileToPost); // safe when NULL
   g_free(iSnapshotTimeExpr); // safe when NULL
@@ -157,22 +173,29 @@ CUploader::~CUploader()
 
 void CUploader::Inactivate()
 {
-  if (iPosterAo) iPosterAo->Cancel();
-  if (iSnapshotTimerAo) iSnapshotTimerAo->Cancel();
-  if (iPostTimerAo) iPostTimerAo->Cancel();
+  if (iPosterAo) iPosterAo->Cancel(); //xxx
+  if (iSnapshotTimerAo.isActive()) 
+    iSnapshotTimerAo.stop();
+  if (iPostTimerAo.isActive()) 
+    iPostTimerAo.stop();
 }
 
-void CUploader::FatalError(TInt errCode)
+void CUploader::FatalError(const std::exception &ex)
 {
   Inactivate();
-  ex_dblog_fatal_error(iLogDb, errCode);
+  er_log_none(er_FATAL, "error in uploader: %s", ex.what());
 }
+
+#define CATCH_FATAL(_act)			\
+  try {						\
+    _act ;					\
+  } catch (const std::exception &_ex) {		\
+    FatalError(_ex);				\
+  }
 
 void CUploader::StateChanged()
 {
-  TRAPD(errCode, StateChangedL());
-  if (errCode)
-    FatalError(errCode);
+  CATCH_FATAL(StateChangedL());
 }
 
 void CUploader::NextOldFileL()
@@ -187,7 +210,7 @@ void CUploader::NextOldFileL()
     if (iFileToPost) {
       return;
     } else {
-      iNoOldFiles = ETrue;
+      iNoOldFiles = true;
       dblogt("no more old files to upload");
     }
   } else {
@@ -198,9 +221,17 @@ void CUploader::NextOldFileL()
 // External API.
 void CUploader::RequestSnapshot()
 {
-  iSnapshotTimePassed = ETrue;
-  iSnapshotTimerAo->Cancel();
+  iSnapshotTimePassed = true;
+  if (iSnapshotTimerAo.isActive())
+    iSnapshotTimerAo.stop();
   StateChanged();
+}
+
+static int SecsToMsecs(int secs)
+{
+  long long ms64 = (long long)(secs) * 1000LL;
+  if (ms64 > 0x7fffffffLL) ms64 = 0x7fffffffLL;
+  return (int)ms64;
 }
 
 // Computes next snapshot time (if any), and sets a timer for it as
@@ -208,100 +239,68 @@ void CUploader::RequestSnapshot()
 void CUploader::SetSnapshotTimerL()
 {
   assert(!iSnapshotTimePassed);
-  iSnapshotTimerAo->Cancel();
-  if (iNoNextSnapshotTime) return; // flag to avoid needless computation
-  time_t now = time(NULL);
-  if (now == -1)
-    User::Leave(KErrGeneral);
+  if (iSnapshotTimerAo.isActive())
+    iSnapshotTimerAo.stop();
+  if (iNoNextSnapshotTime) 
+    return; // flag to avoid needless computation
+  time_t now = TimeNow();
   time_t ctx = iSnapshotTimeCtx;
-  time_t snaptime;
+  time_t snaptime; // xxx should perhaps store this and use multiple interval timer requests if necessary to get this far
   GError* parseError = NULL;
   if (!parse_moment(iSnapshotTimeExpr, ctx, now, &snaptime, &parseError)) {
-    gx_txtlog_error_free(parseError);
-    iNoNextSnapshotTime = ETrue;
+    gx_dblog_error_free(parseError);
+    iNoNextSnapshotTime = true;
     return;
   }
   if (!snaptime) {
     dblogt("no snapshot time upcoming");
-    iNoNextSnapshotTime = ETrue;
+    iNoNextSnapshotTime = true;
     return;
   }
   logt("next snapshot time computed");
   log_time(snaptime);
-  // Note that RTimer At and AtUTC often return with a KErrAbort in
-  // current phones. Still, here we definitely want to be using
-  // absolute times. http://www.newlc.com/en/topic-5076
-  // http://wiki.forum.nokia.com/index.php/TSS000261_-_Timer_issues_and_tips
-  TTime epocTime;
-#if 1
-  UnixTimeToUtcEpocTime(epocTime, snaptime);
-  iSnapshotTimerAo->AtUTC(epocTime);
-#else
-  UnixTimeToLocalEpocTime(epocTime, snaptime);
-  iSnapshotTimerAo->At(epocTime);
-#endif
+
+  // We must specify time interval in milliseconds. For long time
+  // intervals we might get an overflow. Another reason to use an
+  // absolute timer where possible.
+  int diffTime = snaptime - now; // both in UTC  //xxx negative?
+  diffTime = SecsToMsecs(diffTime);
+  if (diffTime < 5000) diffTime = 5000; // ensure some sanity
+  logg("snapshot %d msecs from now", diffTime);
+  iSnapshotTimerAo.start(diffTime);
 }
 
 void CUploader::SetPostTimer()
 {
   assert(iNumPostFailures > 0);
 
-  iPostTimerAo->Cancel();
+  if (iPostTimerAo.isActive())
+    iPostTimerAo.stop();
 
-  // Roughly num_failures * 5 mins.     xxx perhaps this should be computed by a Lua function coming from ConfigDb
+  // Roughly num_failures * 5 mins.
   int secs = 5 * 60 * iNumPostFailures + (rand() % 60);
-  TTimeIntervalMicroSeconds32 interval = SecsToUsecs(secs);
-  dblogg("retrying upload in %d secs / %d usecs", secs, interval.Int());
+  int interval = SecsToMsecs(secs);
+  dblogg("retrying upload in %d secs / %d msecs", secs, interval);
 
-  // Note that these timers should not complete with KErrAbort, since
-  // a wait for an interval should not be affected by a system time
-  // change.
-  iPostTimerAo->After(interval);
+  iPostTimerAo.start(interval);
 }
 
 // Make sure this method does not leave.
-void CUploader::HandleTimerEvent(CTimerAo* aTimerAo, TInt errCode)
+void CUploader::handlePosterTimerEvent()
 {
-  logg("timer event (%d)", errCode);
-
-  if (errCode == KErrAbort) {
-    // System time changed. We should recompute the snapshot time, as
-    // this may not be just a time zone change, but also the UTC time
-    // may have been changed. Normally though the changes are trivial,
-    // and frequent changes are often caused by network-based time
-    // updates.
-    logt("system time changed");
-    assert(aTimerAo == iSnapshotTimerAo); // should be only for At timers
-    iNoNextSnapshotTime = EFalse; // not sure of this anymore
-    StateChanged(); // go recompute the time and set the timer again
-    return;
-  }
-
-  if (errCode == KErrUnderflow) {
-    // This is quite possible. We might compute a time that is a
-    // fraction of a second later, and by the time we got to asking
-    // for a timer event the time might have just passed. This is
-    // okay.
-    assert(aTimerAo == iSnapshotTimerAo); // our After intervals should not be negative
-    logt("expiration time in the past");
-    errCode = KErrNone;
-  }
-
-  if (errCode) {
-    FatalError(errCode);
-  } else if (aTimerAo == iPostTimerAo) {
-    logt("was posting timer");
-    StateChanged();
-  } else if (aTimerAo == iSnapshotTimerAo) {
-    logt("was snapshot timer");
-    iSnapshotTimePassed = ETrue;
-    StateChanged();
-  } else {
-    assert(0);
-  }
+  logt("posting timer event");
+  StateChanged();
 }
 
-void CUploader::PosterEvent(TInt anError)
+// Make sure this method does not leave.
+void CUploader::handleSnapshotTimerEvent()
+{
+  logt("snapshot timer event");
+  iSnapshotTimePassed = true;
+  StateChanged();
+}
+
+void CUploader::PosterEvent(int anError)
 {
   dblogg("poster reports %d", anError);
 
@@ -317,16 +316,12 @@ void CUploader::PosterEvent(TInt anError)
 	  gx_txtlog_error_free(localError);
 	  FatalError(KErrGeneral);
 	} else {
-	  log_db_log_status(iLogDb, NULL, "posted log file '%s'", iFileToPost);
+	  log_db_log_status(GetLogDb(), NULL, "posted log file '%s'", iFileToPost);
 	  iNumPostFailures = 0;
 	  iFileToPost = NULL;
 
 	  {
-	    time_t t = time(NULL);
-	    if (t == -1) {
-	      er_log_errno(er_FATAL, "time()");
-	      return;
-	    }
+	    time_t t = TimeNow();
 	    ac_global_Registry->last_upload_time = t;
 	  }
 
@@ -359,7 +354,7 @@ void CUploader::PosterEvent(TInt anError)
 }
 
 // Called to handle poster creation and poster request errors.
-void CUploader::HandleCommsError(TInt anError)
+void CUploader::HandleCommsError(int anError)
 {
   // Some errors are more severe than others.
   switch (anError)
@@ -416,47 +411,8 @@ void CUploader::HandleCommsError(TInt anError)
     } // end switch
 }
 
-// Better by careful not to run out of stack calling this recursively.
-// Can always use an "ImmediateAo" if necessary to avoid such a risk.
-void CUploader::StateChangedL()
-{
-  if (iNoConfig)
-    return;
-
-  if (!iSnapshotTimePassed &&
-      !iNoNextSnapshotTime &&
-      !iSnapshotTimerAo->IsActive()) {
-    SetSnapshotTimerL();
-  }
-
- again:
-  if (iFileToPost) {
-    if (PosterAoIsActive() || 
-	// 'iPostTimerAo' is a post retry timer.
-	iPostTimerAo->IsActive())
-      return;
-    if (i_uploads_allowed) {
-      PostNowL(); // not called elsewhere
-    } else {
-      DestroyPosterAo(); // make sure no connection remains
-    }
-  } else if (!iNoOldFiles) {
-    NextOldFileL();
-    goto again;
-  } else if (iSnapshotTimePassed) {
-    TakeSnapshotNowL(); // not called elsewhere
-  } else {
-    // Have nothing to post for now. This will see to it that we close
-    // any connection that we do not require. With some operators,
-    // with no fixed data, merely keeping an RConnection open incurs
-    // an hourly charge (minimum charge per hour), and there is a
-    // battery hit as well, and possible interference with phone calls
-    // and such.
-    DestroyPosterAo();
-  }
-}
-
-TInt CUploader::CreatePosterAo()
+//xxx
+int CUploader::CreatePosterAo()
 {
   assert(!iPosterAo);
 
@@ -468,6 +424,7 @@ TInt CUploader::CreatePosterAo()
   return errCode;
 }
 
+//xxx
 void CUploader::DestroyPosterAo()
 {
   if (iPosterAo) {
@@ -477,18 +434,13 @@ void CUploader::DestroyPosterAo()
   }
 }
 
+//xxx
 void CUploader::PostNowL()
 {
-  // For error handling testing.
-#if 0
-  logt("horrible test error");
-  User::Leave(KErrTotalLossOfPrecision);
-#endif
-
   logt("trying to post file now");
 
   if (!iPosterAo) {
-    TInt errCode = CreatePosterAo();
+    int errCode = CreatePosterAo();
     if (errCode) {
       HandleCommsError(errCode);
       return;
@@ -516,18 +468,58 @@ void CUploader::TakeSnapshotNowL()
   
   gboolean wasRenamed = FALSE;
   GError* snapError = NULL;
-  if (!log_db_take_snapshot(iLogDb, pathname, &wasRenamed, &snapError)) {
+  if (!log_db_take_snapshot(GetLogDb(), pathname, &wasRenamed, &snapError)) {
     logg("failure taking snapshot to file '%s'", pathname);
     free(pathname);
     logg("snapshot file was%s created", wasRenamed ? "" : " not");
     er_log_gerror(er_FATAL|er_FREE, snapError, "taking snapshot");
   }
 
-  log_db_log_status(iLogDb, NULL, "snapshot taken as '%s'", pathname);
+  log_db_log_status(GetLogDb(), NULL, "snapshot taken as '%s'", pathname);
 
   iFileToPost = pathname;
-  iSnapshotTimePassed = EFalse;
+  iSnapshotTimePassed = false;
   StateChangedL();
+}
+
+// Better by careful not to run out of stack calling this recursively.
+// Can always use an "ImmediateAo" if necessary to avoid such a risk.
+void CUploader::StateChangedL()
+{
+  if (iNoConfig)
+    return;
+
+  if (!iSnapshotTimePassed &&
+      !iNoNextSnapshotTime &&
+      !iSnapshotTimerAo.isActive()) {
+    SetSnapshotTimerL();
+  }
+
+ again:
+  if (iFileToPost) {
+    if (PosterAoIsActive() || 
+	// 'iPostTimerAo' is a post retry timer.
+	iPostTimerAo.isActive())
+      return;
+    if (i_uploads_allowed) {
+      PostNowL(); // not called elsewhere
+    } else {
+      DestroyPosterAo(); // make sure no connection remains
+    }
+  } else if (!iNoOldFiles) {
+    NextOldFileL();
+    goto again;
+  } else if (iSnapshotTimePassed) {
+    TakeSnapshotNowL(); // not called elsewhere
+  } else {
+    // Have nothing to post for now. This will see to it that we close
+    // any connection that we do not require. With some operators,
+    // with no fixed data, merely keeping an RConnection open incurs
+    // an hourly charge (minimum charge per hour), and there is a
+    // battery hit as well, and possible interference with phone calls
+    // and such.
+    DestroyPosterAo();
+  }
 }
 
 // --------------------------------------------------
@@ -568,13 +560,14 @@ EXTERN_C gboolean up_Uploader_reconfigure(up_Uploader* object,
   return TRUE;
 }
 
-EXTERN_C up_Uploader* up_Uploader_new(LogDb* logDb, GError** error)
+EXTERN_C up_Uploader* up_Uploader_new(ac_AppContext* aAppContext, GError** error)
 {
   CUploader* object = NULL;
-  TRAPD(errCode, object = CUploader::NewL(logDb));
-  if (errCode) {
+  try {
+    object = q_check_ptr(new CUploader(aAppContext));
+  } catch (const std::exception &ex) {
     if (error)
-      *error = gx_error_new(domain_symbian, errCode, "Uploader init failure: %s (%d)", plat_error_strerror(errCode), errCode);
+      *error = gx_error_new(domain_qt, -1, "Uploader init failure: %s", ex.what());
     return NULL;
   }
   return (up_Uploader*)object;

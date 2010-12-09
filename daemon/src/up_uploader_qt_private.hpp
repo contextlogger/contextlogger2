@@ -5,6 +5,10 @@
 
 #include "ac_app_context.h"
 
+#include <glib.h>
+
+#include <QTimer>
+
 class CUploader : 
   public QObject
 {
@@ -14,63 +18,68 @@ class CUploader :
   CUploader(ac_AppContext* aAppContext);
   ~CUploader();
 
-  void RefreshIap(TBool aNotInitial);
-  void RefreshSnapshotTimeExpr(TBool aNotInitial);
+  void RefreshIap(bool aNotInitial);
+  void RefreshSnapshotTimeExpr(bool aNotInitial);
 
   void RequestSnapshot();
 
- private: // MTimerObserver
-  void HandleTimerEvent(CTimerAo* aTimerAo, TInt errCode);
+ private slots:
+  void handlePosterTimerEvent();
+  void handleSnapshotTimerEvent();
 
  private: // MPosterObserver
-  void PosterEvent(TInt anError);
+  void PosterEvent(int anError);
 
  private: // methods
   void Inactivate();
   void StateChanged();
   void StateChangedL();
   void NextOldFileL();
-  TInt CreatePosterAo();
+  int CreatePosterAo();
   void DestroyPosterAo();
-  TBool PosterAoIsActive() { return (iPosterAo && iPosterAo->IsActive()); }
-  void HandleCommsError(TInt errCode);
+  bool PosterAoIsActive() { return (iPosterAo && iPosterAo->IsActive()); }
+  void HandleCommsError(int errCode);
   void PostNowL();
   void SetPostTimer();
   void SetSnapshotTimerL();
   void TakeSnapshotNowL();
-  void FatalError(TInt anError);
+  void FatalError(const std::exception &ex);
 
  private: // property
 
-  LogDb* iLogDb; // not owned
+  ac_AppContext* iAppContext; // not owned
 
-  TBool iNoConfig; // no upload URL
-  TPtrC8 iUploadUrl; // data not owned
+  bool iNoConfig; // no upload URL
+  QByteArray iUploadUrl; // data not owned
+#if defined(__SYMBIAN32__)
   TUint32 iIapId;
+#endif /* __SYMBIAN32__ */
 
   //// posting state
   CPosterAo* iPosterAo;
-  CTimerAo* iPostTimerAo;
+  QTimer iPostTimerAo; // interval timer
   gchar* iFileToPost; // pathname of file to upload
-  TBool iNoOldFiles; // getNextOldLogFile found nothing
-  TInt iNumPostFailures; // affects retry timing
+  bool iNoOldFiles; // getNextOldLogFile found nothing
+  int iNumPostFailures; // affects retry timing
 
   //// snapshot taking state
-  CTimerAo* iSnapshotTimerAo;
-  TBool iSnapshotTimePassed;
+  QTimer iSnapshotTimerAo; // absolute timer (not really, but we would prefer one, may have to implement an abstraction, and internally use an absolute timer where available, otherwise defaulting to QTimer based impl xxx)
+  bool iSnapshotTimePassed;
   gchar* iSnapshotTimeExpr;
   time_t iSnapshotTimeCtx;
-  TBool iNoNextSnapshotTime;
+  bool iNoNextSnapshotTime;
+
+ private:
+  LogDb* GetLogDb() const { return ac_LogDb(iAppContext); }
 
   //// blackboard
  public:
-  void Set_uploads_allowed(TBool val);
+  void Set_uploads_allowed(bool val);
  private:
-  TBool i_uploads_allowed; // from blackboard
+  bool i_uploads_allowed; // from blackboard
   bb_Closure iClosure;
   void BbRegisterL();
   void BbUnregister();
-
 };
 
 #endif /* __up_uploader_qt_private_hpp__ */

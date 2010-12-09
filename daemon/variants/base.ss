@@ -161,10 +161,15 @@ project must implement.
     #t)
 
   (define/public (feature-uploader.attr)
-    (eq? (platform) 'symbian))
+    (or (eq? (platform) 'symbian)
+        (and (eq? (platform) 'linux)
+             (with-qt.attr))))
 
   (define/public (upload-with-curl.attr)
     #f)
+
+  (define/public (upload-with-qt.attr)
+    (eq? (platform) 'linux))
 
   (define/public (feature-localserver.attr)
     (eq? (platform) 'symbian))
