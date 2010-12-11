@@ -1,39 +1,40 @@
-#include "client-run.h"
-#include "er_errors.h"
-#include "kr_controller.h"
+#ifndef __iodeviceseq_qt_hpp__
+#define __iodeviceseq_qt_hpp__
 
-#include <QtCore/QCoreApplication>
-#include <QtGlobal>
+#include <QIODevice>
+#include <QList>
+#include <QListIterator>
 
-int main(int argc, char *argv[])
+// A composition of QIODevices, itself a QIODevice.
+// Sequentially reads data from each of the devices.
+// http://doc.qt.nokia.com/latest/qiodevice.html
+class QIODeviceSeq :
+  public QIODevice
 {
-  QCoreApplication app(argc, argv);
+  Q_OBJECT
 
-  int errCode = cl2GlobalInit();
-  if (errCode) {
-    logt("global init failed");
-    return 1;
-  }
+ public:
+  // Note that QList is a shared class, and hence passing like this is
+  // efficient. Note that both QFile and QBuffer are subclasses of
+  // QIODevice. Ownership of list elements is not taken. Devices must
+  // be initialized and ready for reading.
+  QIODeviceSeq(const QList<QIODevice*>& aList);
+  ~QIODeviceSeq();
 
-  logg("compiled against Qt %s", QT_VERSION_STR);
-  logg("running with Qt %s", qVersion());
-  
-  GError* localError = NULL;
-  kr_Controller* controller = kr_Controller_new(&localError);
-  if (!controller) {
-    logt("controller init failed");
-    gx_txtlog_error_free(localError);
-    return 2;
-  }
+ private:
+  QList<QIODevice*> iList;
+  QListIterator<QIODevice*> iIterator;
+  QIODevice* iDevice;
+  bool iAtEnd;
 
-  if (!kr_Controller_start(controller, &localError)) {
-    logt("controller start failed");
-    gx_txtlog_error_free(localError);
-    return 3;
-  }
+public: // QIODevice
+  virtual bool isSequential() const;
+  virtual qint64 readData(char *data, qint64 maxlen);
+  virtual qint64 writeData(const char *data, qint64 len);
+  virtual bool atEnd() const;
+};
 
-  return app.exec();
-}
+#endif /* __iodeviceseq_qt_hpp__ */
 
 /**
 

@@ -22,6 +22,10 @@ SOURCES += ac_app_context.cpp bb_blackboard.cpp cf_rcfile.cpp lua_bindings.cpp l
 SOURCES += error_list.c gx_maybe_string.c gxerror.c logging-time.c platform_error.c utilities.c
 SOURCES += assertions_cxx.cpp logging.cpp utilities_cxx.cpp
 SOURCES += moment_parser.c time_utils.c
+WITH_QT {
+  SOURCES += iodeviceseq_qt.cpp
+  HEADERS += iodeviceseq_qt.hpp
+}
 DEFINES += G_DISABLE_DEPRECATED
 !LUA_FROM_SOURCE {
   INCLUDEPATH += /usr/include/lua5.1

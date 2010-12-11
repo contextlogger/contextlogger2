@@ -8,6 +8,7 @@
 #include <glib.h>
 
 #include <QFile>
+#include <QIODevice>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>

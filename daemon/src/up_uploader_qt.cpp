@@ -24,6 +24,10 @@
 #include "common/epoc-time.h"
 #endif /* __SYMBIAN32__ */
 
+// --------------------------------------------------
+// CUploader
+// --------------------------------------------------
+
 static time_t TimeNow()
 {
   time_t now = time(NULL);

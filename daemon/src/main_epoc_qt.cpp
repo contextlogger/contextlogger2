@@ -21,8 +21,8 @@
 
 #include <estlib.h> // __crt0
 
-#include <qglobal.h> // QT_TRYCATCH_LEAVING
 #include <QtCore/QCoreApplication>
+#include <QtGlobal>
 #include <QTimer>
 
 #include <stdlib.h> // abort
@@ -122,6 +122,9 @@ static TInt QtMainE(int argc, char *argv[], char *envp[])
     logt("error in global init");
     goto gifail;
   }
+
+  logg("compiled against Qt %s", QT_VERSION_STR);
+  logg("running with Qt %s", qVersion());
 
   logg("argc is %d", argc);
   for (int i=0; i<argc; i++)
