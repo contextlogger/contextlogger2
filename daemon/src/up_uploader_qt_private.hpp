@@ -4,9 +4,11 @@
 #include "up_private.h"
 
 #include "ac_app_context.h"
+#include "iodeviceseq_qt.hpp"
 
 #include <glib.h>
 
+#include <QBuffer>
 #include <QFile>
 #include <QIODevice>
 #include <QNetworkAccessManager>
@@ -64,9 +66,14 @@ class CUploader :
   QNetworkRequest iNetworkRequest;
   QNetworkReply* iNetworkReply;
   QTimer iPostTimerAo; // interval timer
-  QFile* iFileToPost; // pathname of file to upload
   bool iNoOldFiles; // getNextOldLogFile found nothing
   int iNumPostFailures; // affects retry timing
+
+  QFile* iFileToPost; // pathname of file to upload
+  QBuffer* iPrologue;
+  QBuffer* iEpilogue;
+  QList<QIODevice*> iPostElems;
+  QIODeviceSeq* iPostData;
 
   //// snapshot taking state
   QTimer iSnapshotTimerAo; // absolute timer (not really, but we would prefer one, may have to implement an abstraction, and internally use an absolute timer where available, otherwise defaulting to QTimer based impl xxx)
@@ -74,6 +81,10 @@ class CUploader :
   gchar* iSnapshotTimeExpr;
   time_t iSnapshotTimeCtx;
   bool iNoNextSnapshotTime;
+
+ private slots:
+  //void 	postingError ( QNetworkReply::NetworkError code );
+  void 	postingFinished();
 
  private:
   LogDb* GetLogDb() const { return ac_LogDb(iAppContext); }

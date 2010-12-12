@@ -1,11 +1,8 @@
 #ifndef __up_uploader_h__
 #define __up_uploader_h__
 
-#include "application_config.h"
-
-#if __FEATURE_UPLOADER__
-
 #include "ac_app_context.h"
+#include "application_config.h"
 
 #include "common/error_list.h"
 
@@ -54,8 +51,6 @@ extern "C" {
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
-
-#endif // __FEATURE_UPLOADER__
 
 #endif /* __up_uploader_h__ */
 

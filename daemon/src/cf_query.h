@@ -43,7 +43,7 @@ extern "C" {
   // instead sets it to strdup'ed copy of "default_s" (except if
   // "default_s" itself is NULL).
   gboolean get_ConfigDb_str(const gchar* name, gchar** s, 
-			    gchar* default_s, GError** error);
+			    const gchar* default_s, GError** error);
 
   int get_config_iap_id();
 

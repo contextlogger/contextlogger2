@@ -3,9 +3,7 @@
 
 #include "up_uploader.h"
 
-#if __FEATURE_UPLOADER__
-
-#include "application_config.h"
+#include <glib.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -17,8 +15,6 @@ gboolean getNextOldLogFile(gchar** pathname,
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
-
-#endif // __FEATURE_UPLOADER__
 
 #endif /* __up_private_h__ */
 

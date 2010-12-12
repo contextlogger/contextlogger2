@@ -1,7 +1,5 @@
 #include "up_private.h"
 
-#if __FEATURE_UPLOADER__
-
 #include "ac_app_context.h"
 
 #include "common/assertions.h"
@@ -42,17 +40,15 @@ gboolean getNextOldLogFile(gchar** pathname,
   g_dir_close(dir);
   return TRUE;
 
+#if HAVE_TRAP_OOM
  fail:
   if (dir) g_dir_close(dir);
   if (error) *error = gx_error_no_memory;
   return FALSE;
+#endif
 }
 
-#endif // __FEATURE_UPLOADER__
-
 /**
-
-up_shared.c
 
 Copyright 2009 Helsinki Institute for Information Technology (HIIT)
 and the authors. All rights reserved.

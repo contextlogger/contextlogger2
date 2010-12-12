@@ -251,7 +251,7 @@ gboolean try_get_ConfigDb_str(const gchar* name, gchar** s, GError** error)
 }
 
 gboolean get_ConfigDb_str(const gchar* name, gchar** s, 
-			  gchar* default_s, GError** error)
+			  const gchar* default_s, GError** error)
 {
   if (!try_get_ConfigDb_str(name, s, error)) {
     return FALSE;

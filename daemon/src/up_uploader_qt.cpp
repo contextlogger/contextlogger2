@@ -3,6 +3,7 @@
 #include "cf_query.h"
 #include "er_errors.h"
 #include "ld_log_db.h"
+#include "up_private.h"
 #include "utils_cl2.h"
 
 #include "moment_parser.h"
@@ -18,6 +19,8 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
+
+#include <exception>
 
 #if defined(__SYMBIAN32__)
 #include "epoc-iap.h"
@@ -68,7 +71,7 @@ void CUploader::BbRegisterL()
   if (!bb_Blackboard_register(bb,
 			      bb_dt_uploads_allowed,
 			      iClosure, NULL))
-    throw std::badalloc();
+    throw std::bad_alloc();
 }
 
 void CUploader::BbUnregister()
@@ -127,7 +130,14 @@ void CUploader::RefreshSnapshotTimeExpr(bool aNotInitial)
 }
 
 CUploader::CUploader(ac_AppContext* aAppContext) :
-  iAppContext(aAppContext)
+  iAppContext(aAppContext), iNoConfig(false),
+  iNetworkReply(NULL), iNoOldFiles(false),
+  iNumPostFailures(0),
+  iFileToPost(NULL), 
+  iPrologue(NULL), iEpilogue(NULL), 
+  iPostData(NULL),
+  iSnapshotTimePassed(false), iSnapshotTimeExpr(NULL),
+  iNoNextSnapshotTime(false)
 {
   // Ensure that uploads directory exists.
   GError* mdError = NULL;
@@ -177,7 +187,6 @@ CUploader::~CUploader()
 {
   BbUnregister();
   DestroyPosterAo();
-  delete iFileToPost;
   g_free(iSnapshotTimeExpr); // safe when NULL
 }
 
@@ -259,7 +268,7 @@ void CUploader::SetSnapshotTimerL()
   time_t snaptime; // xxx should perhaps store this and use multiple interval timer requests if necessary to get this far
   GError* parseError = NULL;
   if (!parse_moment(iSnapshotTimeExpr, ctx, now, &snaptime, &parseError)) {
-    gx_dblog_error_free(parseError);
+    gx_dblog_error_free(GetLogDb(), parseError);
     iNoNextSnapshotTime = true;
     return;
   }
@@ -316,22 +325,23 @@ bool CUploader::PosterAoIsActive()
   return (iNetworkReply != NULL) && iNetworkReply->isRunning();
 }
 
-void CUploader::PosterEvent(int anError)
+void CUploader::postingFinished()
 {
-  dblogg("poster reports %d", anError);
+  QNetworkReply::NetworkError errCode = iNetworkReply->error();
+  dblogg("poster finished with %d", errCode);
 
-  switch (anError)
+  iFileToPost->close();
+  iNetworkReply->deleteLater();
+
+  switch (errCode)
     {
-    case POSTER_SUCCESS:
+      //// success
+    case QNetworkReply::NoError:
       {
 	GError* localError = NULL;
-	//assert(iFileToPost);
-	//logg("removing file '%s'", iFileToPost);
 	const char* pathname = iFileToPost->fileName().toUtf8().data();
 	if (!rm_file(pathname, &localError)) {
-	  //logt("failure removing file");
-	  gx_txtlog_error_free(localError);
-	  FatalError(KErrGeneral);
+	  FatalError(GException(localError));
 	} else {
 	  log_db_log_status(GetLogDb(), NULL, "posted log file '%s'", pathname);
 	  iNumPostFailures = 0;
@@ -346,86 +356,59 @@ void CUploader::PosterEvent(int anError)
 	}
         break;
       }
-    case POSTER_TRANSIENT_FAILURE:
+      //// aborted (do we ever get these signals)
+    case QNetworkReply::OperationCanceledError:
+      {
+	logt("upload operation cancelled event");
+	break;
+      }
+      //// transient failure
+    case QNetworkReply::ConnectionRefusedError:
+    case QNetworkReply::RemoteHostClosedError:
+    case QNetworkReply::HostNotFoundError:
+    case QNetworkReply::TimeoutError:
+    case QNetworkReply::SslHandshakeFailedError:
+    case QNetworkReply::TemporaryNetworkFailureError:
+    case QNetworkReply::ProxyConnectionRefusedError:
+    case QNetworkReply::ProxyConnectionClosedError:
+    case QNetworkReply::ProxyNotFoundError:
+    case QNetworkReply::ProxyTimeoutError:
+    case QNetworkReply::ProxyAuthenticationRequiredError:
+    case QNetworkReply::ContentAccessDenied:
+    case QNetworkReply::ContentOperationNotPermittedError:
+    case QNetworkReply::ContentNotFoundError:
+    case QNetworkReply::ContentReSendError:
+    case QNetworkReply::ProtocolUnknownError:
+    case QNetworkReply::ProtocolInvalidOperationError:
+    case QNetworkReply::UnknownNetworkError:
+    case QNetworkReply::UnknownProxyError:
+    case QNetworkReply::UnknownContentError:
+    case QNetworkReply::ProtocolFailure:
       {
 	// Retry later.
+	logg("upload failure %d, retrying later", errCode);
 	iNumPostFailures++;
 	SetPostTimer();
         break;
       }
-    case POSTER_PERMANENT_FAILURE:
+      //// permanent failure
+    case QNetworkReply::AuthenticationRequiredError:
       {
         // We must be doing something wrong. Better stop altogether,
         // barring external intervention.
-	er_log_none(0, "inactivating uploader due to a permanent posting failure");
+	er_log_none(0, "inactivating uploader due to a permanent posting failure (%d)", errCode);
 	Inactivate();
         break;
       }
-    default: // Symbian error
+      //// unknown failure
+    default:
       {
-        assert(anError < 0);
-	HandleCommsError(anError);
+	logg("unknown upload failure %d, retrying later", errCode);
+	iNumPostFailures++;
+	SetPostTimer();
         break;
       }
     }
-}
-
-// Called to handle poster creation and poster request errors.
-void CUploader::HandleCommsError(int anError)
-{
-  // Some errors are more severe than others.
-  switch (anError)
-    {   
-      // Some errors warrant the recreation of iPosterAo (if we even
-      // have one).
-    case KErrCouldNotConnect:
-    case KErrDisconnected:
-    case KErrCommsLineFail:
-    case KErrCommsFrame:
-    case KErrCommsOverrun:
-    case KErrCommsParity:
-    case KErrInUse: // file in use maybe
-    case KErrNotReady: // -18 ("A device required by an I/O operation is not ready to start operations.") We have actually gotten this error. Let us have it here to see if it is something transient.
-    case KErrServerBusy: // local daemon, such as socket or file server
-    case -8268: // not documented, but getting this in flight mode
-    case -30180: // not documented, getting this when WLAN specified in IAP is not within range
-    case -5120: // no response from DNS server
-      {
-	DestroyPosterAo();
-      } // fall through...
-
-      // For many errors, a retry later is a suitable action.
-    case KErrTimedOut:
-      {
-	// Retry later.
-	iNumPostFailures++;
-	SetPostTimer();
-	break;
-      }
-
-      // Some errors are considered fatal.
-    case KErrNoMemory: // bad, resume this program later
-    case KErrPathNotFound: // our state may be messed up
-      {
-	FatalError(anError);
-	break;
-      }
-
-      // Some errors are considered permanently fatal. In such cases
-      // the situation likely will not improve by restarting the
-      // process.
-    case KErrNotSupported: // perhaps uploader cannot function on this device
-    case KErrNotFound: // some required resource missing perhaps
-    default:
-      {
-	// We do not yet have logic for handling this kind of
-	// error, so inactivate. Future versions may implement
-	// this better.
-	dblogg("inactivating uploader due to Symbian error %d", anError);
-	Inactivate();
-	break;
-      }
-    } // end switch
 }
 
 void CUploader::DestroyPosterAo()
@@ -434,11 +417,19 @@ void CUploader::DestroyPosterAo()
     iNetworkReply->abort();
     DELETE_Z(iNetworkReply);
   }
+  DELETE_Z(iPostData);
+  iPostElems.clear();
+  if (iFileToPost) {
+    iFileToPost->close();
+  }
+  DELETE_Z(iPrologue);
+  DELETE_Z(iEpilogue);
 }
 
 void CUploader::CreatePosterAoL()
 {
   assert(!iNetworkReply);
+  assert(iFileToPost);
 
 #if defined(__SYMBIAN32__)
   // Requires Qt 4.7.
@@ -448,25 +439,62 @@ void CUploader::CreatePosterAoL()
   //iNetworkAccessManager.setConfiguration(cfg);
 #endif /* __SYMBIAN32__ */
 
-  //xxx honor compilation option indicating whether to compress the file
-
-  // xxx username/filename to iNetworkRequest.setHeader
-  // xxx multipart content, cannot pass file directly
-
-  assert(iFileName);
   const char* pathname = iFileToPost->fileName().toUtf8().data();
   dblogg("asking poster to post '%s'", pathname);
 
+  iPrologue = q_check_ptr(new QBuffer());
+  iEpilogue = q_check_ptr(new QBuffer());
+
+  const gchar* username = get_config_username();
+  logg("uploader using username '%s'", username);
+
+  static const char* KSep = "--";
+  static const char* KCrLf = "\r\n";
+  static const char* KBoundary = "-----AaB03xeql7dsxeql7ds";
+
+  QByteArray& prologue = iPrologue->buffer();
+  prologue.append(KSep);
+  prologue.append(KBoundary);
+  prologue.append(KCrLf);
+  prologue.append("Content-Disposition: form-data; name=\"logdata\"; filename=\"");
+  prologue.append(username);
+  prologue.append(".db\"\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: binary\r\n\r\n");
+
+  QByteArray& epilogue = iEpilogue->buffer();
+  epilogue.append(KCrLf);
+  epilogue.append(KSep);
+  epilogue.append(KBoundary);
+  epilogue.append(KCrLf);
+  epilogue.append("Content-Disposition: form-data; name=\"logdata_submit\"\r\n\r\nUpload\r\n");
+  epilogue.append(KSep);
+  epilogue.append(KBoundary);
+  epilogue.append(KSep);
+  epilogue.append(KCrLf);
+
   if (!iFileToPost->open(QIODevice::ReadOnly)) {
-    int errCode = iFileToPost->error;
+    int errCode = (iFileToPost->error());
     gx_throw(gx_error_new(domain_qt, errCode, 
 			  "failed to open file '%s': QFile::FileError %d", 
 			  pathname, errCode));
   }
 
+  iPrologue->open(QIODevice::ReadOnly); //xxx check return bool
+  iEpilogue->open(QIODevice::ReadOnly); //xxx check return bool
+
+  iPostElems.append(iPrologue);
+  iPostElems.append(iFileToPost);
+  iPostElems.append(iEpilogue);
+
+  iPostData = q_check_ptr(new QIODeviceSeq(iPostElems));
+
   // Note that the file object (or the file) may not be deleted until
   // we get the finished() signal for this reply.
-  iNetworkReply = iNetworkAccessManager.post(iNetworkRequest, iFileToPost);
+  iNetworkReply = iNetworkAccessManager.post(iNetworkRequest, iPostData);
+
+  connect(iNetworkReply, SIGNAL(error(QNetworkReply::NetworkError)),
+	  this, SLOT(postingError(QNetworkReply::NetworkError)));
+  connect(iNetworkReply, SIGNAL(finished()),
+	  this, SLOT(postingFinished()));
 }
 
 void CUploader::PostNowL()
@@ -574,9 +602,9 @@ EXTERN_C gboolean up_Uploader_reconfigure(up_Uploader* object,
 					  GError** error)
 {
   if (strcmp(key, "iap") == 0) {
-    ((CUploader*)object)->RefreshIap(ETrue);
+    ((CUploader*)object)->RefreshIap(true);
   } else if (strcmp(key, "uploader.time_expr") == 0) {
-    ((CUploader*)object)->RefreshSnapshotTimeExpr(ETrue);
+    ((CUploader*)object)->RefreshSnapshotTimeExpr(true);
   }
   return TRUE;
 }

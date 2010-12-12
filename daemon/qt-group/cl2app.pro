@@ -11,6 +11,7 @@ WITH_QT {
   # Note: Do not use Qt 4.7.0 on Linux, as there is an event loop memory bug.
   CONFIG += qt
   QT -= gui
+  QT += network
 }
 !WITH_QT {
   message("without Qt")
@@ -25,6 +26,8 @@ SOURCES += moment_parser.c time_utils.c
 WITH_QT {
   SOURCES += iodeviceseq_qt.cpp
   HEADERS += iodeviceseq_qt.hpp
+  SOURCES += up_uploader_qt.cpp
+  HEADERS += up_uploader_qt_private.hpp
 }
 DEFINES += G_DISABLE_DEPRECATED
 !LUA_FROM_SOURCE {
