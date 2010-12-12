@@ -11,7 +11,9 @@ WITH_QT {
   # Note: Do not use Qt 4.7.0 on Linux, as there is an event loop memory bug.
   CONFIG += qt
   QT -= gui
-  QT += network
+  FEATURE_UPLOADER {
+    QT += network
+  }
 }
 !WITH_QT {
   message("without Qt")
@@ -23,11 +25,19 @@ SOURCES += ac_app_context.cpp bb_blackboard.cpp cf_rcfile.cpp lua_bindings.cpp l
 SOURCES += error_list.c gx_maybe_string.c gxerror.c logging-time.c platform_error.c utilities.c
 SOURCES += assertions_cxx.cpp logging.cpp utilities_cxx.cpp
 SOURCES += moment_parser.c time_utils.c
+FEATURE_REMOKON {
+  SOURCES += rk_remokon.c rk_jabber_session.c
+  INCLUDEPATH += ../../iksemel/include
+  DEPENDPATH += ../../iksemel/src
+  SOURCES += base64.c dom.c filter.c iks.c ikss_stream.c ikst_transport_libev.c ikstack.c jabber.c md5.c sax.c sha.c utility.c
+}
 WITH_QT {
-  SOURCES += iodeviceseq_qt.cpp
-  HEADERS += iodeviceseq_qt.hpp
-  SOURCES += up_uploader_qt.cpp
-  HEADERS += up_uploader_qt_private.hpp
+  FEATURE_UPLOADER {
+    SOURCES += iodeviceseq_qt.cpp
+    HEADERS += iodeviceseq_qt.hpp
+    SOURCES += up_uploader_qt.cpp
+    HEADERS += up_uploader_qt_private.hpp
+  }
 }
 DEFINES += G_DISABLE_DEPRECATED
 !LUA_FROM_SOURCE {

@@ -22,6 +22,8 @@
 
 #include <exception>
 
+#include <QtDebug>
+
 #if defined(__SYMBIAN32__)
 #include "epoc-iap.h"
 #include "common/epoc-time.h"
@@ -129,6 +131,8 @@ void CUploader::RefreshSnapshotTimeExpr(bool aNotInitial)
   }
 }
 
+static const char* KBoundary = "-----AaB03xeql7dsxeql7ds";
+
 CUploader::CUploader(ac_AppContext* aAppContext) :
   iAppContext(aAppContext), iNoConfig(false),
   iNetworkReply(NULL), iNoOldFiles(false),
@@ -158,6 +162,10 @@ CUploader::CUploader(ac_AppContext* aAppContext) :
   } else {
     logg("upload URL: %s", upload_url);
     iNetworkRequest.setUrl(QUrl(upload_url));
+    QByteArray ct("multipart/form-data, boundary=");
+    ct.append(KBoundary);
+    iNetworkRequest.setHeader(QNetworkRequest::ContentTypeHeader, ct);
+    iNetworkRequest.setRawHeader("Connection", "close");
   }
 
   RefreshIap(false);
@@ -217,6 +225,14 @@ void CUploader::StateChanged()
   CATCH_FATAL(StateChangedL());
 }
 
+struct ScopedPointerGfree
+{
+  static inline void cleanup(gchar* pointer)
+  {
+    g_free(pointer);
+  }
+};
+
 void CUploader::NextOldFileL()
 {
   if (iNoOldFiles) return;
@@ -227,7 +243,12 @@ void CUploader::NextOldFileL()
   gchar* pathname = NULL;
   if (getNextOldLogFile(&pathname, &error)) {
     if (pathname) {
-      iFileToPost = q_check_ptr(new QFile(QString::fromUtf8(pathname)));
+      dblogg("found old log file '%s'", pathname);
+      QScopedPointer<gchar, ScopedPointerGfree> pn(pathname);
+      QString qs = QString::fromUtf8(pathname);
+      //qDebug() << qs;
+      iFileToPost = q_check_ptr(new QFile(qs));
+      //qDebug() << (iFileToPost->fileName().toLocal8Bit());
       return;
     } else {
       iNoOldFiles = true;
@@ -339,7 +360,8 @@ void CUploader::postingFinished()
     case QNetworkReply::NoError:
       {
 	GError* localError = NULL;
-	const char* pathname = iFileToPost->fileName().toUtf8().data();
+	QByteArray ba = (iFileToPost->fileName().toLocal8Bit());
+	const char* pathname = ba.data();
 	if (!rm_file(pathname, &localError)) {
 	  FatalError(GException(localError));
 	} else {
@@ -439,7 +461,8 @@ void CUploader::CreatePosterAoL()
   //iNetworkAccessManager.setConfiguration(cfg);
 #endif /* __SYMBIAN32__ */
 
-  const char* pathname = iFileToPost->fileName().toUtf8().data();
+  QByteArray ba = (iFileToPost->fileName().toLocal8Bit());
+  const char* pathname = ba.data();
   dblogg("asking poster to post '%s'", pathname);
 
   iPrologue = q_check_ptr(new QBuffer());
@@ -450,7 +473,6 @@ void CUploader::CreatePosterAoL()
 
   static const char* KSep = "--";
   static const char* KCrLf = "\r\n";
-  static const char* KBoundary = "-----AaB03xeql7dsxeql7ds";
 
   QByteArray& prologue = iPrologue->buffer();
   prologue.append(KSep);
@@ -491,8 +513,10 @@ void CUploader::CreatePosterAoL()
   // we get the finished() signal for this reply.
   iNetworkReply = iNetworkAccessManager.post(iNetworkRequest, iPostData);
 
+  /*
   connect(iNetworkReply, SIGNAL(error(QNetworkReply::NetworkError)),
 	  this, SLOT(postingError(QNetworkReply::NetworkError)));
+  */
   connect(iNetworkReply, SIGNAL(finished()),
 	  this, SLOT(postingFinished()));
 }

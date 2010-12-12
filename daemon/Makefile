@@ -169,6 +169,10 @@ src/ut_telephony_epoc.h src/ut_telephony_epoc.cpp : src/ut_telephony_epoc.scm
 $(SHARED_PATH)/common/error_list.h $(SHARED_PATH)/common/error_list.c : $(SHARED_PATH)/common/error_list.scm
 	$(PLT_ENV) $<
 
+old-log :
+	-mkdir -p uploads
+	echo hello world > uploads/log--notreally--2010-09-25-04-01-43.db
+
 clean :
 	-rm main .depend $(ALL_OBJ_FILES) $(GEN_FILES) .sake_op
 

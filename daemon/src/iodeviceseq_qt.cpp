@@ -45,13 +45,15 @@ qint64 QIODeviceSeq::readData(char *data, qint64 maxlen)
     return -1;
   }
 
-  while (!iDevice) {
-    if (!iIterator.hasNext()) {
-      iAtEnd = true;
-      return 0;
+  forever {
+    if (!iDevice) {
+      if (!iIterator.hasNext()) {
+	iAtEnd = true;
+	return 0;
+      }
+      iDevice = iIterator.next();
+      assert(iDevice);
     }
-    iDevice = iIterator.next();
-    assert(iDevice);
 
     qint64 r = iDevice->read(data, maxlen);
     switch (r)

@@ -175,7 +175,7 @@ project must implement.
     (eq? (platform) 'symbian))
 
   (define/public (feature-remokon.attr)
-    #t)
+    #f)
 
   (define/public (feature-compress-logs.attr)
     #f)
@@ -193,9 +193,6 @@ project must implement.
   (super-new)
   
   (define/override (platform) 'linux)
-
-  ;; No finished Linux implementation.
-  (define/override (feature-uploader.attr) #f)
 
   (define/override (mark-enabled.attr) #t)
   (define/override (timer-enabled.attr) #t)
