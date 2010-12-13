@@ -27,6 +27,8 @@ NONSHARABLE_CLASS(GException) :
     return iError->message;
   }
 
+  GError* gerror() const { return iError; }
+
  private:
   GError *iError; // owned
 };

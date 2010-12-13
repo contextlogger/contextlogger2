@@ -14,6 +14,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
+#include <QSslConfiguration>
 #include <QTimer>
 
 class CUploader : 
@@ -63,6 +64,7 @@ class CUploader :
 
   //// posting state
   QNetworkAccessManager iNetworkAccessManager;
+  QSslConfiguration iSslConfiguration;
   QNetworkRequest iNetworkRequest;
   QNetworkReply* iNetworkReply;
   QTimer iPostTimerAo; // interval timer
@@ -84,7 +86,8 @@ class CUploader :
 
  private slots:
   //void 	postingError ( QNetworkReply::NetworkError code );
-  void 	postingFinished();
+  void postingSslErrors(const QList<QSslError> & errors);
+  void postingFinished();
 
  private:
   LogDb* GetLogDb() const { return ac_LogDb(iAppContext); }

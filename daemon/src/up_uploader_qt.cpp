@@ -4,6 +4,7 @@
 #include "er_errors.h"
 #include "ld_log_db.h"
 #include "up_private.h"
+#include "ut_exceptions.hpp"
 #include "utils_cl2.h"
 
 #include "moment_parser.h"
@@ -19,8 +20,6 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
-
-#include <exception>
 
 #include <QtDebug>
 
@@ -150,11 +149,6 @@ CUploader::CUploader(ac_AppContext* aAppContext) :
 		  "failure creating uploads directory");
   }
 
-  // Note that we might be able to use
-  // QNetworkRequest::setSslConfiguration to specify the SSL cert we
-  // want to use, even one that is not installed. This would ease
-  // deployment.
-
   const gchar* upload_url = ac_STATIC_GET(upload_url);
   if (!upload_url) {
     iNoConfig = true;
@@ -166,6 +160,22 @@ CUploader::CUploader(ac_AppContext* aAppContext) :
     ct.append(KBoundary);
     iNetworkRequest.setHeader(QNetworkRequest::ContentTypeHeader, ct);
     iNetworkRequest.setRawHeader("Connection", "close");
+
+    // On Symbian we currently assume that CA public certs are
+    // installed system wide.
+#if !defined(__SYMBIAN32__)
+    iSslConfiguration = QSslConfiguration::defaultConfiguration();
+    QList<QSslCertificate> caList = iSslConfiguration.caCertificates();
+    QList<QSslCertificate> myList = QSslCertificate::fromPath("etc/ca-certs/*.crt", QSsl::Pem, QRegExp::Wildcard);
+    caList.append(myList);
+#if 0
+    foreach (QSslCertificate cert, caList) {
+      qDebug() << cert.issuerInfo(QSslCertificate::Organization);
+    }
+#endif
+    iSslConfiguration.setCaCertificates(caList);
+    iNetworkRequest.setSslConfiguration(iSslConfiguration);
+#endif /* __SYMBIAN32__ */
   }
 
   RefreshIap(false);
@@ -346,6 +356,19 @@ bool CUploader::PosterAoIsActive()
   return (iNetworkReply != NULL) && iNetworkReply->isRunning();
 }
 
+void CUploader::postingSslErrors(const QList<QSslError> & errors)
+{
+  // We do nothing to recover, as we do want security. Note that a
+  // self-signed CA may not be used as the server cert, for instance.
+  // Although that in a way is secure, even Apache complains about it,
+  // for instance.
+#if 0
+  foreach (QSslError err, errors) {
+    qDebug() << err;
+  }
+#endif
+}
+
 void CUploader::postingFinished()
 {
   QNetworkReply::NetworkError errCode = iNetworkReply->error();
@@ -500,8 +523,9 @@ void CUploader::CreatePosterAoL()
 			  pathname, errCode));
   }
 
-  iPrologue->open(QIODevice::ReadOnly); //xxx check return bool
-  iEpilogue->open(QIODevice::ReadOnly); //xxx check return bool
+#define CHECKBUFOPEN(x) throw_cstr_unless(x, "QBuffer open failed")
+  CHECKBUFOPEN(iPrologue->open(QIODevice::ReadOnly));
+  CHECKBUFOPEN(iEpilogue->open(QIODevice::ReadOnly));
 
   iPostElems.append(iPrologue);
   iPostElems.append(iFileToPost);
@@ -517,6 +541,8 @@ void CUploader::CreatePosterAoL()
   connect(iNetworkReply, SIGNAL(error(QNetworkReply::NetworkError)),
 	  this, SLOT(postingError(QNetworkReply::NetworkError)));
   */
+  connect(iNetworkReply, SIGNAL(sslErrors(const QList<QSslError> &)),
+	  this, SLOT(postingSslErrors(const QList<QSslError> &)));
   connect(iNetworkReply, SIGNAL(finished()),
 	  this, SLOT(postingFinished()));
 }

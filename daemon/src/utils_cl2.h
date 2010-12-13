@@ -73,8 +73,6 @@ HBufC* ConvFromUtf8CStringL(const char* s);
 
 /**
 
-utils_cl2.h
-
 Copyright 2009 Helsinki Institute for Information Technology (HIIT)
 and the authors. All rights reserved.
 
