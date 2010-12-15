@@ -37,6 +37,8 @@ WITH_QT {
     HEADERS += iodeviceseq_qt.hpp
     SOURCES += up_uploader_qt.cpp
     HEADERS += up_uploader_qt_private.hpp
+    SOURCES += ut_abs_timer_qt_pure.cpp
+    HEADERS += ut_abs_timer_qt_pure.hpp
   }
 }
 DEFINES += G_DISABLE_DEPRECATED

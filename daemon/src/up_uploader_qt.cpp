@@ -184,7 +184,6 @@ CUploader::CUploader(ac_AppContext* aAppContext) :
 #endif /* __SYMBIAN32__ */
 
   iPostTimerAo.setSingleShot(true);
-  iSnapshotTimerAo.setSingleShot(true);
   connect(&iPostTimerAo, SIGNAL(timeout()), 
 	  this, SLOT(handlePosterTimerEvent()));
   connect(&iSnapshotTimerAo, SIGNAL(timeout()), 
@@ -296,7 +295,7 @@ void CUploader::SetSnapshotTimerL()
     return; // flag to avoid needless computation
   time_t now = TimeNow();
   time_t ctx = iSnapshotTimeCtx;
-  time_t snaptime; // xxx should perhaps store this and use multiple interval timer requests if necessary to get this far
+  time_t snaptime;
   GError* parseError = NULL;
   if (!parse_moment(iSnapshotTimeExpr, ctx, now, &snaptime, &parseError)) {
     gx_dblog_error_free(GetLogDb(), parseError);
@@ -314,11 +313,15 @@ void CUploader::SetSnapshotTimerL()
   // We must specify time interval in milliseconds. For long time
   // intervals we might get an overflow. Another reason to use an
   // absolute timer where possible.
-  int diffTime = snaptime - now; // both in UTC  //xxx negative?
-  diffTime = SecsToMsecs(diffTime);
-  if (diffTime < 5000) diffTime = 5000; // ensure some sanity
+  QDateTime atTime;
+  atTime.setTime_t(snaptime);
+  atTime = atTime.toUTC();
+#if __DO_LOGGING__
+  int diffTime = snaptime - now;
   logg("snapshot %d msecs from now", diffTime);
-  iSnapshotTimerAo.start(diffTime);
+  //qDebug() << "snapshot time at" << atTime;
+#endif
+  iSnapshotTimerAo.start(atTime);
 }
 
 void CUploader::SetPostTimer()
@@ -358,14 +361,17 @@ bool CUploader::PosterAoIsActive()
 
 void CUploader::postingSslErrors(const QList<QSslError> & errors)
 {
-  // We do nothing to recover, as we do want security. Note that a
-  // self-signed CA may not be used as the server cert, for instance.
-  // Although that in a way is secure, even Apache complains about it,
-  // for instance.
 #if 0
   foreach (QSslError err, errors) {
-    qDebug() << err;
+    qDebug() << err.errorString() << (int)err.error();
   }
+#endif
+  // We do want security, and hence do not make any exceptions here. A
+  // self-signed CA is only okay if we have a locally registered copy.
+#if 0
+  if ((errors.length() == 1) &&
+      (errors.first() == QSslError::SelfSignedCertificateInChain))
+    iNetworkReply.ignoreSslErrors();
 #endif
 }
 

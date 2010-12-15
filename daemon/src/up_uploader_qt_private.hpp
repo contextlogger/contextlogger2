@@ -5,6 +5,7 @@
 
 #include "ac_app_context.h"
 #include "iodeviceseq_qt.hpp"
+#include "ut_abs_timer_qt.hpp"
 
 #include <glib.h>
 
@@ -78,7 +79,7 @@ class CUploader :
   QIODeviceSeq* iPostData;
 
   //// snapshot taking state
-  QTimer iSnapshotTimerAo; // absolute timer (not really, but we would prefer one, may have to implement an abstraction, and internally use an absolute timer where available, otherwise defaulting to QTimer based impl xxx)
+  QAbsTimer iSnapshotTimerAo;
   bool iSnapshotTimePassed;
   gchar* iSnapshotTimeExpr;
   time_t iSnapshotTimeCtx;
