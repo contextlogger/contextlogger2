@@ -375,6 +375,7 @@ void CUploader::postingSslErrors(const QList<QSslError> & errors)
 #endif
 }
 
+/// xxx careful, we may not be allowed to delete posting objects here yet
 void CUploader::postingFinished()
 {
   QNetworkReply::NetworkError errCode = iNetworkReply->error();
@@ -482,7 +483,7 @@ void CUploader::CreatePosterAoL()
   assert(!iNetworkReply);
   assert(iFileToPost);
 
-#if defined(__SYMBIAN32__)
+#if defined(__SYMBIAN32__) && 0
   // Requires Qt 4.7.
   //QNetworkConfiguration cfg = iNetworkAccessManager.defaultConfiguration();
   QList<QNetworkConfiguration> cfgList = iNetworkAccessManager.allConfigurations();

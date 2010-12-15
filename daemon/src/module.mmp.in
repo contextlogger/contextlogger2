@@ -43,7 +43,7 @@ systeminclude ..\..\..\<%= curl_dir %>\include
 <% end %>
 
 <% if $WITH_QT %>
-<% qt_inc_list = %w{include/QtCore include mkspecs/common/symbian/stl-off mkspecs/common/symbian}
+<% qt_inc_list = %w{include/QtCore include/QtNetwork include mkspecs/common/symbian/stl-off mkspecs/common/symbian}
    qt_inc_list.push('include/QtGui') if qt_gui
    for inc in qt_inc_list %>
 systeminclude		../../../../../symbian-gp/qt-latest/<%= inc %>
@@ -191,6 +191,7 @@ library keyevents_client_2000af44.lib
 <% if $WITH_QT %>
 LIBRARY		libdl.lib
 LIBRARY		QtCore.lib
+LIBRARY		QtNetwork.lib
 <% if qt_gui %>
 LIBRARY		QtGui.lib
 <% end %>
@@ -306,6 +307,10 @@ source utils_cl2_cxx.cpp
 <% if $FEATURE_UPLOADER %>
 <% if $UPLOAD_WITH_CURL %>
 source up_uploader_curl.c
+<% elsif $UPLOAD_WITH_QT %>
+source iodeviceseq_qt.cpp moc_iodeviceseq_qt.cpp
+source up_uploader_qt.cpp moc_up_uploader_qt_private.cpp
+source ut_abs_timer_qt_epoc.cpp moc_ut_abs_timer_qt_epoc.cpp
 <% else %>
 source up_uploader_epoc.cpp
 source up_poster_epoc.cpp
@@ -606,10 +611,11 @@ MACRO		UNICODE
 MACRO		QT_KEYPAD_NAVIGATION
 MACRO		QT_SOFTKEYS_ENABLED
 MACRO		QT_USE_MATH_H_FLOATS
+MACRO		QT_CORE_LIB
+MACRO		QT_NETWORK_LIB
 <% if qt_gui %>
 MACRO		QT_GUI_LIB
 <% end %>
-MACRO		QT_CORE_LIB
 
 OPTION CW -cwd include
 OPTION ARMCC --visibility_inlines_hidden
