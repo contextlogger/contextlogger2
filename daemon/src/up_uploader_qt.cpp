@@ -134,11 +134,9 @@ static const char* KBoundary = "-----AaB03xeql7dsxeql7ds";
 
 CUploader::CUploader(ac_AppContext* aAppContext) :
   iAppContext(aAppContext), iNoConfig(false),
-  iNetworkReply(NULL), iNoOldFiles(false),
+  iNoOldFiles(false),
   iNumPostFailures(0),
-  iFileToPost(NULL), 
-  iPrologue(NULL), iEpilogue(NULL), 
-  iPostData(NULL),
+  iPostSession(NULL), iFileToPost(NULL), 
   iSnapshotTimePassed(false), iSnapshotTimeExpr(NULL),
   iNoNextSnapshotTime(false)
 {
@@ -194,7 +192,7 @@ CUploader::CUploader(ac_AppContext* aAppContext) :
   //logg("using snapshot time '%s'", iSnapshotTimeExpr);
 
   // Note that if this ConstructL() leaves, the dtor of this will
-  // unregister us.
+  // unregister us. xxx
   BbRegisterL();
 
   StateChangedL();
@@ -277,13 +275,6 @@ void CUploader::RequestSnapshot()
   StateChanged();
 }
 
-static int SecsToMsecs(int secs)
-{
-  long long ms64 = (long long)(secs) * 1000LL;
-  if (ms64 > 0x7fffffffLL) ms64 = 0x7fffffffLL;
-  return (int)ms64;
-}
-
 // Computes next snapshot time (if any), and sets a timer for it as
 // appropriate.
 void CUploader::SetSnapshotTimerL()
@@ -324,6 +315,13 @@ void CUploader::SetSnapshotTimerL()
   iSnapshotTimerAo.start(atTime);
 }
 
+static int SecsToMsecs(int secs)
+{
+  long long ms64 = (long long)(secs) * 1000LL;
+  if (ms64 > 0x7fffffffLL) ms64 = 0x7fffffffLL;
+  return (int)ms64;
+}
+
 void CUploader::SetPostTimer()
 {
   assert(iNumPostFailures > 0);
@@ -356,7 +354,9 @@ void CUploader::handleSnapshotTimerEvent()
 
 bool CUploader::PosterAoIsActive()
 {
-  return (iNetworkReply != NULL) && iNetworkReply->isRunning();
+  return iPostSession && 
+    iPostSession->iNetworkReply && 
+    iPostSession->iNetworkReply->isRunning();
 }
 
 void CUploader::postingSslErrors(const QList<QSslError> & errors)
@@ -371,18 +371,21 @@ void CUploader::postingSslErrors(const QList<QSslError> & errors)
 #if 0
   if ((errors.length() == 1) &&
       (errors.first() == QSslError::SelfSignedCertificateInChain))
-    iNetworkReply.ignoreSslErrors();
+    iPostSession->iNetworkReply.ignoreSslErrors();
 #endif
 }
 
-/// xxx careful, we may not be allowed to delete posting objects here yet
 void CUploader::postingFinished()
 {
-  QNetworkReply::NetworkError errCode = iNetworkReply->error();
+  QNetworkReply::NetworkError errCode = iPostSession->iNetworkReply->error();
   dblogg("poster finished with %d", errCode);
 
+  // Cannot delete while still open.
   iFileToPost->close();
-  iNetworkReply->deleteLater();
+
+  iPostSession->iFileToPost = NULL;
+  iPostSession->deleteLater();
+  iPostSession = NULL;
 
   switch (errCode)
     {
@@ -463,8 +466,16 @@ void CUploader::postingFinished()
     }
 }
 
-void CUploader::DestroyPosterAo()
+PostSession::PostSession() : 
+  iNetworkReply(NULL), iFileToPost(NULL), 
+  iPrologue(NULL), iEpilogue(NULL), 
+  iPostData(NULL)
 {
+}  
+
+PostSession::~PostSession()
+{
+  logh();
   if (iNetworkReply) {
     iNetworkReply->abort();
     DELETE_Z(iNetworkReply);
@@ -478,9 +489,14 @@ void CUploader::DestroyPosterAo()
   DELETE_Z(iEpilogue);
 }
 
+void CUploader::DestroyPosterAo()
+{
+  DELETE_Z(iPostSession);
+}
+
 void CUploader::CreatePosterAoL()
 {
-  assert(!iNetworkReply);
+  assert(!iPostSession);
   assert(iFileToPost);
 
 #if defined(__SYMBIAN32__) && 0
@@ -495,8 +511,12 @@ void CUploader::CreatePosterAoL()
   const char* pathname = ba.data();
   dblogg("asking poster to post '%s'", pathname);
 
-  iPrologue = q_check_ptr(new QBuffer());
-  iEpilogue = q_check_ptr(new QBuffer());
+  iPostSession = q_check_ptr(new PostSession());
+
+  iPostSession->iFileToPost = iFileToPost;
+
+  iPostSession->iPrologue = q_check_ptr(new QBuffer());
+  iPostSession->iEpilogue = q_check_ptr(new QBuffer());
 
   const gchar* username = get_config_username();
   logg("uploader using username '%s'", username);
@@ -504,7 +524,7 @@ void CUploader::CreatePosterAoL()
   static const char* KSep = "--";
   static const char* KCrLf = "\r\n";
 
-  QByteArray& prologue = iPrologue->buffer();
+  QByteArray& prologue = iPostSession->iPrologue->buffer();
   prologue.append(KSep);
   prologue.append(KBoundary);
   prologue.append(KCrLf);
@@ -512,7 +532,7 @@ void CUploader::CreatePosterAoL()
   prologue.append(username);
   prologue.append(".db\"\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: binary\r\n\r\n");
 
-  QByteArray& epilogue = iEpilogue->buffer();
+  QByteArray& epilogue = iPostSession->iEpilogue->buffer();
   epilogue.append(KCrLf);
   epilogue.append(KSep);
   epilogue.append(KBoundary);
@@ -531,32 +551,28 @@ void CUploader::CreatePosterAoL()
   }
 
 #define CHECKBUFOPEN(x) throw_cstr_unless(x, "QBuffer open failed")
-  CHECKBUFOPEN(iPrologue->open(QIODevice::ReadOnly));
-  CHECKBUFOPEN(iEpilogue->open(QIODevice::ReadOnly));
+  CHECKBUFOPEN(iPostSession->iPrologue->open(QIODevice::ReadOnly));
+  CHECKBUFOPEN(iPostSession->iEpilogue->open(QIODevice::ReadOnly));
 
-  iPostElems.append(iPrologue);
-  iPostElems.append(iFileToPost);
-  iPostElems.append(iEpilogue);
+  iPostSession->iPostElems.append(iPostSession->iPrologue);
+  iPostSession->iPostElems.append(iPostSession->iFileToPost);
+  iPostSession->iPostElems.append(iPostSession->iEpilogue);
 
-  iPostData = q_check_ptr(new QIODeviceSeq(iPostElems));
+  iPostSession->iPostData = q_check_ptr(new QIODeviceSeq(iPostSession->iPostElems));
 
   // Note that the file object (or the file) may not be deleted until
   // we get the finished() signal for this reply.
-  iNetworkReply = iNetworkAccessManager.post(iNetworkRequest, iPostData);
+  iPostSession->iNetworkReply = 
+    iNetworkAccessManager.post(iNetworkRequest, iPostSession->iPostData);
 
-  /*
-  connect(iNetworkReply, SIGNAL(error(QNetworkReply::NetworkError)),
-	  this, SLOT(postingError(QNetworkReply::NetworkError)));
-  */
-  connect(iNetworkReply, SIGNAL(sslErrors(const QList<QSslError> &)),
+  connect(iPostSession->iNetworkReply, SIGNAL(sslErrors(const QList<QSslError> &)),
 	  this, SLOT(postingSslErrors(const QList<QSslError> &)));
-  connect(iNetworkReply, SIGNAL(finished()),
+  connect(iPostSession->iNetworkReply, SIGNAL(finished()),
 	  this, SLOT(postingFinished()));
 }
 
 void CUploader::PostNowL()
 {
-  DestroyPosterAo();
   CreatePosterAoL();
 }
 
@@ -601,30 +617,21 @@ void CUploader::StateChangedL()
     SetSnapshotTimerL();
   }
 
+  if (!PosterAoIsActive())
+    DestroyPosterAo(); // make sure no connection remains
+
  again:
   if (iFileToPost) {
-    if (PosterAoIsActive() || 
-	// 'iPostTimerAo' is a post retry timer.
-	iPostTimerAo.isActive())
+    if (PosterAoIsActive() || iPostTimerAo.isActive())
       return;
     if (i_uploads_allowed) {
       PostNowL(); // not called elsewhere
-    } else {
-      DestroyPosterAo(); // make sure no connection remains
     }
   } else if (!iNoOldFiles) {
     NextOldFileL();
     goto again;
   } else if (iSnapshotTimePassed) {
     TakeSnapshotNowL(); // not called elsewhere
-  } else {
-    // Have nothing to post for now. This will see to it that we close
-    // any connection that we do not require. With some operators,
-    // with no fixed data, merely keeping an RConnection open incurs
-    // an hourly charge (minimum charge per hour), and there is a
-    // battery hit as well, and possible interference with phone calls
-    // and such.
-    DestroyPosterAo();
   }
 }
 

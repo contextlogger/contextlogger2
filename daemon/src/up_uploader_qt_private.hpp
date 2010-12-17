@@ -18,6 +18,24 @@
 #include <QSslConfiguration>
 #include <QTimer>
 
+class PostSession :
+  public QObject
+{
+  Q_OBJECT
+
+public:
+  QNetworkReply* iNetworkReply;
+  QFile* iFileToPost; // not owned
+  QBuffer* iPrologue;
+  QBuffer* iEpilogue;
+  QList<QIODevice*> iPostElems;
+  QIODeviceSeq* iPostData;
+
+public:
+  PostSession();
+  ~PostSession();
+};
+
 class CUploader : 
   public QObject
 {
@@ -67,16 +85,12 @@ class CUploader :
   QNetworkAccessManager iNetworkAccessManager;
   QSslConfiguration iSslConfiguration;
   QNetworkRequest iNetworkRequest;
-  QNetworkReply* iNetworkReply;
   QTimer iPostTimerAo; // interval timer
   bool iNoOldFiles; // getNextOldLogFile found nothing
   int iNumPostFailures; // affects retry timing
 
+  PostSession* iPostSession;
   QFile* iFileToPost; // pathname of file to upload
-  QBuffer* iPrologue;
-  QBuffer* iEpilogue;
-  QList<QIODevice*> iPostElems;
-  QIODeviceSeq* iPostData;
 
   //// snapshot taking state
   QAbsTimer iSnapshotTimerAo;
