@@ -84,17 +84,24 @@ void CPosterAo::SetHeaderL(RHTTPHeaders aHeaders,
 // Cancels currently running transaction and frees resources related to it.
 // ----------------------------------------------------------------------------
 void CPosterAo::Cancel()
-  {
+{
   if(!iRunning)
     return;
+  
+  logh();
+
   iRunning = EFalse;
 
   // Close() also cancels transaction (Cancel() can also be used but
   // resources allocated by transaction must be still freed with Close())
-  SESSION_CLOSE_IF_OPEN(iHttpTransaction);
-
-  iFileDataSupplier->Close(); // important for closing any locked file
+  if (IS_SESSION_OPEN(iHttpTransaction)) {
+    iHttpTransaction.Cancel();
   }
+
+  if (iFileDataSupplier) {
+    iFileDataSupplier->Close(); // important for closing any locked file
+  }
+}
 
 void CPosterAo::PostFileL(const TDesC8& aUri,
 			  const TDesC& aFileName)
@@ -460,9 +467,14 @@ void CFileDataSupplier::OpenL(const TDesC& aFileName)
   iPhase = 0;
 }
 
-void CFileDataSupplier::Close()
+void CFileDataSupplier::CloseFile()
 {
   SESSION_CLOSE_IF_OPEN(iFile);
+}
+
+void CFileDataSupplier::Close()
+{
+  CloseFile();
   SESSION_CLOSE_IF_OPEN(iFs);
   iPrelude.Close();
   iEpilogue.Close();

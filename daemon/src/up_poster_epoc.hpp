@@ -29,6 +29,10 @@ public:
 NONSHARABLE_CLASS(RBufferDataSupplier) :
   public MDataSupplier
 {
+ private: // property
+  HBufC8* iData; // owned
+ public:
+  RBufferDataSupplier() : iData(NULL) {}
  public:
   void Set(HBufC8* aData) { Close(); iData = aData; }
   void Close() { delete iData; iData = NULL; }
@@ -39,8 +43,6 @@ NONSHARABLE_CLASS(RBufferDataSupplier) :
   TInt OverallDataSize();
  public: // MDataSupplier
   void SetHttpTransaction(RHTTPTransaction* aTransaction) {}
- private: // property
-  HBufC8* iData; // owned
 };
 
 #define KMultiPartBoundaryMaxLen 48
@@ -49,10 +51,10 @@ NONSHARABLE_CLASS(CFileDataSupplier) :
   public CBase, public MDataSupplier
 {
  public:
-  //CFileDataSupplier();
   virtual ~CFileDataSupplier();
   void OpenL(const TDesC& aFileName);
   void Close();
+  void CloseFile();
   const TDesC8& Boundary() const; // at most KMultiPartBoundaryMaxLen bytes
  public: // MHTTPDataSupplier
   TBool GetNextDataPart(TPtrC8& aDataPart); // May leave!
