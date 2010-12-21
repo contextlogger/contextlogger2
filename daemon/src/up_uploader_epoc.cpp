@@ -10,6 +10,7 @@
 #include "er_errors.h"
 #include "ld_log_db.h"
 #include "timer_generic_epoc.h"
+#include "ut_immediate_epoc.hpp"
 #include "utils_cl2.h"
 
 #include "moment_parser.h"
@@ -91,7 +92,8 @@ CUploader::CUploader(LogDb* aLogDb) : iLogDb(aLogDb) \
 NONSHARABLE_CLASS(CUploader) : 
   public CBase,
   public MTimerObserver,
-  public MPosterObserver
+  public MPosterObserver,
+  public MImmediateObserver
 {
   CTOR_DECL_CUploader;
   
@@ -109,26 +111,14 @@ NONSHARABLE_CLASS(CUploader) :
  private: // MPosterObserver
   void PosterEvent(TInt anError);
 
- private: // methods
-  void Inactivate();
-  void StateChanged();
-  void StateChangedL();
-  void NextOldFileL();
-  TInt CreatePosterAo();
-  void DestroyPosterAo();
-  TBool PosterAoIsActive() { return (iPosterAo && iPosterAo->IsActive()); }
-  void HandleCommsError(TInt errCode);
-  void PostNowL();
-  void SetPostTimer();
-  void SetSnapshotTimerL();
-  void TakeSnapshotNowL();
-  void FatalError(TInt anError);
+ private: // MImmediateObserver
+  void HandleImmediateEvent();
 
  private: // property
 
   LogDb* iLogDb; // not owned
 
-  TBool iNoConfig; // no upload URL
+  TBool iNotReady; // no upload URL
   TPtrC8 iUploadUrl; // data not owned
   TUint32 iIapId;
 
@@ -138,6 +128,7 @@ NONSHARABLE_CLASS(CUploader) :
   gchar* iFileToPost; // pathname of file to upload
   TBool iNoOldFiles; // getNextOldLogFile found nothing
   TInt iNumPostFailures; // affects retry timing
+  CImmediateAo* iImmediateAo;
 
   //// snapshot taking state
   CTimerAo* iSnapshotTimerAo;
@@ -154,6 +145,23 @@ NONSHARABLE_CLASS(CUploader) :
   bb_Closure iClosure;
   void BbRegisterL();
   void BbUnregister();
+
+ private: // methods
+  void Inactivate();
+  void InactivateLater();
+  void StateChanged();
+  void StateChangedL();
+  void StateChangedLater();
+  void NextOldFileL();
+  TInt CreatePosterAo();
+  void DestroyPosterAo();
+  TBool PosterAoIsActive() { return (iPosterAo && iPosterAo->IsActive()); }
+  void HandleCommsError(TInt errCode);
+  void PostNowL();
+  void SetPostTimer();
+  void SetSnapshotTimerL();
+  void TakeSnapshotNowL();
+  void FatalError(TInt anError);
 
 };
 
@@ -250,7 +258,7 @@ void CUploader::ConstructL()
 {
   const gchar* upload_url = ac_STATIC_GET(upload_url);
   if (!upload_url) {
-    iNoConfig = ETrue;
+    iNotReady = ETrue;
     logt("uploads disabled: no upload URL");
   } else {
     iUploadUrl.Set((TUint8*)upload_url, strlen(upload_url)); 
@@ -267,30 +275,7 @@ void CUploader::ConstructL()
     User::Leave(KErrGeneral);
   }
 
-  //CreatePosterAo();
-
-#if 0
-  // Test code with a single part post. Just to see if can actually connect somewhere.
-  if (iPosterAo) {
-    _LIT8(KRequestBody, "Hello World!");
-    iPosterAo->PostBufferL(iUploadUrl, KRequestBody);
-  }
-#endif
-#if 0
-  // Test code with a manually constructed multi part post.
-  if (iPosterAo) {
-    _LIT8(boundary, "-----AaB03xeql7dsxeql7ds");
-    _LIT8(KRequestBody, "-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"metadata\"; filename=\"metadata.json\"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n{\"log filename\": \"test_log.db\", \"time\": {\"timezone\": -7200, \"daylight\": true, \"altzone\": -10800, \"time\": 1247093454.8903401}}\r\n-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"logdata\"; filename=\"test_log.db\"\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: binary\r\n\r\nHello World!\r\n-------AaB03xeql7dsxeql7ds\r\nContent-Disposition: form-data; name=\"logdata_submit\"\r\n\r\nUpload\r\n-------AaB03xeql7dsxeql7ds--\r\n");
-    iPosterAo->PostMultiPartBufferL(iUploadUrl, boundary, KRequestBody);
-  }
-#endif
-#if 0
-  // Test code with a file based post.
-  if (iPosterAo) {
-    _LIT(KFileName, "e:\\data\\atwink.png");
-    iPosterAo->PostFileL(iUploadUrl, KFileName);
-  }
-#endif
+  iImmediateAo = CImmediateAo::NewL(*this);
   iPostTimerAo = CTimerAo::NewL(*this, CActive::EPriorityStandard);
   iSnapshotTimerAo = CTimerAo::NewL(*this, CActive::EPriorityStandard);
   RefreshSnapshotTimeExpr(EFalse);
@@ -307,25 +292,44 @@ void CUploader::ConstructL()
 
 CUploader::~CUploader()
 {
-  BbUnregister();
+  Inactivate();
   delete iPostTimerAo;
   delete iSnapshotTimerAo;
-  DestroyPosterAo();
+  delete iImmediateAo;
   g_free(iFileToPost); // safe when NULL
   g_free(iSnapshotTimeExpr); // safe when NULL
 }
 
+void CUploader::StateChangedLater()
+{
+  if (!iImmediateAo->IsActive()) {
+    iImmediateAo->Complete();
+  }
+}
+
 void CUploader::Inactivate()
 {
-  if (iPosterAo) iPosterAo->Cancel();
+  logh();
   if (iSnapshotTimerAo) iSnapshotTimerAo->Cancel();
   if (iPostTimerAo) iPostTimerAo->Cancel();
+  if (iImmediateAo) iImmediateAo->Cancel();
+  iNotReady = ETrue;
+  DestroyPosterAo();
+  BbUnregister();
+}
+
+void CUploader::InactivateLater()
+{
+  logh();
+  if (iSnapshotTimerAo) iSnapshotTimerAo->Cancel();
+  if (iPostTimerAo) iPostTimerAo->Cancel();
+  iNotReady = ETrue;
+  StateChangedLater();
 }
 
 void CUploader::FatalError(TInt errCode)
 {
-  Inactivate();
-  ex_dblog_fatal_error(iLogDb, errCode);
+  er_log_symbian(er_FATAL, errCode, "in uploader");
 }
 
 void CUploader::StateChanged()
@@ -461,6 +465,13 @@ void CUploader::HandleTimerEvent(CTimerAo* aTimerAo, TInt errCode)
   }
 }
 
+void CUploader::HandleImmediateEvent()
+{
+  logh();
+  StateChanged();
+}
+
+// Happens in a callback always.
 void CUploader::PosterEvent(TInt anError)
 {
   dblogg("poster reports %d", anError);
@@ -491,7 +502,7 @@ void CUploader::PosterEvent(TInt anError)
 	    ac_global_Registry->last_upload_time = t;
 	  }
 
-	  StateChanged();
+	  StateChangedLater();
 	}
         break;
       }
@@ -507,7 +518,7 @@ void CUploader::PosterEvent(TInt anError)
         // We must be doing something wrong. Better stop altogether,
         // barring external intervention.
 	er_log_none(0, "inactivating uploader due to a permanent posting failure");
-	Inactivate();
+	InactivateLater();
         break;
       }
     default: // Symbian error
@@ -519,7 +530,8 @@ void CUploader::PosterEvent(TInt anError)
     }
 }
 
-// Called to handle poster creation and poster request errors.
+// Called to handle poster creation and poster request errors. May or
+// may not happen in a callback.
 void CUploader::HandleCommsError(TInt anError)
 {
   // Some errors are more severe than others.
@@ -540,7 +552,7 @@ void CUploader::HandleCommsError(TInt anError)
     case -30180: // not documented, getting this when WLAN specified in IAP is not within range
     case -5120: // no response from DNS server
       {
-	DestroyPosterAo();
+	StateChangedLater(); // to destroy poster AO
       } // fall through...
 
       // For many errors, a retry later is a suitable action.
@@ -571,18 +583,22 @@ void CUploader::HandleCommsError(TInt anError)
 	// error, so inactivate. Future versions may implement
 	// this better.
 	dblogg("inactivating uploader due to Symbian error %d", anError);
-	Inactivate();
+	InactivateLater();
 	break;
       }
     } // end switch
 }
 
-// Better by careful not to run out of stack calling this recursively.
-// Can always use an "ImmediateAo" if necessary to avoid such a risk.
 void CUploader::StateChangedL()
 {
-  if (iNoConfig)
+  if (iNotReady) {
+    Inactivate();
     return;
+  }
+
+  if (!PosterAoIsActive()) {
+    DestroyPosterAo(); // make sure no connection remains
+  }
 
   if (!iSnapshotTimePassed &&
       !iNoNextSnapshotTime &&
@@ -598,22 +614,12 @@ void CUploader::StateChangedL()
       return;
     if (i_uploads_allowed) {
       PostNowL(); // not called elsewhere
-    } else {
-      DestroyPosterAo(); // make sure no connection remains
     }
   } else if (!iNoOldFiles) {
     NextOldFileL();
     goto again;
   } else if (iSnapshotTimePassed) {
     TakeSnapshotNowL(); // not called elsewhere
-  } else {
-    // Have nothing to post for now. This will see to it that we close
-    // any connection that we do not require. With some operators,
-    // with no fixed data, merely keeping an RConnection open incurs
-    // an hourly charge (minimum charge per hour), and there is a
-    // battery hit as well, and possible interference with phone calls
-    // and such.
-    DestroyPosterAo();
   }
 }
 
@@ -649,8 +655,10 @@ void CUploader::PostNowL()
   logt("trying to post file now");
 
   if (!iPosterAo) {
+    logt("creating poster");
     TInt errCode = CreatePosterAo();
     if (errCode) {
+      logg("failure creating poster %d", errCode);
       HandleCommsError(errCode);
       return;
     }

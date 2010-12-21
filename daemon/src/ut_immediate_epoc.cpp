@@ -9,8 +9,14 @@
 
 TInt MImmediateObserver::HandleImmediateError(TInt errCode)
 {
-  assert(0 && "error in CImmediateAo::RunL()");
-  return errCode;
+  er_log_symbian(er_FATAL, errCode, "unexpected error in CImmediateAo");
+  return errCode; // not reached
+}
+
+TInt MImmediateObserver::HandleImmediateLeave(TInt errCode)
+{
+  er_log_symbian(er_FATAL, errCode, "leave in CImmediateAo::RunL()");
+  return errCode; // not reached
 }
 
 CImmediateAo *CImmediateAo::NewL(MImmediateObserver& aClient)
@@ -56,7 +62,7 @@ void CImmediateAo::DoCancel()
 
 TInt CImmediateAo::RunError(TInt aError)
 {
-  return iObserver.HandleImmediateError(aError);
+  return iObserver.HandleImmediateLeave(aError);
 }
 
 void CImmediateAo::RunL()

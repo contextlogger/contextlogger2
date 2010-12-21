@@ -8,6 +8,7 @@ class MImmediateObserver
 public:
   virtual void HandleImmediateEvent() = 0;
   virtual TInt HandleImmediateError(TInt errCode);
+  virtual TInt HandleImmediateLeave(TInt errCode);
 };
 
 NONSHARABLE_CLASS(CImmediateAo) : public CActive
