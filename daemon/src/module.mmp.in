@@ -287,7 +287,7 @@ source timer_generic_epoc.cpp
 source ut_compress.c
 <% end %>
 source ut_diskspace_epoc.cpp
-//source ut_immediate_epoc.cpp   //xxx experimental
+source ut_immediate_epoc.cpp
 //source ut_phonecall_epoc.cpp   //xxx experimental
 source ut_retry_epoc.cpp
 <% if $SMSEVENT_ENABLED %>

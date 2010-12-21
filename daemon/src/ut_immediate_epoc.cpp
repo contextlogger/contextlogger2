@@ -1,51 +1,19 @@
+#include "ut_immediate_epoc.hpp"
 #include "ut_immediate.h"
 
 #include "er_errors.h"
-
-#include <e32base.h>
-
-// --------------------------------------------------
-// opaque object
-// --------------------------------------------------
-
-class CImmediateAo;
-
-struct _ut_Immediate {
-  CImmediateAo* ao;
-  void* userdata; 
-  ut_ImmediateCallback* cb;
-};
 
 // --------------------------------------------------
 // active object
 // --------------------------------------------------
 
-NONSHARABLE_CLASS(CImmediateAo) : public CActive
+TInt MImmediateObserver::HandleImmediateError(TInt errCode)
 {
- public:
-  static CImmediateAo* NewL(ut_Immediate& aClient);
-  ~CImmediateAo();
+  assert(0 && "error in CImmediateAo::RunL()");
+  return errCode;
+}
 
- private:
-  CImmediateAo(ut_Immediate& aClient) : 
-    CActive(EPriorityStandard), iClient(aClient)
-  {
-    CActiveScheduler::Add(this);
-  }
-
- public:
-  void Complete();
-
- private:
-  void RunL();
-  TInt RunError(TInt aError);
-  void DoCancel();
-
- private:
-  ut_Immediate& iClient;
-};
-
-CImmediateAo *CImmediateAo::NewL(ut_Immediate &aClient)
+CImmediateAo *CImmediateAo::NewL(MImmediateObserver& aClient)
 {
   CImmediateAo *object = new (ELeave) CImmediateAo(aClient);
   /*
@@ -61,10 +29,10 @@ CImmediateAo::~CImmediateAo()
   Cancel();
 }
 
-TInt CImmediateAo::RunError(TInt aError)
+CImmediateAo::CImmediateAo(MImmediateObserver& aObserver) : 
+  CActive(EPriorityStandard), iObserver(aObserver)
 {
-  assert(0 && "leave in CImmediateAo::RunL()");
-  return 0; // not reached
+  CActiveScheduler::Add(this);
 }
 
 void CImmediateAo::Complete()
@@ -86,19 +54,45 @@ void CImmediateAo::DoCancel()
     }
 }
 
-#define make_error(_errCode, _msg)					\
-  gx_error_new(domain_symbian, _errCode, _msg ": %s (%d)",		\
-	       plat_error_strerror(_errCode), _errCode);
+TInt CImmediateAo::RunError(TInt aError)
+{
+  return iObserver.HandleImmediateError(aError);
+}
 
 void CImmediateAo::RunL()
 {
-  GError* error = NULL;
   TInt errCode = iStatus.Int();
-  if (G_UNLIKELY(errCode)) {
-    error = make_error(errCode, "immediate error");
-  }
-  (*(iClient.cb))(iClient.userdata, error);
+  if (G_UNLIKELY(errCode))
+    iObserver.HandleImmediateError(errCode);
+  else
+    iObserver.HandleImmediateEvent();
 }
+
+// --------------------------------------------------
+// opaque object
+// --------------------------------------------------
+
+#define make_error(_errCode, _msg)					\
+  gx_error_new(domain_symbian, _errCode, _msg ": %s (%d)",		\
+	       plat_error_strerror(_errCode), _errCode)
+
+struct _ut_Immediate : public MImmediateObserver 
+{
+  CImmediateAo* ao;
+  void* userdata; 
+  ut_ImmediateCallback* cb;
+
+  virtual void HandleImmediateEvent() 
+  {
+    (*cb)(userdata, NULL);
+  }
+
+  virtual TInt HandleImmediateError(TInt errCode)
+  {
+    (*cb)(userdata, make_error(errCode, "immediate error"));
+    return 0;
+  }
+};
 
 // --------------------------------------------------
 // API

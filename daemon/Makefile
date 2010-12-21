@@ -7,7 +7,7 @@ CC := gcc
 SRC_PATH := src
 APP_C_FILES := cf_query.c client-run.c config_db.c db_creation.c er_errors.c kr_controller.c libluasqlite3.c ld_create.c ld_log_db.c ld_logging.c main_posix.c rk_jabber_session.c rk_remokon.c sa_sensor_list_log_db.c sa_sensor_mark.c sa_sensor_timer.c up_shared.c up_uploader_curl.c ut_timer_libev.c utils_cl2.c
 APP_CXX_FILES := ac_app_context.cpp bb_blackboard.cpp cf_rcfile.cpp lua_bindings.cpp lua_cl2.cpp sa_array.cpp
-APP_QT_HEADERS := sa_qt_sensors.hpp sa_sensor_light_qt.hpp sa_sensor_proximity_qt.hpp sa_sensor_tap_qt.hpp iodeviceseq_qt.hpp up_uploader_qt_private.hpp ut_abs_timer_qt_epoc.hpp ut_abs_timer_qt_pure.hpp
+APP_QT_HEADERS := $(and $(USE_QT_SENSORS),sa_qt_sensors.hpp) $(and $(LIGHT_ENABLED),sa_sensor_light_qt.hpp) $(and $(PROXIMITY_ENABLED),sa_sensor_proximity_qt.hpp) $(and $(TAP_ENABLED),sa_sensor_tap_qt.hpp) iodeviceseq_qt.hpp up_uploader_qt_private.hpp ut_abs_timer_qt_epoc.hpp ut_abs_timer_qt_pure.hpp
 
 SHARED_PATH := ../shared
 SHARED_DIR := $(SHARED_PATH)/common
@@ -139,6 +139,11 @@ main : $(ALL_OBJ_FILES)
 GOB_FLAGS := --always-private-header --output-dir $(SRC_PATH)
 
 moc : $(MOC_FILES)
+
+rm-moc :
+	-rm $(MOC_FILES)
+
+remoc : rm-moc moc
 
 $(APP_MOC_FILES) : $(SRC_PATH)/moc_%.cpp : $(SRC_PATH)/%.hpp
 	moc $(MOC_FLAGS) $< -o $@
