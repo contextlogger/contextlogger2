@@ -26,25 +26,6 @@ public:
   virtual void SetHttpTransaction(RHTTPTransaction* aTransaction) = 0;
 };
 
-NONSHARABLE_CLASS(RBufferDataSupplier) :
-  public MDataSupplier
-{
- private: // property
-  HBufC8* iData; // owned
- public:
-  RBufferDataSupplier() : iData(NULL) {}
- public:
-  void Set(HBufC8* aData) { Close(); iData = aData; }
-  void Close() { delete iData; iData = NULL; }
- public: // MHTTPDataSupplier
-  TBool GetNextDataPart(TPtrC8& aDataPart);
-  void ReleaseData();
-  TInt Reset();
-  TInt OverallDataSize();
- public: // MDataSupplier
-  void SetHttpTransaction(RHTTPTransaction* aTransaction) {}
-};
-
 #define KMultiPartBoundaryMaxLen 48
 
 NONSHARABLE_CLASS(CFileDataSupplier) :
@@ -62,7 +43,10 @@ NONSHARABLE_CLASS(CFileDataSupplier) :
   TInt Reset();
   TInt OverallDataSize();
  public: // MDataSupplier
-  void SetHttpTransaction(RHTTPTransaction* aTransaction) { iTransaction = aTransaction; }
+  void SetHttpTransaction(RHTTPTransaction* aTransaction) 
+  { 
+    iTransaction = aTransaction; 
+  }
  private: // property
   TFileName iFileName;
   DEF_SESSION(RFs, iFs);
@@ -130,24 +114,31 @@ NONSHARABLE_CLASS(CPosterAo) :
 {
   CTOR_DECL_CPosterAo;
 
+ private: // property
+  enum TState { EReady = 0, EActive, EDone };
+  TState iState;
+
+  MPosterObserver& iObserver;
+  TUint32 iIapId;
+
+  DEF_SESSION(RSocketServ, iSocketServ);
+  DEF_SESSION(RConnection, iConnection);
+  DEF_SESSION(RHTTPSession, iHttpSession);
+  DEF_SESSION(RHTTPTransaction, iHttpTransaction); // closed with iHttpSession also
+  TInt iHttpStatus;
+
+  CFileDataSupplier* iFileDataSupplier;
+
+  TBuf8<KMultiPartBoundaryMaxLen> iBoundary;
+
  public:
   ~CPosterAo();
   
-  void Cancel();
-  TBool IsActive() { return iRunning; }
-
   // Asynchronous method.
   void PostFileL(const TDesC8& aUri,
 		 const TDesC& aFileName);
 
-  // Asynchronous method.
-  void PostBufferL(const TDesC8& aUri,
-		   const TDesC8& aBody);
-  
-  // Asynchronous method.
-  void PostMultiPartBufferL(const TDesC8& aUri,
-			    const TDesC8& aBody,
-			    const TDesC8& aBoundary);
+  TBool IsActive() const { return iState == EActive; }
 
  private: // MHTTPTransactionCallback
   void MHFRunL(RHTTPTransaction aTransaction, const THTTPEvent& aEvent);
@@ -156,33 +147,18 @@ NONSHARABLE_CLASS(CPosterAo) :
 		   const THTTPEvent& aEvent);
   
  private: // internal methods
+  void PostComplete(TInt errCode);
+
   void SetHeaderL(RHTTPHeaders aHeaders,
 		  TInt aHdrField,
 		  const TDesC8& aHdrValue);
 
-  void SetSinglePart() { iIsMultiPart = EFalse; }
-  void SetMultiPart(const TDesC8& aBoundary) { iIsMultiPart = ETrue; iBoundary = aBoundary; }
+  void SetBoundary(const TDesC8& aBoundary) { iBoundary = aBoundary; }
   
   // Asynchronous method.
   void PostGenericL(const TDesC8& aUri,
 		    MDataSupplier& aDataSupplier);
 
- private: // property
-  MPosterObserver& iObserver;
-  TUint32 iIapId;
-
-  DEF_SESSION(RSocketServ, iSocketServ);
-  DEF_SESSION(RConnection, iConnection);
-  DEF_SESSION(RHTTPSession, iHttpSession);
-  DEF_SESSION(RHTTPTransaction, iHttpTransaction); // closed with iHttpSession also
-  TBool iRunning;
-  TInt iHttpStatus;
-
-  RBufferDataSupplier iBufferDataSupplier;
-  CFileDataSupplier* iFileDataSupplier;
-
-  TBool iIsMultiPart;
-  TBuf8<KMultiPartBoundaryMaxLen> iBoundary;
 };
 
 #endif // __FEATURE_UPLOADER__

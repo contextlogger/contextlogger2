@@ -25,20 +25,15 @@ void CPosterAo::ConstructL()
 {
   iFileDataSupplier = new (ELeave) CFileDataSupplier;
 
-  //logt("doing poster init");
   LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iSocketServ, iSocketServ.Connect());
-  //logt("socket server session open");
   LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iConnection, iConnection.Open(iSocketServ));
-  //logt("connection created");
 
   TCommDbConnPref connPref;
   connPref.SetDialogPreference(ECommDbDialogPrefDoNotPrompt);
   connPref.SetIapId(iIapId);
   User::LeaveIfError(iConnection.Start(connPref));
-  //logt("connection preferences set");
 
   iHttpSession.OpenL(); SET_SESSION_OPEN(iHttpSession);
-  //logt("http session opened");
 
   // Set our RSocketServ and RConnection to the RHTTPSession instance.
   RStringPool strPool = iHttpSession.StringPool();
@@ -47,17 +42,14 @@ void CPosterAo::ConstructL()
 			THTTPHdrVal(iSocketServ.Handle()));
   connInfo.SetPropertyL(strPool.StringF(HTTP::EHttpSocketConnection, RHTTPSession::GetTable()),
 			THTTPHdrVal(REINTERPRET_CAST(TInt, &(iConnection))));
-  //logt("http session set to use our connection");
 }
 
 CPosterAo::~CPosterAo()
 {
-  Cancel();
   SESSION_CLOSE_IF_OPEN(iHttpTransaction);
   SESSION_CLOSE_IF_OPEN(iHttpSession);
   SESSION_CLOSE_IF_OPEN(iConnection);
   SESSION_CLOSE_IF_OPEN(iSocketServ);
-  iBufferDataSupplier.Close(); // safe when no data set
   delete iFileDataSupplier;
 }
 
@@ -67,79 +59,36 @@ CPosterAo::~CPosterAo()
 // Used to set header value to HTTP request
 // ----------------------------------------------------------------------------
 void CPosterAo::SetHeaderL(RHTTPHeaders aHeaders,
-		     TInt aHdrField,
-		     const TDesC8& aHdrValue)
+			   TInt aHdrField,
+			   const TDesC8& aHdrValue)
 {
   RStringF valStr = iHttpSession.StringPool().OpenFStringL(aHdrValue);
   CleanupClosePushL(valStr);
   THTTPHdrVal val(valStr);
-  aHeaders.SetFieldL(iHttpSession.StringPool().StringF(aHdrField,
-						       RHTTPSession::GetTable()), val);
+  aHeaders.SetFieldL(iHttpSession.StringPool().
+		     StringF(aHdrField,
+			     RHTTPSession::GetTable()), val);
   CleanupStack::PopAndDestroy();  // valStr
 }
 
-// ----------------------------------------------------------------------------
-// CClientEngine::CancelTransaction()
-//
-// Cancels currently running transaction and frees resources related to it.
-// ----------------------------------------------------------------------------
-void CPosterAo::Cancel()
+void CPosterAo::PostComplete(TInt errCode)
 {
-  if(!iRunning)
-    return;
-  
+  if (iState != EActive) return;
   logh();
-
-  iRunning = EFalse;
-
-  // Close() also cancels transaction (Cancel() can also be used but
-  // resources allocated by transaction must be still freed with Close())
-  if (IS_SESSION_OPEN(iHttpTransaction)) {
-    iHttpTransaction.Cancel();
-  }
-
-  if (iFileDataSupplier) {
-    iFileDataSupplier->Close(); // important for closing any locked file
-  }
+  assert(iFileDataSupplier);
+  iFileDataSupplier->CloseFile(); // to allow deletion
+  iState = EDone;
+  iObserver.PosterEvent(errCode);
 }
 
 void CPosterAo::PostFileL(const TDesC8& aUri,
 			  const TDesC& aFileName)
 {
-  assert(!iRunning);
-
+  assert(iState == EReady);
+  assert(iFileDataSupplier);
   iFileDataSupplier->OpenL(aFileName);
-  SetMultiPart(iFileDataSupplier->Boundary());
+  SetBoundary(iFileDataSupplier->Boundary());
   PostGenericL(aUri, *iFileDataSupplier);
-}
-
-void CPosterAo::PostBufferL(const TDesC8& aUri,
-			    const TDesC8& aBody)
-{
-  assert(!iRunning);
-
-  SetSinglePart();
-
-  // Copy data to be posted into member variable; iPostData is used later in
-  // methods inherited from MHTTPDataSupplier.
-  iBufferDataSupplier.Set(aBody.AllocL()); // takes ownership
-
-  PostGenericL(aUri, iBufferDataSupplier);
-}
-
-void CPosterAo::PostMultiPartBufferL(const TDesC8& aUri,
-				     const TDesC8& aBody,
-				     const TDesC8& aBoundary)
-{
-  assert(!iRunning);
-
-  SetMultiPart(aBoundary);
-
-  // Copy data to be posted into member variable; iPostData is used later in
-  // methods inherited from MHTTPDataSupplier.
-  iBufferDataSupplier.Set(aBody.AllocL()); // takes ownership
-
-  PostGenericL(aUri, iBufferDataSupplier);
 }
 
 // ----------------------------------------------------------------------------
@@ -173,20 +122,11 @@ void CPosterAo::PostGenericL(const TDesC8& aUri,
   _LIT8(KConnectionClose, "close");
   SetHeaderL(hdr, HTTP::EConnection, KConnectionClose);
 
-  if (iIsMultiPart) {
-    _LIT8(KContentTypeStart, "multipart/form-data, boundary=");
-    TBuf8<KMultiPartBoundaryMaxLen + 30> contentType;
-    contentType.Copy(KContentTypeStart);
-    contentType.Append(iBoundary);
-    SetHeaderL(hdr, HTTP::EContentType, contentType);
-  } else {
-    _LIT8(KContentDisposition, "form-data; name=\"logdata\"; filename=\"teemuteekkari.db\"");
-    _LIT8(KContentType, "application/octet-stream");
-    _LIT8(KContentTransferEncoding, "binary");
-    SetHeaderL(hdr, HTTP::EContentDisposition, KContentDisposition);
-    SetHeaderL(hdr, HTTP::EContentType, KContentType);
-    SetHeaderL(hdr, HTTP::ETransferEncoding, KContentTransferEncoding);
-  }
+  _LIT8(KContentTypeStart, "multipart/form-data, boundary=");
+  TBuf8<KMultiPartBoundaryMaxLen + 30> contentType;
+  contentType.Copy(KContentTypeStart);
+  contentType.Append(iBoundary);
+  SetHeaderL(hdr, HTTP::EContentType, contentType);
 
   // Set this class as an data supplier. Inherited MHTTPDataSupplier methods
   // are called when framework needs to send body data.
@@ -196,7 +136,7 @@ void CPosterAo::PostGenericL(const TDesC8& aUri,
   // events via MHFRunL and MHFRunError.
   iHttpTransaction.SubmitL();
 
-  iRunning = ETrue;
+  iState = EActive;
 }
 
 // ----------------------------------------------------------------------------
@@ -283,11 +223,10 @@ void CPosterAo::MHFRunL(RHTTPTransaction aTransaction,
       {
 	// Indicates that transaction succeeded.
 	logt("R_HTTP_TX_SUCCESSFUL");
-	Cancel(); // transaction complete (important, must Close any file before posting event)
         // Some codes might even indicate a permanent error, but it is
         // possible for such errors to appear as we do tweaking on the
         // server side.
-	iObserver.PosterEvent((iHttpStatus == 200) ? POSTER_SUCCESS : POSTER_TRANSIENT_FAILURE);
+	PostComplete((iHttpStatus == 200) ? POSTER_SUCCESS : POSTER_TRANSIENT_FAILURE);
       }
       break;
 
@@ -295,18 +234,17 @@ void CPosterAo::MHFRunL(RHTTPTransaction aTransaction,
       {
 	// Transaction completed with failure.
 	logt("R_HTTP_TX_FAILED");
-	Cancel(); // transaction complete
-	iObserver.PosterEvent(POSTER_TRANSIENT_FAILURE); // guessing
+	PostComplete(POSTER_TRANSIENT_FAILURE); // guessing
       }
       break;
 
     default:
       {
 	logg("THTTPEvent (%d)", eventStatus);
-	Cancel(); // xxx not right if for progress events
         // Any negative value presumably is a Symbian error, otherwise
-        // we are just guessing here.
-	iObserver.PosterEvent((eventStatus < 0) ? eventStatus : POSTER_TRANSIENT_FAILURE);
+        // we are just guessing here. And for progress events it is
+        // just wrong to even complete the post.
+	PostComplete((eventStatus < 0) ? eventStatus : POSTER_TRANSIENT_FAILURE);
       }
       break;
     }
@@ -324,80 +262,8 @@ TInt CPosterAo::MHFRunError(TInt aError,
 			    const THTTPEvent& /*aEvent*/)
 {
   logg("leave %d in HTTP handler", aError);
-  Cancel(); // no more events if could not handle that one
-  iObserver.PosterEvent(aError);
+  PostComplete(aError);
   return KErrNone;
-}
-
-// --------------------------------------------------
-// --------------------------------------------------
-// --------------------------------------------------
-// RBufferDataSupplier
-// --------------------------------------------------
-// --------------------------------------------------
-// --------------------------------------------------
-
-// ----------------------------------------------------------------------------
-// CClientEngine::GetNextDataPart()
-//
-// Inherited from MHTTPDataSupplier
-// Called by framework when next part of the body is needed. In this
-// this provides data for HTTP post.
-// ----------------------------------------------------------------------------
-TBool RBufferDataSupplier::GetNextDataPart(TPtrC8& aDataPart)
-{
-  assert(iData);
-
-  // Provide pointer to next chunk of data (return ETrue, if last chunk)
-  // Usually only one chunk is needed, but sending big file could require
-  // loading the file in small parts.
-  aDataPart.Set(iData->Des());
-
-  return ETrue;
-}
-
-// ----------------------------------------------------------------------------
-// CClientEngine::ReleaseData()
-//
-// Inherited from MHTTPDataSupplier
-// Called by framework. Allows us to release resources needed for previous
-// chunk. (e.g. free buffers)
-// ----------------------------------------------------------------------------
-void RBufferDataSupplier::ReleaseData()
-{
-  // We have no "buffers" to release.
-}
-
-// ----------------------------------------------------------------------------
-// CClientEngine::Reset()
-//
-// Inherited from MHTTPDataSupplier
-// Called by framework to reset the data supplier. Indicates to the data
-// supplier that it should return to the first part of the data.
-// In practise an error has occured while sending data, and framework needs to
-// resend data.
-// ----------------------------------------------------------------------------
-TInt RBufferDataSupplier::Reset()
-{
-  // Nothing needed since iPostData still exists and contains all the data.
-  // (If a file is used and read in small parts we should seek to beginning
-  // of file and provide the first chunk again in GetNextDataPart() )
-  return KErrNone;
-}
-
-// ----------------------------------------------------------------------------
-// CClientEngine::OverallDataSize()
-//
-// Inherited from MHTTPDataSupplier
-// Called by framework. We should return the expected size of data to be sent.
-// If it's not know we can return KErrNotFound (it's allowed and does not cause
-// problems, since HTTP protocol allows multipart bodys without exact content
-// length in header).
-// ----------------------------------------------------------------------------
-TInt RBufferDataSupplier::OverallDataSize()
-{
-  assert(iData);
-  return iData->Length();
 }
 
 // --------------------------------------------------
@@ -411,6 +277,19 @@ TInt RBufferDataSupplier::OverallDataSize()
 CFileDataSupplier::~CFileDataSupplier()
 {
   Close();
+}
+
+void CFileDataSupplier::CloseFile()
+{
+  SESSION_CLOSE_IF_OPEN(iFile);
+}
+
+void CFileDataSupplier::Close()
+{
+  CloseFile();
+  SESSION_CLOSE_IF_OPEN(iFs);
+  iPrelude.Close();
+  iEpilogue.Close();
 }
 
 // xxx need some metadata support here, probably, unless user identified in some other manner (now all we have is the filename encoded username, but could have a JSON part with that and more, say)
@@ -465,19 +344,6 @@ void CFileDataSupplier::OpenL(const TDesC& aFileName)
   //iDataLen = KPrelude().Length() + fileSize + KEpilogue().Length();
   iDataLen = iPrelude.Length() + fileSize + iEpilogue.Length();
   iPhase = 0;
-}
-
-void CFileDataSupplier::CloseFile()
-{
-  SESSION_CLOSE_IF_OPEN(iFile);
-}
-
-void CFileDataSupplier::Close()
-{
-  CloseFile();
-  SESSION_CLOSE_IF_OPEN(iFs);
-  iPrelude.Close();
-  iEpilogue.Close();
 }
 
 const TDesC8& CFileDataSupplier::Boundary() const
