@@ -183,7 +183,8 @@ CUploader::CUploader(ac_AppContext* aAppContext) :
 
   qxDebug() << "testing qxDebug";
 #if defined(__SYMBIAN32__)
-  // Requires Qt 4.7.
+  // Requires Qt 4.7, unless using the Mobility version.
+  // http://doc.qt.nokia.com/qtmobility-1.1.0-beta/bearer-management.html
   QNetworkConfigurationManager mgr;
   QList<QNetworkConfiguration> cfgList = mgr.allConfigurations();
   // We want to print out the list of configurations. Perhaps we can
