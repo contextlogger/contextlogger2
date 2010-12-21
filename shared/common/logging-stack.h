@@ -2,7 +2,7 @@
 #ifndef __logging_stack_h__
 #define __logging_stack_h__
 
-#include "common/logging.h"
+#include "common/logging_c.h"
 
 #if __DO_LOGGING__
 

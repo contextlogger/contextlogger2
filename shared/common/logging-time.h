@@ -1,8 +1,9 @@
 #ifndef __logging_time_h__
 #define __logging_time_h__
 
+#include "common/logging_c.h"
+
 #include <time.h>
-#include "common/logging.h"
 
 #ifdef __cplusplus
 extern "C" {

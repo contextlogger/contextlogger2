@@ -10,8 +10,10 @@ APP_CXX_FILES := ac_app_context.cpp bb_blackboard.cpp cf_rcfile.cpp lua_bindings
 APP_QT_HEADERS := sa_qt_sensors.hpp sa_sensor_light_qt.hpp sa_sensor_proximity_qt.hpp sa_sensor_tap_qt.hpp iodeviceseq_qt.hpp up_uploader_qt_private.hpp ut_abs_timer_qt_epoc.hpp ut_abs_timer_qt_pure.hpp
 
 SHARED_PATH := ../shared
+SHARED_DIR := $(SHARED_PATH)/common
 SHARED_C_FILES := error_list.c gx_maybe_string.c gxerror.c logging-time.c platform_error.c utilities.c
 SHARED_CXX_FILES := assertions_cxx.cpp logging.cpp utilities_cxx.cpp
+SHARED_QT_HEADERS :=
 
 TIMESPEC_PATH := ../time-spec
 TIMESPEC_C_FILES := moment_parser.c time_utils.c
@@ -38,12 +40,15 @@ CURL_FEATURES := $(shell $(CURL_CONFIG) --features)
 CURL_PREFIX := $(shell $(CURL_CONFIG) --prefix)
 endif
 
-C_FILES := $(patsubst %, $(SRC_PATH)/%, $(APP_C_FILES)) $(patsubst %, $(SHARED_PATH)/common/%, $(SHARED_C_FILES)) $(patsubst %, $(TIMESPEC_PATH)/%, $(TIMESPEC_C_FILES)) $(FULL_IKSEMEL_C_FILES)
-CXX_FILES := $(patsubst %, $(SRC_PATH)/%, $(APP_CXX_FILES)) $(patsubst %, $(SHARED_PATH)/common/%, $(SHARED_CXX_FILES))
+C_FILES := $(patsubst %, $(SRC_PATH)/%, $(APP_C_FILES)) $(patsubst %, $(SHARED_DIR)/%, $(SHARED_C_FILES)) $(patsubst %, $(TIMESPEC_PATH)/%, $(TIMESPEC_C_FILES)) $(FULL_IKSEMEL_C_FILES)
+CXX_FILES := $(patsubst %, $(SRC_PATH)/%, $(APP_CXX_FILES)) $(patsubst %, $(SHARED_DIR)/%, $(SHARED_CXX_FILES))
 
-APP_MOC_FILES := $(patsubst %.hpp,moc_%.cpp,$(APP_QT_HEADERS))
-QT_HEADERS := $(patsubst %, $(SRC_PATH)/%, $(APP_QT_HEADERS))
-MOC_FILES := $(patsubst %, $(SRC_PATH)/%, $(APP_MOC_FILES))
+APP_MOC_BASENAMES := $(patsubst %.hpp,moc_%.cpp,$(APP_QT_HEADERS))
+SHARED_MOC_BASENAMES := $(patsubst %.hpp,moc_%.cpp,$(SHARED_QT_HEADERS))
+QT_HEADERS := $(patsubst %, $(SRC_PATH)/%, $(APP_QT_HEADERS)) $(patsubst %, $(SHARED_DIR)/%, $(SHARED_QT_HEADERS))
+APP_MOC_FILES := $(patsubst %, $(SRC_PATH)/%, $(APP_MOC_BASENAMES))
+SHARED_MOC_FILES := $(patsubst %, $(SHARED_DIR)/%, $(SHARED_MOC_BASENAMES))
+MOC_FILES := $(APP_MOC_FILES) $(SHARED_MOC_FILES)
 
 GEN_FILES := $(RAGEL_GEN_FILES)
 
@@ -135,7 +140,10 @@ GOB_FLAGS := --always-private-header --output-dir $(SRC_PATH)
 
 moc : $(MOC_FILES)
 
-$(MOC_FILES) : $(SRC_PATH)/moc_%.cpp : $(SRC_PATH)/%.hpp
+$(APP_MOC_FILES) : $(SRC_PATH)/moc_%.cpp : $(SRC_PATH)/%.hpp
+	moc $(MOC_FLAGS) $< -o $@
+
+$(SHARED_MOC_FILES) : $(SHARED_DIR)/moc_%.cpp : $(SHARED_DIR)/%.hpp
 	moc $(MOC_FLAGS) $< -o $@
 
 %.c %.h %-private.h : %.gob
@@ -154,7 +162,7 @@ epoc_codegen : src/timer_generic_epoc.h src/ut_telephony_epoc.h
 
 ragel : $(RAGEL_C_FILES) $(RAGEL_GV_FILES) $(RAGEL_PNG_FILES)
 
-codegen : ragel epoc_codegen src/sa_sensor_list_log_db.h $(SHARED_PATH)/common/error_list.h
+codegen : ragel epoc_codegen src/sa_sensor_list_log_db.h $(SHARED_DIR)/error_list.h
 	cd ../time-spec && make codegen
 
 src/sa_sensor_list_log_db.h src/sa_sensor_list_log_db.c src/sa_sensor_list_integration.cpp : src/sa_sensor_list_spec.ss src/sa_sensor_list_make.ss src/sa_sensor_list_dsl.ss
@@ -166,7 +174,7 @@ src/timer_generic_epoc.h src/timer_generic_epoc.cpp : src/timer_generic_epoc.scm
 src/ut_telephony_epoc.h src/ut_telephony_epoc.cpp : src/ut_telephony_epoc.scm
 	$(PLT_ENV) $<
 
-$(SHARED_PATH)/common/error_list.h $(SHARED_PATH)/common/error_list.c : $(SHARED_PATH)/common/error_list.scm
+$(SHARED_DIR)/error_list.h $(SHARED_DIR)/error_list.c : $(SHARED_DIR)/error_list.scm
 	$(PLT_ENV) $<
 
 old-log :

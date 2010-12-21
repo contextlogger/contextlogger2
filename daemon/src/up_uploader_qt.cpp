@@ -12,15 +12,15 @@
 #include "common/assertions.h"
 #include "common/error_list.h"
 #include "common/gx_exception.hpp"
-#include "common/logging-stack.h"
+#include "common/logging_qt.hpp"
 #include "common/logging-time.h"
-#include "common/logging.h"
 #include "common/platform_error.h"
 
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <QNetworkConfigurationManager>
 #include <QtDebug>
 
 #if defined(__SYMBIAN32__)
@@ -179,6 +179,24 @@ CUploader::CUploader(ac_AppContext* aAppContext) :
   RefreshIap(false);
 #if defined(__SYMBIAN32__)
   logg("uploader using IAP %d", iIapId);
+#endif /* __SYMBIAN32__ */
+
+  qxDebug() << "testing qxDebug";
+#if defined(__SYMBIAN32__)
+  // Requires Qt 4.7.
+  QNetworkConfigurationManager mgr;
+  QList<QNetworkConfiguration> cfgList = mgr.allConfigurations();
+  // We want to print out the list of configurations. Perhaps we can
+  // select one by platform specific ID, which we already have. It
+  // seems that currently on Symbian^3 we get no configurations even if
+  // IAP entries do exist.
+  logt("network config list begin");
+  foreach (QNetworkConfiguration cfg, cfgList) {
+    logt("config entry:");
+    qxDebug() << cfg.identifier() << cfg.name() << cfg.bearerTypeName();
+  }
+  logt("network config list end");
+  //iNetworkAccessManager.setConfiguration(cfg);
 #endif /* __SYMBIAN32__ */
 
   iPostTimerAo.setSingleShot(true);
@@ -498,14 +516,6 @@ void CUploader::CreatePosterAoL()
 {
   assert(!iPostSession);
   assert(iFileToPost);
-
-#if defined(__SYMBIAN32__) && 0
-  // Requires Qt 4.7.
-  //QNetworkConfiguration cfg = iNetworkAccessManager.defaultConfiguration();
-  QList<QNetworkConfiguration> cfgList = iNetworkAccessManager.allConfigurations();
-  // We want to print out the list of configurations. Perhaps we can select one by platform specific ID, which we already have. xxx
-  //iNetworkAccessManager.setConfiguration(cfg);
-#endif /* __SYMBIAN32__ */
 
   QByteArray ba = (iFileToPost->fileName().toLocal8Bit());
   const char* pathname = ba.data();

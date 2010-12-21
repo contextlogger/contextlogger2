@@ -1,20 +1,26 @@
-#ifndef __logging_h__
-#define __logging_h__
+#ifndef __logging_qt_hpp__
+#define __logging_qt_hpp__
 
-#include "common/logging_c.h"
+#include "application_config.h"
 
-// Qt headers conflict with Lua internal definitions.
-#if defined(__cplusplus) && defined(QT_CORE_LIB) && !defined(LUA_CORE)
-#include "common/logging_qt.hpp"
+#if __DO_LOGGING__ && defined(__SYMBIAN32__)
+
+#include "common/logging_qt_qxdebug.hpp"
+#define qxDebug() (QxDebug().Debug())
+
+#else
+
+#include <QtGlobal>
+// We assume that QT_NO_DEBUG_OUTPUT is defined when !__DO_LOGGING__.
+#define qxDebug() qDebug()
+
 #endif
 
-#endif /* __logging_h__ */
+#endif /* __logging_qt_hpp__ */
 
 /**
 
-logging.h
-
-Copyright 2009 Helsinki Institute for Information Technology (HIIT)
+Copyright 2010 Helsinki Institute for Information Technology (HIIT)
 and the authors. All rights reserved.
 
 Authors: Tero Hasu <tero.hasu@hut.fi>

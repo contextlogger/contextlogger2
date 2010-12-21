@@ -1,20 +1,34 @@
-#ifndef __logging_h__
-#define __logging_h__
+#ifndef __logging_qt_qxdebug_hpp__
+#define __logging_qt_qxdebug_hpp__
 
-#include "common/logging_c.h"
+#include "common/logging_c.h" // logt
 
-// Qt headers conflict with Lua internal definitions.
-#if defined(__cplusplus) && defined(QT_CORE_LIB) && !defined(LUA_CORE)
-#include "common/logging_qt.hpp"
-#endif
+#include <QDebug>
+#include <QString>
 
-#endif /* __logging_h__ */
+class QxDebug
+{
+  private:
+  QString s;
+  QDebug d;
+
+  public:
+  QxDebug() : d(QDebug(&s)) {}
+
+  ~QxDebug() {
+    if (!s.isEmpty()) {
+      logt(s.toUtf8().data());
+    }
+  }
+
+  QDebug& Debug() { return d; }
+};
+
+#endif /* __logging_qt_qxdebug_hpp__ */
 
 /**
 
-logging.h
-
-Copyright 2009 Helsinki Institute for Information Technology (HIIT)
+Copyright 2010 Helsinki Institute for Information Technology (HIIT)
 and the authors. All rights reserved.
 
 Authors: Tero Hasu <tero.hasu@hut.fi>
