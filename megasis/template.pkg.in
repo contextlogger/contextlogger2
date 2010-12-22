@@ -348,6 +348,8 @@ endif
 ;; (except that the component is made available under SFL v1.0),
 ;; so we cannot necessarily include this.
 ;;
+<% if false %>
+
 <% srcfile = "../libs-s60/euserhl-1.2/euserhl.sis"
    uid = lookup_uid srcfile
    uid_s = ("0x%08x" % uid) %>
@@ -360,6 +362,8 @@ endif
 if not package(<%= uid_s %>)
 <%= display_note "This software requires the EUserHL v1.2 library. Please download and install it. The download URL is http://developer.symbian.com/main/downloads/files/EUserHL.zip." %>
 endif
+<% end %>
+
 <% end %>
 
 ;;

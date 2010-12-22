@@ -281,6 +281,12 @@ project must implement.
   (define/public (have-devcert-caps.attr)
     (sublist? DEV-CAPS (capabilities)))
 
+  (define/public (can-get-cell-id)
+    (sublist? '(ReadDeviceData) (capabilities)))
+  
+  (define/public (can-get-network-info.attr)
+    (can-get-cell-id))
+
   (define/public (protected-uid-signable.attr)
     ;; Having a DevCert is not quite the same thing as having DevCert
     ;; caps, so override this as necessary.
@@ -355,11 +361,14 @@ project must implement.
   (define/override (appfocus-enabled.attr)
     #t)
 
+  (define/override (appmessage-enabled.attr)
+    #t)
+
   (define/override (callstatus-enabled.attr)
     #t)
 
   (define/override (cellid-enabled.attr)
-    (have-caps? '(ReadDeviceData)))
+    (send this can-get-cell-id))
 
   (define/override (inactivity-enabled.attr)
     #t)

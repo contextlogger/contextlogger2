@@ -619,6 +619,7 @@ extern "C" kr_PlatAo* kr_PlatAo_new(GError** error)
     return NULL;
   }
 
+#if __CAN_GET_NETWORK_INFO__
   TRAP(errCode, self->iNetworkObserver = CNetworkObserver::NewL());
   if (G_UNLIKELY(errCode)) {
     kr_PlatAo_destroy(self);
@@ -628,6 +629,7 @@ extern "C" kr_PlatAo* kr_PlatAo_new(GError** error)
 			    plat_error_strerror(errCode), errCode);
     return NULL;
   }
+#endif
 
   TRAP(errCode, self->iSignalObserver = CSignalObserver::NewL());
   if (G_UNLIKELY(errCode)) {

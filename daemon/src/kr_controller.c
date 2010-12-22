@@ -46,7 +46,7 @@ static void stop_uploader(kr_Controller* self)
 
 static gboolean current_iap_is_cellular()
 {
-#if defined(__SYMBIAN32__)
+#if defined(__SYMBIAN32__) && __CAN_GET_NETWORK_INFO__
   int value = get_config_iap_id();
   if (value < 0) {
     // No IAP configured. User can manually choose IAP or not.
