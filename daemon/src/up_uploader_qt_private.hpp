@@ -1,3 +1,8 @@
+/*
+ !concept {:name => "Multipart HTTP posting",
+   :desc => "Multipart HTTP(S) POSTing using the QtNetwork API."}
+*/
+
 #ifndef __up_uploader_qt_private_hpp__
 #define __up_uploader_qt_private_hpp__
 
