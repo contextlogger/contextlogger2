@@ -29,8 +29,6 @@ only dependency.
     
     (define/override (binary-type) 'application)
   
-    (define/override (have-sqlite3.attr) #f)
-
     (define/override (have-anim.attr) #f)
 
     (define/override (have-epocxplat.attr) #f)

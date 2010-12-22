@@ -20,8 +20,6 @@ epocstacksize 	0x10000
 EPOCHEAPSIZE	0x020000 0x800000
 <% end %>
 
-<% qt_gui = false %>
-
 systeminclude \epoc32\include
 systeminclude \epoc32\include\stdapis
 systeminclude \epoc32\include\stdapis\glib-2.0
@@ -44,7 +42,7 @@ systeminclude ..\..\..\<%= curl_dir %>\include
 
 <% if $WITH_QT %>
 <% qt_inc_list = %w{include/QtCore include/QtNetwork include mkspecs/common/symbian/stl-off mkspecs/common/symbian}
-   qt_inc_list.push('include/QtGui') if qt_gui
+   qt_inc_list.push('include/QtGui') if $WITH_QT_GUI
    for inc in qt_inc_list %>
 systeminclude		../../../../../symbian-gp/qt-latest/<%= inc %>
 <% end %>
@@ -192,7 +190,7 @@ library keyevents_client_2000af44.lib
 LIBRARY		libdl.lib
 LIBRARY		QtCore.lib
 LIBRARY		QtNetwork.lib
-<% if qt_gui %>
+<% if $WITH_QT_GUI %>
 LIBRARY		QtGui.lib
 <% end %>
 <% end %>
@@ -202,7 +200,7 @@ source ac_app_context.cpp
 source bb_blackboard.cpp
 source cf_query.c
 source cf_rcfile.cpp
-<% if $IS_APPLICATION %>
+<% if $IS_APPLICATION and not $WITH_QT %>
 source cl2appapp.cpp
 source cl2appappui.cpp
 source cl2appcontainer.cpp
@@ -252,12 +250,11 @@ source lua_cl2.cpp
 source ld_log_db.c
 source ld_create.c
 source ld_logging.c
-<% unless $IS_APPLICATION %>
-<% if $WITH_QT %>
-source main_epoc_qt.cpp
-<% else %>
+<% if (not $WITH_QT) and (not $IS_APPLICATION) %>
 source main_epoc.cpp
 <% end %>
+<% if $WITH_QT and not $IS_APPLICATION %>
+source main_epoc_qt.cpp
 <% end %>
 <% if $FEATURE_REMOKON %>
 source rk_jabber_session.c
@@ -553,7 +550,7 @@ MACRO       HAVE_LIBZ
 // See Qt src/s60main to see what this library contains.
 // Looks like it essentially just sets up cleanup stack and then calls 'main'.
 // We want neither if our main_ implementation has an E32Main.
-<% if qt_gui %>
+<% if $WITH_QT_GUI %>
 //staticlibrary	qtmain.lib
 <% else %>
 //staticlibrary	libcrt0.lib
@@ -614,7 +611,7 @@ MACRO		QT_USE_MATH_H_FLOATS
 MACRO		QT_CORE_LIB
 MACRO		QT_NETWORK_LIB
 
-<% if qt_gui %>
+<% if $WITH_QT_GUI %>
 MACRO		QT_GUI_LIB
 <% end %>
 
