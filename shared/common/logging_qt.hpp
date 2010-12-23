@@ -6,13 +6,16 @@
 #if __DO_LOGGING__ && defined(__SYMBIAN32__)
 
 #include "common/logging_qt_qxdebug.hpp"
+
+// We could also define this as an overloaded (inline) function. Could
+// then also support the const char* taking variant.
 #define qxDebug() (QxDebug().Debug())
 
 #else
 
 #include <QtGlobal>
 // We assume that QT_NO_DEBUG_OUTPUT is defined when !__DO_LOGGING__.
-#define qxDebug() qDebug()
+#define qxDebug qDebug
 
 #endif
 

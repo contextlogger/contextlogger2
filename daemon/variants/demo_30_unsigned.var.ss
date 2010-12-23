@@ -2,8 +2,8 @@
 
 #|
 
-S60 v3.0 self-signed daemon build, with all supported sensors.
-Intended for mega-SIS inclusion.
+S60 v3.0 unsigned demo build for DevCert signing. With a GUI, and Open
+C/C++ as the only dependency.
 
 |#
 
@@ -17,21 +17,21 @@ Intended for mega-SIS inclusion.
     symbian/all-variant%
     (super-new)
     
-    (define/override (signed.attr) #t)
+    (define/override (signed.attr) #f)
   
-    (define/override (cert-name) 'self30)
+    (define/override (cert-name) 'dev)
   
-    (define/override (capabilities) SELF-CAPS-30)
+    (define/override (capabilities) DEV-CAPS)
 
     (define/override (s60-vernum.attr) 30)
     
     (define/override (kit-name) 's60_30)
     
-    (define/override (binary-type) 'daemon)
+    (define/override (binary-type) 'application)
   
-    (define/override (have-anim.attr) #t)
+    (define/override (have-anim.attr) #f)
 
-    (define/override (have-epocxplat.attr) #t)
+    (define/override (have-epocxplat.attr) #f)
 
     (define/override (feature-uploader.attr) #t)
 

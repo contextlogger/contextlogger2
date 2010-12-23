@@ -2,8 +2,8 @@
 
 #|
 
-S60 v3.0 self-signed daemon build, with all supported sensors.
-Intended for mega-SIS inclusion.
+S60 v3.1 self-signed daemon build, with all supported sensors.
+Intended for mega-SIS inclusion. Depends on Qt.
 
 |#
 
@@ -23,12 +23,14 @@ Intended for mega-SIS inclusion.
   
     (define/override (capabilities) SELF-CAPS-30)
 
-    (define/override (s60-vernum.attr) 30)
+    (define/override (s60-vernum.attr) 31)
     
-    (define/override (kit-name) 's60_30)
+    (define/override (kit-name) 's60_31)
     
     (define/override (binary-type) 'daemon)
   
+    (define/override (with-qt.attr) #t)
+
     (define/override (have-anim.attr) #t)
 
     (define/override (have-epocxplat.attr) #t)

@@ -93,7 +93,7 @@ project must implement.
     #f)
 
   (define/public (with-qmake.attr)
-    (with-qt.attr))
+    (and (with-qt.attr) (not (is-symbian.attr))))
 
   (define/public (with-qt-gui.attr)
     (and (with-qt.attr) (is-application.attr)))
