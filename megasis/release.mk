@@ -6,10 +6,10 @@ DIST_HOME := ../download
 
 release :
 	mkdir -p $(DIST_HOME)
-	$(MAKE) s60_30_self30 s60_30_self32 s60_30_unsigned
+	$(MAKE) s60_30_self30 s60_31_self30 s60_32_self32
 	cp cl2_megasis-$(VERSION_STRING)-s60_30_self30.sisx $(DIST_HOME)/
-	cp cl2_megasis-$(VERSION_STRING)-s60_30_self32.sisx $(DIST_HOME)/
-	cp cl2_megasis-$(VERSION_STRING)-s60_30_dev.sis $(DIST_HOME)/
+	cp cl2_megasis-$(VERSION_STRING)-s60_31_self30.sisx $(DIST_HOME)/
+	cp cl2_megasis-$(VERSION_STRING)-s60_32_self32.sisx $(DIST_HOME)/
 
 #
 # Copyright 2009 Helsinki Institute for Information Technology (HIIT)

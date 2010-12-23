@@ -5,10 +5,10 @@
 configure = ./configure.scm $(1)
 configure = make config VARIANT_NAME=$(1)
 
-CONFIGURATIONS = s60_30_dev s60_30_self30 s60_30_self32 s60_30_unsigned hpe
+CONFIGURATIONS = s60_30_self30 s60_31_self30 s60_32_self32 s60_30_dev s60_31_dev hpe
 
 .PHONY : default
-default : s60_30_dev
+default : s60_31_dev
 
 define template
 $(1) :
