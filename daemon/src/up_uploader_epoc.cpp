@@ -549,15 +549,10 @@ void CUploader::HandleCommsError(TInt anError)
     case KErrInUse: // file in use maybe
     case KErrNotReady: // -18 ("A device required by an I/O operation is not ready to start operations.") We have actually gotten this error. Let us have it here to see if it is something transient.
     case KErrServerBusy: // local daemon, such as socket or file server
+    case KErrTimedOut: // (very often see this error)
+    case -5120: // no response from DNS server (often see this error)
     case -8268: // not documented, but getting this in flight mode
     case -30180: // not documented, getting this when WLAN specified in IAP is not within range
-    case -5120: // no response from DNS server
-      {
-	StateChangedLater(); // to destroy poster AO
-      } // fall through...
-
-      // For many errors, a retry later is a suitable action.
-    case KErrTimedOut:
       {
 	// Retry later.
 	iNumPostFailures++;
