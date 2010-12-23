@@ -1,5 +1,5 @@
 /*
- !concept {:name => "Multipart HTTP posting",
+ !concept {:name => "Multipart HTTP posting (Qt)",
    :desc => "Multipart HTTP(S) POSTing using the QtNetwork API."}
 */
 

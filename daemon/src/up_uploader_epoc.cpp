@@ -158,7 +158,7 @@ NONSHARABLE_CLASS(CUploader) :
   TBool PosterAoIsActive() { return (iPosterAo && iPosterAo->IsActive()); }
   void HandleCommsError(TInt errCode);
   void PostNowL();
-  void SetPostTimer();
+  void SetPostRetryTimer();
   void SetSnapshotTimerL();
   void TakeSnapshotNowL();
   void FatalError(TInt anError);
@@ -406,7 +406,7 @@ void CUploader::SetSnapshotTimerL()
 #endif
 }
 
-void CUploader::SetPostTimer()
+void CUploader::SetPostRetryTimer()
 {
   assert(iNumPostFailures > 0);
 
@@ -510,7 +510,8 @@ void CUploader::PosterEvent(TInt anError)
       {
 	// Retry later.
 	iNumPostFailures++;
-	SetPostTimer();
+	SetPostRetryTimer();
+	StateChangedLater(); // to destroy poster AO
         break;
       }
     case POSTER_PERMANENT_FAILURE:
@@ -560,7 +561,8 @@ void CUploader::HandleCommsError(TInt anError)
       {
 	// Retry later.
 	iNumPostFailures++;
-	SetPostTimer();
+	SetPostRetryTimer();
+	StateChangedLater(); // to destroy poster AO
 	break;
       }
 

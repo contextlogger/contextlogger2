@@ -1,3 +1,8 @@
+/*
+ !concept {:name => "Multipart HTTP posting (Qt)",
+   :desc => "Multipart HTTP(S) POSTing using the QtNetwork API."}
+*/
+
 #include "up_uploader_qt_private.hpp"
 
 #include "cf_query.h"
@@ -167,7 +172,7 @@ CUploader::CUploader(ac_AppContext* aAppContext) :
     QList<QSslCertificate> myList = QSslCertificate::fromPath("etc/ca-certs/*.crt", QSsl::Pem, QRegExp::Wildcard);
     caList.append(myList);
 #if 0
-    foreach (QSslCertificate cert, caList) {
+    foreach (const QSslCertificate& cert, caList) {
       qDebug() << cert.issuerInfo(QSslCertificate::Organization);
     }
 #endif
@@ -192,7 +197,7 @@ CUploader::CUploader(ac_AppContext* aAppContext) :
   // seems that currently on Symbian^3 we get no configurations even if
   // IAP entries do exist.
   logt("network config list begin");
-  foreach (QNetworkConfiguration cfg, cfgList) {
+  foreach (const QNetworkConfiguration& cfg, cfgList) {
     logt("config entry:");
     qxDebug() << cfg.identifier() << cfg.name() << cfg.bearerTypeName();
   }
@@ -381,7 +386,7 @@ bool CUploader::PosterAoIsActive()
 void CUploader::postingSslErrors(const QList<QSslError> & errors)
 {
 #if 0
-  foreach (QSslError err, errors) {
+  foreach (const QSslError& err, errors) {
     qDebug() << err.errorString() << (int)err.error();
   }
 #endif
