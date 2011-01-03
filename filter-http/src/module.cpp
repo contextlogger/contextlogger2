@@ -1,5 +1,10 @@
 // This code based on an example retrieved from http://wiki.forum.nokia.com/index.php/Writing_an_HTTP_filter_plugin
 
+// References:
+// http://wiki.forum.nokia.com/index.php/Writing_an_HTTP_filter_plugin
+// http://wiki.forum.nokia.com/index.php/TSS001070_-_Modifying_web_content_using_an_HTTP_filter
+// http://discussion.forum.nokia.com/forum/showthread.php?128548-How-to-monitor-S60-browser-to-get-the-details-of-URLs-visited-by-the-user
+
 #include "cl2webfilter.h"
 
 #include "common/epoc-session.hpp"
@@ -112,7 +117,7 @@ TInt CCl2WebFilter::MHFSessionRunError(TInt aError, const THTTPSessionEvent& aEv
 	
 // The standard ECOM initialisation stuff
 	
-const TImplementationProxy KImplementationTable[] = 
+static const TImplementationProxy KImplementationTable[] = 
   {
     IMPLEMENTATION_PROXY_ENTRY(0xe846000f, CCl2WebFilter::CreateFilterL)
   };
