@@ -1,12 +1,13 @@
 // This code based on an example retrieved from http://wiki.forum.nokia.com/index.php/Writing_an_HTTP_filter_plugin
 
 #include <e32base.h>
-#include <e32debug.h>
 #include <ecom/ecom.h>
 #include <ecom/implementationproxy.h>
 #include <http/cecomfilter.h>
 #include <http/mhttpfilter.h>
 #include <http/rhttptransaction.h>
+
+#include "common/logging.h"
 
 _LIT8(KCl2WebFilterName, "cl2webfilter");
 
@@ -60,7 +61,7 @@ void CCl2WebFilter::ConstructL(RHTTPSession& aSession)
 void CCl2WebFilter::MHFUnload(RHTTPSession aSession, THTTPFilterHandle aHandle)
 {
   // called when our filter is unloaded
-  RDebug::Print(_L("Demo Filter: HTTP filter unloaded."));
+  logt("Demo Filter: HTTP filter unloaded.");
   // self loading filters manage their own life cycle...
   delete this;
 }
@@ -68,7 +69,7 @@ void CCl2WebFilter::MHFUnload(RHTTPSession aSession, THTTPFilterHandle aHandle)
 void CCl2WebFilter::MHFLoad(RHTTPSession aSession, THTTPFilterHandle aHandle)
 {
   // called when our filter is loaded.
-  RDebug::Print(_L("Demo Filter: HTTP filter loaded."));
+  logt("Demo Filter: HTTP filter loaded.");
 }
 
 void CCl2WebFilter::MHFRunL(RHTTPTransaction aTransaction, const THTTPEvent& aEvent)
@@ -77,7 +78,7 @@ void CCl2WebFilter::MHFRunL(RHTTPTransaction aTransaction, const THTTPEvent& aEv
   if (aEvent == THTTPEvent::ESubmit)
     {
       const TDesC8& uri = aTransaction.Request().URI().UriDes();
-      RDebug::Printf("Demo Filter: New transaction submitted, URI: %S", &uri);
+      logg("Demo Filter: New transaction submitted");
     }
 }
 

@@ -151,9 +151,9 @@ endif
 
 SAKE_EXE := sake
 #SAKE_EXE := ../tools/bin/sake
-SAKE_COMMAND := $(SAKE_EXE) --trace handle=$(DLL_VARIANT) kits=$(KIT) rel=$(REL) "caps=$(CAPLIST)" version=$(VERSION) "projname=$(PROJECT_NAME)" uid=0x$(UID3) bin_basename=$(BIN_BASENAME)
+SAKE_COMMAND := $(SAKE_EXE) --trace handle=$(DLL_VARIANT) kits=$(KIT) rel=$(REL) "caps=$(CAPLIST)" version=$(VERSION) "projname=$(PROJECT_NAME)" uid=0x$(UID3) bin_basename=$(BIN_BASENAME) $(and $(DEBUG),logging=true)
 
-default : dll
+default : all
 
 .PHONY : dll freeze pkg sis clean all
 
@@ -205,7 +205,7 @@ unsigned-sis : pkg
 signed-sis : pkg
 	(cd $(SIS_DIR) && $(SISTOOL) --makesis --signsis --cert $(CERT) -o $(SISX_FILE) -i $(PKG_FILE))
 
-all : sis
+all : dll sis
 
 clean :
 	-rm -r build $(SIS_DIR)

@@ -8,9 +8,9 @@ targetpath      \system\libs\
 
 uid             0x10009d8d <%= build.uid3.chex_string %>
 
-nostrictdef
+//nostrictdef
 exportunfrozen
-deffile		..\..\eabi\<%= $basename %>.def
+//deffile		..\..\eabi\<%= $basename %>.def
 
 systeminclude	\epoc32\include
 
@@ -23,6 +23,14 @@ LIBRARY ecom.lib
 LIBRARY http.lib
 LIBRARY bafl.lib
 LIBRARY inetprotutil.lib 
+
+<% if $do_logging %>
+library efsrv.lib
+library flogger.lib
+
+sourcepath ..\..\..\shared\common
+source logging.cpp
+<% end %>
 
 sourcepath 	..\..\src
 source 		module.cpp

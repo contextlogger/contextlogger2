@@ -121,6 +121,7 @@ for build in $builds
   # if your SDK does not have the required API.
   if $sake_op[:logging] and map[:has_flogger]
     map[:do_logging] = :define
+    $do_logging = true
   end
 
   # Each build variant shall have all of the components.
