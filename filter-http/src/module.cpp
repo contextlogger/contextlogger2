@@ -4,6 +4,7 @@
 // http://wiki.forum.nokia.com/index.php/Writing_an_HTTP_filter_plugin
 // http://wiki.forum.nokia.com/index.php/TSS001070_-_Modifying_web_content_using_an_HTTP_filter
 // http://discussion.forum.nokia.com/forum/showthread.php?128548-How-to-monitor-S60-browser-to-get-the-details-of-URLs-visited-by-the-user
+// http://wiki.forum.nokia.com/index.php/CS000835_-_ECom:_Implementing_interface
 
 #include "cl2webfilter.h"
 
@@ -63,19 +64,26 @@ CCl2WebFilter::~CCl2WebFilter()
 	
 void CCl2WebFilter::ConstructL(RHTTPSession& aSession)
 {
-  // first ID is category, the second is key
+  TInt errCode = RProperty::Define(TUid::Uid(KCl2WebFilterCat), 
+				   KCl2WebFilterKey, 
+				   RProperty::EByteArray,
+				   256);
+  if (errCode != KErrNone && errCode != KErrAlreadyExists) 
+    User::Leave(errCode);
+
   LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iProperty, iProperty.Attach(TUid::Uid(KCl2WebFilterCat), KCl2WebFilterKey, EOwnerThread));
 
   // install this filter in to the current session
   iFilterName = aSession.StringPool().OpenFStringL(KCl2WebFilterName);
   aSession.FilterCollection().AddFilterL(*this, THTTPEvent::EAnyTransactionEvent,
-					 RStringF(), KAnyStatusCode, EClientFilters, iFilterName);
+					 RStringF(), KAnyStatusCode, 
+					 EClientFilters, iFilterName);
 }
 
 void CCl2WebFilter::MHFUnload(RHTTPSession aSession, THTTPFilterHandle aHandle)
 {
   // called when our filter is unloaded
-  logt("Demo Filter: HTTP filter unloaded.");
+  //logt("Demo Filter: HTTP filter unloaded.");
   // self loading filters manage their own life cycle...
   delete this;
 }
@@ -83,7 +91,7 @@ void CCl2WebFilter::MHFUnload(RHTTPSession aSession, THTTPFilterHandle aHandle)
 void CCl2WebFilter::MHFLoad(RHTTPSession aSession, THTTPFilterHandle aHandle)
 {
   // called when our filter is loaded.
-  logt("Demo Filter: HTTP filter loaded.");
+  //logt("Demo Filter: HTTP filter loaded.");
 }
 
 void CCl2WebFilter::MHFRunL(RHTTPTransaction aTransaction, const THTTPEvent& aEvent)
@@ -92,30 +100,31 @@ void CCl2WebFilter::MHFRunL(RHTTPTransaction aTransaction, const THTTPEvent& aEv
   if (aEvent == THTTPEvent::ESubmit)
     {
       const TDesC8& uri = aTransaction.Request().URI().UriDes();
-      logg("Demo Filter: New transaction submitted to '%S'", &uri);
+      //logg("Demo Filter: New transaction submitted to '%S'", &uri);
       if (uri.Length() <= RProperty::KMaxPropertySize)
-	iProperty.Set(uri); // ignore errors
+        // We ignore errors here.
+	iProperty.Set(uri);
     }
 }
 
 void CCl2WebFilter::MHFSessionRunL(const THTTPSessionEvent& aEvent)
 {
-  // called when an RHTTPSession even happens.
+  // Called when an RHTTPSession event happens.
 }
 
 TInt CCl2WebFilter::MHFRunError(TInt aError, RHTTPTransaction aTransaction, const THTTPEvent& aEvent)
 {
-  // called when MHFRunL leaves, as with active objects
+  // Called when MHFRunL leaves. Our implementation never does.
   return KErrNone;
 }
 
 TInt CCl2WebFilter::MHFSessionRunError(TInt aError, const THTTPSessionEvent& aEvent)
 {
-  // called when MHFSessionRunL leaves.
+  // Called when MHFSessionRunL leaves. Our implementation does nothing.
   return KErrNone;
 }
 	
-// The standard ECOM initialisation stuff
+// standard ECOM initialisation
 	
 static const TImplementationProxy KImplementationTable[] = 
   {

@@ -327,6 +327,10 @@ project must implement.
 
   (define/public (have-epocxplat.attr) #t)
 
+  ;; This library requires high capabilities, but not in this process,
+  ;; and hence it makes no sense to have this depend on our capas.
+  (define/public (have-cl2webfilter.attr) #f)
+
   ;; We have no dependency on the DLL anymore, perhaps on some of the
   ;; headers.
   (define/public (have-euserhl.attr) #f)
@@ -408,6 +412,9 @@ project must implement.
     (and (send this with-qt-mobility.attr)
          (have-caps? '(ReadDeviceData))))
 
+  (define/override (httpurl-enabled.attr)
+    (send this have-cl2webfilter.attr))
+    
   (define/override (weburl-enabled.attr)
     (and (send this have-epocxplat.attr)
          (or

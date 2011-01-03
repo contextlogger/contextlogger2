@@ -549,6 +549,7 @@ WARN_LOGFILE           =
 INPUT                  = inc \
                          src \
                          ../epocxplat/src \
+                         ../filter-http/src \
                          ../iksemel/src \
                          ../keyevents/src \
                          ../lua/src \

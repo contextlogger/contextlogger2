@@ -58,6 +58,7 @@ userinclude ..\..\..\lua\etc // for lua.hpp
 userinclude ..\..\..\sqlite3h\src\sqlite3
 <% end %>
 userinclude ..\..\..\epocxplat\src
+userinclude ..\..\..\filter-http\inc
 
 <% if $UPLOAD_WITH_CURL %>
   <% if $pamp_curl %>
@@ -217,6 +218,9 @@ source epoc-callstatus.cpp
 source epoc-cellid.cpp
 source epoc-cliapi-server.cpp
 source epoc-gps.cpp
+<% if $HTTPURL_ENABLED %>
+source epoc-httpurl.cpp
+<% end %>
 source epoc-iap.cpp
 source epoc-inactivity.cpp
 source epoc-indicator.cpp

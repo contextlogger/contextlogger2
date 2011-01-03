@@ -171,6 +171,19 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
              (bindings
               (binding (index 2) (type int) (value "isClose")))))
     
+    ;; httpurl
+    (sensor (name httpurl)
+            (cpp-condition "__HTTPURL_ENABLED__")
+            (sql-schema "create table httpurl_scan (unixtime INTEGER, url TEXT);")
+            (sql-statements "insert into httpurl_scan (unixtime, url) values (?, ?);")
+            (log-insert-api
+             (args
+              ,(arg (type (ptr-to (cconst 'char))) (name 'url))
+              )
+             (bindings
+              (binding (index 2) (type text) (value "url, strlen(url)") (dispose static))
+              )))
+    
     ;; weburl
     (sensor (name weburl)
             (cpp-condition "__WEBURL_ENABLED__")

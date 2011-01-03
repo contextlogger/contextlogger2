@@ -27,6 +27,9 @@ sqlite3 $1 "select datetime(unixtime, 'unixepoch'), latitude, longitude, altitud
 echo GSM CELL ID
 sqlite3 $1 "select datetime(unixtime, 'unixepoch'), country_code, network_code, area_code, cell_id from cellid_scan;"
 
+echo HTTP URL
+sqlite3 $1 "select datetime(unixtime, 'unixepoch'), url from httpurl_scan;" 
+
 echo INACTIVITY '(active=1)'
 sqlite3 $1 "select datetime(unixtime, 'unixepoch'), value from inactivity_scan;"
 
@@ -57,7 +60,7 @@ sqlite3 $1 "select datetime(unixtime, 'unixepoch'), value, caps from indicator_s
 echo TAPPING
 sqlite3 $1 "select datetime(unixtime, 'unixepoch'), direction, is_dbl from tap_scan;"
 
-echo WEBURL
+echo WEB APP URL
 sqlite3 $1 "select datetime(unixtime, 'unixepoch'), name, url from weburl_scan;" 
 
 echo MARKS
