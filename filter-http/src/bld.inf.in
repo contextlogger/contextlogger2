@@ -1,0 +1,14 @@
+// Note that there is a bldmake bug (in GnuPoc?); a single
+// platform is not supported.
+
+PRJ_PLATFORMS 
+<% if build.v9_up? %>
+winscw gcce
+<% else %>
+wins thumb armi
+<% end %>
+
+PRJ_MMPFILES
+<% for cb in build.comp_builds %>
+<%= build.to_build_rel(cb.mmp_file) %>
+<% end %>

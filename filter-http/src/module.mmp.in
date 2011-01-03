@@ -1,0 +1,40 @@
+targettype 	plugin
+
+target	       	cl2webfilter.dll
+
+<% if build.v8_down? %>
+targetpath      \system\libs\
+<% end %>
+
+uid             0x10009d8d <%= build.uid3.chex_string %>
+
+//nostrictdef
+//exportunfrozen
+//deffile		..\..\eabi\<%= $basename %>.def
+
+systeminclude	\epoc32\include
+
+userinclude 	.
+userinclude 	..\..\src
+userinclude	..\..\..\shared
+
+LIBRARY euser.lib
+LIBRARY ecom.lib
+LIBRARY http.lib
+LIBRARY bafl.lib
+LIBRARY inetprotutil.lib 
+
+sourcepath 	..\..\src
+source 		module.cpp
+
+start resource cl2webfilter.rss
+TARGET cl2webfilter.rsc
+END
+
+<% if build.v9_up? %>
+vendorid 	0
+capability 	<%= build.caps_string %>
+<% end %>
+
+// No using the old client-server API.
+macro 	    	__HIDE_IPC_V1__

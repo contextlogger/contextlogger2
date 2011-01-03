@@ -1,0 +1,24 @@
+#include <ecom/registryinfo.rh>
+
+RESOURCE REGISTRY_INFO theInfo
+	{
+	dll_uid = 0xe846000f;
+	interfaces=
+		{
+		INTERFACE_INFO
+			{
+			interface_uid = 0x101F446D;
+			implementations = 
+				{
+				IMPLEMENTATION_INFO
+					{
+					implementation_uid = 0xe846000f;
+					version_no = 1;
+					display_name = "CL2 Web Filter";
+					default_data = "HTTP/+CL2WEBFILTER";
+					opaque_data = "";
+					}
+				};
+			}
+		};
+	}
