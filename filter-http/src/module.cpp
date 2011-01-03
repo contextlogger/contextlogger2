@@ -78,7 +78,7 @@ void CCl2WebFilter::MHFRunL(RHTTPTransaction aTransaction, const THTTPEvent& aEv
   if (aEvent == THTTPEvent::ESubmit)
     {
       const TDesC8& uri = aTransaction.Request().URI().UriDes();
-      logg("Demo Filter: New transaction submitted");
+      logg("Demo Filter: New transaction submitted to '%S'", &uri);
     }
 }
 
