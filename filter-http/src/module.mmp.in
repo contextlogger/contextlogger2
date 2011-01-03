@@ -8,9 +8,9 @@ targetpath      \system\libs\
 
 uid             0x10009d8d <%= build.uid3.chex_string %>
 
-//nostrictdef
-//exportunfrozen
-//deffile		..\..\eabi\<%= $basename %>.def
+nostrictdef
+exportunfrozen
+deffile		..\..\eabi\<%= $basename %>.def
 
 systeminclude	\epoc32\include
 

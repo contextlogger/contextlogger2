@@ -133,7 +133,7 @@ DLL_FN_FMT := $(VARPFX)_%s_$(VARSFX).dll
 # We must actually build with this DLL name in order to get the LIB
 # file named right, it is not just a matter of renaming in the PKG
 # file.
-BIN_BASENAME := $(BASENAME)_$(UID3)
+BIN_BASENAME := $(BASENAME)
 BIN_FN := $(BIN_BASENAME).dll
 
 PKGIN_FILE := src/module.pkg.in
@@ -167,10 +167,12 @@ FREEZE_COMMAND := ruby $(CURDIR)/../tools/bin/in-kit-env.rb -k $(KIT) abld freez
 freeze :
 	(cd build/$(DLL_VARIANT) && $(FREEZE_COMMAND))
 
+SIS_DLL_FN := $(DLL_VARIANT).dll
+
 dll :
 	$(SAKE_COMMAND)
 	mkdir -p $(SIS_DIR)
-	cp build/$(DLL_VARIANT)/$(BIN_FN) $(SIS_DIR)/$(DLL_VARIANT).dll
+	cp build/$(DLL_VARIANT)/$(BIN_FN) $(SIS_DIR)/$(SIS_DLL_FN)
 
 define sake_template
 $(1) :
@@ -186,7 +188,7 @@ $(foreach name,$(SAKE_RULES),$(eval $(call sake_template,$(name))))
 SISFMT := $(if $(IS_V9),er9,er6)
 
 SIS_VERSION := $(VERSION)
-PKG_VARLIST := BASENAME BIN_FN DLL_FN_FMT PROJECT_NAME SISFMT UID3 SIS_VERSION
+PKG_VARLIST := BASENAME BIN_FN PROJECT_NAME SIS_DLL_FN SISFMT UID3 SIS_VERSION
 PKG_EXPORTS := $(foreach name,$(PKG_VARLIST),$(name) = "$($(name))";)
 
 pkg :
@@ -197,14 +199,10 @@ SISTOOL := ../../megasis/do-sis-signing.rb -k $(KIT)
 
 sis : $(if $(SIGN),signed-sis,unsigned-sis)
 
-unsupported-txt :
-	mkdir -p $(SIS_DIR)
-	echo Unsupported platform. No DLL installed. Please abort installation. > $(SIS_DIR)/unsupported.txt
-
-unsigned-sis : pkg unsupported-txt
+unsigned-sis : pkg
 	(cd $(SIS_DIR) && $(SISTOOL) --makesis -o $(SIS_FILE) -i $(PKG_FILE))
 
-signed-sis : pkg unsupported-txt
+signed-sis : pkg
 	(cd $(SIS_DIR) && $(SISTOOL) --makesis --signsis --cert $(CERT) -o $(SISX_FILE) -i $(PKG_FILE))
 
 all : sis

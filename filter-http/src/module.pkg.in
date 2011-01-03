@@ -22,7 +22,7 @@
 [0x1028315F], 0, 0, 0, {"Series605thProductID"}
 [0x20022E6D], 0, 0, 0, {"Symbian3ProductID"}
 
-"cl2webfilter.dll" - "!:\sys\bin\cl2webfilter.dll"
+"<%= SIS_DLL_FN %>" - "!:\sys\bin\cl2webfilter.dll"
 "epoc32/data/z/resource/plugins/cl2webfilter.rsc" - "!:\resource\plugins\cl2webfilter.rsc"
 
 ;; Copyright 2010 Helsinki Institute for Information Technology (HIIT)
