@@ -15,6 +15,7 @@ exportunfrozen
 systeminclude	\epoc32\include
 
 userinclude 	.
+userinclude 	..\..\inc
 userinclude 	..\..\src
 userinclude	..\..\..\shared
 

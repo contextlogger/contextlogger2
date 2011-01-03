@@ -1,13 +1,17 @@
 // This code based on an example retrieved from http://wiki.forum.nokia.com/index.php/Writing_an_HTTP_filter_plugin
 
+#include "cl2webfilter.h"
+
+#include "common/epoc-session.hpp"
+#include "common/logging.h"
+
 #include <e32base.h>
+#include <e32property.h>
 #include <ecom/ecom.h>
 #include <ecom/implementationproxy.h>
 #include <http/cecomfilter.h>
 #include <http/mhttpfilter.h>
 #include <http/rhttptransaction.h>
-
-#include "common/logging.h"
 
 _LIT8(KCl2WebFilterName, "cl2webfilter");
 
@@ -32,6 +36,7 @@ private:
 	
 private:
   RStringF iFilterName;
+  DEF_SESSION(RProperty, iProperty);
 };
 	
 CEComFilter* CCl2WebFilter::CreateFilterL(TAny* aHttpSession)
@@ -48,10 +53,14 @@ CEComFilter* CCl2WebFilter::CreateFilterL(TAny* aHttpSession)
 CCl2WebFilter::~CCl2WebFilter()
 {
   iFilterName.Close();
+  SESSION_CLOSE_IF_OPEN(iProperty);
 }
 	
 void CCl2WebFilter::ConstructL(RHTTPSession& aSession)
 {
+  // first ID is category, the second is key
+  LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iProperty, iProperty.Attach(TUid::Uid(KCl2WebFilterCat), KCl2WebFilterKey, EOwnerThread));
+
   // install this filter in to the current session
   iFilterName = aSession.StringPool().OpenFStringL(KCl2WebFilterName);
   aSession.FilterCollection().AddFilterL(*this, THTTPEvent::EAnyTransactionEvent,
@@ -79,6 +88,8 @@ void CCl2WebFilter::MHFRunL(RHTTPTransaction aTransaction, const THTTPEvent& aEv
     {
       const TDesC8& uri = aTransaction.Request().URI().UriDes();
       logg("Demo Filter: New transaction submitted to '%S'", &uri);
+      if (uri.Length() <= RProperty::KMaxPropertySize)
+	iProperty.Set(uri); // ignore errors
     }
 }
 
