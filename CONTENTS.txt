@@ -24,6 +24,14 @@ A dynamic library for isolating Symbian platform ABI incompatibilities, so that 
 
 A separate epocxplat DLL is built for each Symbian release, but this fact is hidden by including all the different builds in a single epocxplat SIS file, and by picking a compatible DLL during installation.
 
+h2. filter-http/
+
+A HTTP filter plugin DLL. The purpose of this plugin is to hook up with the Symbian HTTP framework sessions in order to notify the logger (or another interested process) of any URLs being requested.
+
+We do not know of any public (or private) Symbian API that could be used to directly observe HTTP requests from the logger, and hence the requirement to install this plugin in order for the logger to get notified regarding HTTP requests. If the plugin is not installed, then the logger will not receive said notifications, but there is no harm done otherwise.
+
+As this plugin automatically and intrusively hooks up with all ``RHTTPSession`` objects, it requires rather high Symbian platform security capabilities, and hence its use may not always be an option.
+
 h2. iksemel/
 
 A port of the [Iksemel http://code.google.com/p/iksemel/] XML and Jabber/XMPP library for Symbian. This not quite your plain port, but rather it excludes some APIs and includes some new ones.
