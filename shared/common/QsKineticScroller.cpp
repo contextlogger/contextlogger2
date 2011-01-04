@@ -23,7 +23,10 @@
 // OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "QsKineticScroller.h"
+// References:
+// http://blog.codeimproved.net/2010/12/kinetic-scrolling-with-qt-the-what-and-the-how/
+
+#include "QsKineticScroller.hpp"
 #include <QApplication>
 #include <QScrollBar>
 #include <QAbstractScrollArea>
