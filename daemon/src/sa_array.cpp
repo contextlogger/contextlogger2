@@ -103,7 +103,7 @@
 #include "epoc-smsevent.hpp"
 #include "epoc-weburl.hpp"
 
-#include "sa_sensor_light_qt.hpp"
+#include "sa_sensor_light_api.h"
 #include "sa_sensor_proximity_qt.hpp"
 #include "sa_sensor_tap_qt.hpp"
 

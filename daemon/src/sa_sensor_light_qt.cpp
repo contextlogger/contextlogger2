@@ -1,4 +1,5 @@
 #include "sa_sensor_light_qt.hpp"
+#include "sa_sensor_light_api.h"
 
 #include "er_errors.h"
 #include "ld_logging.h"
@@ -22,9 +23,19 @@ void Sensor_light::handleReadingChanged()
   QAmbientLightReading *data(static_cast<QAmbientLightReading*>(reading()));
   if (data) {
     int level = data->lightLevel();
-    logg("got light reading: %d", level);
+    guilogf("light %d", level);
     log_db_log_light(GetLogDb(), level, NULL);
   }
+}
+
+Sensor_light* new_Sensor_light(ac_AppContext* aAppContext)
+{
+  return q_check_ptr(new Sensor_light(aAppContext));
+}
+
+void delete_Sensor_light(Sensor_light* obj)
+{
+  delete obj;
 }
 
 /**

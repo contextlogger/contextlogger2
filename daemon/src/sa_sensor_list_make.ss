@@ -309,7 +309,7 @@
             (thunk
              (display-nl (format "#if ~a" cpp-condition))
              (display-nl (format "#define SENSOR_~a_IS_SUPPORTED 1" (symbol-upcase sensor-name)))
-             (display-nl (format "#define WHEN_SENSOR_~a_SUPPORTED_BLOCK(x) x" (symbol-upcase sensor-name)))
+             (display-nl (format "#define WHEN_SENSOR_~a_SUPPORTED_BLOCK(x) { x ; }" (symbol-upcase sensor-name)))
              (display-nl (format "#define WHEN_SENSOR_~a_SUPPORTED_NOTHING(x) x" (symbol-upcase sensor-name)))
              (display-nl "#else")
              (display-nl (format "#define SENSOR_~a_IS_SUPPORTED 0" (symbol-upcase sensor-name)))

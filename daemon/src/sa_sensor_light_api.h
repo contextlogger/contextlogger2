@@ -1,32 +1,38 @@
-#ifndef __sa_sensor_light_qt_hpp__
-#define __sa_sensor_light_qt_hpp__
+#ifndef __sa_sensor_light_api_h__
+#define __sa_sensor_light_api_h__
 
 #include "ac_app_context.h"
-#include "sa_qt_sensors.hpp"
+#include "application_config.h"
 
-QTM_USE_NAMESPACE
+class Sensor_light;
 
-// Note: We cannot say NONSHARABLE_CLASS here as it would confuse "moc".
-class Sensor_light :
-  public ClQtEventSensorBase
-{
-  Q_OBJECT
+Sensor_light* new_Sensor_light(ac_AppContext* aAppContext);
 
- public:
-  Sensor_light(ac_AppContext* aAppContext);
+void delete_Sensor_light(Sensor_light* obj);
 
- private:
-  virtual const char* Name() const;
+// --------------------------------------------------
+// sensor array integration
+// --------------------------------------------------
 
- private:
-  virtual void handleReadingChanged();
-};
+#if defined(SA_ARRAY_INTEGRATION)
+#if __LIGHT_ENABLED__
+#define DECLARE_SENSOR_light Sensor_light* iSensor_light
+#define SENSOR_LIGHT_DESTROY delete_Sensor_light(self->iSensor_light); self->iSensor_light = NULL;
+#define SENSOR_LIGHT_CREATE sa_typical_qt_sensor_create(self->iSensor_light = new_Sensor_light(self->ac), "light sensor initialization")
+#define SENSOR_LIGHT_START SENSOR_LIGHT_CREATE
+#define SENSOR_LIGHT_STOP SENSOR_LIGHT_DESTROY
+#define SENSOR_LIGHT_IS_RUNNING (self->iSensor_light != NULL)
+#define SENSOR_LIGHT_RECONFIGURE(key, value) sa_reconfigure_ignore_all_keys
+#else
+#define DECLARE_SENSOR_light
+#endif
+#endif /* SA_ARRAY_INTEGRATION */
 
-#endif /* __sa_sensor_light_qt_hpp__ */
+#endif /* __sa_sensor_light_api_h__ */
 
 /**
 
-Copyright 2010 Helsinki Institute for Information Technology (HIIT)
+Copyright 2011 Helsinki Institute for Information Technology (HIIT)
 and the authors. All rights reserved.
 
 Authors: Tero Hasu <tero.hasu@hut.fi>

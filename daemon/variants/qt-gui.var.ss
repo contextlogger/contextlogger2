@@ -13,7 +13,8 @@ For testing Symbian Qt GUI builds.
 (define* (info)
   (new 
    (variant-class
-    symbian/all-event-variant%
+    ;;symbian/all-event-variant%
+    symbian-variant%
     (super-new)
     
     (define/override (signed.attr) #t)
@@ -33,4 +34,6 @@ For testing Symbian Qt GUI builds.
     (define/override (feature-remokon.attr) #f)
     (define/override (feature-uploader.attr) #f)
 
+    (define/override (light-enabled.attr) #t)
+    
     )))
