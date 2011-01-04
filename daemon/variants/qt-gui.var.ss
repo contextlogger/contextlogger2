@@ -35,5 +35,6 @@ For testing Symbian Qt GUI builds.
     (define/override (feature-uploader.attr) #f)
 
     (define/override (light-enabled.attr) #t)
+    (define/override (doubletap-enabled.attr) #t)
     
     )))

@@ -1,9 +1,5 @@
-#ifndef __sa_sensor_tap_h__
-#define __sa_sensor_tap_h__
-
-#include "application_config.h"
-
-#if __WITH_TAP_SENSORS__
+#ifndef __sa_sensor_tap_qt_hpp__
+#define __sa_sensor_tap_qt_hpp__
 
 #include "ac_app_context.h"
 
@@ -40,41 +36,7 @@ class Sensor_tap :
   void handleSensorError(int errCode);
 };
 
-#endif /* __WITH_TAP_SENSORS__ */
-
-// --------------------------------------------------
-// sensor array integration
-// --------------------------------------------------
-
-#if defined(SA_ARRAY_INTEGRATION)
-
-#if __SINGLETAP_ENABLED__
-#define DECLARE_SENSOR_singletap Sensor_tap* iSensor_singletap
-#define SENSOR_SINGLETAP_DESTROY DELETE_Z(self->iSensor_singletap)
-#define SENSOR_SINGLETAP_CREATE sa_typical_qt_sensor_create(self->iSensor_singletap = q_check_ptr(new Sensor_tap(self->ac, false, "singletap")), "singletap sensor initialization")
-#define SENSOR_SINGLETAP_START SENSOR_SINGLETAP_CREATE
-#define SENSOR_SINGLETAP_STOP SENSOR_SINGLETAP_DESTROY
-#define SENSOR_SINGLETAP_IS_RUNNING (self->iSensor_singletap != NULL)
-#define SENSOR_SINGLETAP_RECONFIGURE(key, value) sa_reconfigure_ignore_all_keys
-#else
-#define DECLARE_SENSOR_singletap
-#endif // __SINGLETAP_ENABLED__
-
-#if __DOUBLETAP_ENABLED__
-#define DECLARE_SENSOR_doubletap Sensor_tap* iSensor_doubletap
-#define SENSOR_DOUBLETAP_DESTROY DELETE_Z(self->iSensor_doubletap)
-#define SENSOR_DOUBLETAP_CREATE sa_typical_qt_sensor_create(self->iSensor_doubletap = q_check_ptr(new Sensor_tap(self->ac, true, "doubletap")), "doubletap sensor initialization")
-#define SENSOR_DOUBLETAP_START SENSOR_DOUBLETAP_CREATE
-#define SENSOR_DOUBLETAP_STOP SENSOR_DOUBLETAP_DESTROY
-#define SENSOR_DOUBLETAP_IS_RUNNING (self->iSensor_doubletap != NULL)
-#define SENSOR_DOUBLETAP_RECONFIGURE(key, value) sa_reconfigure_ignore_all_keys
-#else
-#define DECLARE_SENSOR_doubletap
-#endif // __DOUBLETAP_ENABLED__
-
-#endif /* SA_ARRAY_INTEGRATION */
-
-#endif /* __sa_sensor_tap_h__ */
+#endif /* __sa_sensor_tap_qt_hpp__ */
 
 /**
 

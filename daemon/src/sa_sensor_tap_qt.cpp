@@ -1,4 +1,5 @@
 #include "sa_sensor_tap_qt.hpp"
+#include "sa_sensor_tap_api.h"
 
 #include "er_errors.h"
 #include "ld_logging.h"
@@ -52,8 +53,8 @@ void Sensor_tap::handleReadingChanged()
   if (data) {
     int dir = data->tapDirection();
     int isDbl = data->isDoubleTap();
-    logg("got %s reading: %d (%s)", Name(),
-	 dir, isDbl ? "double" : "single");
+    guilogf("%s dir=%d (%s)", Name(),
+	    dir, isDbl ? "double" : "single");
     log_db_log_tap(GetLogDb(), dir, isDbl, NULL);
   }
 }
@@ -63,6 +64,17 @@ void Sensor_tap::handleSensorError(int errCode)
   log_db_log_status(GetLogDb(), NULL, 
 		    "ERROR: error in %s sensor: %d", 
 		    Name(), errCode);
+}
+
+Sensor_tap* new_Sensor_tap(ac_AppContext* aAppContext,
+			   bool aDouble, const char* aName)
+{
+  return q_check_ptr(new Sensor_tap(aAppContext, aDouble, aName));
+}
+
+void delete_Sensor_tap(Sensor_tap* obj)
+{
+  delete obj;
 }
 
 /**
