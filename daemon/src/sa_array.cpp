@@ -104,7 +104,7 @@
 #include "epoc-weburl.hpp"
 
 #include "sa_sensor_light_api.h"
-#include "sa_sensor_proximity_qt.hpp"
+#include "sa_sensor_proximity_api.h"
 #include "sa_sensor_tap_api.h"
 
 // This file is generated, and included only once here. Code for

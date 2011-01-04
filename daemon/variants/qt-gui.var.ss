@@ -36,5 +36,6 @@ For testing Symbian Qt GUI builds.
 
     (define/override (light-enabled.attr) #t)
     (define/override (doubletap-enabled.attr) #t)
+    (define/override (proximity-enabled.attr) #t)
     
     )))

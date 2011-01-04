@@ -23,7 +23,7 @@ void Sensor_light::handleReadingChanged()
   QAmbientLightReading *data(static_cast<QAmbientLightReading*>(reading()));
   if (data) {
     int level = data->lightLevel();
-    guilogf("light %d", level);
+    guilogf("light: %d", level);
     log_db_log_light(GetLogDb(), level, NULL);
   }
 }

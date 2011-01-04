@@ -1,4 +1,5 @@
 #include "sa_sensor_proximity_qt.hpp"
+#include "sa_sensor_proximity_api.h"
 
 #include "er_errors.h"
 #include "ld_logging.h"
@@ -24,9 +25,19 @@ void Sensor_proximity::handleReadingChanged()
   QProximityReading *data(static_cast<QProximityReading*>(reading()));
   if (data) {
     bool isClose = data->close();
-    logg("got proximity reading: %s", isClose ? "close" : "far");
+    guilogf("proximity: %s", isClose ? "close" : "far");
     log_db_log_proximity(GetLogDb(), isClose, NULL);
   }
+}
+
+Sensor_proximity* new_Sensor_proximity(ac_AppContext* aAppContext)
+{
+  return q_check_ptr(new Sensor_proximity(aAppContext));
+}
+
+void delete_Sensor_proximity(Sensor_proximity* obj)
+{
+  delete obj;
 }
 
 /**

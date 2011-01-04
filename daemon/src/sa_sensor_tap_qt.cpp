@@ -53,7 +53,7 @@ void Sensor_tap::handleReadingChanged()
   if (data) {
     int dir = data->tapDirection();
     int isDbl = data->isDoubleTap();
-    guilogf("%s dir=%d (%s)", Name(),
+    guilogf("%s: dir=%d (%s)", Name(),
 	    dir, isDbl ? "double" : "single");
     log_db_log_tap(GetLogDb(), dir, isDbl, NULL);
   }

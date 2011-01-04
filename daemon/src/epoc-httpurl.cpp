@@ -98,7 +98,7 @@ void CSensor_httpurl::RunL()
   MakeRequest();
 
   const char* url = (const char*)(buf.PtrZ());
-  guilogf("httpurl '%s'", url);
+  guilogf("httpurl: '%s'", url);
   log_db_log_httpurl(GetLogDb(), url, NULL);
 }
 

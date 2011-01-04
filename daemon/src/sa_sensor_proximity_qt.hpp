@@ -1,9 +1,5 @@
-#ifndef __sa_sensor_proximity_h__
-#define __sa_sensor_proximity_h__
-
-#include "application_config.h"
-
-#if __PROXIMITY_ENABLED__
+#ifndef __sa_sensor_proximity_qt_hpp__
+#define __sa_sensor_proximity_qt_hpp__
 
 #include "ac_app_context.h"
 #include "sa_qt_sensors.hpp"
@@ -25,27 +21,7 @@ class Sensor_proximity :
   virtual void handleReadingChanged();
 };
 
-#endif /* __PROXIMITY_ENABLED__ */
-
-// --------------------------------------------------
-// sensor array integration
-// --------------------------------------------------
-
-#if defined(SA_ARRAY_INTEGRATION)
-#if __PROXIMITY_ENABLED__
-#define DECLARE_SENSOR_proximity Sensor_proximity* iSensor_proximity
-#define SENSOR_PROXIMITY_DESTROY DELETE_Z(self->iSensor_proximity)
-#define SENSOR_PROXIMITY_CREATE sa_typical_qt_sensor_create(self->iSensor_proximity = q_check_ptr(new Sensor_proximity(self->ac)), "proximity sensor initialization")
-#define SENSOR_PROXIMITY_START SENSOR_PROXIMITY_CREATE
-#define SENSOR_PROXIMITY_STOP SENSOR_PROXIMITY_DESTROY
-#define SENSOR_PROXIMITY_IS_RUNNING (self->iSensor_proximity != NULL)
-#define SENSOR_PROXIMITY_RECONFIGURE(key, value) sa_reconfigure_ignore_all_keys
-#else
-#define DECLARE_SENSOR_proximity
-#endif
-#endif /* SA_ARRAY_INTEGRATION */
-
-#endif /* __sa_sensor_proximity_h__ */
+#endif /* __sa_sensor_proximity_qt_hpp__ */
 
 /**
 
