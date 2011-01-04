@@ -14,7 +14,7 @@ C/C++ as the only dependency.
 (define* (info)
   (new 
    (variant-class
-    symbian/all-variant%
+    symbian/demo-variant%
     (super-new)
     
     (define/override (signed.attr) #f)
@@ -27,14 +27,4 @@ C/C++ as the only dependency.
     
     (define/override (kit-name) 's60_30)
     
-    (define/override (binary-type) 'application)
-  
-    (define/override (have-anim.attr) #f)
-
-    (define/override (have-epocxplat.attr) #f)
-
-    (define/override (feature-uploader.attr) #t)
-
-    (define/override (upload-time-expr.attr) "never")
-
     )))

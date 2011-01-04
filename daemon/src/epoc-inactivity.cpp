@@ -111,6 +111,8 @@ void CSensor_inactivity::RunL()
     return;
   }
 
+  guilogf("inactivity: %s", (iCurrentState == EActive) ? "active" : "inactive");
+
   MakeRequest();
 }
 

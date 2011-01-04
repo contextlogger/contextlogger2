@@ -14,7 +14,7 @@ and Open C/C++ and Qt as dependencies.
 (define* (info)
   (new 
    (variant-class
-    symbian/all-variant%
+    symbian/demo-variant%
     (super-new)
     
     (define/override (signed.attr) #t)
@@ -27,16 +27,6 @@ and Open C/C++ and Qt as dependencies.
     
     (define/override (kit-name) 's60_32)
     
-    (define/override (binary-type) 'application)
-  
     (define/override (with-qt.attr) #t)
-
-    (define/override (have-anim.attr) #f)
-
-    (define/override (have-epocxplat.attr) #f)
-
-    (define/override (feature-uploader.attr) #t)
-
-    (define/override (upload-time-expr.attr) "never")
 
     )))

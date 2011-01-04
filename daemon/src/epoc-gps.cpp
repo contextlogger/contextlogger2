@@ -141,6 +141,7 @@ void CPositioner_gps::ConstructL()
   User::LeaveIfError(iPositioner.SetUpdateOptions(iUpdateOptions));
 
   dblogg("gps scan interval set to %d secs", iUpdateIntervalSecs);
+  guilogf("gps: interval %d secs", iUpdateIntervalSecs);
 }
 
 CPositioner_gps::~CPositioner_gps()
@@ -317,6 +318,7 @@ TBool CSensor_gps::ChooseBestPositionerL(TPositionModuleId& aBestId)
       moduleInfo.GetModuleName(moduleName);
       gchar* nameString = ConvToUtf8CStringL(moduleName);
       dblogg("chose positioning module '%s'", nameString);
+      guilogf("gps: using module '%s'", nameString);
       g_free(nameString);
     }
 
@@ -632,7 +634,8 @@ gboolean CSensor_gps::PositionerEventL(GError** error)
 	TReal32 alt = position.Altitude();
 	TReal32 vacc = position.VerticalAccuracy();
 	TReal32 hacc = position.HorizontalAccuracy();
-	logg("position info: latitude %lg deg, longitude %lg deg, altitude %g m, vertical_accuracy %g m, horizontal_accuracy %g m", lat, lon, alt, vacc, hacc);
+	//logg("position info: latitude %lg deg, longitude %lg deg, altitude %g m, vertical_accuracy %g m, horizontal_accuracy %g m", lat, lon, alt, vacc, hacc);
+	guilogf("gps: lat %lg, lon %lg, alt %g, vacc %g m, hacc %g m", lat, lon, alt, vacc, hacc);
 	if (!Math::IsNaN(lat) &&
 	    !Math::IsNaN(lon)) {
 	  if (!log_db_log_gps(iLogDb, lat, lon, alt, vacc, hacc, couString, satString, error)) {

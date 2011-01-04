@@ -336,6 +336,11 @@ void CSensor_callstatus::ChangedData_CallStatus(TInt errCode)
 	gx_txtlog_fatal_error_free(localError);
 	goto cleanup;
       }
+      guilogf("callstatus: %d num='%s' name='%s' os=%d net=%d",
+	      callStatus,
+	      number ? number : "(N/A)",
+	      contactName ? contactName : "(N/A)",
+	      etelCode, netCode);
     }
 
     iCallStatusNotifier->MakeRequest();

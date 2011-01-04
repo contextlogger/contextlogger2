@@ -184,7 +184,7 @@ gboolean CSensor_appfocus::RunGL(GError** error)
     ConvToUtf8CString(appName, 32, nameDes);
     delete gn;
     
-    //logg("appfocus: '%s' %08x", appName, appUid);
+    guilogf("appfocus: '%s' 0x%08x", appName, appUid);
 
     if (!log_db_log_appfocus(iLogDb, appUid64, appName, error)) {
       return FALSE;

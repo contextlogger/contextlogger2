@@ -126,13 +126,15 @@ void CSensor_indicator::HandleRead()
     iNumScanFailures = 0;
 
     if (!(INDICATOR_EQ(iIndicator, iOldIndicator))) {
+#if 0
       logg("new indicator value: %u/%u", 
 	   iIndicator.iIndicator,
 	   iIndicator.iCapabilities);
-      logg("indicators: charger=%c network=%c call=%c", 
-	   IND2CH(CTelephony::KIndChargerConnected),
-	   IND2CH(CTelephony::KIndNetworkAvailable),
-	   IND2CH(CTelephony::KIndCallInProgress));
+#endif
+      guilogf("indicator: ac=%c nw=%c call=%c", 
+	      IND2CH(CTelephony::KIndChargerConnected),
+	      IND2CH(CTelephony::KIndNetworkAvailable),
+	      IND2CH(CTelephony::KIndCallInProgress));
 
       if (!log_db_log_indicator(logDb, iIndicator.iIndicator, 
 				iIndicator.iCapabilities,

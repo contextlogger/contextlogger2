@@ -301,7 +301,7 @@ void This::ObservedData_NetworkInfo(TData_NetworkInfo const &aData)
       LogDb* logDb = ac_global_LogDb;
       HBufC8* text8 = ConvToUtf8ZL(aData.iLongName);
       CleanupStack::PushL(text8);
-      //logg("operator name: '%s'", (char*)text8->Ptr());
+      guilogf("operator: name '%s'", (char*)text8->Ptr());
       log_db_log_operator(logDb, (const char*)text8->Ptr(), NULL);
       kr_Controller_set_operator_name(ac_global_Controller, 
 				      (const char*)text8->Ptr());
@@ -568,7 +568,7 @@ void This::HandleSignal(TInt aError,
 
     int dbm = -(aData.iSignalStrength);
     int bars = aData.iBar;
-    //logg("network signal strength: %d dBm (%d bars)", dbm, bars);
+    guilogf("signal: %d dBm (%d bars)", dbm, bars);
     log_db_log_signal(logDb, dbm, bars, NULL);
     iNotifier->MakeRequest();
 

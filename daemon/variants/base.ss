@@ -439,6 +439,27 @@ project must implement.
   (define/override (btprox-enabled.attr)
     #t))
 
+;; Demo app configurations.
+(define-variant* symbian/demo-variant% symbian/all-variant%
+  (super-new)
+  
+  (define/override (quit-on-low-battery.attr) #f)
+
+  (define/override (binary-type) 'application)
+  
+  (define/override (have-anim.attr) #f)
+  
+  (define/override (have-epocxplat.attr) #f)
+
+  (define/override (have-cl2webfilter.attr) #f)
+
+  (define/override (feature-remokon.attr) #f)
+  
+  (define/override (feature-uploader.attr) #t)
+
+  (define/override (upload-time-expr.attr) "never")
+  )
+
 #|
 
 Copyright 2009 Helsinki Institute for Information Technology (HIIT)

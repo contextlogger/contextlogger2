@@ -102,6 +102,7 @@ void CSensor_profile::HandleProfileActivatedL(TInt aProfileId)
 
   GError* localError = NULL;
   gboolean ok = log_db_log_profile(iLogDb, aProfileId, profileName, &localError);
+  guilogf("profile: %d (%s)", aProfileId, profileName);
   delete pnDes;
   if (!ok) {
     gx_dblog_fatal_error_free(iLogDb, localError);

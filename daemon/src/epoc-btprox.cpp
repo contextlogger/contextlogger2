@@ -242,7 +242,7 @@ void CSensor_btprox::SetTimer()
   assert(iState == EScanWaiting || iState == ERetryWaiting);
   int secs = iBaseScanIntervalSecs * (1 + iNumScanFailures) + (rand() % 10);
   TTimeIntervalMicroSeconds32 interval = SecsToUsecs(secs);
-  logg("btprox timer set to %d secs / %d usecs", secs, interval.Int());
+  //logg("btprox timer set to %d secs / %d usecs", secs, interval.Int());
   iTimer.After(iStatus, interval);
   SetActive();
 }
@@ -251,7 +251,7 @@ void CSensor_btprox::SetTimer()
 
 void CSensor_btprox::BtDiscover() 
 {
-  logt("starting btprox discovery");
+  guilogf("btprox: scanning...");
 
   SWAP(GPtrArray*, iResult, iOldResult);
   ClearResult(iResult);
@@ -292,7 +292,7 @@ gboolean CSensor_btprox::HandleScanEventL(TInt errCode, GError** error)
 {
   if (errCode == KErrEof) // no more devices
     {
-      //logt("no more bt devices");
+      guilogf("btprox: scan complete");
       iNumScanFailures = 0;
       assert(iResult);
       SortResult(iResult);
@@ -315,13 +315,14 @@ gboolean CSensor_btprox::HandleScanEventL(TInt errCode, GError** error)
 	  // result still stands. Is it necessary to know the time
 	  // of the attempt to scan a different set?
 	  
-	  //logt("bt device set unchanged");
+	  guilogf("btprox: device set unchanged");
 	}
       iState = EScanWaiting;
       SetTimer(); // wait before scanning for more
     } 
   else if (errCode) // some error
     {
+      guilogf("btprox: scan failed");
       iNumScanFailures++;
       dblogg("%dth consecutive failure in btprox: %s (%d)", 
 	     iNumScanFailures, plat_error_strerror(errCode), errCode);
@@ -351,7 +352,7 @@ gboolean CSensor_btprox::HandleScanEventL(TInt errCode, GError** error)
 	item->address = g_strdup((gchar*)(addrBuf8.PtrZ()));
 	g_ptr_array_add(iResult, item);
 	UNSET_TRAP_OOM();
-	//logg("discovered bt device '%s' '%s'", item->address, item->name);
+	guilogf("btprox: device '%s' '%s'", item->address, item->name);
       }
       BtNext();
     }
