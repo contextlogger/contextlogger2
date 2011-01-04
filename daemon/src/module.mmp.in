@@ -332,6 +332,9 @@ source gx_maybe_string.c
 source logging.cpp
 source logging-time.c
 source platform_error.c
+<% if $WITH_QT and $IS_APPLICATION %>
+source QsKineticScroller.cpp moc_QsKineticScroller.cpp
+<% end %>
 source utilities.c
 source utilities_cxx.cpp
 

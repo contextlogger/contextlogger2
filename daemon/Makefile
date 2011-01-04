@@ -13,7 +13,7 @@ SHARED_PATH := ../shared
 SHARED_DIR := $(SHARED_PATH)/common
 SHARED_C_FILES := error_list.c gx_maybe_string.c gxerror.c logging-time.c platform_error.c utilities.c
 SHARED_CXX_FILES := assertions_cxx.cpp logging.cpp utilities_cxx.cpp
-SHARED_QT_HEADERS :=
+SHARED_QT_HEADERS := QsKineticScroller.hpp
 
 TIMESPEC_PATH := ../time-spec
 TIMESPEC_C_FILES := moment_parser.c time_utils.c
