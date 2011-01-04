@@ -2,8 +2,9 @@
 
 #|
 
-S60 v3.1 unsigned demo build for DevCert signing. With a GUI, and Open
-C/C++ and Qt as dependencies.
+Symbian^3 unsigned demo build for DevCert signing. With a
+GUI, and Open C/C++ and Qt as dependencies. Uploads with Qt, as the
+Symbian HTTP stack appears too broken on Symbian^3.
 
 |#
 
@@ -21,9 +22,10 @@ C/C++ and Qt as dependencies.
   
     (define/override (capabilities) DEV-CAPS)
 
-    (define/override (s60-vernum.attr) 31)
+    (define/override (s60-vernum.attr) 52)
     
-    (define/override (kit-name) 's60_31)
+    ;; As there is still no 1.0 release of the Symbian^3 SDK.
+    (define/override (kit-name) 's60_50)
     
     (define/override (with-qt.attr) #t)
 

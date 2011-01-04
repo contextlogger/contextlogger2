@@ -19,8 +19,6 @@ C/C++ as the only dependency.
     
     (define/override (signed.attr) #f)
   
-    (define/override (cert-name) 'dev)
-  
     (define/override (capabilities) DEV-CAPS)
 
     (define/override (s60-vernum.attr) 30)

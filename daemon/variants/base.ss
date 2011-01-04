@@ -353,6 +353,10 @@ project must implement.
   
   (define/override (mark-enabled.attr) #t)
 
+  (define/override (upload-with-qt.attr)
+    (and (send this with-qt.attr)
+         (>= (s60-vernum.attr) 52)))
+  
   ) ;; end symbian-variant%
 
 ;; Enables all passive sensors that can be enabled.
