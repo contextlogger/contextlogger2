@@ -329,7 +329,7 @@ project must implement.
 
   ;; This library requires high capabilities, but not in this process,
   ;; and hence it makes no sense to have this depend on our capas.
-  (define/public (have-cl2webfilter.attr) #f)
+  (define/public (have-cl2webfilter.attr) #t)
 
   ;; We have no dependency on the DLL anymore, perhaps on some of the
   ;; headers.
@@ -413,7 +413,9 @@ project must implement.
          (have-caps? '(ReadDeviceData))))
 
   (define/override (httpurl-enabled.attr)
-    (send this have-cl2webfilter.attr))
+    (and (send this have-cl2webfilter.attr)
+         ;; This capa required by RProperty::Define().
+         (have-caps? '(WriteDeviceData))))
     
   (define/override (weburl-enabled.attr)
     (and (send this have-epocxplat.attr)
