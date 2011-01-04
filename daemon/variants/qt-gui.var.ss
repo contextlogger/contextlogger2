@@ -13,7 +13,7 @@ For testing Symbian Qt GUI builds.
 (define* (info)
   (new 
    (variant-class
-    symbian-variant%
+    symbian/all-event-variant%
     (super-new)
     
     (define/override (signed.attr) #t)

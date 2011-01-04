@@ -16,7 +16,7 @@ $curl_as_source = true
 $pamp_curl = true
 
 $proj = Sake::Project.new(:basename => $basename,
-                          :name => "CL2 App",
+                          :name => $APP_NAME,
                           :version => $version,
                           :uid => Sake::Uid.v9($uid_v9),
                           :vendor => "HIIT")

@@ -2,6 +2,6 @@
 #define qtn_appl_another_menu_command "Second"
 #define qtn_appl_exit "Exit"
 
-#define qtn_app_caption_string "CL2 App"
+#define qtn_app_caption_string "CL2 Logger"
 
 #define qtn_app_short_caption_string "CL2 App"

@@ -1,6 +1,7 @@
 #ifndef __er_errors_h__
 #define __er_errors_h__
 
+#include "guilog.h"
 #include "ld_log_db.h"
 
 #include "common/assertions.h"

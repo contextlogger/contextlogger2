@@ -4,6 +4,7 @@
 
 #include "application_config.h"
 #include "ac_app_context_private.h"
+#include "guilog.h"
 #include "kr_controller.h"
 #include "client-run.h"
 #include "epoc-ao-gerror.hpp"
@@ -55,20 +56,33 @@ extern "C" void ShutdownApplication()
 
 static QStringListModel* gModel = NULL;
 
-static void guilog(QString s)
+#define MAX_ROWS 100
+
+void guilog(const QString& s)
 {
+  int count = gModel->rowCount();
+  if (count >= MAX_ROWS) {
+    int newCount = count * 3 / 4;
+    gModel->removeRows(newCount, count - newCount);
+  }
+
   int ix = 0;
   gModel->insertRow(ix);
   gModel->setData(gModel->index(ix), s, Qt::DisplayRole);
 }
 
-static void guilog(const char* fmt, ...)
+void guilog(const char* s)
+{
+  guilog(QString(s));
+}
+
+extern "C" void guilogf(const char* fmt, ...)
 {
   va_list argp;
   va_start(argp, fmt);
   char buf[256];
   vsnprintf(buf, 256, fmt, argp);
-  guilog(QString(buf));
+  guilog(buf);
   va_end(argp);
 }
 
@@ -196,6 +210,12 @@ static TInt QtMainE(int argc, char *argv[], char *envp[])
     goto mofail;
   }
 
+  guilog(__APP_NAME__);
+  guilogf("variant %s", __VARIANT_NAME__);
+  guilogf("version %s", __VERSION_STRING__);
+  guilogf("capas %s", __CERT_NAME__);
+  guilogf("compiled against Qt %s", QT_VERSION_STR);
+  guilogf("running with Qt %s", qVersion());
   guilog("Welcome.");
   w.showMaximized();
 

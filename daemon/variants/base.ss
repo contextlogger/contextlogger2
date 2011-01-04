@@ -64,7 +64,7 @@ project must implement.
   
   (define/public (app-basename.attr) "cl2app")
   
-  (define/public (app-name.attr) "CL2 App")
+  (define/public (app-name.attr) "CL2 Logger")
 
   (define/public (major-version.attr) 0)
   
@@ -156,6 +156,10 @@ project must implement.
 
   (define/public (feature-debugging.attr)
     #t)
+
+  (define/public (feature-guilog.attr)
+    (and (eq? (platform) 'symbian)
+         (with-qt-gui.attr)))
   
   (define/public (do-logging.attr)
     (feature-debugging.attr))
