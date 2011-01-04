@@ -266,7 +266,11 @@ project must implement.
   ;; releases may be packaged and deployed differently than public
   ;; releases.
   (define/public (is-trial.attr) #f)
-         
+
+  ;; This may affect configurations, as demos are somewhat different
+  ;; in nature.
+  (define/public (is-demo.attr) #f)
+  
   (define/override (have-signal.attr)
     (> (kit-vernum.attr) 50))
 
@@ -442,6 +446,8 @@ project must implement.
 ;; Demo app configurations.
 (define-variant* symbian/demo-variant% symbian/all-variant%
   (super-new)
+  
+  (define/override (is-demo.attr) #t)
   
   (define/override (quit-on-low-battery.attr) #f)
 
