@@ -86,10 +86,16 @@ extern "C" void guilogf(const char* fmt, ...)
   va_end(argp);
 }
 
+#include "common/QsKineticScroller.hpp"
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
   listView = new QListView(this);
+  // Required by QsKineticScroller.
+  listView->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+  iScroller = new QsKineticScroller(this);
+  iScroller->enableKineticScrollFor(listView);
   // The view does not take ownership of the model.
   gModel = new QStringListModel(stringList, listView);
   listView->setModel(gModel);

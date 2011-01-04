@@ -7,6 +7,8 @@
 class QListView;
 class QWidget;
 
+class QsKineticScroller;
+
 class MainWindow : public QMainWindow
 {
   Q_OBJECT
@@ -17,6 +19,7 @@ class MainWindow : public QMainWindow
  private:
   QListView* listView;
   QStringList stringList;
+  QsKineticScroller* iScroller;
 };
 
 #endif /* __main_epoc_qt_gui_hpp__ */
