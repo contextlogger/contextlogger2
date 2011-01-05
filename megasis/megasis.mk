@@ -14,7 +14,6 @@ TEMPLATE := template.pkg.in
 FLAGS := $(and $(IS_TRIAL), --nr)
 # unpacking no longer supported $(and $(NOT__SIGNED), --unpack)
 
-# Note that $(DIST_VARIANT_NAME) is defined only for release variants.
 PKGFILE := $(BASENAME)-$(DIST_VARIANT_NAME).pkg
 SISFILE := $(BASENAME)-$(VERSION_STRING)-$(DIST_VARIANT_NAME).sis
 SISXFILE := $(SISFILE)x

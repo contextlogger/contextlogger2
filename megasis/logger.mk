@@ -1,50 +1,21 @@
-# This top-level makefile also does variant configuration, and you
-# should specify the desired configuration or configurations as
-# the make targets.
+CURRENT_CONFIG := ../daemon/src/current_config.mk
 
-configure = ./configure.scm $(1)
-configure = make config VARIANT_NAME=$(1)
+include $(CURRENT_CONFIG)
 
-MEGACONFIGURATIONS = s60_30_self30 s60_31_self30 s60_32_self32 s60_30_dev s60_31_dev hpe
-LOGGERCONFIGURATIONS = demo_30_self30 demo_31_self30 demo_32_self32 demo_52_self32
+SISEXT := $(if $(SIGNED),sisx,sis)
+SRC_FILE := ../daemon/build/$(VARIANT_NAME)/$(APP_BASENAME)-$(VERSION_STRING)-$(VARIANT_NAME).$(SISEXT)
+DEST_FILENAME := $(APP_BASENAME)-$(VERSION_STRING)-$(DIST_VARIANT_NAME).$(SISEXT)
 
 .PHONY : default
-default : s60_31_dev
 
-define megatemplate
-$(1) :
-	cd ../daemon && $(call configure,$(1))
-	$(MAKE) -f build.mk external
-	$(MAKE) -f build.mk static_libs
-	$(MAKE) -f build.mk $(1)
-	$(MAKE) -f megasis.mk
-endef
-
-$(foreach cfg,$(MEGACONFIGURATIONS),$(eval $(call megatemplate,$(cfg))))
-
-define loggertemplate
-$(1) :
-	cd ../daemon && $(call configure,$(1))
-	$(MAKE) -f logger.mk
-endef
-
-$(foreach cfg,$(LOGGERCONFIGURATIONS),$(eval $(call loggertemplate,$(cfg))))
-
-release-mega :
-	$(MAKE) -f release.mk mega
-
-release-logger :
-	$(MAKE) -f release.mk logger
-
-release : release-mega release-logger
-
-clean :
-	-rm *~ *.pkg *.sis *.sisx
+default :
+	cd ../daemon && $(MAKE)
+	-rm -r logger-builds/$(VARIANT_NAME)
+	mkdir -p logger-builds/$(VARIANT_NAME)
+	cp -a $(SRC_FILE) logger-builds/$(VARIANT_NAME)/$(DEST_FILENAME)
 
 #
-# Makefile
-#
-# Copyright 2009 Helsinki Institute for Information Technology (HIIT)
+# Copyright 2011 Helsinki Institute for Information Technology (HIIT)
 # and the authors. All rights reserved.
 #
 # Authors: Tero Hasu <tero.hasu@hut.fi>

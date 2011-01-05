@@ -4,12 +4,20 @@ include $(CURRENT_CONFIG)
 
 DIST_HOME := ../download
 
-release :
+mega :
 	mkdir -p $(DIST_HOME)
 	$(MAKE) s60_30_self30 s60_31_self30 s60_32_self32
 	cp cl2_megasis-$(VERSION_STRING)-s60_30_self30.sisx $(DIST_HOME)/
 	cp cl2_megasis-$(VERSION_STRING)-s60_31_self30.sisx $(DIST_HOME)/
 	cp cl2_megasis-$(VERSION_STRING)-s60_32_self32.sisx $(DIST_HOME)/
+
+logger :
+	mkdir -p $(DIST_HOME)
+	$(MAKE) demo_30_self30 demo_31_self30 demo_32_self32 demo_52_self32
+	cp logger-builds/demo_30_self30/* $(DIST_HOME)/
+	cp logger-builds/demo_31_self30/* $(DIST_HOME)/
+	cp logger-builds/demo_32_self32/* $(DIST_HOME)/
+	cp logger-builds/demo_52_self32/* $(DIST_HOME)/
 
 #
 # Copyright 2009 Helsinki Institute for Information Technology (HIIT)
