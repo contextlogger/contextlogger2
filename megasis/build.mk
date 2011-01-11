@@ -72,6 +72,14 @@ s60_32_self32 :
 	cd ../launcher && $(MAKE) CERT=self32 sis
 	cd ../epocxplat && $(MAKE) CERT=self32 cl2
 
+s60_50_dev_sub :
+	cd ../daemon && $(MAKE)
+	cd ../cxx-cl2-cli-lib && $(SAKE) cert=dev kits=s60_50
+	cd ../py-cl2-cli-lib && $(SAKE) cert=dev kits=s60_50
+	cd ../keyevents && $(SAKE) cert=dev kits=s60_50
+	cd ../watchdog && $(MAKE)
+	cd ../epocxplat && $(MAKE) CERT=dev cl2
+
 hpe : s60_31_dev
 
 #

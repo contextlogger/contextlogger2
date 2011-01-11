@@ -27,9 +27,6 @@ systeminclude \epoc32\include\stdapis\glib-2.0
 // Qt headers do refer to STL headers.
 systeminclude \epoc32\include\stdapis\stlport
 <% end %>
-<% if $USE_QT_MOBILITY %>
-systeminclude \epoc32\include\middleware
-<% end %>
 
 <% if $UPLOAD_WITH_CURL
    curl_dir = ($pamp_curl ? "libcurl-pamp" : "libcurl-std") %>
@@ -46,6 +43,11 @@ systeminclude ..\..\..\<%= curl_dir %>\include
    for inc in qt_inc_list %>
 systeminclude		../../../../../symbian-gp/qt-latest/<%= inc %>
 <% end %>
+<% end %>
+
+// Must be after Qt headers, as there is some overlap with Qt itself.
+<% if $USE_QT_MOBILITY %>
+systeminclude \epoc32\include\middleware
 <% end %>
 
 userinclude .

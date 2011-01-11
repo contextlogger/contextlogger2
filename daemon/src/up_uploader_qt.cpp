@@ -25,7 +25,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <QNetworkConfiguration>
 #include <QNetworkConfigurationManager>
+
 #include <QtDebug>
 
 #if defined(__SYMBIAN32__)

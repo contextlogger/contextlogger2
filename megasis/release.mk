@@ -11,13 +11,12 @@ mega :
 	cp cl2_megasis-$(VERSION_STRING)-s60_31_self30.sisx $(DIST_HOME)/
 	cp cl2_megasis-$(VERSION_STRING)-s60_32_self32.sisx $(DIST_HOME)/
 
+LOGGERCONFIGURATIONS = demo_30_self30 demo_30_unsigned demo_31_self30 demo_31_unsigned demo_32_self32 demo_52_self32 demo_52_unsigned
+
 logger :
 	mkdir -p $(DIST_HOME)
-	$(MAKE) demo_30_self30 demo_31_self30 demo_32_self32 demo_52_self32
-	cp logger-builds/demo_30_self30/* $(DIST_HOME)/
-	cp logger-builds/demo_31_self30/* $(DIST_HOME)/
-	cp logger-builds/demo_32_self32/* $(DIST_HOME)/
-	cp logger-builds/demo_52_self32/* $(DIST_HOME)/
+	$(MAKE) $(LOGGERCONFIGURATIONS)
+	cp $(patsubst %, logger-builds/%/*, $(LOGGERCONFIGURATIONS)) $(DIST_HOME)/
 
 #
 # Copyright 2009 Helsinki Institute for Information Technology (HIIT)

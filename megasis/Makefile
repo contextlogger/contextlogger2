@@ -6,7 +6,7 @@ configure = ./configure.scm $(1)
 configure = make config VARIANT_NAME=$(1)
 
 MEGACONFIGURATIONS = s60_30_self30 s60_31_self30 s60_32_self32 s60_30_dev s60_31_dev hpe
-LOGGERCONFIGURATIONS = demo_30_self30 demo_31_self30 demo_32_self32 demo_52_self32
+LOGGERCONFIGURATIONS = demo_30_self30 demo_30_unsigned demo_31_self30 demo_31_unsigned demo_32_self32 demo_52_self32 demo_52_unsigned
 
 .PHONY : default
 default : s60_31_dev
