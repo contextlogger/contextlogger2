@@ -1,6 +1,6 @@
 #include <exception> // for uncaught exception (keep this first)
 
-#include "main_qt_gui.hpp"
+#include "window_demo_qt.hpp"
 
 #include "application_config.h"
 #include "ac_app_context_private.h"

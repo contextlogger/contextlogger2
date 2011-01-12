@@ -263,7 +263,7 @@ source main_epoc.cpp
 source main_epoc_qt.cpp
 <% end %>
 <% if $WITH_QT and $IS_APPLICATION %>
-source main_epoc_qt_gui.cpp moc_main_qt_gui.cpp
+source main_epoc_qt_gui.cpp moc_window_demo_qt.cpp
 <% end %>
 <% if $FEATURE_REMOKON %>
 source rk_jabber_session.c

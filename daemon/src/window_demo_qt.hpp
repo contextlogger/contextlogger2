@@ -1,5 +1,5 @@
-#ifndef __main_qt_gui_hpp__
-#define __main_qt_gui_hpp__
+#ifndef __window_demo_qt_hpp__
+#define __window_demo_qt_hpp__
 
 #include <QMainWindow>
 #include <QStringList>
@@ -22,7 +22,7 @@ class MainWindow : public QMainWindow
   QsKineticScroller* iScroller;
 };
 
-#endif /* __main_qt_gui_hpp__ */
+#endif /* __window_demo_qt_hpp__ */
 
 /**
 
