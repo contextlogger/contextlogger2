@@ -118,12 +118,16 @@ void er_log_base(int opt, void* errObj,
     } else if (opt & er_OOM) {
       er_fatal_oom;
     } else if (opt & er_FATAL) {
+#if defined(__SYMBIAN32__)
       if (opt & er_SYMBIAN) {
 	TInt errCode = *(TInt*)errObj;
 	ex_fatal_error(errCode);
       } else {
 	er_fatal_general;
       }
+#else
+      er_fatal_general;
+#endif /* __SYMBIAN32__ */
     }
   }
   return;

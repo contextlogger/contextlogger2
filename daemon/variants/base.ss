@@ -158,8 +158,7 @@ project must implement.
     #t)
 
   (define/public (feature-guilog.attr)
-    (and (eq? (platform) 'symbian)
-         (with-qt-gui.attr)))
+    (with-qt-gui.attr))
   
   (define/public (do-logging.attr)
     (feature-debugging.attr))

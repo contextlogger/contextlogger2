@@ -10,7 +10,11 @@ WITH_QT {
   message("with Qt")
   # Note: Do not use Qt 4.7.0 on Linux, as there is an event loop memory bug.
   CONFIG += qt
-  QT -= gui
+  WITH_QT_GUI {
+    QT += gui
+  } else {
+    QT -= gui
+  }
   FEATURE_UPLOADER {
     QT += network
   }
@@ -70,7 +74,12 @@ LUA_FROM_SOURCE {
   WITH_QT {
     SOURCES += ut_timer_qt.cpp
     HEADERS += ut_timer_qt_private.hpp
-    SOURCES += main_qt.cpp
+    WITH_QT_GUI {
+      SOURCES += main_demo_qt.cpp window_demo_qt.cpp QsKineticScroller.cpp
+      HEADERS += window_demo_qt.hpp QsKineticScroller.hpp
+    } else {
+      SOURCES += main_qt.cpp
+    }
   }
   WITH_LIBEV {
     SOURCES += ut_timer_libev.c

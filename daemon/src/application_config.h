@@ -96,7 +96,7 @@ extern "C" {
 // You may optionally also define a "nicer" variant of
 // EXIT_APPLICATION by defining SHUTDOWN_APPLICATION. The nicer
 // variant may be used in cases where immediate exit is undesirable.
-#ifdef __SYMBIAN32__
+#if defined(__SYMBIAN32__) || __IS_APPLICATION__
   void ExitApplication();
 #define EXIT_APPLICATION ExitApplication()
   void ShutdownApplication();

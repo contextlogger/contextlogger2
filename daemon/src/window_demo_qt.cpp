@@ -1,23 +1,28 @@
 #include "window_demo_qt.hpp"
 #include "guilog.h"
 
+#include "common/QsKineticScroller.hpp"
+
 #include <QAbstractListModel>
 #include <QAction>
 #include <QApplication>
 #include <QListView>
 #include <QObject>
+#include <QString>
 #include <QStringListModel>
 
 #include <QtGlobal>
 
+#define MY_MAX_ROWS 100
+
 static QStringListModel* gModel = NULL;
 
-#define MAX_ROWS 100
+#if __FEATURE_GUILOG__
 
 void guilog(const QString& s)
 {
   int count = gModel->rowCount();
-  if (count >= MAX_ROWS) {
+  if (count >= MY_MAX_ROWS) {
     int newCount = count * 3 / 4;
     gModel->removeRows(newCount, count - newCount);
   }
@@ -42,7 +47,7 @@ extern "C" void guilogf(const char* fmt, ...)
   va_end(argp);
 }
 
-#include "common/QsKineticScroller.hpp"
+#endif
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)

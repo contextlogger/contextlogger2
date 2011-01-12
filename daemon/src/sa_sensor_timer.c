@@ -59,6 +59,8 @@ static void timerCallback(void* userdata, GError* timerError)
     return;
   }
 
+  guilogf("timer: event");
+
   // Schedule next timer event.
   setTimer(self);
 }
