@@ -190,6 +190,7 @@ CUploader::CUploader(ac_AppContext* aAppContext) :
 
   qxDebug() << "testing qxDebug";
 #if defined(__SYMBIAN32__)
+  // Beware of naming clashes, as both Mobility and Qt Network have these classes. 
   // Requires Qt 4.7, unless using the Mobility version.
   // http://doc.qt.nokia.com/qtmobility-1.1.0-beta/bearer-management.html
   QNetworkConfigurationManager mgr;
