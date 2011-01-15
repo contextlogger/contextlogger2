@@ -5,6 +5,44 @@
 #include "sa_sensor_list_log_db.h"
 #include "utils_cl2.h"
 
+NONSHARABLE_CLASS(MyTrackInfo)
+{
+ public:
+  MyTrackInfo() : iUrl(0), iArtist(0), iTitle(0), iAlbum(0) {}
+
+  HBufC8* iUrl; // owned
+  HBufC8* iArtist; // owned
+  HBufC8* iTitle; // owned
+  HBufC8* iAlbum; // owned
+
+  void Reset() {
+    DELETE_Z(iUrl);
+    DELETE_Z(iTitle);
+    DELETE_Z(iArtist);
+    DELETE_Z(iAlbum);
+  }
+
+  ~MyTrackInfo() { Reset(); }
+
+  int Cmp(const MyTrackInfo& another) const;
+};
+
+static int CmpHBufC8(const HBufC8* a, const HBufC8* b)
+{
+  if (!a && !b) return 0;
+  if (a && !b) return 1;
+  if (!a && b) return -1;
+  return (*a).Compare(*b);
+}
+
+int MyTrackInfo::Cmp(const MyTrackInfo& another) const
+{
+  return CmpHBufC8(iUrl, another.iUrl) ||
+    CmpHBufC8(iTitle, another.iTitle) ||
+    CmpHBufC8(iArtist, another.iArtist) ||
+    CmpHBufC8(iAlbum, another.iAlbum);
+}
+
 CSensor_music* CSensor_music::NewLC(ac_AppContext* aAppContext)
 {
   CSensor_music* obj = new (ELeave) CSensor_music(aAppContext);
@@ -23,7 +61,8 @@ CSensor_music* CSensor_music::NewL(ac_AppContext* aAppContext)
 CSensor_music::~CSensor_music()
 {
   CloseSession();
-  ClearTrackInfo();
+  delete iTrackInfo;
+  delete iOldTrackInfo;
 }
 
 void CSensor_music::CloseSession()
@@ -46,6 +85,9 @@ CSensor_music::CSensor_music(ac_AppContext* aAppContext) :
 
 void CSensor_music::ConstructL()
 {
+  iTrackInfo = new (ELeave) MyTrackInfo;
+  iOldTrackInfo = new (ELeave) MyTrackInfo;
+
   iPlaybackUtility = MMPXPlaybackUtility::NewL(KPbModeActivePlayer, this);
 
   if ((iPlaybackUtility->StateL() != EPbStateNotInitialised) &&
@@ -428,6 +470,8 @@ void CSensor_music::RequestMediaL()
     }
 }
 
+#define SWAP(t,x,y) { t _tmp = x; x = y; y = _tmp; }
+
 // adapted from code in Music Player Remote Python extension
 // also see mpxmedia.h
 void CSensor_music::HandleMediaL(const CMPXMedia& aMedia,
@@ -438,7 +482,14 @@ void CSensor_music::HandleMediaL(const CMPXMedia& aMedia,
   if (errCode)
     return;
 
-  ClearTrackInfo();
+  SWAP(MyTrackInfo*, iOldTrackInfo, iTrackInfo); // current becomes old
+
+  iTrackInfo->Reset(); // clear space for new data
+
+  HBufC8*& iUrl = iTrackInfo->iUrl;
+  HBufC8*& iArtist = iTrackInfo->iArtist;
+  HBufC8*& iTitle = iTrackInfo->iTitle;
+  HBufC8*& iAlbum = iTrackInfo->iAlbum;
 
   if (aMedia.IsSupported(KMPXMediaGeneralUri)) {
     const TDesC& text = aMedia.ValueText(KMPXMediaGeneralUri);
@@ -458,6 +509,9 @@ void CSensor_music::HandleMediaL(const CMPXMedia& aMedia,
     iAlbum = ConvToUtf8ZL(aMedia.ValueText(KMPXMediaMusicAlbum));
   }
 
+  if (iTrackInfo->Cmp(*iOldTrackInfo) == 0)
+    return; // no duplicates
+
   const char* url = (iUrl ? (const char*)(iUrl->Ptr()) : NULL);
   const char* title = (iTitle ? (const char*)(iTitle->Ptr()) : NULL);
   const char* artist = (iArtist ? (const char*)(iArtist->Ptr()) : NULL);
@@ -473,14 +527,6 @@ void CSensor_music::HandleMediaL(const CMPXMedia& aMedia,
     guilogf("music: artist '%s'", artist);
   if (album)
     guilogf("music: album '%s'", album);
-}
-
-void CSensor_music::ClearTrackInfo()
-{
-  DELETE_Z(iUrl);
-  DELETE_Z(iTitle);
-  DELETE_Z(iArtist);
-  DELETE_Z(iAlbum);
 }
 
 /**
