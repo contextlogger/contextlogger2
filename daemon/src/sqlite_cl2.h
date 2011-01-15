@@ -37,6 +37,9 @@
 #define sqlite3_bind_int_ltez(db, ix, val) \
   (((val) <= 0) ? sqlite3_bind_int(db, ix, val) : sqlite3_bind_null(db, ix))
 
+#define sqlite3_bind_int_gtez(db, ix, val) \
+  (((val) >= 0) ? sqlite3_bind_int(db, ix, val) : sqlite3_bind_null(db, ix))
+
 #endif /* __sqlite_cl2_h__ */
 
 /**

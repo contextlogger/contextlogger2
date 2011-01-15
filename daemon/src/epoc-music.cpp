@@ -22,6 +22,12 @@ CSensor_music* CSensor_music::NewL(ac_AppContext* aAppContext)
 
 CSensor_music::~CSensor_music()
 {
+  CloseSession();
+  ClearTrackInfo();
+}
+
+void CSensor_music::CloseSession()
+{
   if (iPlaybackUtility) {
     //TRAP_IGNORE(iPlaybackUtility->CommandL(EPbCmdClose));
     //iPlaybackUtility->CancelRequest();
@@ -29,8 +35,8 @@ CSensor_music::~CSensor_music()
     // We appear to be getting USER 42 if we delete iPlaybackUtility.
     // Hopefully Close() is enough.
     //delete iPlaybackUtility; // not
+    iPlaybackUtility = NULL;
   }
-  ClearTrackInfo();
 }
 
 CSensor_music::CSensor_music(ac_AppContext* aAppContext) :
@@ -52,19 +58,29 @@ void CSensor_music::ConstructL()
 #include <mpxmessagegeneraldefs.h>
 #include <mpxplaybackmessage.h>
 
+#include <glib/gprintf.h>
+
 void CSensor_music::HandlePlaybackMessage(CMPXMessage* aMessage, TInt errCode)
 {
   if (errCode) {
     guilogf("music: error %d", errCode);
     er_log_symbian(0, errCode, "INACTIVATE: music data fetch error");
-    iPlaybackUtility->Close();
+    CloseSession();
     return;
   }
 
+  int eventId = -1; // logged
+  const char* detail = NULL; // logged
+#define DETAILBUFSIZE 50
+  char detailBuf[DETAILBUFSIZE];
+#define DETAILFMT(f...) g_snprintf(detailBuf, DETAILBUFSIZE, f)
+
   TMPXMessageId msgId(*aMessage->Value<TMPXMessageId>(KMPXMessageGeneralId));
   //guilogf("music: message ID %d", msgId);
-  if (msgId == KMPXMessageGeneral) {
-     TInt eventId = aMessage->ValueTObjectL<TInt>(KMPXMessageGeneralEvent);
+  if (msgId != KMPXMessageGeneral) {
+    return;
+  } else {
+     eventId = aMessage->ValueTObjectL<TInt>(KMPXMessageGeneralEvent);
      //guilogf("music: event ID %d", eventId);
      switch (eventId)
        {
@@ -80,7 +96,7 @@ void CSensor_music::HandlePlaybackMessage(CMPXMessage* aMessage, TInt errCode)
 	 }
        case TMPXPlaybackMessage::ECommandReceived: /* seen often */
 	 {
-	   guilogf("music: ECommandReceived");
+	   //guilogf("music: ECommandReceived");
 	   break;
 	 }
        case TMPXPlaybackMessage::ECommandComplete:
@@ -90,10 +106,10 @@ void CSensor_music::HandlePlaybackMessage(CMPXMessage* aMessage, TInt errCode)
 	 }
        case TMPXPlaybackMessage::EPropertyChanged: /* seen often */
 	 {
-	   TMPXPlaybackProperty property(aMessage->ValueTObjectL<TMPXPlaybackProperty>(KMPXMessageGeneralType));
+	   TMPXPlaybackProperty propId(aMessage->ValueTObjectL<TMPXPlaybackProperty>(KMPXMessageGeneralType));
 	   TInt value(aMessage->ValueTObjectL<TInt>(KMPXMessageGeneralData));
 	   const char* propStr;
-	   switch (property)
+	   switch (propId)
 	     {
 	     case EPbPropertyVolume:
 	       {
@@ -182,18 +198,20 @@ void CSensor_music::HandlePlaybackMessage(CMPXMessage* aMessage, TInt errCode)
 	         break;
 	       }
 	     }
+	   DETAILFMT("{property: %d, value: %d}", propId, value);
+	   detail = detailBuf;
 	   guilogf("music: EPropertyChanged: '%s' = %d", propStr, value);
 	   break;
 	 }
        case TMPXPlaybackMessage::EStateChanged: /* seen often */
 	 {
-	   TInt state(aMessage->ValueTObjectL<TMPXPlaybackState>(KMPXMessageGeneralType));
-	   if (state == iOldPbState)
+	   TInt stateId(aMessage->ValueTObjectL<TMPXPlaybackState>(KMPXMessageGeneralType));
+	   if (stateId == iOldPbState)
 	     // We seem to get repeats, avoid that.
 	     return;
-	   iOldPbState = state;
+	   iOldPbState = stateId;
 	   const char* stateStr;
-	   switch (state)
+	   switch (stateId)
 	     {
 	     case EPbStateNotInitialised:
 	       {
@@ -251,8 +269,10 @@ void CSensor_music::HandlePlaybackMessage(CMPXMessage* aMessage, TInt errCode)
 	         break;
 	       }
 	     }
-	   //guilogf("music: EStateChanged %d", state);
-	   guilogf("music: playback state %s (%d)", stateStr, state);
+	   DETAILFMT("{state: %d}", stateId);
+	   detail = detailBuf;
+	   //guilogf("music: EStateChanged %d", stateId);
+	   guilogf("music: playback state %s (%d)", stateStr, stateId);
 	   break;
 	 }
        case TMPXPlaybackMessage::ESongCorrupt:
@@ -378,6 +398,8 @@ void CSensor_music::HandlePlaybackMessage(CMPXMessage* aMessage, TInt errCode)
            break;
          }
        }
+
+     log_db_log_musicplayer(GetLogDb(), eventId, detail, NULL);
   }
 }
 
@@ -395,6 +417,7 @@ void CSensor_music::RequestMediaL()
       attrs.Append(KMPXMediaGeneralUri);
       attrs.Append(KMPXMediaGeneralTitle);
       attrs.Append(KMPXMediaMusicArtist);
+      attrs.Append(KMPXMediaMusicAlbum);
       // The two-arg method is deprecated, we assume passing NULL as
       // the third arg has the same semantics. The arg is
       // CMPXAttributeSpecs* aSpecs (typedef CMPXMedia
@@ -417,37 +440,47 @@ void CSensor_music::HandleMediaL(const CMPXMedia& aMedia,
 
   ClearTrackInfo();
 
-  if (aMedia.IsSupported(KMPXMediaGeneralTitle))
-    {
-      iTitle = ConvToUtf8ZL(aMedia.ValueText(KMPXMediaGeneralTitle));
-    }
-  else if (aMedia.IsSupported(KMPXMediaGeneralUri))
-    {
-      const TDesC& text = aMedia.ValueText(KMPXMediaGeneralUri);
-#if 0
-      TParsePtrC filePath(text);
-      iTitle = ConvToUtf8ZL(filePath.Name());
-#else
-      iTitle = ConvToUtf8ZL(text);
-#endif
-    }
+  if (aMedia.IsSupported(KMPXMediaGeneralUri)) {
+    const TDesC& text = aMedia.ValueText(KMPXMediaGeneralUri);
+    /*
+    TParsePtrC filePath(text);
+    iUrl = ConvToUtf8ZL(filePath.Name());
+    */
+    iUrl = ConvToUtf8ZL(text);
+  }
+  if (aMedia.IsSupported(KMPXMediaGeneralTitle)) {
+    iTitle = ConvToUtf8ZL(aMedia.ValueText(KMPXMediaGeneralTitle));
+  }
   if (aMedia.IsSupported(KMPXMediaMusicArtist)) {
     iArtist = ConvToUtf8ZL(aMedia.ValueText(KMPXMediaMusicArtist));
   }
+  if (aMedia.IsSupported(KMPXMediaMusicAlbum)) {
+    iAlbum = ConvToUtf8ZL(aMedia.ValueText(KMPXMediaMusicAlbum));
+  }
 
+  const char* url = (iUrl ? (const char*)(iUrl->Ptr()) : NULL);
   const char* title = (iTitle ? (const char*)(iTitle->Ptr()) : NULL);
   const char* artist = (iArtist ? (const char*)(iArtist->Ptr()) : NULL);
+  const char* album = (iAlbum ? (const char*)(iAlbum->Ptr()) : NULL);
 
+  log_db_log_musictrack(GetLogDb(), url, title, artist, album, NULL);
+
+  if (url)
+    guilogf("music: URL '%s'", url);
   if (title)
     guilogf("music: title '%s'", title);
   if (artist)
     guilogf("music: artist '%s'", artist);
+  if (album)
+    guilogf("music: album '%s'", album);
 }
 
 void CSensor_music::ClearTrackInfo()
 {
+  DELETE_Z(iUrl);
   DELETE_Z(iTitle);
   DELETE_Z(iArtist);
+  DELETE_Z(iAlbum);
 }
 
 /**

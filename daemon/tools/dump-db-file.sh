@@ -36,6 +36,12 @@ sqlite3 $1 "select datetime(unixtime, 'unixepoch'), value from inactivity_scan;"
 echo KEYPRESS
 sqlite3 $1 "select datetime(unixtime, 'unixepoch'), presstimes from keypress_scan;" 
 
+echo MUSIC PLAYER STATE
+sqlite3 $1 "select datetime(unixtime, 'unixepoch'), event, detail from musicplayer_scan;" 
+
+echo MUSIC TRACK INFO
+sqlite3 $1 "select datetime(unixtime, 'unixepoch'), url, title, artist, album from musictrack_scan;" 
+
 echo NETWORK REGISTRATION STATUS
 sqlite3 $1 "select datetime(unixtime, 'unixepoch'), status from registration_scan;"
 

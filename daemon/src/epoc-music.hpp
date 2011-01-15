@@ -40,14 +40,18 @@ NONSHARABLE_CLASS(CSensor_music) :
  private:
   ac_AppContext* iAppContext; // not owned
   MMPXPlaybackUtility* iPlaybackUtility; // owned
-  HBufC8* iTitle; // owned
+  HBufC8* iUrl; // owned
   HBufC8* iArtist; // owned
+  HBufC8* iTitle; // owned
+  HBufC8* iAlbum; // owned
   TInt iOldPbState;
 
  private:
   LogDb* GetLogDb() const { return ac_LogDb(iAppContext); }
 
   void ClearTrackInfo();
+
+  void CloseSession();
 
   void RequestMediaL();
 

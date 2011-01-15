@@ -172,9 +172,39 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
               (binding (index 2) (type int) (value "isClose")))))
     
     (sensor (name music)
+            (cpp-condition "__MUSIC_ENABLED__"))
+
+    (sensor (name musicplayer) (inactive #t)
             (cpp-condition "__MUSIC_ENABLED__")
-            ;;xxx
-            )
+            (sql-schema "create table musicplayer_scan (unixtime INTEGER, event INTEGER, detail TEXT);")
+            (sql-statements "insert into musicplayer_scan (unixtime, event, detail) values (?, ?, ?);")
+            (log-insert-api
+             (args
+              ,(arg (type 'int) (name 'eventId))
+              ,(arg (type (ptr-to (cconst 'char))) (name 'detail))
+              )
+             (bindings
+              (binding (index 2) (type int) (value "eventId"))
+              (binding (index 3) (type text?) (value "detail, strlen(detail)") (dispose static))
+              )))
+            
+    (sensor (name musictrack) (inactive #t)
+            (cpp-condition "__MUSIC_ENABLED__")
+            (sql-schema "create table musictrack_scan (unixtime INTEGER, url TEXT, title TEXT, artist TEXT, album TEXT);")
+            (sql-statements "insert into musictrack_scan (unixtime, url, title, artist, album) values (?, ?, ?, ?, ?);")
+            (log-insert-api
+             (args
+              ,(arg (type (ptr-to (cconst 'char))) (name 'url))
+              ,(arg (type (ptr-to (cconst 'char))) (name 'title))
+              ,(arg (type (ptr-to (cconst 'char))) (name 'artist))
+              ,(arg (type (ptr-to (cconst 'char))) (name 'album))
+              )
+             (bindings
+              (binding (index 2) (type text?) (value "url, strlen(url)") (dispose static))
+              (binding (index 3) (type text?) (value "title, strlen(title)") (dispose static))
+              (binding (index 4) (type text?) (value "artist, strlen(artist)") (dispose static))
+              (binding (index 5) (type text?) (value "album, strlen(album)") (dispose static))
+              )))
             
     ;; httpurl
     (sensor (name httpurl)
