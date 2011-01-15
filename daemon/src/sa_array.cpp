@@ -100,6 +100,7 @@
 #include "epoc-callstatus.hpp"
 #include "epoc-cellid.hpp"
 #include "epoc-httpurl.hpp"
+#include "epoc-music.hpp"
 #include "epoc-smsevent.hpp"
 #include "epoc-weburl.hpp"
 
@@ -147,9 +148,10 @@ extern "C" struct _sa_Array
 #endif
   DECLARE_SENSOR_callstatus;
   DECLARE_SENSOR_cellid;
+  DECLARE_SENSOR_doubletap;
   DECLARE_SENSOR_httpurl;
   DECLARE_SENSOR_light;
-  DECLARE_SENSOR_doubletap;
+  DECLARE_SENSOR_music;
   DECLARE_SENSOR_proximity;
   DECLARE_SENSOR_singletap;
   DECLARE_SENSOR_smsevent;

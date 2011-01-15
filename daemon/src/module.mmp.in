@@ -149,6 +149,11 @@ library cntmodel.lib // CContactDatabase
 //library logcli.lib // CLogClient
 //library pbkeng.lib // CPbkContactEngine
 
+<% if $MUSIC_ENABLED %>
+library    mpxcommon.lib
+library    mpxplaybackutility.lib
+<% end %>
+
 <% if $WEBURL_ENABLED %>
 library epocxplat_e846000e.lib
 <% end %>
@@ -230,6 +235,9 @@ source epoc-indicator.cpp
 source epoc-keypress-anim.cpp
 <% else %>
 source epoc-keypress.cpp
+<% end %>
+<% if $MUSIC_ENABLED %>
+source epoc-music.cpp
 <% end %>
 <% if $HAVE_PROFILEENGINE_LIB %>
 source epoc-profile-31.cpp

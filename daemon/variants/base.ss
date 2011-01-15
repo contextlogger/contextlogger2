@@ -276,6 +276,28 @@ project must implement.
   ;; TThreadStackInfo
   (define/public (has-thread-stack-info.attr)
     (>= (s60-vernum.attr) 30))
+
+  (define/public (have-mplayerremotecontrol.attr)
+    (and
+     ;; Based on docs, it sounds like at least v3.1 and v3.2 are
+     ;; supported, with exceptions. Namely that not all v3.1 devices
+     ;; are actually supported, but that just results in no events
+     ;; being received, and is hence not harmful. "S60 3rd Edition,
+     ;; FP1 devices are shipped with a new Music Player, which is not
+     ;; the same S60 Music Player that is delivered with the S60 3rd
+     ;; Edition, FP1 SDK. This new Music Player does not support the
+     ;; Music Player Remote Control API." But the SDK plug-in is only
+     ;; available for v3.1 kits, do not know if the same plug-in can
+     ;; be installed onto others.
+     (and (>= (s60-vernum.attr) 31) (<= (s60-vernum.attr) 32))
+     (= (kit-vernum.attr) 31)
+     (sublist? '(ReadDeviceData ReadUserData WriteUserData WriteDeviceData)
+               (capabilities))))
+
+  ;; Capas for this API not documented.
+  (define/public (have-mpxplaybackutility.attr)
+    (and (>= (s60-vernum.attr) 50)
+         (= (kit-vernum.attr) 50)))
   
   (define/public (sqlite3h-as.attr)
     "static") ;; "static", "dynamic", or "source"

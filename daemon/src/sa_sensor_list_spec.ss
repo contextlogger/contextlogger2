@@ -171,6 +171,11 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
              (bindings
               (binding (index 2) (type int) (value "isClose")))))
     
+    (sensor (name music)
+            (cpp-condition "__MUSIC_ENABLED__")
+            ;;xxx
+            )
+            
     ;; httpurl
     (sensor (name httpurl)
             (cpp-condition "__HTTPURL_ENABLED__")
