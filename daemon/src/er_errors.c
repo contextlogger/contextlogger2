@@ -245,6 +245,7 @@ void gx_propagate_error(GError** dest, GError* src)
 
 gchar* gx_error_to_string(GError* error)
 {
+  assert(error); // NULL argument not supported here
   GString* gs = NULL;
   TRAP_OOM_FAIL(gs = g_string_sized_new(128);
 		g_string_printf(gs, "%s (%s: %d)",

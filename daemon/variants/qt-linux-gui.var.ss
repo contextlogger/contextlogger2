@@ -16,6 +16,7 @@ A Linux/Qt GUI build, with the demo GUI.
   (define/override (with-qmake.attr) #t)
   (define/override (with-qt.attr) #t)
   (define/override (feature-remokon.attr) #f)
+  (define/override (feature-uploader.attr) #t)
   )
 
 (define* (info)

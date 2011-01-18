@@ -20,6 +20,9 @@ class MainWindow : public QMainWindow
   QListView* listView;
   QStringList stringList;
   QsKineticScroller* iScroller;
+
+ private slots:
+  void uploadNow();
 };
 
 #endif /* __window_demo_qt_hpp__ */

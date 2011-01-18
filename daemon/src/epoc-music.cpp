@@ -1,3 +1,15 @@
+/** 
+
+  Music artist and track logging
+
+  References:
+
+  Sample source code for example in the [Music Player Remote https://www.iyouit.eu/portal/Software.aspx] PyS60 extension.
+
+  As for APIs, see the [Media Player Engine API http://wiki.forum.nokia.com/index.php/Media_Player_Engine_API]. Related, possibly interesting API: [Audio Metadata Reader API http://wiki.forum.nokia.com/index.php/Audio_Metadata_Reader_API]. [Music Player Remote Control API http://wiki.forum.nokia.com/index.php/Music_Player_Remote_Control_API] sounds highly related despite the name, but do note [this http://wiki.forum.nokia.com/index.php/KIS001005_-_Music_Player_Remote_Control_API_does_not_work_in_all_S60_3rd_Edition%2C_FP1_and_FP2_devices] issue. For more recent devices see [MPX Playback Utility API http://wiki.forum.nokia.com/index.php/TSS001652_-_Using_MPX_Playback_Utility_API].
+
+ */
+
 #include "epoc-music.hpp"
 
 #include "er_errors.h"

@@ -172,6 +172,12 @@ EXTERN_C bb_Blackboard* ac_get_Blackboard(ac_AppContext* self)
   return self->blackboard;
 }
 
+EXTERN_C up_Uploader* ac_get_Uploader(ac_AppContext* self)
+{
+  if (!self || !(self->kr)) return NULL;
+  return self->kr->uploader;
+}
+
 EXTERN_C const char* ac_get_logdb_file(ac_AppContext* self)
 {
   return self->logdb_file;

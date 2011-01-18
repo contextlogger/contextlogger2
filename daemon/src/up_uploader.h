@@ -8,13 +8,13 @@
 
 #include <glib.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define up_DOMAIN domain_cl2app
 
 #define up_ERR_GENERAL 1
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
   // Does global initialization.
   //
@@ -26,11 +26,7 @@ extern "C" {
   //
   void up_global_cleanup();
 
-#if __UPLOAD_WITH_CURL__
-  typedef struct _up_Uploader up_Uploader; 
-#else
-  typedef void* up_Uploader; 
-#endif
+  typedef struct _up_Uploader up_Uploader;
 
   up_Uploader* up_Uploader_new(ac_AppContext* aAppContext, GError** error);
 
@@ -47,6 +43,9 @@ extern "C" {
 				   const gchar* key,
 				   const gchar* value,
 				   GError** error);
+
+  up_Uploader* ac_get_Uploader(ac_AppContext* self);
+#define ac_global_Uploader ac_get_Uploader(ac_get_global_AppContext())
 
 #ifdef __cplusplus
 } /* extern "C" */

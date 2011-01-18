@@ -1,17 +1,25 @@
 #include "window_demo_qt.hpp"
 #include "guilog.h"
 
+#include "application_config.h"
+#include "up_uploader.h"
+
 #include "common/QsKineticScroller.hpp"
 
 #include <QAbstractListModel>
 #include <QAction>
 #include <QApplication>
+#include <QErrorMessage>
 #include <QListView>
+#include <QMenu>
+#include <QMenuBar>
 #include <QObject>
 #include <QString>
 #include <QStringListModel>
 
 #include <QtGlobal>
+
+#include <stdio.h>
 
 #define MY_MAX_ROWS 100
 
@@ -66,8 +74,41 @@ MainWindow::MainWindow(QWidget *parent)
 
   setCentralWidget(listView);
 
-  QAction *exitAction = new QAction("Exit", this);
-  exitAction->setShortcuts(QKeySequence::Quit);
-  connect(exitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
-  addAction(exitAction);
+  QAction *quitAction = new QAction(tr("&Quit"), this);
+  quitAction->setShortcuts(QKeySequence::Quit); // C-q on Linux
+  quitAction->setStatusTip(tr("Stop logger and quit"));
+  connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
+  addAction(quitAction);
+
+  QAction* uploadAction = new QAction(tr("&Upload now"), this);
+  uploadAction->setStatusTip(tr("Take log snapshot and upload now"));
+  connect(uploadAction, SIGNAL(triggered()), this, SLOT(uploadNow()));
+
+  QMenu* actionMenu = menuBar()->addMenu(tr("&Action"));
+  actionMenu->addAction(uploadAction);
+  actionMenu->addSeparator();
+  actionMenu->addAction(quitAction);
+}
+
+static void showFreeGerror(GError* error)
+{
+  if (error) {
+    gchar* s = gx_error_to_string(error);
+    gx_error_free(error);
+    QErrorMessage::qtHandler()->showMessage(QString(s));
+    g_free(s);
+  } else {
+    QErrorMessage::qtHandler()->showMessage(QString("out of memory"));
+  }
+}
+
+void MainWindow::uploadNow()
+{
+#if __FEATURE_UPLOADER__
+  up_Uploader* uploader = ac_global_Uploader;
+  GError* localError = NULL;
+  if (!up_Uploader_upload_now(uploader, &localError)) {
+    showFreeGerror(localError);
+  }
+#endif
 }
