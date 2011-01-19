@@ -27,7 +27,7 @@ For testing the "music" sensor on Symbian.
     (define/override (feature-remokon.attr) #f)
     (define/override (feature-uploader.attr) #f)
     
-    (define/override (music-enabled.attr) #t) ;;xxx
+    (define/override (music-enabled.attr) #t)
 
     )) ;; end class
 

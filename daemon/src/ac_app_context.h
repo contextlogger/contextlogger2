@@ -16,6 +16,7 @@
 // common API
 // --------------------------------------------------
 
+// xxx To avoid circular dependencies, we may not actually want to have all of these includes here.
 #include "bb_blackboard.h"
 #include "config_db.h"
 #include "cf_rcfile.h"
