@@ -115,7 +115,10 @@ project must implement.
     (not (have-sqlite3.attr)))
   
   (define/public (lua-from-source.attr)
-    (is-symbian.attr))
+    #f)
+  
+  (define/public (lua-as-static-lib.attr)
+    (and (is-symbian.attr) (not (lua-from-source.attr))))
   
   (define/public (upload-time-expr.attr) "never")
 

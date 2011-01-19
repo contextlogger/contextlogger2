@@ -5,9 +5,9 @@
      files. The application itself must actually export the symbols that
      require an implementation. */
 #if defined(NDEBUG)
-#define __DO_LOGGING__ 1
-#else
 #define __DO_LOGGING__ 0
+#else
+#define __DO_LOGGING__ 1
 #endif
 
   /* This header may be loaded, however. */

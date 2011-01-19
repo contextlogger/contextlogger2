@@ -1,6 +1,8 @@
 KIT := s60_30
 REL := udeb
 
+default : all
+
 staticlib :
 	cd group && in-gnupoc-env $(KIT) abld-output-filter bldmake bldfiles
 	cd group && in-gnupoc-env $(KIT) abld-output-filter abld build gcce $(REL)

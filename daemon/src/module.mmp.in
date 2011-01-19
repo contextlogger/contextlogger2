@@ -97,6 +97,10 @@ staticlibrary libcurl.lib    // built by us
   <% end %>
 <% end %>
 
+<% if $LUA_AS_STATIC_LIB %>
+staticlibrary luastatic.lib  // built by us
+<% end %>
+
 // With DLLs, note that if there are symbol conflicts, it's first
 // come, first served, so may want to have the more stable libraries
 // listed first.
@@ -373,6 +377,7 @@ source socketaos.cpp
 source utility.c
 <% end %>
 
+<% if $LUA_FROM_SOURCE %>
 sourcepath ..\..\..\lua\src
 source			lapi.c
 source			lauxlib.c
@@ -404,6 +409,7 @@ source			lundump.c
 source			lvm.c
 source 			lzio.c
 source			print.c
+<% end %>
 
 <% if $USE_SQLITE3H and ($SQLITE3H_AS == "source") %>
 sourcepath ..\..\..\sqlite3h\src\sqlite3
