@@ -1,5 +1,7 @@
-PRJ_MMPFILES
+PRJ_PLATFORMS
+winscw gcce
 
+PRJ_MMPFILES
 luastatic.mmp
 //luadll.mmp
 //lua.mmp
@@ -11,4 +13,3 @@ luastatic.mmp
 
 PRJ_EXPORTS
 //lua.iby		/epoc32/rom/include/lua.iby
-

@@ -10,6 +10,7 @@ systeminclude \epoc32\include\stdapis
 userinclude ..\..\shared
 userinclude ..\src
 userinclude ..\etc // for lua.hpp
+userinclude ..\inc-staticlib
 
 //library libc.lib       // PIPS
 //library libm.lib       // required for Lua
@@ -45,5 +46,3 @@ source			lundump.c
 source			lvm.c
 source 			lzio.c
 source			print.c
-
-macro __IS_STATIC_LIB__

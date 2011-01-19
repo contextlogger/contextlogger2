@@ -3,31 +3,8 @@
 
 /* Any application-specific header file #includes must be contained here. */
 
-#ifdef __IS_STATIC_LIB__
-
-  /* When building a static library, the build must be good for just
-     about all configurations. We can only really rely on the platform
-     and the NDEBUG flag. So do not even load "application_config.h". */
-#define __application_config_h__
-  
-  /* Do any required configuration manually. Just enough for the header
-     files. The application itself must actually export the symbols that
-     require an implementation. */
-#if defined(NDEBUG)
-#define __DO_LOGGING__ 1
-#else
-#define __DO_LOGGING__ 0
-#endif
-
-  /* This header may be loaded, however. */
-#include "common/platform_config.h"
-
-#else
-
-  /* This is fine if built from source into an application. */
+  /* We have a specific implementation for shared library builds. */
 #include "application_config.h"
-
-#endif
 
   //#include <assert.h>
 #include "common/assertions.h"

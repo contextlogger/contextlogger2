@@ -572,12 +572,12 @@ void luaG_typeerror (lua_State *L, const TValue *o, const char *op) {
   const char *t = luaT_typenames[ttype(o)];
   //logg("type name is '%s'", t ? t : "NULL");
   const char *kind = (isinstack(L->ci, o)) ?
-                         getobjname(L, L->ci, cast_int(o - L->base), &name) :
-                         NULL;
+    getobjname(L, L->ci, cast_int(o - L->base), &name) :
+    NULL;
   //logg("kind is '%s'", kind ? kind : "NULL");
   if (kind)
     luaG_runerror_m(L, "attempt to %s %s " LUA_QS " (a %s value)",
-                op, kind, name, t);
+		    op, kind, name, t);
   else
     luaG_runerror_m(L, "attempt to %s a %s value", op, t);
 }
