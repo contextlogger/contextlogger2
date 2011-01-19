@@ -1,0 +1,49 @@
+targettype      lib
+
+target          luastatic.lib
+
+uid             0x01000000 0x00000000
+
+systeminclude \epoc32\include
+systeminclude \epoc32\include\stdapis
+
+userinclude ..\..\shared
+userinclude ..\src
+userinclude ..\etc // for lua.hpp
+
+//library libc.lib       // PIPS
+//library libm.lib       // required for Lua
+
+sourcepath ..\src
+source			lapi.c
+source			lauxlib.c
+source			lbaselib.c
+source			lcode.c
+source			ldblib.c
+source			ldebug.c
+source			ldo.cpp       	// ldo.c compiled as C++
+source			ldump.c
+source			lfunc.c
+source			lgc.c
+source			linit.c
+source			liolib.c
+source			llex.c
+source			lmathlib.c
+source			lmem.c
+source			loadlib.cpp   	// loadlib.c compiled as C++
+source			lobject.c
+source			lopcodes.c
+source			loslib.c
+source			lparser.c
+source			lstate.c
+source			lstring.c
+source			lstrlib.c
+source			ltable.c
+source			ltablib.c
+source			ltm.c
+source			lundump.c
+source			lvm.c
+source 			lzio.c
+source			print.c
+
+macro __IS_STATIC_LIB__

@@ -35,8 +35,6 @@
 #include <e32std.h>
 #endif
 
-#include "common/logging.h"
-
 
 /*
 ** {======================================================

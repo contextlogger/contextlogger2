@@ -407,8 +407,7 @@
 ** with Lua. A useful redefinition is to use assert.h.
 */
 #if defined(LUA_USE_APICHECK)
-#include "common/assertions.h"
-//#include <assert.h>
+#include "luaconf_cl2.h"
 #define luai_apicheck(L,o)	{ (void)L; assert(o); }
 #else
 #define luai_apicheck(L,o)	{ (void)L; }

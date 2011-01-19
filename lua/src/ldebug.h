@@ -7,7 +7,7 @@
 #ifndef ldebug_h
 #define ldebug_h
 
-#include "common/platform_config.h"
+#include "luaconf_cl2.h"
 
 #include "lstate.h"
 

@@ -1,13 +1,14 @@
 PRJ_MMPFILES
 
-luadll.mmp
-lua.mmp
-active.mmp
-sock.mmp
+luastatic.mmp
+//luadll.mmp
+//lua.mmp
+//active.mmp
+//sock.mmp
 //logger.mmp
 //alua.mmp
 //luac.mmp
 
 PRJ_EXPORTS
-lua.iby		/epoc32/rom/include/lua.iby
+//lua.iby		/epoc32/rom/include/lua.iby
 

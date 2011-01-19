@@ -28,7 +28,6 @@
 #include "ltm.h"
 #include "lvm.h"
 
-#include "common/logging.h"
 
 
 
@@ -600,7 +599,7 @@ void luaG_aritherror (lua_State *L, const TValue *p1, const TValue *p2) {
 
 
 int luaG_ordererror (lua_State *L, const TValue *p1, const TValue *p2) {
-  logt("luaG_ordererror");
+  //logt("luaG_ordererror");
   const char *t1 = luaT_typenames[ttype(p1)];
   const char *t2 = luaT_typenames[ttype(p2)];
 #if 0
@@ -619,9 +618,9 @@ int luaG_ordererror (lua_State *L, const TValue *p1, const TValue *p2) {
 
 
 void luaG_errormsg (lua_State *L) {
-  logt("luaG_errormsg");
+  //logt("luaG_errormsg");
   if (L->errfunc != 0) {  /* is there an error handling function? */
-    logt("have error handling function");
+    //logt("have error handling function");
     StkId errfunc = restorestack(L, L->errfunc);
     if (!ttisfunction(errfunc)) luaD_throw(L, LUA_ERRERR);
     setobjs2s(L, L->top, L->top - 1);  /* move argument */
@@ -629,7 +628,7 @@ void luaG_errormsg (lua_State *L) {
     incr_top(L);
     luaD_call(L, L->top - 2, 1);  /* call it */
   }
-  logt("throwing now");
+  //logt("throwing now");
   luaD_throw(L, LUA_ERRRUN);
 }
 
@@ -642,7 +641,7 @@ void luaG_errormsg (lua_State *L) {
 // http://discussion.forum.nokia.com/forum/showthread.php?t=115248.
 // Upgrading to GCCE 4 might possibly help?
 void luaG_runerror_wa (lua_State *L, const char *s) {
-  logt("luaG_runerror_wa");
+  //logt("luaG_runerror_wa");
   setsvalue2s(L, L->top, luaS_new(L, s));
   incr_top(L);
   luaG_errormsg(L);
@@ -652,10 +651,10 @@ void luaG_runerror_wa (lua_State *L, const char *s) {
 
 // only used in luaG_runerror
 static void addinfo (lua_State *L, const char *msg) {
-  logt("addinfo");
+  //logt("addinfo");
   CallInfo *ci = L->ci;
   if (isLua(ci)) {  /* is Lua code? */
-    logt("is Lua code");
+    //logt("is Lua code");
     char buff[LUA_IDSIZE];  /* add file:line information */
     int line = currentline(L, ci);
     luaO_chunkid(buff, getstr(getluaproto(ci)->source), LUA_IDSIZE);
@@ -664,7 +663,7 @@ static void addinfo (lua_State *L, const char *msg) {
 }
 
 void luaG_runerror_ok (lua_State *L, const char *fmt, ...) {
-  logt("luaG_runerror");
+  //logt("luaG_runerror");
   va_list argp;
   va_start(argp, fmt);
   addinfo(L, luaO_pushvfstring(L, fmt, argp));
