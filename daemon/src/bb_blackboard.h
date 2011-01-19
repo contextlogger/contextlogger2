@@ -46,8 +46,8 @@ extern "C" {
     gpointer arg;
   } bb_Closure;
 
-  // The value of the "changed" function is used as a unique ID for
-  // the registrant.
+  // The value of the closure is used as a unique ID for the
+  // registrant. This function does not check for duplicates.
   gboolean bb_Blackboard_register(bb_Blackboard* self,
 				  enum bb_DataType dt,
 				  bb_Closure cb,
@@ -73,6 +73,45 @@ extern "C" {
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
+
+// Symbian C++ convenience API for observing.
+#if defined(__cplusplus) && defined(__SYMBIAN32__)
+namespace bb {
+  class RHandle;
+
+  class MObserver
+  {
+  public:
+    virtual void BbChangedL(RHandle* self, enum bb_DataType dt,
+			    gpointer data, int len) = 0;
+
+    // Override if you do not consider leave in BbChangedL fatal.
+    virtual void BbLeave(TInt errCode);
+  };
+
+  // Only one property may be observed per handle.
+  class RHandle
+  {
+  private:
+    bb_Blackboard* iBoard;
+    bb_Closure iClosure;
+    MObserver* iObserver;
+
+  public:
+    RHandle();
+
+    ~RHandle();
+
+    void Register(bb_Blackboard* aBoard,
+		  enum bb_DataType dt, 
+		  MObserver* observer);
+    
+    void Unregister();
+
+    MObserver* Observer() const { return iObserver; }
+  };
+};
+#endif // end Symbian C++
 
 #endif /* __bb_blackboard_h__ */
 

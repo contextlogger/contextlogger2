@@ -90,7 +90,8 @@ void bb_Blackboard_unregister(bb_Blackboard* self,
   GSList* link = self->reg;
   while (link != NULL) {
     Registrant* elem = (Registrant*)link->data;
-    if (elem->cb.changed == cb.changed) {
+    if ((elem->cb.changed == cb.changed) &&
+	(elem->cb.arg == cb.arg)) {
       Registrant_free(elem);
       link = g_slist_delete_link(link, link);
       if (plink)
@@ -116,6 +117,56 @@ void bb_Blackboard_notify(bb_Blackboard* self,
     }
   }
 }
+
+#if defined(__cplusplus) && defined(__SYMBIAN32__)
+
+static void RHandleFunc(bb_Blackboard* self, enum bb_DataType dt,
+			gpointer data, int len, gpointer arg)
+{
+  bb::RHandle* handle = (bb::RHandle*)arg;
+  bb::MObserver* observer = handle->Observer();
+  TRAPD(errCode, observer->BbChangedL(handle, dt, data, len));
+  if (errCode)
+    observer->BbLeave(errCode);
+}
+
+void bb::MObserver::BbLeave(TInt errCode)
+{
+  er_log_symbian(er_FATAL, errCode, "leave in bb::MObserver::BbChangedL");
+}
+
+bb::RHandle::RHandle() : iBoard(NULL), iObserver(NULL)
+{
+  iClosure.changed = RHandleFunc;
+  iClosure.arg = this;
+}
+
+bb::RHandle::~RHandle()
+{
+  Unregister();
+}
+
+void bb::RHandle::Register(bb_Blackboard* aBoard,
+			   enum bb_DataType dt, 
+			   bb::MObserver* aObserver)
+{
+  iBoard = aBoard;
+  iObserver = aObserver;
+
+  GError* localError = NULL;
+  if (!bb_Blackboard_register(iBoard, dt, iClosure, &localError)) {
+    er_log_gerror(er_FATAL|er_FREE, localError, 
+		  "bb_Blackboard_register failed");
+  }
+}
+    
+void bb::RHandle::Unregister()
+{
+  if (iBoard)
+    bb_Blackboard_unregister(iBoard, iClosure);
+}
+
+#endif
 
 /**
 
