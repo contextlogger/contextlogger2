@@ -422,7 +422,7 @@ gboolean CSensor_gps::PositionerEventL(GError** error)
       break;
     case KErrArgument:
     case KErrPositionBufferOverflow:
-      assert(0 && "unexpected gps error");
+      er_log_symbian(er_FATAL, errCode, "unexpected gps error");
       break;
     default:
       if (iNumScanFailures < 100) {
