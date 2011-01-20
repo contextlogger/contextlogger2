@@ -5,9 +5,16 @@
 
 #include <glib.h>
 
+// The GPS positioner class uses this interface for reporting events.
 NONSHARABLE_CLASS(MObserver_gps)
 {
  public:
+  // This callback may either leave or set a GError to report an error
+  // in the callback.
+  // 
+  // The implementation of this method may invoke StatusCode() on the
+  // positioner to determine whether a position was successfully
+  // acquired.
   virtual gboolean PositionerEventL(GError** error) = 0;
 };
 

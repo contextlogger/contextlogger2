@@ -25,7 +25,6 @@ void CPositioner_gps::ConstructL()
     timeout. Set to zero for no timeout.
   */
   User::LeaveIfError(iPositioner.SetUpdateOptions(iUpdateOptions));
-  // xxx the current callback interface is not suitable for reporting timeouts
 
   dblogg("gps scan interval set to %d secs", iUpdateIntervalSecs);
   guilogf("gps: interval %d secs", iUpdateIntervalSecs);
