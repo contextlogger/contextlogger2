@@ -295,7 +295,7 @@ This::~CNetworkObserver()
 
 void This::ObservedData_NetworkInfo(TData_NetworkInfo const &aData)
 {
-  // Log interesting data, if it has changed.
+  // Log operator long name, if it has changed.
   {
     if (aData.iLongName != iOldData.iLongName) {
       LogDb* logDb = ac_global_LogDb;
@@ -309,6 +309,7 @@ void This::ObservedData_NetworkInfo(TData_NetworkInfo const &aData)
     }
   }
 
+  // Propagate any changed mobile network country code.
   if (iOldData.iCountryCode != aData.iCountryCode) {
     TLex lex(aData.iCountryCode);
     int mcc;
@@ -318,6 +319,16 @@ void This::ObservedData_NetworkInfo(TData_NetworkInfo const &aData)
       mcc = -1;
     // Notify interested parties.
     kr_Controller_set_current_mcc(ac_global_Controller, mcc);
+  }
+
+  // Post data for those interested in GSM cell ID changes.
+  if ((iOldData.iCountryCode != aData.iCountryCode) ||
+      (iOldData.iNetworkId != aData.iNetworkId) ||
+      (iOldData.iLocationAreaCode != aData.iLocationAreaCode) ||
+      (iOldData.iCellId != aData.iCellId)) {
+    bb_Blackboard_notify(ac_global_Blackboard,
+			 bb_dt_cell_id,
+			 (gpointer)&aData, 0);
   }
 
   iOldData = aData;

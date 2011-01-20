@@ -30,7 +30,7 @@ void CSensor_cellid::ConstructL()
   iClosure.changed = DataChanged;
   iClosure.arg = this;
   if (!bb_Blackboard_register(GetBlackboard(),
-			      bb_dt_network_info,
+			      bb_dt_cell_id,
 			      iClosure,
 			      NULL))
     User::LeaveNoMemory();
@@ -97,11 +97,15 @@ void CSensor_cellid::PostNewDataL(const CTelephony::TNetworkInfoV1& aData)
       int areaCode = aData.iLocationAreaCode; // valid if iAccess is true
       int cellId = aData.iCellId; // valid if iAccess is true
 
+      const char* cCountryCode = (const char*)(countryCode->Ptr());
+      const char* cNetworkCode = (const char*)(networkCode->Ptr());
+
       log_db_log_cellid(GetLogDb(), 
-			(char*)(countryCode->Ptr()), 
-			(char*)(networkCode->Ptr()), 
+			cCountryCode,
+			cNetworkCode,
 			areaCode, cellId, NULL);
-      //logg("new cellid: (%s, %s, %d, %d)", (char*)(countryCode->Ptr()), (char*)(networkCode->Ptr()), areaCode, cellId);
+      guilogf("cellid: (%s, %s, %d, %d)", 
+	      cCountryCode, cNetworkCode, areaCode, cellId);
 
       CleanupStack::PopAndDestroy(2); // networkCode, countryCode
     }

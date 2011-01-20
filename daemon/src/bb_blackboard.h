@@ -35,6 +35,7 @@ extern "C" {
   enum bb_DataType {
     bb_dt_flightmode,      /* gboolean */
     bb_dt_network_info,    /* CTelephony::TNetworkInfoV1 */
+    bb_dt_cell_id,         /* CTelephony::TNetworkInfoV1 */
     bb_dt_uploads_allowed  /* gboolean */
   };
 
