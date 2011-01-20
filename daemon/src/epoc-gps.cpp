@@ -141,11 +141,24 @@ TBool CSensor_gps::ChooseBestPositionerL(TPositionModuleId& aBestId)
     TPositionModuleStatus moduleStatus;
     TInt moduleStatusError = iPositionServer.GetModuleStatus(moduleStatus, moduleInfo.ModuleId());
     
+    // See lbscommon.h for interpretations for the values.
+    logg("moduleInfo: %s stat=%d loc=%d tech=%02x caps=%04x",
+	 moduleInfo.IsAvailable() ? "available" : "unavailable",
+	 moduleStatus.DeviceStatus(),
+	 moduleInfo.DeviceLocation(),
+	 moduleInfo.TechnologyType(),
+	 moduleInfo.Capabilities());
+
     if (moduleInfo.IsAvailable() &&
 	!moduleStatusError && 
 	(moduleStatus.DeviceStatus() != TPositionModuleStatus::EDeviceDisabled) &&
 	(moduleInfo.Capabilities() & TPositionModuleInfo::ECapabilitySatellite) &&
 	(moduleInfo.TechnologyType() != TPositionModuleInfo::ETechnologyUnknown) &&
+        // We might want to allow network positioning (particularly
+        // for WLAN based positioning on devices that support it), but
+        // it is dangerous as it may involve frequent queries over the
+        // network. Should at least make sure we are not roaming
+        // before allowing it. xxx
 	(moduleInfo.TechnologyType() != TPositionModuleInfo::ETechnologyNetwork) &&
 	(moduleInfo.DeviceLocation() != TPositionModuleInfo::EDeviceUnknown)) {
       int score = 0;
@@ -158,10 +171,25 @@ TBool CSensor_gps::ChooseBestPositionerL(TPositionModuleId& aBestId)
 	  // Avoid the BT device search dialog.
 	  continue;
 	*/
-	score += 0xf;
+	score += 0x100;
       }
       if (moduleInfo.TechnologyType() == TPositionModuleInfo::ETechnologyAssisted)
-	score += 1;
+	score += 0x10;
+
+      // Given the choice between 'Wi-Fi/Network' and 'Network based'
+      // we would like to favor the former. But they both have the
+      // same TechnologyType and Capabilities. We could consider
+      // making better use of TPositionQuality, perhaps that would do
+      // the trick. Not sure if this code is ever going to be of any
+      // use.
+      TPositionQuality quality;
+      moduleInfo.GetPositionQuality(quality);
+      TReal32 accuracy = quality.VerticalAccuracy();
+      if (!Math::IsNaN(accuracy)) {
+	//logg("vertical accuracy %g", accuracy);
+	score += 0x1; // bonus for having some accuracy value
+      }
+
       logg("module score is %d", score);
       if (score > bestScore) {
 	bestScore = score;
@@ -338,10 +366,12 @@ gboolean CSensor_gps::RunGL(GError** error)
     // unlikely, and will not deal with such situations in a very
     // optimal way necessarily.
     if (occurredEvents & TPositionModuleStatusEventBase::EEventSystemModuleEvent) {
-      TPositionModuleStatusEventBase::TSystemModuleEvent systemModuleEvent = iPositionModuleStatusEvent.SystemModuleEvent();
+      TPositionModuleStatusEventBase::TSystemModuleEvent systemModuleEvent = 
+	iPositionModuleStatusEvent.SystemModuleEvent();
       dblogg("system module event was %d", (int)systemModuleEvent);
       if (aboutCurrent &&
-	  ((systemModuleEvent == TPositionModuleStatusEventBase::ESystemError) || (systemModuleEvent == TPositionModuleStatusEventBase::ESystemModuleRemoved))) {
+	  ((systemModuleEvent == TPositionModuleStatusEventBase::ESystemError) || 
+	   (systemModuleEvent == TPositionModuleStatusEventBase::ESystemModuleRemoved))) {
 	CurrentModuleUnavailable();
       } else if (!aboutCurrent &&
 		 ((systemModuleEvent == TPositionModuleStatusEventBase::ESystemModuleInstalled))) {
