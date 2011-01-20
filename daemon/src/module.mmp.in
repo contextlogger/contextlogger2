@@ -230,6 +230,7 @@ source epoc-cellid.cpp
 source epoc-cliapi-server.cpp
 <% if $GPS_ENABLED %>
 source epoc-gps.cpp
+source epoc-gps-positioner.cpp
 <% end %>
 <% if $HTTPURL_ENABLED %>
 source epoc-httpurl.cpp

@@ -5,6 +5,8 @@
 
 #if __GPS_ENABLED__
 
+#include "epoc-gps-observer.hpp"
+
 #include "ac_app_context.h"
 #include "epoc-ao-gerror.hpp"
 #include "ld_log_db.h"
@@ -17,12 +19,6 @@
 #include <glib.h>
 
 class CPositioner_gps;
-
-NONSHARABLE_CLASS(MObserver_gps)
-{
- public:
-  virtual gboolean PositionerEventL(GError** error) = 0;
-};
 
 NONSHARABLE_CLASS(CSensor_gps) :
   public CActiveRunG, 

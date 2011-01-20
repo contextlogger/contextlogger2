@@ -1,5 +1,7 @@
 #include "epoc-gps.hpp"
 
+#include "epoc-gps-positioner.hpp"
+
 #include "cf_query.h"
 #include "er_errors.h"
 #include "kr_controller_private.h"
@@ -28,149 +30,7 @@
 
 // -------------------------------------------------------------------
 
-_LIT_W(KRequestor, COMPONENT_NAME_W);
-
 #define DEFAULT_POSITION_SCAN_INTERVAL_SECS (5 * 60)
-
-// -------------------------------------------------------------------
-
-/* 
-If we were to use this setting we should expect error completions for
-our positioning requests. But handling such completions every few
-minutes is hardly a big deal in terms of energy consumption or
-anything. Still, without setting this presumably there is no timeout.
-*/
-// iUpdateOptions.SetUpdateTimeOut(TTimeIntervalMicroSeconds(5 * 60 * 1000000));
-
-/***koog 
-(require codegen/symbian-cxx)
-
-(ctor-defines/spec
- "CPositioner_gps"
- "RPositionServer& aPositionServer, MObserver_gps& aObserver, TPositionModuleId aModuleId, TInt aUpdateIntervalSecs"
- "CActiveRunG(EPriorityStandard), iPositionServer(aPositionServer), iObserver(aObserver), iModuleId(aModuleId), iUpdateIntervalSecs(aUpdateIntervalSecs)"
- "CActiveScheduler::Add(this);"
- #t)
- ***/
-#define CTOR_DECL_CPositioner_gps  \
-public: static CPositioner_gps* NewLC(RPositionServer& aPositionServer, MObserver_gps& aObserver, TPositionModuleId aModuleId, TInt aUpdateIntervalSecs); \
-public: static CPositioner_gps* NewL(RPositionServer& aPositionServer, MObserver_gps& aObserver, TPositionModuleId aModuleId, TInt aUpdateIntervalSecs); \
-private: CPositioner_gps(RPositionServer& aPositionServer, MObserver_gps& aObserver, TPositionModuleId aModuleId, TInt aUpdateIntervalSecs); \
-private: void ConstructL();
-
-#define CTOR_IMPL_CPositioner_gps  \
-CPositioner_gps* CPositioner_gps::NewLC(RPositionServer& aPositionServer, MObserver_gps& aObserver, TPositionModuleId aModuleId, TInt aUpdateIntervalSecs) \
-{ \
-  CPositioner_gps* obj = new (ELeave) CPositioner_gps(aPositionServer, aObserver, aModuleId, aUpdateIntervalSecs); \
-  CleanupStack::PushL(obj); \
-  obj->ConstructL(); \
-  return obj; \
-} \
- \
-CPositioner_gps* CPositioner_gps::NewL(RPositionServer& aPositionServer, MObserver_gps& aObserver, TPositionModuleId aModuleId, TInt aUpdateIntervalSecs) \
-{ \
-  CPositioner_gps* obj = CPositioner_gps::NewLC(aPositionServer, aObserver, aModuleId, aUpdateIntervalSecs); \
-  CleanupStack::Pop(obj); \
-  return obj; \
-} \
- \
-CPositioner_gps::CPositioner_gps(RPositionServer& aPositionServer, MObserver_gps& aObserver, TPositionModuleId aModuleId, TInt aUpdateIntervalSecs) : CActiveRunG(EPriorityStandard), iPositionServer(aPositionServer), iObserver(aObserver), iModuleId(aModuleId), iUpdateIntervalSecs(aUpdateIntervalSecs) \
-{CActiveScheduler::Add(this);}
-/***end***/
-
-// An active object for dealing with a single RPositioner.
-NONSHARABLE_CLASS(CPositioner_gps) : public CActiveRunG
-{
- public:
-
-  virtual ~CPositioner_gps();
-
-  CTOR_DECL_CPositioner_gps;
-
- public:
-
-  // Makes the next positioning request.
-  void MakeRequest();
-
-  TInt StatusCode() const { return iStatus.Int(); }
-
-  const TPositionSatelliteInfo& PositionInfo() const { return iPositionInfo; }
-
-  TPositionModuleId ModuleId() const { return iModuleId; }
-  
- private: // CActiveRunG
-
-  virtual gboolean RunGL(GError** error);
-  
-  virtual const char* Description();
-  
-  virtual void DoCancel();
-
- private:
-
-  RPositionServer& iPositionServer;
-  MObserver_gps& iObserver;
-  TPositionModuleId iModuleId;
-
-  DEF_SESSION(RPositioner, iPositioner);
-
-  TPositionUpdateOptions iUpdateOptions;
-
-  // Supertype of both TPositionCourseInfo and TPositionInfo.
-  TPositionSatelliteInfo iPositionInfo;
-
-  TInt iUpdateIntervalSecs;
-};
-
-CTOR_IMPL_CPositioner_gps;
-
-void CPositioner_gps::ConstructL()
-{
-  LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iPositioner, iPositioner.Open(iPositionServer, iModuleId));
-  User::LeaveIfError(iPositioner.SetRequestor(CRequestor::ERequestorService,
-					      CRequestor::EFormatApplication, 
-					      KRequestor));
-  
-  iUpdateOptions.SetAcceptPartialUpdates(EFalse);
-
-  TInt64 usecs = iUpdateIntervalSecs * 1000000LL;
-  iUpdateOptions.SetUpdateInterval(TTimeIntervalMicroSeconds(usecs));
-
-  User::LeaveIfError(iPositioner.SetUpdateOptions(iUpdateOptions));
-
-  dblogg("gps scan interval set to %d secs", iUpdateIntervalSecs);
-  guilogf("gps: interval %d secs", iUpdateIntervalSecs);
-}
-
-CPositioner_gps::~CPositioner_gps()
-{
-  Cancel(); // safe when AO inactive as DoCancel not called
-  SESSION_CLOSE_IF_OPEN(iPositioner);
-}
-
-void CPositioner_gps::MakeRequest() 
-{
-  iPositioner.NotifyPositionUpdate(iPositionInfo, iStatus);
-  SetActive();
-}
-  
-gboolean CPositioner_gps::RunGL(GError** error) 
-{
-  return iObserver.PositionerEventL(error);
-}
-  
-const char* CPositioner_gps::Description() 
-{
-  return "gps_positioner";
-}
-  
-void CPositioner_gps::DoCancel() 
-{
-  assert(IS_SESSION_OPEN(iPositioner));
-  // Ignoring return value. The only possible error should never
-  // happen in this case.
-  iPositioner.CancelRequest(EPositionerNotifyPositionUpdate);
-}
 
 // -------------------------------------------------------------------
 
