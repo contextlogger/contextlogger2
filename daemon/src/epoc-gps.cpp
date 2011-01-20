@@ -174,18 +174,20 @@ void CPositioner_gps::DoCancel()
 
 // -------------------------------------------------------------------
 
-CSensor_gps* CSensor_gps::NewL(LogDb* aLogDb)
+CSensor_gps* CSensor_gps::NewL(ac_AppContext* aAppContext)
 {
-  CSensor_gps* obj = new (ELeave) CSensor_gps(aLogDb);
+  CSensor_gps* obj = new (ELeave) CSensor_gps(aAppContext);
   CleanupStack::PushL(obj);
   obj->ConstructL();
   CleanupStack::Pop();
   return obj;
 }
 
-CSensor_gps::CSensor_gps(LogDb* aLogDb) : CActiveRunG(EPriorityStandard)
+CSensor_gps::CSensor_gps(ac_AppContext* aAppContext) : 
+  CActiveRunG(EPriorityStandard),
+  iAppContext(aAppContext)
 {
-  iLogDb = aLogDb;
+  iLogDb = ac_LogDb(aAppContext);
   iPositionUpdateIntervalSecs = DEFAULT_POSITION_SCAN_INTERVAL_SECS;
   CActiveScheduler::Add(this);
 }

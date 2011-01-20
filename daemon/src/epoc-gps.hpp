@@ -5,6 +5,7 @@
 
 #if __GPS_ENABLED__
 
+#include "ac_app_context.h"
 #include "epoc-ao-gerror.hpp"
 #include "ld_log_db.h"
 #include "utils_cl2.h"
@@ -29,7 +30,7 @@ NONSHARABLE_CLASS(CSensor_gps) :
 {
  public:
 
-  static CSensor_gps* NewL(LogDb* aLogDb);
+  static CSensor_gps* NewL(ac_AppContext* aAppContext);
 
   virtual ~CSensor_gps();
 
@@ -41,7 +42,7 @@ NONSHARABLE_CLASS(CSensor_gps) :
 
  private:
  
-  CSensor_gps(LogDb* aLogDb);
+  CSensor_gps(ac_AppContext* aAppContext);
 
   void ConstructL();
 
@@ -70,6 +71,7 @@ NONSHARABLE_CLASS(CSensor_gps) :
 
  private:
 
+  ac_AppContext* iAppContext; // not owned
   LogDb* iLogDb; // not owned
 
   DEF_SESSION(RPositionServer, iPositionServer);
@@ -95,7 +97,7 @@ NONSHARABLE_CLASS(CSensor_gps) :
 #if __GPS_ENABLED__
 #define DECLARE_SENSOR_gps CSensor_gps* iSensor_gps
 #define SENSOR_GPS_DESTROY DELETE_Z(self->iSensor_gps)
-#define SENSOR_GPS_CREATE sa_typical_symbian_sensor_create(self->iSensor_gps = CSensor_gps::NewL(self->logDb), "gps sensor initialization")
+#define SENSOR_GPS_CREATE sa_typical_symbian_sensor_create(self->iSensor_gps = CSensor_gps::NewL(self->ac), "gps sensor initialization")
 #define SENSOR_GPS_START sa_typical_symbian_sensor_start(self->iSensor_gps, "failed to start gps scanning")
 #define SENSOR_GPS_STOP { self->iSensor_gps->Stop(); }
 #define SENSOR_GPS_IS_RUNNING (self->iSensor_gps->IsActive())
