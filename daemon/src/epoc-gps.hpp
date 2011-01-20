@@ -90,6 +90,24 @@ NONSHARABLE_CLASS(CSensor_gps) :
 
 #endif // __GPS_ENABLED__
 
+// --------------------------------------------------
+// sensor array integration
+// --------------------------------------------------
+
+#if defined(SA_ARRAY_INTEGRATION)
+#if __GPS_ENABLED__
+#define DECLARE_SENSOR_gps CSensor_gps* iSensor_gps
+#define SENSOR_GPS_DESTROY DELETE_Z(self->iSensor_gps)
+#define SENSOR_GPS_CREATE sa_typical_symbian_sensor_create(self->iSensor_gps = CSensor_gps::NewL(self->logDb), "gps sensor initialization")
+#define SENSOR_GPS_START sa_typical_symbian_sensor_start(self->iSensor_gps, "failed to start gps scanning")
+#define SENSOR_GPS_STOP { self->iSensor_gps->Stop(); }
+#define SENSOR_GPS_IS_RUNNING (self->iSensor_gps->IsActive())
+#define SENSOR_GPS_RECONFIGURE(key,value) sa_typical_symbian_sensor_reconfigure(gps)
+#else
+#define DECLARE_SENSOR_gps
+#endif
+#endif /* SA_ARRAY_INTEGRATION */
+
 #endif /* __epoc_gps_hpp__ */
 
 /**

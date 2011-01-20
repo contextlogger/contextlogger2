@@ -228,7 +228,9 @@ source epoc-btprox.cpp
 source epoc-callstatus.cpp
 source epoc-cellid.cpp
 source epoc-cliapi-server.cpp
+<% if $GPS_ENABLED %>
 source epoc-gps.cpp
+<% end %>
 <% if $HTTPURL_ENABLED %>
 source epoc-httpurl.cpp
 <% end %>

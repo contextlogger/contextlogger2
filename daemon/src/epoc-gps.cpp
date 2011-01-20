@@ -1,7 +1,5 @@
 #include "epoc-gps.hpp"
 
-#if __GPS_ENABLED__
-
 #include "cf_query.h"
 #include "er_errors.h"
 #include "kr_controller_private.h"
@@ -679,8 +677,6 @@ void CSensor_gps::RefreshPositionUpdateIntervalSecs()
 		       &iPositionUpdateIntervalSecs,
 		       NULL, NULL);
 }
-
-#endif // __GPS_ENABLED__
 
 /**
 

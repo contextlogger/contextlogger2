@@ -67,9 +67,6 @@
 #if __BTPROX_ENABLED__
 #include "epoc-btprox.hpp"
 #endif
-#if __GPS_ENABLED__
-#include "epoc-gps.hpp"
-#endif
 #if __INACTIVITY_ENABLED__
 #include "epoc-inactivity.hpp"
 #endif
@@ -99,6 +96,7 @@
 
 #include "epoc-callstatus.hpp"
 #include "epoc-cellid.hpp"
+#include "epoc-gps.hpp"
 #include "epoc-httpurl.hpp"
 #include "epoc-music.hpp"
 #include "epoc-smsevent.hpp"
@@ -125,9 +123,6 @@ extern "C" struct _sa_Array
 #if __BTPROX_ENABLED__
   CSensor_btprox *iSensor_btprox;
 #endif
-#if __GPS_ENABLED__
-  CSensor_gps *iSensor_gps;
-#endif
 #if __INACTIVITY_ENABLED__
   CSensor_inactivity *iSensor_inactivity;
 #endif
@@ -149,6 +144,7 @@ extern "C" struct _sa_Array
   DECLARE_SENSOR_callstatus;
   DECLARE_SENSOR_cellid;
   DECLARE_SENSOR_doubletap;
+  DECLARE_SENSOR_gps;
   DECLARE_SENSOR_httpurl;
   DECLARE_SENSOR_light;
   DECLARE_SENSOR_music;
@@ -163,7 +159,6 @@ extern "C" struct _sa_Array
  */
 #define SENSOR_APPFOCUS_START sa_typical_symbian_sensor_start(self->iSensor_appfocus, "failed to start appfocus scanning")
 #define SENSOR_BTPROX_START sa_typical_symbian_sensor_start(self->iSensor_btprox, "failed to start btprox scanning")
-#define SENSOR_GPS_START sa_typical_symbian_sensor_start(self->iSensor_gps, "failed to start gps scanning")
 #define SENSOR_INACTIVITY_START sa_typical_symbian_sensor_start(self->iSensor_inactivity, "failed to start inactivity scanning")
 #define SENSOR_INDICATOR_START sa_typical_symbian_sensor_start(self->iSensor_indicator, "failed to start indicator scanning")
 #define SENSOR_KEYPRESS_START sa_typical_symbian_sensor_start(self->iSensor_keypress, "failed to start keypress scanning")
@@ -174,7 +169,6 @@ extern "C" struct _sa_Array
 /* Sensor stopping. (Statement.) */
 #define SENSOR_APPFOCUS_STOP { self->iSensor_appfocus->Stop(); }
 #define SENSOR_BTPROX_STOP { self->iSensor_btprox->Stop(); }
-#define SENSOR_GPS_STOP { self->iSensor_gps->Stop(); }
 #define SENSOR_INACTIVITY_STOP { self->iSensor_inactivity->Stop(); }
 #define SENSOR_INDICATOR_STOP { self->iSensor_indicator->Stop(); }
 #define SENSOR_KEYPRESS_STOP { self->iSensor_keypress->Stop(); }
@@ -185,7 +179,6 @@ extern "C" struct _sa_Array
 /* Sensor running querying. (Boolean expression.) */
 #define SENSOR_APPFOCUS_IS_RUNNING (self->iSensor_appfocus->IsActive())
 #define SENSOR_BTPROX_IS_RUNNING (self->iSensor_btprox->IsActive())
-#define SENSOR_GPS_IS_RUNNING (self->iSensor_gps->IsActive())
 #define SENSOR_INACTIVITY_IS_RUNNING (self->iSensor_inactivity->IsActive())
 #define SENSOR_INDICATOR_IS_RUNNING (self->iSensor_indicator->IsActive())
 #define SENSOR_KEYPRESS_IS_RUNNING (self->iSensor_keypress->IsActive())
@@ -196,7 +189,6 @@ extern "C" struct _sa_Array
 /* Sensor destruction. (Statement.) */
 #define SENSOR_APPFOCUS_DESTROY { delete self->iSensor_appfocus; self->iSensor_appfocus = NULL; }
 #define SENSOR_BTPROX_DESTROY { delete self->iSensor_btprox; self->iSensor_btprox = NULL; }
-#define SENSOR_GPS_DESTROY { delete self->iSensor_gps; self->iSensor_gps = NULL; }
 #define SENSOR_INACTIVITY_DESTROY { delete self->iSensor_inactivity; self->iSensor_inactivity = NULL; }
 #define SENSOR_INDICATOR_DESTROY { delete self->iSensor_indicator; self->iSensor_indicator = NULL; }
 #define SENSOR_KEYPRESS_DESTROY { delete self->iSensor_keypress; self->iSensor_keypress = NULL; }
@@ -209,7 +201,6 @@ extern "C" struct _sa_Array
 */
 #define SENSOR_PROFILE_CREATE sa_typical_symbian_sensor_create(self->iSensor_profile = CSensor_profile::NewL(self->logDb), "profile sensor initialization")
 #define SENSOR_BTPROX_CREATE sa_typical_symbian_sensor_create(self->iSensor_btprox = CSensor_btprox::NewL(self->logDb), "btprox sensor initialization")
-#define SENSOR_GPS_CREATE sa_typical_symbian_sensor_create(self->iSensor_gps = CSensor_gps::NewL(self->logDb), "gps sensor initialization")
 #define SENSOR_INACTIVITY_CREATE sa_typical_symbian_sensor_create(self->iSensor_inactivity = CSensor_inactivity::NewL(self->ac), "inactivity sensor initialization")
 #define SENSOR_INDICATOR_CREATE sa_typical_symbian_sensor_create(self->iSensor_indicator = CSensor_indicator::NewL(self->ac), "indicator sensor initialization")
 #define SENSOR_APPFOCUS_CREATE sa_typical_symbian_sensor_create(self->iSensor_appfocus = CSensor_appfocus::NewL(self->logDb), "appfocus sensor initialization")
@@ -226,7 +217,6 @@ extern "C" struct _sa_Array
 /* Sensor reconfiguring. (Statement.) */
 #define SENSOR_APPFOCUS_RECONFIGURE(key,value) sa_reconfigure_ignore_all_keys
 #define SENSOR_BTPROX_RECONFIGURE(key,value) sa_typical_symbian_sensor_reconfigure(btprox)
-#define SENSOR_GPS_RECONFIGURE(key,value) sa_typical_symbian_sensor_reconfigure(gps)
 #define SENSOR_INACTIVITY_RECONFIGURE(key,value) sa_reconfigure_ignore_all_keys
 #define SENSOR_INDICATOR_RECONFIGURE(key,value) sa_reconfigure_ignore_all_keys
 #define SENSOR_KEYPRESS_RECONFIGURE(key,value) sa_reconfigure_ignore_all_keys
