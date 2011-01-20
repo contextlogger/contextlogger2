@@ -111,7 +111,7 @@ void CSensor_gps::CreateBestPositionerL()
 void CSensor_gps::CreateSpecifiedPositionerL(TPositionModuleId bestId)
 {
   iNumScanFailures = 0;
-  iPositioner = CPositioner_gps::NewL(iPositionServer, *this, bestId, iPositionUpdateIntervalSecs);
+  iPositioner = CPositioner_gps::NewL(iPositionServer, *this, bestId, iPositionUpdateIntervalSecs, 0);
   iPositioner->MakeRequest();
 }
 

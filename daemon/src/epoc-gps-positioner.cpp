@@ -2,14 +2,6 @@
 
 _LIT_W(KRequestor, COMPONENT_NAME_W);
 
-/*    xxx may want to have our api support setting this
-If we were to use this setting we should expect error completions for
-our positioning requests. But handling such completions every few
-minutes is hardly a big deal in terms of energy consumption or
-anything. Still, without setting this presumably there is no timeout.
-*/
-// iUpdateOptions.SetUpdateTimeOut(TTimeIntervalMicroSeconds(5 * 60 * 1000000));
-
 CTOR_IMPL_CPositioner_gps;
 
 void CPositioner_gps::ConstructL()
@@ -24,7 +16,16 @@ void CPositioner_gps::ConstructL()
   TInt64 usecs = iUpdateIntervalSecs * 1000000LL;
   iUpdateOptions.SetUpdateInterval(TTimeIntervalMicroSeconds(usecs));
 
+  usecs = iUpdateTimeoutSecs * 1000000LL;
+  iUpdateOptions.SetUpdateTimeOut(TTimeIntervalMicroSeconds(usecs));
+
+  /*
+    If you set this to a non-zero value, expect error completions for
+    positioning requests. Without setting this presumably there is no
+    timeout. Set to zero for no timeout.
+  */
   User::LeaveIfError(iPositioner.SetUpdateOptions(iUpdateOptions));
+  // xxx the current callback interface is not suitable for reporting timeouts
 
   dblogg("gps scan interval set to %d secs", iUpdateIntervalSecs);
   guilogf("gps: interval %d secs", iUpdateIntervalSecs);
