@@ -253,11 +253,67 @@ gboolean CSensor_gps::RunGL(GError** error)
     TPositionModuleStatus moduleStatus;
     iPositionModuleStatusEvent.GetModuleStatus(moduleStatus);
     
-    TPositionModuleStatusEventBase::TModuleEvent occurredEvents = iPositionModuleStatusEvent.OccurredEvents();
+    TPositionModuleStatusEventBase::TModuleEvent occurredEvents = 
+      iPositionModuleStatusEvent.OccurredEvents();
     logg("occurred position events: %d", (int)occurredEvents);
     if (occurredEvents & TPositionModuleStatusEventBase::EEventDeviceStatus) {
-      TPositionModuleStatus::TDeviceStatus deviceStatus = moduleStatus.DeviceStatus();
-      dblogg("device status now %d", (int)deviceStatus);
+      TPositionModuleStatus::TDeviceStatus deviceStatus = 
+	moduleStatus.DeviceStatus();
+#if __DO_LOGGING__
+      const char* deviceStatusStr;
+      switch (deviceStatus)
+        {
+	case TPositionModuleStatus::EDeviceUnknown:
+	  {
+	    deviceStatusStr = "EDeviceUnknown";
+	    break;
+	  }
+	case TPositionModuleStatus::EDeviceError:
+	  {
+	    deviceStatusStr = "EDeviceError";
+	    break;
+	  }
+	case TPositionModuleStatus::EDeviceDisabled:
+	  {
+	    deviceStatusStr = "EDeviceDisabled";
+	    break;
+	  }
+	case TPositionModuleStatus::EDeviceInactive:
+	  {
+	    deviceStatusStr = "EDeviceInactive";
+	    break;
+	  }
+	case TPositionModuleStatus::EDeviceInitialising:
+	  {
+	    deviceStatusStr = "EDeviceInitialising";
+	    break;
+	  }
+	case TPositionModuleStatus::EDeviceStandBy:
+	  {
+	    deviceStatusStr = "EDeviceStandBy";
+	    break;
+	  }
+	case TPositionModuleStatus::EDeviceReady:
+	  {
+	    deviceStatusStr = "EDeviceReady";
+	    break;
+	  }
+	case TPositionModuleStatus::EDeviceActive:
+	  {
+	    deviceStatusStr = "EDeviceActive";
+	    break;
+	  }
+        default:
+          {
+            deviceStatusStr = "<unknown>";
+            break;
+          }
+        }
+      
+      dblogg("%s device status now %d (%s)", 
+	     aboutCurrent ? "current" : "other", 
+	     deviceStatus, deviceStatusStr);
+#endif
       if (aboutCurrent && 
 	  ((deviceStatus == TPositionModuleStatus::EDeviceDisabled) ||
 	   (deviceStatus == TPositionModuleStatus::EDeviceError) ||
