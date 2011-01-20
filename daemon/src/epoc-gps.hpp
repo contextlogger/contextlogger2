@@ -42,15 +42,21 @@ NONSHARABLE_CLASS(CSensor_gps) :
 
   void ConstructL();
 
- private:
-
-  void MakeRequest();
+ private: // CActiveRunG
 
   virtual gboolean RunGL(GError** error);
   
   virtual const char* Description();
   
   virtual void DoCancel();
+
+ private: // MObserver_gps
+
+  virtual gboolean PositionerEventL(GError** error);
+
+ private:
+
+  void MakeRequest();
 
   // These are for changing positioners if need be.
   void CurrentModuleUnavailable();
@@ -61,10 +67,6 @@ NONSHARABLE_CLASS(CSensor_gps) :
 
   void RefreshPositionUpdateIntervalSecs();
 
- private: // MObserver_gps
-
-  virtual gboolean PositionerEventL(GError** error);
-
  private:
 
   ac_AppContext* iAppContext; // not owned
@@ -74,7 +76,7 @@ NONSHARABLE_CLASS(CSensor_gps) :
 
   TPositionModuleStatusEvent iPositionModuleStatusEvent;
 
-  TInt iNumScanFailures;
+  TInt iNumScanFailures; // xxx could use CRetryAo instead
 
   // Used for positioning when a suitable positioning module is
   // available. When nothing suitable is available, this is NULL.

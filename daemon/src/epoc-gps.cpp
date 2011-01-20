@@ -397,8 +397,9 @@ gboolean CSensor_gps::PositionerEventL(GError** error)
   
   if (errCode == KErrTimedOut) {
     // Can expect to get this after the time period specified with
-    // SetUpdateTimeOut.
-    logt("gps request timed out, retrying");
+    // SetUpdateTimeOut. We haven't set such a time period, though,
+    // and presumably then should not get this.
+    logt("gps request timed out (unexpectedly), retrying");
     iPositioner->MakeRequest();
   } else if (errCode == KErrCancel) {
     // Not really expected here, but whatever. Do nothing.
