@@ -6,7 +6,6 @@
 #if __GPS_ENABLED__
 
 #include "epoc-ao-gerror.hpp"
-#include "epoc-s60-version.hpp"
 #include "ld_log_db.h"
 #include "utils_cl2.h"
 
@@ -82,8 +81,6 @@ NONSHARABLE_CLASS(CSensor_gps) :
   // Used for positioning when a suitable positioning module is
   // available. When nothing suitable is available, this is NULL.
   CPositioner_gps* iPositioner; // owned
-
-  TPlatformVersion iPlatformVersion; // xxx could be more "global"
 
   TInt iPositionUpdateIntervalSecs;
 };

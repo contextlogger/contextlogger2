@@ -9,6 +9,8 @@
 // Symbian private implementation
 // --------------------------------------------------
 
+// We include here so that we can directly refer to anything and
+// everything in here.
 #ifdef __cplusplus
 #if defined(__SYMBIAN32__)
 #include "ac_app_context_epoc.cpp"
@@ -231,6 +233,12 @@ CContactDatabase& ac_ContactDatabase(ac_AppContext* self)
   return *(self->plat->iImpl->iContactDatabase);
 }
 #endif
+
+const TPlatformVersion& ac_get_PlatformVersion(ac_AppContext* self)
+{
+  assert(self && self->plat);
+  return self->plat->iImpl->iPlatformVersion;
+}
 
 #endif /* defined(__cplusplus) */
 #endif /* __SYMBIAN32__ */

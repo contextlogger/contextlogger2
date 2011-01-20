@@ -1,6 +1,7 @@
 // Not a standalone file. It exists as a separate file only to avoid
 // platform-specific clutter in the primary implementation file.
 
+#include "epoc-s60-version.hpp"
 #include "sa_sensor_list_log_db.h"
 #include "ut_telephony_epoc.h"
 #include "utils_cl2.h" // DEF_SESSION
@@ -353,6 +354,8 @@ NONSHARABLE_CLASS(CAppContextImpl) :
   CContactDatabase* iContactDatabase;
 #endif
 
+  TPlatformVersion iPlatformVersion;
+
  private:
   CBatteryObserver* iBatteryObserver;
   CFlightModeObserver* iFlightModeObserver;
@@ -402,6 +405,8 @@ void CAppContextImpl::ConstructL()
   iFlightModeObserver = CFlightModeObserver::NewL(*iTelephony, *this);
 
   LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iFs, iFs.Connect());
+
+  GetS60PlatformVersionL(iFs, iPlatformVersion);
 
 #if __NEED_CONTACT_DATABASE__
   iContactDatabase = CContactDatabase::OpenL();

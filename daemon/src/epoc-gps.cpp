@@ -192,7 +192,6 @@ CSensor_gps::CSensor_gps(LogDb* aLogDb) : CActiveRunG(EPriorityStandard)
 
 void CSensor_gps::ConstructL()
 {
-  GetS60PlatformVersionL(iPlatformVersion);
   RefreshPositionUpdateIntervalSecs();
   LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iPositionServer, iPositionServer.Connect());
   iPositionModuleStatusEvent.SetRequestedEvents(TPositionModuleStatusEventBase::EEventDeviceStatus|TPositionModuleStatusEventBase::EEventSystemModuleEvent);

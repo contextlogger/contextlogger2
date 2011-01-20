@@ -107,6 +107,9 @@ CTelephony& ac_Telephony(ac_AppContext* self);
 class CContactDatabase;
 CContactDatabase& ac_ContactDatabase(ac_AppContext* self);
 
+class TPlatformVersion;
+const TPlatformVersion& ac_get_PlatformVersion(ac_AppContext* self);
+
 #endif /* __SYMBIAN32__ */
 #endif
 
