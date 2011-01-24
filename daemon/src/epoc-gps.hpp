@@ -10,6 +10,7 @@
 #include "ac_app_context.h"
 #include "epoc-ao-gerror.hpp"
 #include "ld_log_db.h"
+#include "ut_retry_epoc.hpp"
 #include "utils_cl2.h"
 
 #include <e32std.h>
@@ -19,70 +20,64 @@
 #include <glib.h>
 
 class CPositioner_gps;
+class CPosModuleStatAo;
 
 NONSHARABLE_CLASS(CSensor_gps) :
-  public CActiveRunG, 
-  public MObserver_gps
+  public CBase,
+  public MObserverPosMod,
+  public MObserver_gps,
+  public MRetryAoObserver
 {
  public:
-
   static CSensor_gps* NewL(ac_AppContext* aAppContext);
-
   virtual ~CSensor_gps();
 
-  gboolean StartL(GError** error);
-
-  void Stop();
-
-  void Reconfigure(const gchar* name, const gchar* value);
-
  private:
- 
   CSensor_gps(ac_AppContext* aAppContext);
-
   void ConstructL();
 
- private: // CActiveRunG
-
-  virtual gboolean RunGL(GError** error);
-  
-  virtual const char* Description();
-  
-  virtual void DoCancel();
+ private: // MObserverPosMod
+  virtual void PosModSwitchToModuleL(TPositionModuleId aModuleId);
+  virtual void PosModNoModuleL();
+  virtual void PosModErrorL(TInt errCode);
+  virtual void PosModLeave(TInt errCode);
 
  private: // MObserver_gps
-
   virtual gboolean PositionerEventL(GError** error);
 
- private:
-
-  void MakeRequest();
-
-  // These are for changing positioners if need be.
-  void CurrentModuleUnavailable();
-  void NewModuleAvailable();
-  void CreateBestPositionerL();
-  void CreateSpecifiedPositionerL(TPositionModuleId bestId);
-  TBool ChooseBestPositionerL(TPositionModuleId& bestId);
-
-  void RefreshPositionUpdateIntervalSecs();
+ private: // MRetryAoObserver
+  virtual void RetryTimerExpired(CRetryAo* src, TInt errCode);
 
  private:
-
   ac_AppContext* iAppContext; // not owned
   LogDb* iLogDb; // not owned
 
-  DEF_SESSION(RPositionServer, iPositionServer);
-
-  TPositionModuleStatusEvent iPositionModuleStatusEvent;
-
-  TInt iNumScanFailures; // xxx could use CRetryAo instead
+  CPosModuleStatAo* iModuleAo; // owned
 
   // Used for positioning when a suitable positioning module is
   // available. When nothing suitable is available, this is NULL.
   CPositioner_gps* iPositioner; // owned
 
+  CRetryAo* iRetryAo; // owned
+
   TInt iPositionUpdateIntervalSecs;
+
+  enum TState {
+    EInactive = 0, // not started
+    EActive, // module status query outstanding
+    ERetryWaiting // waiting to retry module status query
+  };
+  TState iState;
+
+ private:
+  void RefreshPositionUpdateIntervalSecs();
+  void CreateSpecifiedPositionerL(TPositionModuleId bestId);
+
+ public:
+  void StartL();
+  void Stop();
+  TBool IsActive() const { return iState != EInactive; }
+  void Reconfigure(const gchar* name, const gchar* value);
 };
 
 #endif // __GPS_ENABLED__
@@ -96,7 +91,7 @@ NONSHARABLE_CLASS(CSensor_gps) :
 #define DECLARE_SENSOR_gps CSensor_gps* iSensor_gps
 #define SENSOR_GPS_DESTROY DELETE_Z(self->iSensor_gps)
 #define SENSOR_GPS_CREATE sa_typical_symbian_sensor_create(self->iSensor_gps = CSensor_gps::NewL(self->ac), "gps sensor initialization")
-#define SENSOR_GPS_START sa_typical_symbian_sensor_start(self->iSensor_gps, "failed to start gps scanning")
+#define SENSOR_GPS_START sa_trap_symbian_sensor_start(self->iSensor_gps, "failed to start gps scanning")
 #define SENSOR_GPS_STOP { self->iSensor_gps->Stop(); }
 #define SENSOR_GPS_IS_RUNNING (self->iSensor_gps->IsActive())
 #define SENSOR_GPS_RECONFIGURE(key,value) sa_typical_symbian_sensor_reconfigure(gps)

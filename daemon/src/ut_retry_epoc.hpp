@@ -1,5 +1,5 @@
-#ifndef __sa_sensor_util_epoc_hpp__
-#define __sa_sensor_util_epoc_hpp__
+#ifndef __ut_retry_epoc_hpp__
+#define __ut_retry_epoc_hpp__
 
 #include "utils_cl2.h"
 
@@ -62,7 +62,7 @@ NONSHARABLE_CLASS(CRetryAo) :
 
 };
 
-#endif /* __sa_sensor_util_epoc_hpp__ */
+#endif /* __ut_retry_epoc_hpp__ */
 
 /**
 

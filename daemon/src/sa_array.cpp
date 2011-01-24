@@ -22,6 +22,12 @@
     if (error) \
       *error = ((errCode == KErrNoMemory) ? gx_error_no_memory : gx_error_new(domain_symbian, errCode, msg ": %s (%d)", plat_error_strerror(errCode), errCode));
 
+#define sa_trap_symbian_sensor_start(object,msg) {	\
+  success = TRUE;					\
+  TRAPD(_errCode, (object)->StartL());				\
+  if (_errCode) { sa_set_symbian_error(_errCode, msg); success = FALSE; } \
+}
+
 #define sa_typical_symbian_sensor_start(object,msg) { \
   success = TRUE; \
   TRAPD(_errCode, success = (object)->StartL(error));		       \

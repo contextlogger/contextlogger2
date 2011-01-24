@@ -1,5 +1,6 @@
 #include "epoc-gps.hpp"
 
+#include "epoc-gps-module.hpp"
 #include "epoc-gps-positioner.hpp"
 
 #include "cf_query.h"
@@ -44,345 +45,104 @@ CSensor_gps* CSensor_gps::NewL(ac_AppContext* aAppContext)
 }
 
 CSensor_gps::CSensor_gps(ac_AppContext* aAppContext) : 
-  CActiveRunG(EPriorityStandard),
   iAppContext(aAppContext)
 {
   iLogDb = ac_LogDb(aAppContext);
   iPositionUpdateIntervalSecs = DEFAULT_POSITION_SCAN_INTERVAL_SECS;
-  CActiveScheduler::Add(this);
 }
 
 void CSensor_gps::ConstructL()
 {
   RefreshPositionUpdateIntervalSecs();
-  LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iPositionServer, iPositionServer.Connect());
-  iPositionModuleStatusEvent.SetRequestedEvents(TPositionModuleStatusEventBase::EEventDeviceStatus|TPositionModuleStatusEventBase::EEventSystemModuleEvent);
+  iRetryAo = CRetryAo::NewL(*this, 30, 120);
+  iModuleAo = CPosModuleStatAo::NewL(*this);
 }
 
 CSensor_gps::~CSensor_gps()
 {
-  DELETE_Z(iPositioner);
-  Cancel(); // safe when AO inactive as DoCancel not called
-  SESSION_CLOSE_IF_OPEN(iPositionServer);
-}
-
-gboolean CSensor_gps::StartL(GError** error)
-{
-  if (!IsActive()) {
-    Stop(); // ensure stopped
-    
-    CreateBestPositionerL();
-
-    // Start observing for module status events, as such events might
-    // call for changes in the way we do or should do positioning.
-    MakeRequest();
-
-    log_db_log_status(iLogDb, NULL, "gps sensor started");
-  }
-
-  return TRUE;
+  Stop();
+  delete iRetryAo;
+  delete iModuleAo;
 }
 
 void CSensor_gps::Stop()
 {
-  if (IsActive()) {
-    Cancel();
-    
-    // Stop positioner, if any.
-    DELETE_Z(iPositioner);
+  iRetryAo->Cancel();
+  iModuleAo->Cancel();
+  DELETE_Z(iPositioner);
+  iState = EInactive;
+}
 
-    log_db_log_status(iLogDb, NULL, "gps sensor stopped");
+void CSensor_gps::StartL()
+{
+  if (!IsActive()) {
+    iRetryAo->ResetFailures();
+
+    TPositionModuleId bestId = iModuleAo->ChooseBestPositionerL();
+
+    if (bestId != KPositionNullModuleId) {
+      TRAPD(errCode, CreateSpecifiedPositionerL(bestId));
+      if (errCode) {
+	er_log_symbian(0, errCode, "WARNING: failed to create positioner");
+      }
+    }
+
+    // Observe changes in module status.
+    iModuleAo->MakeRequest();
+
+    iState = EActive;
   }
-}
-
-void CSensor_gps::MakeRequest() 
-{
-  iPositionServer.NotifyModuleStatusEvent(iPositionModuleStatusEvent, iStatus);
-  SetActive();
-}
-  
-void CSensor_gps::CreateBestPositionerL()
-{
-  TPositionModuleId bestId;
-  if (ChooseBestPositionerL(bestId))
-    CreateSpecifiedPositionerL(bestId);
 }
 
 void CSensor_gps::CreateSpecifiedPositionerL(TPositionModuleId bestId)
 {
-  iNumScanFailures = 0;
-  iPositioner = CPositioner_gps::NewL(iPositionServer, *this, bestId, iPositionUpdateIntervalSecs, 0);
+  RPositionServer& server = iModuleAo->PositionServer();
+  iPositioner = CPositioner_gps::NewL(server, *this, 
+				      bestId, iPositionUpdateIntervalSecs, 0);
   iPositioner->MakeRequest();
+  iModuleAo->SwitchedToModule(bestId);
 }
 
-// Returns true iff there was anything good enough to choose. In that
-// case the module ID will be returned as well.
-TBool CSensor_gps::ChooseBestPositionerL(TPositionModuleId& aBestId)
+void CSensor_gps::PosModSwitchToModuleL(TPositionModuleId bestId)
 {
-  TUint numModules;
-  User::LeaveIfError(iPositionServer.GetNumModules(numModules));
-  TUint i;
-  TPositionModuleInfo moduleInfo;
-  int bestScore = -1;
-  int bestIndex = -1;
-  for (i=0; i<numModules; i++) {
-    User::LeaveIfError(iPositionServer.GetModuleInfoByIndex(i, moduleInfo));
-
-#if __DO_LOGGING__
-    {
-      TBuf<KPositionMaxModuleName> moduleName;
-      moduleInfo.GetModuleName(moduleName);
-      gchar* nameString = ConvToUtf8CStringL(moduleName);
-      logg("considering positioning module '%s'", nameString);
-      g_free(nameString);
-    }
-#endif
-
-    TPositionModuleStatus moduleStatus;
-    TInt moduleStatusError = iPositionServer.GetModuleStatus(moduleStatus, moduleInfo.ModuleId());
-    
-    // See lbscommon.h for interpretations for the values.
-    logg("moduleInfo: %s stat=%d loc=%d tech=%02x caps=%04x",
-	 moduleInfo.IsAvailable() ? "available" : "unavailable",
-	 moduleStatus.DeviceStatus(),
-	 moduleInfo.DeviceLocation(),
-	 moduleInfo.TechnologyType(),
-	 moduleInfo.Capabilities());
-
-    if (moduleInfo.IsAvailable() &&
-	!moduleStatusError && 
-	(moduleStatus.DeviceStatus() != TPositionModuleStatus::EDeviceDisabled) &&
-	(moduleInfo.Capabilities() & TPositionModuleInfo::ECapabilitySatellite) &&
-	(moduleInfo.TechnologyType() != TPositionModuleInfo::ETechnologyUnknown) &&
-        // We might want to allow network positioning (particularly
-        // for WLAN based positioning on devices that support it), but
-        // it is dangerous as it may involve frequent queries over the
-        // network. Should at least make sure we are not roaming
-        // before allowing it. xxx
-	(moduleInfo.TechnologyType() != TPositionModuleInfo::ETechnologyNetwork) &&
-	(moduleInfo.DeviceLocation() != TPositionModuleInfo::EDeviceUnknown)) {
-      int score = 0;
-      if (moduleInfo.DeviceLocation() == TPositionModuleInfo::EDeviceExternal) {
-	/*
-	  // Not required: Bluetooth GPS can be disabled globally in
-          // the device settings. See the Position application in 
-          // S60 3.0 devices, and the settings dialog in later devices.
-	  if (iPlatformVersion.iMajor == 3 && iPlatformVersion.iMinor == 0)
-	  // Avoid the BT device search dialog.
-	  continue;
-	*/
-	score += 0x100;
-      }
-      if (moduleInfo.TechnologyType() == TPositionModuleInfo::ETechnologyAssisted)
-	score += 0x10;
-
-      // Given the choice between 'Wi-Fi/Network' and 'Network based'
-      // we would like to favor the former. But they both have the
-      // same TechnologyType and Capabilities. We could consider
-      // making better use of TPositionQuality, perhaps that would do
-      // the trick. Not sure if this code is ever going to be of any
-      // use.
-      TPositionQuality quality;
-      moduleInfo.GetPositionQuality(quality);
-      TReal32 accuracy = quality.VerticalAccuracy();
-      if (!Math::IsNaN(accuracy)) {
-	//logg("vertical accuracy %g", accuracy);
-	score += 0x1; // bonus for having some accuracy value
-      }
-
-      logg("module score is %d", score);
-      if (score > bestScore) {
-	bestScore = score;
-	bestIndex = i;
-      }
-    }
-  }
-  if (bestIndex >= 0) {
-    User::LeaveIfError(iPositionServer.GetModuleInfoByIndex(bestIndex, moduleInfo));
-
-    {
-      TBuf<KPositionMaxModuleName> moduleName;
-      moduleInfo.GetModuleName(moduleName);
-      gchar* nameString = ConvToUtf8CStringL(moduleName);
-      dblogg("chose positioning module '%s'", nameString);
-      guilogf("gps: using module '%s'", nameString);
-      g_free(nameString);
-    }
-
-    aBestId = moduleInfo.ModuleId();
-    return ETrue;
-  }
-  return EFalse;
-}
-
-// Cannot use the current positioner any longer, so delete it, and try
-// to create a new one.
-void CSensor_gps::CurrentModuleUnavailable()
-{
+  iRetryAo->Cancel();
+  iRetryAo->ResetFailures();
   DELETE_Z(iPositioner);
-  TRAPD(errCode, CreateBestPositionerL());
+  TRAPD(errCode, CreateSpecifiedPositionerL(bestId));
   if (errCode) {
-    // If we cannot initialize with the best one, then in theory
-    // we could try less good ones, but let us not go there
-    // without good reason.
-    log_db_log_status(iLogDb, NULL, "ERROR: handling present positioning module becoming unavailable failed: %s (%d)", plat_error_strerror(errCode), errCode);
+    er_log_symbian(0, errCode, "WARNING: failed to create positioner");
   }
+  iModuleAo->MakeRequest();
 }
 
-// Is the newly ready device something we want to use; we may or may
-// not have a current one.
-void CSensor_gps::NewModuleAvailable()
+void CSensor_gps::PosModNoModuleL()
 {
-  TPositionModuleId bestId;
-  TRAPD(errCode, {
-      if (ChooseBestPositionerL(bestId)) {
-	if (!iPositioner || (bestId != iPositioner->ModuleId())) {
-	  DELETE_Z(iPositioner);
-	  CreateSpecifiedPositionerL(bestId);
-	}
-      }});
-  if (errCode) {
-    log_db_log_status(iLogDb, NULL, "ERROR: handling new positioning module availability failed: %s (%d)", plat_error_strerror(errCode), errCode);
-  }
+  iRetryAo->Cancel();
+  iRetryAo->ResetFailures();
+  DELETE_Z(iPositioner);
+  iModuleAo->SwitchedToModule(KPositionNullModuleId);
+  iModuleAo->MakeRequest();
 }
 
-// Invoked upon a NotifyModuleStatusEvent completion.
-gboolean CSensor_gps::RunGL(GError** error) 
+void CSensor_gps::PosModErrorL(TInt errCode)
 {
-  assert_error_unset(error);
+  er_log_symbian(0, errCode, "INACTIVATE: gps: positioning module status tracking error");
+  Stop();
+}
 
-  TInt errCode = iStatus.Int();
-  dblogg("positioning module status event (%d)", errCode);
+void CSensor_gps::PosModLeave(TInt errCode)
+{
+  er_log_symbian(er_FATAL, errCode, "gps: leave in positioning module status reporting handler");
+}
 
+void CSensor_gps::RetryTimerExpired(CRetryAo* src, TInt errCode)
+{
   if (errCode) {
-    Stop();
-    if (!log_db_log_status(iLogDb, error, "INACTIVATE: gps: failure observing positioning module status: %s (%d)", plat_error_strerror(errCode), errCode)) {
-      return FALSE;
-    }
-  } else {
-    // We are interested in these kinds of events:
-    // * current module is removed
-    // * currently used module stops working in some way
-    // * some other (possibly better) module becomes available
-    // * a new (possibly better) module is installed
-    // Note also that there might not be a current module at all.
-
-    TPositionModuleId moduleId = iPositionModuleStatusEvent.ModuleId();
-    TBool haveCurrent = EFalse;
-    TBool aboutCurrent = EFalse;
-    if (iPositioner) {
-      haveCurrent = ETrue;
-      TPositionModuleId currentId = iPositioner->ModuleId();
-      if (moduleId == currentId) {
-	aboutCurrent = ETrue;
-      }
-    }
-
-    TPositionModuleStatus moduleStatus;
-    iPositionModuleStatusEvent.GetModuleStatus(moduleStatus);
-    
-    TPositionModuleStatusEventBase::TModuleEvent occurredEvents = 
-      iPositionModuleStatusEvent.OccurredEvents();
-    logg("occurred position events: %d", (int)occurredEvents);
-    if (occurredEvents & TPositionModuleStatusEventBase::EEventDeviceStatus) {
-      TPositionModuleStatus::TDeviceStatus deviceStatus = 
-	moduleStatus.DeviceStatus();
-#if __DO_LOGGING__
-      const char* deviceStatusStr;
-      switch (deviceStatus)
-        {
-	case TPositionModuleStatus::EDeviceUnknown:
-	  {
-	    deviceStatusStr = "EDeviceUnknown";
-	    break;
-	  }
-	case TPositionModuleStatus::EDeviceError:
-	  {
-	    deviceStatusStr = "EDeviceError";
-	    break;
-	  }
-	case TPositionModuleStatus::EDeviceDisabled:
-	  {
-	    deviceStatusStr = "EDeviceDisabled";
-	    break;
-	  }
-	case TPositionModuleStatus::EDeviceInactive:
-	  {
-	    deviceStatusStr = "EDeviceInactive";
-	    break;
-	  }
-	case TPositionModuleStatus::EDeviceInitialising:
-	  {
-	    deviceStatusStr = "EDeviceInitialising";
-	    break;
-	  }
-	case TPositionModuleStatus::EDeviceStandBy:
-	  {
-	    deviceStatusStr = "EDeviceStandBy";
-	    break;
-	  }
-	case TPositionModuleStatus::EDeviceReady:
-	  {
-	    deviceStatusStr = "EDeviceReady";
-	    break;
-	  }
-	case TPositionModuleStatus::EDeviceActive:
-	  {
-	    deviceStatusStr = "EDeviceActive";
-	    break;
-	  }
-        default:
-          {
-            deviceStatusStr = "<unknown>";
-            break;
-          }
-        }
-      
-      dblogg("%s device status now %d (%s)", 
-	     aboutCurrent ? "current" : "other", 
-	     deviceStatus, deviceStatusStr);
-#endif
-      if (aboutCurrent && 
-	  ((deviceStatus == TPositionModuleStatus::EDeviceDisabled) ||
-	   (deviceStatus == TPositionModuleStatus::EDeviceError) ||
-           // Should not become inactive when it is something we are
-           // using. This may indicate it was disabled in the
-           // configuration.
-	   (deviceStatus == TPositionModuleStatus::EDeviceInactive))) {
-	CurrentModuleUnavailable();
-      } else if (!aboutCurrent &&
-		 ((deviceStatus == TPositionModuleStatus::EDeviceReady) ||
-                  // Again, this may signal that another module has
-                  // become available but is not yet active as it is
-                  // not used yet. It is worth checking if it is
-                  // listed as available.
-		  (deviceStatus == TPositionModuleStatus::EDeviceInactive))) {
-	NewModuleAvailable();
-      }
-    }
-
-    // Can it ever really happen that we get both a system module
-    // event and a non-system module event? We shall deem this
-    // unlikely, and will not deal with such situations in a very
-    // optimal way necessarily.
-    if (occurredEvents & TPositionModuleStatusEventBase::EEventSystemModuleEvent) {
-      TPositionModuleStatusEventBase::TSystemModuleEvent systemModuleEvent = 
-	iPositionModuleStatusEvent.SystemModuleEvent();
-      dblogg("system module event was %d", (int)systemModuleEvent);
-      if (aboutCurrent &&
-	  ((systemModuleEvent == TPositionModuleStatusEventBase::ESystemError) || 
-	   (systemModuleEvent == TPositionModuleStatusEventBase::ESystemModuleRemoved))) {
-	CurrentModuleUnavailable();
-      } else if (!aboutCurrent &&
-		 ((systemModuleEvent == TPositionModuleStatusEventBase::ESystemModuleInstalled))) {
-	NewModuleAvailable();
-      }
-    }
-
-    MakeRequest();
+    er_log_symbian(er_FATAL, errCode, "gps: retry timer error");
+    return;
   }
-
-  return TRUE;
+  assert(iPositioner);
+  iPositioner->MakeRequest();
 }
 
 gboolean CSensor_gps::PositionerEventL(GError** error)
@@ -404,8 +164,8 @@ gboolean CSensor_gps::PositionerEventL(GError** error)
   } else if (errCode == KErrCancel) {
     // Not really expected here, but whatever. Do nothing.
   } else if (errCode < 0) {
-    // xxx Do not yet quite know what sort of errors might be getting,
-    // so shall merely log errors and keep retrying. Do want to make
+    // Do not yet quite know what sort of errors might be getting, so
+    // shall merely log errors and keep retrying. Do want to make
     // sure, however, that we do not get an awful lot of errors
     // growing our log file to an unreasonable size, and hence will
     // stop the scanner if there are lots of consecutive error
@@ -413,27 +173,26 @@ gboolean CSensor_gps::PositionerEventL(GError** error)
     // errors we might be getting. But it is reasonable to assume that
     // there may be immediate error returns in cases such as a
     // positioning module being or having become unavailable.
-    iNumScanFailures++;
-    dblogg("%dth consecutive failure in gps: %s (%d)", iNumScanFailures, plat_error_strerror(errCode), errCode);
-    // xxx maybe should support KErrServerBusy by trying again only after a small delay
     switch (errCode) {
     case KErrAccessDenied: // Perhaps some capability thing.
       // Locally severe error. Give up.
-      log_db_log_status(iLogDb, NULL, "INACTIVATE: gps: scanner cannot continue");
+      er_log_symbian(0, errCode, "gps: positioner error, giving up on positioner");
+      // We will not reset state further, lest we be asked to switch
+      // back to the same module again.
+      DELETE_Z(iPositioner);
       break;
     case KErrArgument:
     case KErrPositionBufferOverflow:
-      er_log_symbian(er_FATAL, errCode, "unexpected gps error");
+      er_log_symbian(er_FATAL, errCode, "gps: unexpected positioning error");
       break;
     default:
-      if (iNumScanFailures < 100) {
-	iPositioner->MakeRequest();
-      } else {
-	log_db_log_status(iLogDb, NULL, "INACTIVATE: gps: stopping scanning due to too many errors");
+      if (!iRetryAo->Retry()) {
+	er_log_symbian(0, errCode, "INACTIVATE: gps: stopping scanning due to too many errors");
+	Stop();
       }
     }
   } else {
-    iNumScanFailures = 0;
+    iRetryAo->ResetFailures();
     if (errCode == KPositionQualityLoss) {
       // The positioning module could not get any information.
       logt("no gps info available");
@@ -598,17 +357,6 @@ gboolean CSensor_gps::PositionerEventL(GError** error)
   }
 
   return TRUE;
-}
-
-const char* CSensor_gps::Description() 
-{
-  return "gps";
-}
-  
-void CSensor_gps::DoCancel() 
-{
-  // Ignoring the undocumented error code.
-  iPositionServer.CancelRequest(EPositionServerNotifyModuleStatusEvent);
 }
 
 void CSensor_gps::Reconfigure(const gchar* name, const gchar* value)

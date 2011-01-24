@@ -2,6 +2,7 @@
 #define __epoc_gps_observer_hpp__
 
 #include <e32std.h>
+#include <lbs.h> // link against lbs.lib
 
 #include <glib.h>
 
@@ -16,6 +17,16 @@ NONSHARABLE_CLASS(MObserver_gps)
   // positioner to determine whether a position was successfully
   // acquired.
   virtual gboolean PositionerEventL(GError** error) = 0;
+};
+
+// The positioning module status observer uses this interface to report.
+NONSHARABLE_CLASS(MObserverPosMod)
+{
+ public:
+  virtual void PosModSwitchToModuleL(TPositionModuleId aModuleId) = 0;
+  virtual void PosModNoModuleL() = 0;
+  virtual void PosModErrorL(TInt errCode) = 0;
+  virtual void PosModLeave(TInt errCode) = 0;
 };
 
 #endif /* __epoc_gps_observer_hpp__ */
