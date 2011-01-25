@@ -64,8 +64,7 @@ NONSHARABLE_CLASS(CSensor_gps) :
 
   enum TState {
     EInactive = 0, // not started
-    EActive, // module status query outstanding
-    ERetryWaiting // waiting to retry module status query
+    EActive // module status query outstanding
   };
   TState iState;
 

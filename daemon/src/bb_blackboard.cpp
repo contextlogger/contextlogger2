@@ -143,6 +143,7 @@ bb::RHandle::RHandle() : iBoard(NULL), iObserver(NULL)
 
 bb::RHandle::~RHandle()
 {
+  //logh();
   Unregister();
 }
 

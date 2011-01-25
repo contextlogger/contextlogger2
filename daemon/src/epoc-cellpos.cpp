@@ -21,8 +21,22 @@
 #include <string.h>
 
 // -------------------------------------------------------------------
+// internal parameters...
 
-#define DEFAULT_POSITION_SCAN_INTERVAL_SECS (5 * 60)
+// We will never ask the positioner for service more frequently than
+// this.
+#define MIN_SCAN_REQUEST_INTERVAL_SECS (3 * 60)
+
+// We will not drain the battery for longer than this if we do not get
+// a position fix, and we call Cancel. If we do get a position, it
+// should be enough to not call MakeRequest.
+#define SATELLITE_QUERY_TIMEOUT_SECS (60)
+
+// This is given as a parameter to the positioner, and it indicates
+// how frequently it should scan. We want quick and frequent to
+// increase the chances of getting something quickly. In any case it
+// seems this must be shorter than the timeout interval.
+#define POSITIONER_SCAN_INTERVAL_SECS (1)
 
 // -------------------------------------------------------------------
 
@@ -40,13 +54,15 @@ CSensor_cellpos::CSensor_cellpos(ac_AppContext* aAppContext) :
   iModuleId(KPositionNullModuleId)
 {
   iLogDb = ac_LogDb(aAppContext);
-  iPositionUpdateIntervalSecs = DEFAULT_POSITION_SCAN_INTERVAL_SECS;
 }
 
 void CSensor_cellpos::ConstructL()
 {
-  iRetryAo = CRetryAo::NewL(*this, 30, 120);
+  iRetryAo = CRetryAo::NewL(*this, 4, 5); // 4 tries, 5 secs
   iModuleAo = CPosModuleStatAo::NewL(*this);
+  iCellChangeHandle.Register(ac_get_Blackboard(iAppContext),
+			     bb_dt_cell_id,
+			     this);
 }
 
 CSensor_cellpos::~CSensor_cellpos()
@@ -95,8 +111,9 @@ void CSensor_cellpos::CreateSpecifiedPositionerL(TPositionModuleId bestId)
 
   RPositionServer& server = iModuleAo->PositionServer();
   iPositioner = CPositioner_gps::NewL(server, *this, 
-				      bestId, iPositionUpdateIntervalSecs, 0);
-  iPositioner->MakeRequest();
+				      bestId, 
+				      POSITIONER_SCAN_INTERVAL_SECS,
+				      SATELLITE_QUERY_TIMEOUT_SECS);
 }
 
 void CSensor_cellpos::PosModChangeL()
@@ -124,7 +141,8 @@ TBool CSensor_cellpos::PosModIsCurrent(TPositionModuleId id) const
 
 void CSensor_cellpos::PosModErrorL(TInt errCode)
 {
-  er_log_symbian(0, errCode, "INACTIVATE: cellpos: positioning module status tracking error");
+  er_log_symbian(0, errCode, 
+		 "INACTIVATE: cellpos: positioning module status tracking error");
   Stop();
 }
 
@@ -144,10 +162,39 @@ void CSensor_cellpos::RetryTimerExpired(CRetryAo* src, TInt errCode)
   iPositioner->MakeRequest();
 }
 
+void CSensor_cellpos::BbChangedL(bb::RHandle* self, enum bb_DataType dt,
+				 gpointer data, int len)
+{
+  if (!IsActive()) 
+    return; // stopped
+  assert(dt == bb_dt_cell_id);
+  guilogf("cellpos: cell changed");
+  if (!iPositioner) {
+    guilogf("cellpos: no positioner");
+    return; // no positioner
+  }
+  if (iPositioner->IsActive() || iRetryAo->IsActive()) {
+    guilogf("cellpos: already positioning");
+    return; // doing positioning
+  }
+  TTime now;
+  now.UniversalTime();
+  TTime earliestTime(iLastScanTime.Int64());
+  earliestTime += TTimeIntervalSeconds(MIN_SCAN_REQUEST_INTERVAL_SECS);
+  if (now <= earliestTime) {
+    guilogf("cellpos: too early");
+    return; // too early
+  }
+  guilogf("cellpos: positioning...");
+  iPositioner->MakeRequest();
+}
+
 gboolean CSensor_cellpos::PositionerEventL(GError** error)
 {
   assert_error_unset(error);
   assert(iPositioner);
+
+  iLastScanTime.UniversalTime();
 
   // See "lbserrors.h" for LBS-specific return codes for
   // NotifyPositionUpdate requests. Note that somewhat unusually there
@@ -156,12 +203,9 @@ gboolean CSensor_cellpos::PositionerEventL(GError** error)
   
   if (errCode == KErrTimedOut) {
     // Can expect to get this after the time period specified with
-    // SetUpdateTimeOut. We haven't set such a time period, though,
-    // and presumably then should not get this.
-    logt("gps request timed out (unexpectedly), retrying");
-    iPositioner->MakeRequest();
-  } else if (errCode == KErrCancel) {
-    // Not really expected here, but whatever. Do nothing.
+    // SetUpdateTimeOut. If we didn't get the position in that time,
+    // then we did not.
+    guilogf("cellpos: GPS timeout");
   } else if (errCode < 0) {
     // Do not yet quite know what sort of errors might be getting, so
     // shall merely log errors and keep retrying. Do want to make
@@ -173,9 +217,14 @@ gboolean CSensor_cellpos::PositionerEventL(GError** error)
     // there may be immediate error returns in cases such as a
     // positioning module being or having become unavailable.
     switch (errCode) {
-    case KErrAccessDenied: // Perhaps some capability thing.
+      // Perhaps some capability thing.
+    case KErrAccessDenied: 
+      // Could apparently happen if the user refuses to connect an
+      // external Bluetooth GPS device, for example.
+    case KErrCancel:
       // Locally severe error. Give up.
-      er_log_symbian(0, errCode, "cellpos: positioner error, giving up on positioner");
+      er_log_symbian(0, errCode, 
+		     "cellpos: positioner error, giving up on positioner");
       // We will not reset state further, lest we be asked to switch
       // back to the same module again.
       DELETE_Z(iPositioner);
@@ -184,11 +233,18 @@ gboolean CSensor_cellpos::PositionerEventL(GError** error)
     case KErrPositionBufferOverflow:
       er_log_symbian(er_FATAL, errCode, "cellpos: unexpected positioning error");
       break;
+    case KPositionQualityLoss: // could consider retrying
     default:
+      // We may not actually need the retry AO at all. The cell ID
+      // changes will determine when to retry.
+      er_log_symbian(0, errCode, 
+		     "cellpos: positioner error, not retrying");
+      /*
       if (!iRetryAo->Retry()) {
 	er_log_symbian(0, errCode, "INACTIVATE: cellpos: stopping scanning due to too many errors");
 	Stop();
       }
+      */
     }
   } else {
     iRetryAo->ResetFailures();
@@ -352,7 +408,6 @@ gboolean CSensor_cellpos::PositionerEventL(GError** error)
     } else {
       dblogg("warning, unknown gps request status code (%d)", errCode);
     }
-    iPositioner->MakeRequest();
   }
 
   return TRUE;

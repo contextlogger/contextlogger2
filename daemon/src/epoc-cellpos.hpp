@@ -1,3 +1,6 @@
+// This is like the "gps" sensor, but only scans after GSM cell ID
+// changes, and even so does not scan for too often.
+
 #ifndef __epoc_cellpos_hpp__
 #define __epoc_cellpos_hpp__
 
@@ -52,7 +55,7 @@ NONSHARABLE_CLASS(CSensor_cellpos) :
 
  private: // bb::MObserver
   virtual void BbChangedL(bb::RHandle* self, enum bb_DataType dt,
-			  gpointer data, int len) {}
+			  gpointer data, int len);
 
  private:
   ac_AppContext* iAppContext; // not owned
@@ -66,14 +69,13 @@ NONSHARABLE_CLASS(CSensor_cellpos) :
 
   CRetryAo* iRetryAo; // owned
 
-  bb::RHandle iBbHandle;
+  bb::RHandle iCellChangeHandle;
 
-  TInt iPositionUpdateIntervalSecs;
+  TTime iLastScanTime;
 
   enum TState {
     EInactive = 0, // not started
-    EActive, // module status query outstanding
-    ERetryWaiting // waiting to retry module status query
+    EActive // asynchronous queries outstanding internally
   };
   TState iState;
 
