@@ -98,6 +98,15 @@ static void uploads_allowed_changed(kr_Controller* self)
   uploads_allowed_update_board(self->are_uploads_allowed);
 }
 
+static void netpos_allowed_update_board(gboolean value)
+{
+  log_db_log_status(ac_global_LogDb, NULL, "CHANGE: network positioning allowed = %s", boolstr_yes(value));
+  bb_Blackboard_notify(ac_global_Blackboard, bb_dt_netpos_allowed,
+		       GINT_TO_POINTER(value), 0);
+}
+
+static void recompute_netpos_allowed(kr_Controller* self);
+
 static void init_uploads_allowed_state(kr_Controller* self)
 {
   //WHEN_SYMBIAN(epoc_log_bearer_types());
@@ -116,11 +125,46 @@ static void init_uploads_allowed_state(kr_Controller* self)
   logg("non-roaming MCC: %d", self->non_roaming_mcc);
   WHEN_LOGGING({if (self->non_roaming_operator_name) logg("non-roaming operator: '%s'", self->non_roaming_operator_name);});
   uploads_allowed_changed(self);
+
+  self->is_netpos_allowed = FALSE;
+  recompute_netpos_allowed(self);
 }
 
 static void free_uploads_allowed_state(kr_Controller* self)
 {
   GMaybeString_free(&self->current_operator_name);
+}
+
+static void recompute_netpos_allowed(kr_Controller* self)
+{
+  gboolean oldval = self->is_netpos_allowed;
+  gboolean newval = TRUE;
+
+  if (self->current_mcc == -1) {
+      // no network
+      newval = FALSE;
+  }
+  else
+    if (self->non_roaming_mcc != -1) {
+      // have a roaming restriction
+      if (self->current_mcc != self->non_roaming_mcc)
+	// is roaming
+	newval = FALSE;
+    }
+    else
+      if (self->non_roaming_operator_name) {
+	// have a roaming restriction
+	if (GMaybeString_is_nothing(&self->current_operator_name) ||
+	    !GMaybeString_is(&self->current_operator_name,
+			     self->non_roaming_operator_name))
+	  // is roaming
+	  newval = FALSE;
+      }
+
+  if (oldval != newval) {
+    self->is_netpos_allowed = newval;
+    netpos_allowed_update_board(newval);
+  }
 }
 
 static void recompute_uploads_allowed(kr_Controller* self)
@@ -163,6 +207,7 @@ static void recompute_uploads_allowed(kr_Controller* self)
   }
 }
 
+// Called after "iap" configuration changes.
 static void iap_config_changed(kr_Controller* self)
 {
   gboolean nval = current_iap_is_cellular();
@@ -189,6 +234,7 @@ void kr_Controller_set_current_mcc(kr_Controller* self, int mcc)
   if (mcc != self->current_mcc) {
     self->current_mcc = mcc;
     recompute_uploads_allowed(self);
+    recompute_netpos_allowed(self);
   }
 }
 
@@ -202,6 +248,7 @@ void kr_Controller_set_operator_name(kr_Controller* self, const char* name)
       logg("setting operator to %s", name ? name : "<none>");
       er_log_oom_on_false(GMaybeString_assign(&self->current_operator_name, name, NULL));
       recompute_uploads_allowed(self);
+      recompute_netpos_allowed(self);
     }
   }
 }

@@ -36,7 +36,8 @@ extern "C" {
     bb_dt_flightmode,      /* gboolean */
     bb_dt_network_info,    /* CTelephony::TNetworkInfoV1 */
     bb_dt_cell_id,         /* CTelephony::TNetworkInfoV1 */
-    bb_dt_uploads_allowed  /* gboolean */
+    bb_dt_uploads_allowed, /* gboolean */
+    bb_dt_netpos_allowed   /* gboolean, by value */
   };
 
   typedef void (*bb_Func)(bb_Blackboard* self, enum bb_DataType dt,

@@ -49,6 +49,7 @@ extern "C" {
 #endif
 
     gboolean are_uploads_allowed;
+    gboolean is_netpos_allowed;
     gboolean is_cellular_ap;
     int non_roaming_mcc; // -1 for none configured
     const char* non_roaming_operator_name; // NULL for none configured

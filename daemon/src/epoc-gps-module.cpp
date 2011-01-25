@@ -185,10 +185,17 @@ void CPosModuleStatAo::MaybeSwitchModulesL()
 #define CurrentModuleUnavailableL { MaybeSwitchModulesL(); return; }
 #define NewModuleAvailableL { MaybeSwitchModulesL(); return; }
 
+static TBool DeviceNotAvailable(TPositionModuleStatus::TDeviceStatus deviceStatus)
+{
+  return ((deviceStatus == TPositionModuleStatus::EDeviceUnknown) ||
+	  (deviceStatus == TPositionModuleStatus::EDeviceDisabled) ||
+	  (deviceStatus == TPositionModuleStatus::EDeviceError));
+}
+
 void CPosModuleStatAo::RunL()
 {
   TInt errCode = iStatus.Int();
-  dblogg("positioning module status event (%d)", errCode);
+  logg("positioning module status event (%d)", errCode);
 
   if (errCode) {
     RunError(errCode);
@@ -275,25 +282,15 @@ void CPosModuleStatAo::RunL()
 	}
       }
       
-    dblogg("%s device status now %d (%s)", 
-	   aboutCurrent ? "current" : "other", 
-	   deviceStatus, deviceStatusStr);
+    logg("%s device status now %d (%s)", 
+	 aboutCurrent ? "current" : "other", 
+	 deviceStatus, deviceStatusStr);
 #endif
-    if (aboutCurrent && 
-	((deviceStatus == TPositionModuleStatus::EDeviceDisabled) ||
-	 (deviceStatus == TPositionModuleStatus::EDeviceError) ||
-	 // Should not become inactive when it is something we are
-	 // using. This may indicate it was disabled in the
-	 // configuration.
-	 (deviceStatus == TPositionModuleStatus::EDeviceInactive))) {
+    if (aboutCurrent && DeviceNotAvailable(deviceStatus)) {
       CurrentModuleUnavailableL;
-    } else if (!aboutCurrent &&
-	       ((deviceStatus == TPositionModuleStatus::EDeviceReady) ||
-		// Again, this may signal that another module has
-		// become available but is not yet active as it is
-		// not used yet. It is worth checking if it is
-		// listed as available.
-		(deviceStatus == TPositionModuleStatus::EDeviceInactive))) {
+    } else if (!aboutCurrent && !DeviceNotAvailable(deviceStatus)) {
+      // May not be mean that it actually is new, but recompute best
+      // one anyway.
       NewModuleAvailableL;
     }
   }
@@ -304,7 +301,7 @@ void CPosModuleStatAo::RunL()
   if (occurredEvents & TPositionModuleStatusEventBase::EEventSystemModuleEvent) {
     TPositionModuleStatusEventBase::TSystemModuleEvent systemModuleEvent = 
       iPositionModuleStatusEvent.SystemModuleEvent();
-    dblogg("system module event was %d", (int)systemModuleEvent);
+    logg("system module event was %d", (int)systemModuleEvent);
     if (aboutCurrent &&
 	((systemModuleEvent == TPositionModuleStatusEventBase::ESystemError) || 
 	 (systemModuleEvent == TPositionModuleStatusEventBase::ESystemModuleRemoved))) {
