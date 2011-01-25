@@ -23,7 +23,6 @@ NONSHARABLE_CLASS(CPosModuleStatAo) :
  private:
   DEF_SESSION(RPositionServer, iPositionServer);
   MObserverPosMod& iObserver;
-  TPositionModuleId iModuleId; // current one, or KPositionNullModuleId
   TPositionModuleStatusEvent iPositionModuleStatusEvent;
 
  public:
@@ -37,21 +36,8 @@ NONSHARABLE_CLASS(CPosModuleStatAo) :
     return iPositionServer;
   }
 
-  void SwitchedToModule(TPositionModuleId aModuleId)
-  {
-    iModuleId = aModuleId;
-  }
-
  private:
-  void PosModSwitchToModule(TPositionModuleId aModuleId);
-  void PosModNoModule();
-
-  TBool HaveModuleId() const
-  {
-    return iModuleId != KPositionNullModuleId;
-  }
-
-  void MaybeSwitchModulesL();
+  void PosModChange();
 
  private: // CActive
   virtual void DoCancel();

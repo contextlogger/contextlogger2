@@ -45,7 +45,8 @@ CSensor_gps* CSensor_gps::NewL(ac_AppContext* aAppContext)
 }
 
 CSensor_gps::CSensor_gps(ac_AppContext* aAppContext) : 
-  iAppContext(aAppContext)
+  iAppContext(aAppContext),
+  iModuleId(KPositionNullModuleId)
 {
   iLogDb = ac_LogDb(aAppContext);
   iPositionUpdateIntervalSecs = DEFAULT_POSITION_SCAN_INTERVAL_SECS;
@@ -78,6 +79,8 @@ void CSensor_gps::StartL()
   if (!IsActive()) {
     iRetryAo->ResetFailures();
 
+    iModuleId = KPositionNullModuleId;
+
     TPositionModuleId bestId = iModuleAo->ChooseBestPositionerL();
 
     if (bestId != KPositionNullModuleId) {
@@ -96,32 +99,37 @@ void CSensor_gps::StartL()
 
 void CSensor_gps::CreateSpecifiedPositionerL(TPositionModuleId bestId)
 {
+  // This is just the module we last tried to use; we do not require
+  // we actually succeed in creating the positioner for it.
+  iModuleId = bestId;
+
   RPositionServer& server = iModuleAo->PositionServer();
   iPositioner = CPositioner_gps::NewL(server, *this, 
 				      bestId, iPositionUpdateIntervalSecs, 0);
   iPositioner->MakeRequest();
-  iModuleAo->SwitchedToModule(bestId);
 }
 
-void CSensor_gps::PosModSwitchToModuleL(TPositionModuleId bestId)
+void CSensor_gps::PosModChangeL()
 {
-  iRetryAo->Cancel();
-  iRetryAo->ResetFailures();
-  DELETE_Z(iPositioner);
-  TRAPD(errCode, CreateSpecifiedPositionerL(bestId));
-  if (errCode) {
-    er_log_symbian(0, errCode, "WARNING: failed to create positioner");
+  TPositionModuleId bestId = iModuleAo->ChooseBestPositionerL();
+  if (bestId != iModuleId) {
+    iRetryAo->Cancel();
+    iRetryAo->ResetFailures();
+    DELETE_Z(iPositioner);
+
+    if (bestId != KPositionNullModuleId) {
+      TRAPD(errCode, CreateSpecifiedPositionerL(bestId));
+      if (errCode) {
+	er_log_symbian(0, errCode, "WARNING: failed to create positioner");
+      }
+    }
   }
   iModuleAo->MakeRequest();
 }
 
-void CSensor_gps::PosModNoModuleL()
+TBool CSensor_gps::PosModIsCurrent(TPositionModuleId id) const
 {
-  iRetryAo->Cancel();
-  iRetryAo->ResetFailures();
-  DELETE_Z(iPositioner);
-  iModuleAo->SwitchedToModule(KPositionNullModuleId);
-  iModuleAo->MakeRequest();
+  return (iModuleId != KPositionNullModuleId) && (iModuleId == id);
 }
 
 void CSensor_gps::PosModErrorL(TInt errCode)
@@ -130,6 +138,7 @@ void CSensor_gps::PosModErrorL(TInt errCode)
   Stop();
 }
 
+// Called if PosModChangeL or PosModErrorL leaves.
 void CSensor_gps::PosModLeave(TInt errCode)
 {
   er_log_symbian(er_FATAL, errCode, "gps: leave in positioning module status reporting handler");

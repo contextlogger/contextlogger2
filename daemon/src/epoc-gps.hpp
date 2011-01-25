@@ -37,10 +37,10 @@ NONSHARABLE_CLASS(CSensor_gps) :
   void ConstructL();
 
  private: // MObserverPosMod
-  virtual void PosModSwitchToModuleL(TPositionModuleId aModuleId);
-  virtual void PosModNoModuleL();
+  virtual void PosModChangeL();
   virtual void PosModErrorL(TInt errCode);
   virtual void PosModLeave(TInt errCode);
+  virtual TBool PosModIsCurrent(TPositionModuleId id) const;
 
  private: // MObserver_gps
   virtual gboolean PositionerEventL(GError** error);
@@ -68,6 +68,8 @@ NONSHARABLE_CLASS(CSensor_gps) :
     ERetryWaiting // waiting to retry module status query
   };
   TState iState;
+
+  TPositionModuleId iModuleId; // current one, or KPositionNullModuleId
 
  private:
   void RefreshPositionUpdateIntervalSecs();

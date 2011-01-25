@@ -23,10 +23,10 @@ NONSHARABLE_CLASS(MObserver_gps)
 NONSHARABLE_CLASS(MObserverPosMod)
 {
  public:
-  virtual void PosModSwitchToModuleL(TPositionModuleId aModuleId) = 0;
-  virtual void PosModNoModuleL() = 0;
+  virtual void PosModChangeL() = 0;
   virtual void PosModErrorL(TInt errCode) = 0;
   virtual void PosModLeave(TInt errCode) = 0;
+  virtual TBool PosModIsCurrent(TPositionModuleId id) const = 0;
 };
 
 #endif /* __epoc_gps_observer_hpp__ */

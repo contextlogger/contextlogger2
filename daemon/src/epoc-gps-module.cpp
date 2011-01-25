@@ -20,8 +20,7 @@ CPosModuleStatAo::~CPosModuleStatAo()
 
 CPosModuleStatAo::CPosModuleStatAo(MObserverPosMod& aObserver) :
   CActive(CActive::EPriorityStandard), 
-  iObserver(aObserver),
-  iModuleId(KPositionNullModuleId)
+  iObserver(aObserver)
 {
   CActiveScheduler::Add(this);
 }
@@ -54,22 +53,17 @@ TInt CPosModuleStatAo::RunError(TInt aErrCode)
   return KErrNone;
 }
 
-void CPosModuleStatAo::PosModSwitchToModule(TPositionModuleId aModuleId)
+void CPosModuleStatAo::PosModChange()
 {
-  TRAPD(errCode, iObserver.PosModSwitchToModuleL(aModuleId));
+  TRAPD(errCode, iObserver.PosModChangeL());
   if (errCode)
     iObserver.PosModLeave(errCode);
 }
 
-void CPosModuleStatAo::PosModNoModule()
-{
-  TRAPD(errCode, iObserver.PosModNoModuleL());
-  if (errCode)
-    iObserver.PosModLeave(errCode);
-}
-
-// Returns the module ID of the best (and good enough) available module.
-// Returns KPositionNullModuleId if nothing suitable is found.
+// Returns the module ID of the best (and good enough) available
+// module. Returns KPositionNullModuleId if nothing suitable is found.
+// xxx We may later have this function take some parameter(s) to
+// indicate what kind of a module is "best".
 TPositionModuleId CPosModuleStatAo::ChooseBestPositionerL()
 {
   TUint numModules;
@@ -167,24 +161,6 @@ TPositionModuleId CPosModuleStatAo::ChooseBestPositionerL()
   return KPositionNullModuleId;
 }
 
-// This method gets called if the current module becomes unavailable,
-// or a new module becomes available. Or when there is no current
-// module. In such a case we might want switch modules.
-void CPosModuleStatAo::MaybeSwitchModulesL()
-{
-  TPositionModuleId newId = ChooseBestPositionerL();
-  if (newId != iModuleId) {
-    if (newId == KPositionNullModuleId) {
-      PosModNoModule();
-    } else {
-      PosModSwitchToModule(newId);
-    }
-  }
-}
-
-#define CurrentModuleUnavailableL { MaybeSwitchModulesL(); return; }
-#define NewModuleAvailableL { MaybeSwitchModulesL(); return; }
-
 static TBool DeviceNotAvailable(TPositionModuleStatus::TDeviceStatus deviceStatus)
 {
   return ((deviceStatus == TPositionModuleStatus::EDeviceUnknown) ||
@@ -210,16 +186,9 @@ void CPosModuleStatAo::RunL()
   // Note also that there might not be a current module at all.
 
   TPositionModuleId moduleId = iPositionModuleStatusEvent.ModuleId();
-  TBool haveCurrent = EFalse;
-  TBool aboutCurrent = EFalse;
+  assert(moduleId != KPositionNullModuleId);
 
-  if (HaveModuleId()) {
-    haveCurrent = ETrue;
-    TPositionModuleId currentId = iModuleId;
-    if (moduleId == currentId) {
-      aboutCurrent = ETrue;
-    }
-  }
+  TBool aboutCurrent = iObserver.PosModIsCurrent(moduleId);
 
   TPositionModuleStatus moduleStatus;
   iPositionModuleStatusEvent.GetModuleStatus(moduleStatus);
@@ -287,11 +256,11 @@ void CPosModuleStatAo::RunL()
 	 deviceStatus, deviceStatusStr);
 #endif
     if (aboutCurrent && DeviceNotAvailable(deviceStatus)) {
-      CurrentModuleUnavailableL;
+      PosModChange(); // current module unavailable
     } else if (!aboutCurrent && !DeviceNotAvailable(deviceStatus)) {
       // May not be mean that it actually is new, but recompute best
       // one anyway.
-      NewModuleAvailableL;
+      PosModChange(); // new module available
     }
   }
 
@@ -305,10 +274,10 @@ void CPosModuleStatAo::RunL()
     if (aboutCurrent &&
 	((systemModuleEvent == TPositionModuleStatusEventBase::ESystemError) || 
 	 (systemModuleEvent == TPositionModuleStatusEventBase::ESystemModuleRemoved))) {
-      CurrentModuleUnavailableL;
+      PosModChange(); // current module unavailable
     } else if (!aboutCurrent &&
 	       ((systemModuleEvent == TPositionModuleStatusEventBase::ESystemModuleInstalled))) {
-      NewModuleAvailableL;
+      PosModChange(); // new module available
     }
   }
 }
