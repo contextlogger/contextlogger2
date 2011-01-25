@@ -227,9 +227,14 @@ source epoc-appfocus.cpp
 source epoc-btprox.cpp
 source epoc-callstatus.cpp
 source epoc-cellid.cpp
+<% if $CELLPOS_ENABLED %>
+source epoc-cellpos.cpp
+<% end %>
 source epoc-cliapi-server.cpp
 <% if $GPS_ENABLED %>
 source epoc-gps.cpp
+<% end %>
+<% if $POSITION_ENABLED %>
 source epoc-gps-module.cpp
 source epoc-gps-positioner.cpp
 <% end %>

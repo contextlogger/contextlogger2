@@ -380,6 +380,10 @@ project must implement.
   (define/override (upload-with-qt.attr)
     (and (send this with-qt.attr)
          (>= (s60-vernum.attr) 52)))
+
+  (define/override (position-enabled.attr)
+    (or (send this gps-enabled.attr)
+        (send this cellpos-enabled.attr)))
   
   ) ;; end symbian-variant%
 

@@ -24,7 +24,8 @@ For testing location sensors.
     (define/override (have-sqlite3.attr) #t)
 
     (define/override (cellid-enabled.attr) #t)
-    (define/override (gps-enabled.attr) #t)
+    (define/override (gps-enabled.attr) #f)
+    (define/override (cellpos-enabled.attr) #t)
 
     (define/override (feature-remokon.attr) #f)
     (define/override (feature-uploader.attr) #t)

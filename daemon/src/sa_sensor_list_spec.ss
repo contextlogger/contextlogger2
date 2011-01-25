@@ -18,7 +18,6 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
 
     ;; Not really a sensor.
     (sensor (name transaction) (inactive #t) (essential #t)
-            (cpp-condition "__TRANSACTION_ENABLED__")
             (sql-statements (Begin "begin transaction;")
                             (Commit "commit transaction;")
                             (Rollback "rollback transaction;")))
@@ -29,7 +28,6 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     
     ;; status
     (sensor (name status) (inactive #t) (essential #t)
-            (cpp-condition "__STATUS_ENABLED__")
             (sql-schema "create table status_log (unixtime INTEGER, message TEXT);")
             (sql-statements "insert into status_log (unixtime, message) values (?, ?);"))
 
@@ -282,11 +280,11 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
             ;;(epoc-create-expr "CSensor_btprox::NewL(iLogDb)"))
             )
     
-    ;; gps
-    (sensor (name gps)
-            (cpp-condition "__GPS_ENABLED__")
-            (sql-schema "create table gps_scan (unixtime INTEGER, latitude REAL, longitude REAL, altitude REAL, vertical_accuracy REAL, horizontal_accuracy REAL, course TEXT, satellites TEXT);")
-            (sql-statements "insert into gps_scan (unixtime, latitude, longitude, altitude, vertical_accuracy, horizontal_accuracy, course, satellites) values (?, ?, ?, ?, ?, ?, ?, ?);")
+    ;; position
+    (sensor (name position) (inactive #t)
+            (cpp-condition "__POSITION_ENABLED__")
+            (sql-schema "create table position_scan (unixtime INTEGER, latitude REAL, longitude REAL, altitude REAL, vertical_accuracy REAL, horizontal_accuracy REAL, course TEXT, satellites TEXT);")
+            (sql-statements "insert into position_scan (unixtime, latitude, longitude, altitude, vertical_accuracy, horizontal_accuracy, course, satellites) values (?, ?, ?, ?, ?, ?, ?, ?);")
             (log-insert-api
              (args
               ,(arg (type 'double) (name 'latitude))
@@ -306,9 +304,15 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
               (binding (index 7) (type text) (value "course, strlen(course)") (dispose static))
               (binding (index 8) (type text) (value "satellites, strlen(satellites)") (dispose static))
               ))
-            ;;(scanner-object
-            ;;(epoc-create-expr "CSensor_gps::NewL(iLogDb)"))
             )
+    
+    ;; gps
+    (sensor (name gps)
+            (cpp-condition "__GPS_ENABLED__"))
+    
+    ;; cellpos
+    (sensor (name cellpos)
+            (cpp-condition "__CELLPOS_ENABLED__"))
     
     ;; appfocus
     (sensor (name appfocus)

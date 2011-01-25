@@ -21,9 +21,6 @@ sqlite3 $1 "select datetime(unixtime, 'unixepoch'), value, number, contact_name,
 echo FLIGHT MODE
 sqlite3 $1 "select datetime(unixtime, 'unixepoch'), value from flightmode_scan;"
 
-echo GPS
-sqlite3 $1 "select datetime(unixtime, 'unixepoch'), latitude, longitude, altitude, vertical_accuracy, horizontal_accuracy, course, satellites from gps_scan;"
-
 echo GSM CELL ID
 sqlite3 $1 "select datetime(unixtime, 'unixepoch'), country_code, network_code, area_code, cell_id from cellid_scan;"
 
@@ -50,6 +47,9 @@ sqlite3 $1 "select datetime(unixtime, 'unixepoch'), dbm, bars from signal_scan;"
 
 echo OPERATOR
 sqlite3 $1 "select datetime(unixtime, 'unixepoch'), name from operator_scan;"
+
+echo POSITION
+sqlite3 $1 "select datetime(unixtime, 'unixepoch'), latitude, longitude, altitude, vertical_accuracy, horizontal_accuracy, course, satellites from position_scan;"
 
 echo PROFILE CHANGE
 sqlite3 $1 "select datetime(unixtime, 'unixepoch'), value, name from profile_scan;"

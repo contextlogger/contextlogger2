@@ -84,7 +84,7 @@ namespace bb {
   class MObserver
   {
   public:
-    virtual void BbChangedL(RHandle* self, enum bb_DataType dt,
+    virtual void BbChangedL(bb::RHandle* self, enum bb_DataType dt,
 			    gpointer data, int len) = 0;
 
     // Override if you do not consider leave in BbChangedL fatal.
