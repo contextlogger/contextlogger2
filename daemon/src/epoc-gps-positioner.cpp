@@ -1,3 +1,11 @@
+/*
+
+References:
+
+http://library.forum.nokia.com/index.jsp?topic=/S60_5th_Edition_Cpp_Developers_Library/GUID-759FBC7F-5384-4487-8457-A8D4B76F6AA6/html/classRPositioner.html
+
+*/
+
 #include "epoc-gps-positioner.hpp"
 
 _LIT_W(KRequestor, COMPONENT_NAME_W);

@@ -1,3 +1,11 @@
+/*
+
+References:
+
+http://www.forum.nokia.com/document/Cpp_Developers_Library/GUID-759FBC7F-5384-4487-8457-A8D4B76F6AA6/html/Location_Acquisition_API4.html
+
+*/
+
 #include "epoc-cellpos.hpp"
 
 #include "epoc-gps-module.hpp"
@@ -33,10 +41,12 @@
 #define SATELLITE_QUERY_TIMEOUT_SECS (60)
 
 // This is given as a parameter to the positioner, and it indicates
-// how frequently it should scan. We want quick and frequent to
-// increase the chances of getting something quickly. In any case it
-// seems this must be shorter than the timeout interval.
-#define POSITIONER_SCAN_INTERVAL_SECS (1)
+// how frequently it should be prepared to provide periodic updates.
+// In our case such time periods are irregular, and it probably makes
+// sense not to set this to avoid possibly spending battery on
+// needless guarantees. It seems this must be shorter than the timeout
+// interval, and indeed anything else does not make much sense.
+#define POSITIONER_SCAN_INTERVAL_SECS (0)
 
 // -------------------------------------------------------------------
 
@@ -201,12 +211,7 @@ gboolean CSensor_cellpos::PositionerEventL(GError** error)
   // are some positive values as well.
   TInt errCode = iPositioner->StatusCode();
   
-  if (errCode == KErrTimedOut) {
-    // Can expect to get this after the time period specified with
-    // SetUpdateTimeOut. If we didn't get the position in that time,
-    // then we did not.
-    guilogf("cellpos: GPS timeout");
-  } else if (errCode < 0) {
+  if (errCode < 0) {
     // Do not yet quite know what sort of errors might be getting, so
     // shall merely log errors and keep retrying. Do want to make
     // sure, however, that we do not get an awful lot of errors
@@ -216,24 +221,41 @@ gboolean CSensor_cellpos::PositionerEventL(GError** error)
     // errors we might be getting. But it is reasonable to assume that
     // there may be immediate error returns in cases such as a
     // positioning module being or having become unavailable.
-    switch (errCode) {
+    switch (errCode) { // see <lbserrors.h>
+    case KErrTimedOut:
+      // Can expect to get this after the time period specified with
+      // SetUpdateTimeOut. If we didn't get the position in that time,
+      // then we did not.
+      guilogf("cellpos: GPS timeout");
+      break;
+
+    case KPositionPartialUpdate: // partial data
+    case KPositionQualityLoss: // no data
+      guilogf("cellpos: got no GPS data");
+      break;
+
+      guilogf("cellpos: positioning error");
+
+      // Used positioning module became unavailable. (Before we had
+      // time to stop using it.)
+    case KErrNotFound:
       // Perhaps some capability thing.
     case KErrAccessDenied: 
       // Could apparently happen if the user refuses to connect an
       // external Bluetooth GPS device, for example.
     case KErrCancel:
-      // Locally severe error. Give up.
       er_log_symbian(0, errCode, 
 		     "cellpos: positioner error, giving up on positioner");
       // We will not reset state further, lest we be asked to switch
       // back to the same module again.
       DELETE_Z(iPositioner);
       break;
+
     case KErrArgument:
     case KErrPositionBufferOverflow:
       er_log_symbian(er_FATAL, errCode, "cellpos: unexpected positioning error");
       break;
-    case KPositionQualityLoss: // could consider retrying
+
     default:
       // We may not actually need the retry AO at all. The cell ID
       // changes will determine when to retry.
