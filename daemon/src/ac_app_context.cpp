@@ -176,8 +176,12 @@ EXTERN_C bb_Blackboard* ac_get_Blackboard(ac_AppContext* self)
 
 EXTERN_C up_Uploader* ac_get_Uploader(ac_AppContext* self)
 {
+#if __FEATURE_UPLOADER__
   if (!self || !(self->kr)) return NULL;
   return self->kr->uploader;
+#else
+  return NULL;
+#endif
 }
 
 EXTERN_C const char* ac_get_logdb_file(ac_AppContext* self)

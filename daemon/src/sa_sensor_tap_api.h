@@ -20,8 +20,8 @@ void delete_Sensor_tap(Sensor_tap* obj);
 #if __SINGLETAP_ENABLED__
 #define DECLARE_SENSOR_singletap Sensor_tap* iSensor_singletap
 #define SENSOR_SINGLETAP_DESTROY delete_Sensor_tap(self->iSensor_singletap); self->iSensor_singletap = NULL;
-#define SENSOR_SINGLETAP_CREATE sa_typical_qt_sensor_create(self->iSensor_singletap = new_Sensor_tap(self->ac, false, "singletap"), "singletap sensor initialization")
-#define SENSOR_SINGLETAP_START SENSOR_SINGLETAP_CREATE
+#define SENSOR_SINGLETAP_CREATE 
+#define SENSOR_SINGLETAP_START sa_typical_qt_sensor_create(self->iSensor_singletap = new_Sensor_tap(self->ac, false, "singletap"), "singletap sensor initialization")
 #define SENSOR_SINGLETAP_STOP SENSOR_SINGLETAP_DESTROY
 #define SENSOR_SINGLETAP_IS_RUNNING (self->iSensor_singletap != NULL)
 #define SENSOR_SINGLETAP_RECONFIGURE(key, value) sa_reconfigure_ignore_all_keys
@@ -32,8 +32,8 @@ void delete_Sensor_tap(Sensor_tap* obj);
 #if __DOUBLETAP_ENABLED__
 #define DECLARE_SENSOR_doubletap Sensor_tap* iSensor_doubletap
 #define SENSOR_DOUBLETAP_DESTROY delete_Sensor_tap(self->iSensor_doubletap); self->iSensor_doubletap = NULL;
-#define SENSOR_DOUBLETAP_CREATE sa_typical_qt_sensor_create(self->iSensor_doubletap = new_Sensor_tap(self->ac, true, "doubletap"), "doubletap sensor initialization")
-#define SENSOR_DOUBLETAP_START SENSOR_DOUBLETAP_CREATE
+#define SENSOR_DOUBLETAP_CREATE 
+#define SENSOR_DOUBLETAP_START sa_typical_qt_sensor_create(self->iSensor_doubletap = new_Sensor_tap(self->ac, true, "doubletap"), "doubletap sensor initialization")
 #define SENSOR_DOUBLETAP_STOP SENSOR_DOUBLETAP_DESTROY
 #define SENSOR_DOUBLETAP_IS_RUNNING (self->iSensor_doubletap != NULL)
 #define SENSOR_DOUBLETAP_RECONFIGURE(key, value) sa_reconfigure_ignore_all_keys

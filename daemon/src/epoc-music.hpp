@@ -81,8 +81,8 @@ NONSHARABLE_CLASS(CSensor_music) :
 #if __MUSIC_ENABLED__
 #define DECLARE_SENSOR_music CSensor_music* iSensor_music
 #define SENSOR_MUSIC_DESTROY DELETE_Z(self->iSensor_music)
-#define SENSOR_MUSIC_CREATE sa_typical_symbian_sensor_create(self->iSensor_music = CSensor_music::NewL(self->ac), "music sensor initialization")
-#define SENSOR_MUSIC_START SENSOR_MUSIC_CREATE
+#define SENSOR_MUSIC_CREATE 
+#define SENSOR_MUSIC_START sa_typical_symbian_sensor_create(self->iSensor_music = CSensor_music::NewL(self->ac), "music sensor initialization")
 #define SENSOR_MUSIC_STOP SENSOR_MUSIC_DESTROY
 #define SENSOR_MUSIC_IS_RUNNING (self->iSensor_music != NULL)
 #define SENSOR_MUSIC_RECONFIGURE(key, value) sa_reconfigure_ignore_all_keys

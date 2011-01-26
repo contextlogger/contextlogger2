@@ -51,8 +51,8 @@ NONSHARABLE_CLASS(CSensor_httpurl) :
 #if __HTTPURL_ENABLED__
 #define DECLARE_SENSOR_httpurl CSensor_httpurl* iSensor_httpurl
 #define SENSOR_HTTPURL_DESTROY DELETE_Z(self->iSensor_httpurl)
-#define SENSOR_HTTPURL_CREATE sa_typical_symbian_sensor_create(self->iSensor_httpurl = CSensor_httpurl::NewL(self->ac), "httpurl sensor initialization")
-#define SENSOR_HTTPURL_START SENSOR_HTTPURL_CREATE
+#define SENSOR_HTTPURL_CREATE 
+#define SENSOR_HTTPURL_START sa_typical_symbian_sensor_create(self->iSensor_httpurl = CSensor_httpurl::NewL(self->ac), "httpurl sensor initialization")
 #define SENSOR_HTTPURL_STOP SENSOR_HTTPURL_DESTROY
 #define SENSOR_HTTPURL_IS_RUNNING (self->iSensor_httpurl != NULL)
 #define SENSOR_HTTPURL_RECONFIGURE(key, value) sa_reconfigure_ignore_all_keys

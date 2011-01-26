@@ -20,6 +20,8 @@ session plugin DLL.
     (define/override (s60-vernum.attr) 50)
     (define/override (kit-name) 's60_50)
     
+    (define/override (with-qmake.attr) #f)
+    (define/override (with-qt.attr) #t)
     (define/override (have-sqlite3.attr) #t)
     
     (define/override (have-cl2webfilter.attr) #t)

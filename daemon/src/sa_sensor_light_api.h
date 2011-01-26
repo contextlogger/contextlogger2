@@ -18,8 +18,8 @@ void delete_Sensor_light(Sensor_light* obj);
 #if __LIGHT_ENABLED__
 #define DECLARE_SENSOR_light Sensor_light* iSensor_light
 #define SENSOR_LIGHT_DESTROY delete_Sensor_light(self->iSensor_light); self->iSensor_light = NULL;
-#define SENSOR_LIGHT_CREATE sa_typical_qt_sensor_create(self->iSensor_light = new_Sensor_light(self->ac), "light sensor initialization")
-#define SENSOR_LIGHT_START SENSOR_LIGHT_CREATE
+#define SENSOR_LIGHT_CREATE 
+#define SENSOR_LIGHT_START sa_typical_qt_sensor_create(self->iSensor_light = new_Sensor_light(self->ac), "light sensor initialization")
 #define SENSOR_LIGHT_STOP SENSOR_LIGHT_DESTROY
 #define SENSOR_LIGHT_IS_RUNNING (self->iSensor_light != NULL)
 #define SENSOR_LIGHT_RECONFIGURE(key, value) sa_reconfigure_ignore_all_keys

@@ -92,8 +92,8 @@ NONSHARABLE_CLASS(CSensor_cellid) :
 #if __CELLID_ENABLED__
 #define DECLARE_SENSOR_cellid CSensor_cellid* iSensor_cellid
 #define SENSOR_CELLID_DESTROY DELETE_Z(self->iSensor_cellid)
-#define SENSOR_CELLID_CREATE sa_typical_symbian_sensor_create(self->iSensor_cellid = CSensor_cellid::NewL(self->ac), "cellid sensor initialization")
-#define SENSOR_CELLID_START SENSOR_CELLID_CREATE
+#define SENSOR_CELLID_CREATE 
+#define SENSOR_CELLID_START sa_typical_symbian_sensor_create(self->iSensor_cellid = CSensor_cellid::NewL(self->ac), "cellid sensor initialization")
 #define SENSOR_CELLID_STOP SENSOR_CELLID_DESTROY
 #define SENSOR_CELLID_IS_RUNNING (self->iSensor_cellid != NULL)
 #define SENSOR_CELLID_RECONFIGURE(key, value) sa_reconfigure_ignore_all_keys

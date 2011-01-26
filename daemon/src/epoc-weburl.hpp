@@ -85,8 +85,8 @@ NONSHARABLE_CLASS(CSensor_weburl) :
 #if __WEBURL_ENABLED__
 #define DECLARE_SENSOR_weburl CSensor_weburl* iSensor_weburl
 #define SENSOR_WEBURL_DESTROY DELETE_Z(self->iSensor_weburl)
-#define SENSOR_WEBURL_CREATE sa_typical_symbian_sensor_create(self->iSensor_weburl = CSensor_weburl::NewL(self->ac), "weburl sensor initialization")
-#define SENSOR_WEBURL_START SENSOR_WEBURL_CREATE
+#define SENSOR_WEBURL_CREATE 
+#define SENSOR_WEBURL_START sa_typical_symbian_sensor_create(self->iSensor_weburl = CSensor_weburl::NewL(self->ac), "weburl sensor initialization")
 #define SENSOR_WEBURL_STOP SENSOR_WEBURL_DESTROY
 #define SENSOR_WEBURL_IS_RUNNING (self->iSensor_weburl != NULL)
 #define SENSOR_WEBURL_RECONFIGURE(key, value) sa_reconfigure_ignore_all_keys

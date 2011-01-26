@@ -18,8 +18,8 @@ void delete_Sensor_proximity(Sensor_proximity* obj);
 #if __PROXIMITY_ENABLED__
 #define DECLARE_SENSOR_proximity Sensor_proximity* iSensor_proximity
 #define SENSOR_PROXIMITY_DESTROY delete_Sensor_proximity(self->iSensor_proximity); self->iSensor_proximity = NULL;
-#define SENSOR_PROXIMITY_CREATE sa_typical_qt_sensor_create(self->iSensor_proximity = new_Sensor_proximity(self->ac), "proximity sensor initialization")
-#define SENSOR_PROXIMITY_START SENSOR_PROXIMITY_CREATE
+#define SENSOR_PROXIMITY_CREATE 
+#define SENSOR_PROXIMITY_START sa_typical_qt_sensor_create(self->iSensor_proximity = new_Sensor_proximity(self->ac), "proximity sensor initialization")
 #define SENSOR_PROXIMITY_STOP SENSOR_PROXIMITY_DESTROY
 #define SENSOR_PROXIMITY_IS_RUNNING (self->iSensor_proximity != NULL)
 #define SENSOR_PROXIMITY_RECONFIGURE(key, value) sa_reconfigure_ignore_all_keys
