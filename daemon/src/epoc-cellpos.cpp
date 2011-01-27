@@ -4,10 +4,6 @@ References:
 
 http://www.forum.nokia.com/document/Cpp_Developers_Library/GUID-759FBC7F-5384-4487-8457-A8D4B76F6AA6/html/Location_Acquisition_API4.html
 
-To-do:
-
-As an optimization, we might (before trying to get a fresh satellite position fix) first try to get something from the cache, say no more than a one minute old reading. RPositioner does support this with the GetLastKnownPosition method, which is also asynchronous. Our positioner then would need to be able to have two different kinds of (non-simultaneous) requests, but that should be an easy addition.
-
 */
 
 #include "epoc-cellpos.hpp"
