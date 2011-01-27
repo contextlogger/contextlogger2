@@ -32,12 +32,13 @@ http://www.forum.nokia.com/document/Cpp_Developers_Library/GUID-759FBC7F-5384-44
 // internal parameters...
 
 // We will never ask the positioner for service more frequently than
-// this.
+// this. This value is runtime adjustable.
 #define MIN_SCAN_REQUEST_INTERVAL_SECS (3 * 60)
 
 // We will not drain the battery for longer than this if we do not get
 // a position fix, and we call Cancel. If we do get a position, it
-// should be enough to not call MakeRequest.
+// should be enough to not call MakeRequest. This value is runtime
+// adjustable.
 #define SATELLITE_QUERY_TIMEOUT_SECS (60)
 
 // This is given as a parameter to the positioner, and it indicates
@@ -68,6 +69,7 @@ CSensor_cellpos::CSensor_cellpos(ac_AppContext* aAppContext) :
 
 void CSensor_cellpos::ConstructL()
 {
+  ReadConfig();
   iRetryAo = CRetryAo::NewL(*this, 4, 5); // 4 tries, 5 secs
   iModuleAo = CPosModuleStatAo::NewL(*this);
   iCellChangeHandle.Register(ac_get_Blackboard(iAppContext),
@@ -123,7 +125,7 @@ void CSensor_cellpos::CreateSpecifiedPositionerL(TPositionModuleId bestId)
   iPositioner = CPositioner_gps::NewL(server, *this, 
 				      bestId, 
 				      POSITIONER_SCAN_INTERVAL_SECS,
-				      SATELLITE_QUERY_TIMEOUT_SECS);
+				      iSatelliteQueryTimeoutSecs);
 }
 
 void CSensor_cellpos::PosModChangeL()
@@ -190,7 +192,7 @@ void CSensor_cellpos::BbChangedL(bb::RHandle* self, enum bb_DataType dt,
   TTime now;
   now.UniversalTime();
   TTime earliestTime(iLastScanTime.Int64());
-  earliestTime += TTimeIntervalSeconds(MIN_SCAN_REQUEST_INTERVAL_SECS);
+  earliestTime += TTimeIntervalSeconds(iMinScanRequestIntervalSecs);
   if (now <= earliestTime) {
     guilogf("cellpos: too early");
     return; // too early
@@ -443,6 +445,21 @@ gboolean CSensor_cellpos::PositionerEventL(GError** error)
 
 void CSensor_cellpos::Reconfigure(const gchar* name, const gchar* value)
 {
+  if ((strcmp(name, "sensor.cellpos.frequency") == 0) ||
+      (strcmp(name, "sensor.cellpos.timeout") == 0)) {
+    ReadConfig();
+  }
+}
+
+// The paremeter updates do not necessarily take effect immediately.
+void CSensor_cellpos::ReadConfig()
+{
+  iMinScanRequestIntervalSecs =
+  force_get_ConfigDb_int("sensor.cellpos.frequency", 
+			 MIN_SCAN_REQUEST_INTERVAL_SECS);
+  iSatelliteQueryTimeoutSecs = 
+  force_get_ConfigDb_int("sensor.cellpos.timeout", 
+			 SATELLITE_QUERY_TIMEOUT_SECS);
 }
 
 /**

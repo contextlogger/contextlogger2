@@ -81,7 +81,11 @@ NONSHARABLE_CLASS(CSensor_cellpos) :
 
   TPositionModuleId iModuleId; // current one, or KPositionNullModuleId
 
+  TInt iMinScanRequestIntervalSecs; // config param
+  TInt iSatelliteQueryTimeoutSecs; // config param
+
  private:
+  void ReadConfig();
   void CreateSpecifiedPositionerL(TPositionModuleId bestId);
 
  public:
