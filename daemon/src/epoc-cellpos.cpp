@@ -4,6 +4,10 @@ References:
 
 http://www.forum.nokia.com/document/Cpp_Developers_Library/GUID-759FBC7F-5384-4487-8457-A8D4B76F6AA6/html/Location_Acquisition_API4.html
 
+To-do:
+
+As an optimization, we might (before trying to get a fresh satellite position fix) first try to get something from the cache, say no more than a one minute old reading. RPositioner does support this with the GetLastKnownPosition method, which is also asynchronous. Our positioner then would need to be able to have two different kinds of (non-simultaneous) requests, but that should be an easy addition.
+
 */
 
 #include "epoc-cellpos.hpp"
@@ -70,11 +74,15 @@ CSensor_cellpos::CSensor_cellpos(ac_AppContext* aAppContext) :
 void CSensor_cellpos::ConstructL()
 {
   ReadConfig();
+
+  bb_Blackboard* bb = ac_get_Blackboard(iAppContext);
+  bb_Board* bd = bb_Blackboard_board(bb);
+  iAllowAssisted = bd->netpos_allowed;
+
   iRetryAo = CRetryAo::NewL(*this, 4, 5); // 4 tries, 5 secs
   iModuleAo = CPosModuleStatAo::NewL(*this);
-  iCellChangeHandle.Register(ac_get_Blackboard(iAppContext),
-			     bb_dt_cell_id,
-			     this);
+  iCellChangeHandle.Register(bb, bb_dt_cell_id, this);
+  iNetposChangeHandle.Register(bb, bb_dt_netpos_allowed, this);
 }
 
 CSensor_cellpos::~CSensor_cellpos()
@@ -88,7 +96,7 @@ void CSensor_cellpos::Stop()
 {
   iRetryAo->Cancel();
   iModuleAo->Cancel();
-  DELETE_Z(iPositioner);
+  DELETE_Z(iSatPositioner);
   iState = EInactive;
 }
 
@@ -99,17 +107,7 @@ void CSensor_cellpos::StartL()
 
     iModuleId = KPositionNullModuleId;
 
-    TPositionModuleId bestId = iModuleAo->ChooseBestPositionerL();
-
-    if (bestId != KPositionNullModuleId) {
-      TRAPD(errCode, CreateSpecifiedPositionerL(bestId));
-      if (errCode) {
-	er_log_symbian(0, errCode, "WARNING: failed to create positioner");
-      }
-    }
-
-    // Observe changes in module status.
-    iModuleAo->MakeRequest();
+    PosModChangeL();
 
     iState = EActive;
   }
@@ -122,7 +120,7 @@ void CSensor_cellpos::CreateSpecifiedPositionerL(TPositionModuleId bestId)
   iModuleId = bestId;
 
   RPositionServer& server = iModuleAo->PositionServer();
-  iPositioner = CPositioner_gps::NewL(server, *this, 
+  iSatPositioner = CPositioner_gps::NewL(server, *this, 
 				      bestId, 
 				      POSITIONER_SCAN_INTERVAL_SECS,
 				      iSatelliteQueryTimeoutSecs);
@@ -130,11 +128,14 @@ void CSensor_cellpos::CreateSpecifiedPositionerL(TPositionModuleId bestId)
 
 void CSensor_cellpos::PosModChangeL()
 {
-  TPositionModuleId bestId = iModuleAo->ChooseBestPositionerL();
+  TInt modif = 0;
+  if (iAllowAssisted)
+    modif |= CPosModuleStatAo::KAllowAssisted;
+  TPositionModuleId bestId = iModuleAo->ChooseBestPositionerL(modif);
   if (bestId != iModuleId) {
     iRetryAo->Cancel();
     iRetryAo->ResetFailures();
-    DELETE_Z(iPositioner);
+    DELETE_Z(iSatPositioner);
 
     if (bestId != KPositionNullModuleId) {
       TRAPD(errCode, CreateSpecifiedPositionerL(bestId));
@@ -170,8 +171,8 @@ void CSensor_cellpos::RetryTimerExpired(CRetryAo* src, TInt errCode)
     er_log_symbian(er_FATAL, errCode, "cellpos: retry timer error");
     return;
   }
-  assert(iPositioner);
-  iPositioner->MakeRequest();
+  assert(iSatPositioner);
+  iSatPositioner->MakeRequest();
 }
 
 void CSensor_cellpos::BbChangedL(bb::RHandle* self, enum bb_DataType dt,
@@ -179,26 +180,50 @@ void CSensor_cellpos::BbChangedL(bb::RHandle* self, enum bb_DataType dt,
 {
   if (!IsActive()) 
     return; // stopped
-  assert(dt == bb_dt_cell_id);
-  guilogf("cellpos: cell changed");
-  if (!iPositioner) {
-    guilogf("cellpos: no positioner");
-    return; // no positioner
-  }
-  if (iPositioner->IsActive() || iRetryAo->IsActive()) {
-    guilogf("cellpos: already positioning");
-    return; // doing positioning
-  }
-  TTime now;
-  now.UniversalTime();
-  TTime earliestTime(iLastScanTime.Int64());
-  earliestTime += TTimeIntervalSeconds(iMinScanRequestIntervalSecs);
-  if (now <= earliestTime) {
-    guilogf("cellpos: too early");
-    return; // too early
-  }
-  guilogf("cellpos: positioning...");
-  iPositioner->MakeRequest();
+  switch (dt)
+    {
+    case bb_dt_cell_id:
+      {
+	guilogf("cellpos: cell changed");
+	if (!iSatPositioner) {
+	  guilogf("cellpos: no positioner");
+	  return; // no positioner
+	}
+	if (iSatPositioner->IsActive() || iRetryAo->IsActive()) {
+	  guilogf("cellpos: already positioning");
+	  return; // doing positioning
+	}
+	TTime now;
+	now.UniversalTime();
+	TTime earliestTime(iLastScanTime.Int64());
+	earliestTime += TTimeIntervalSeconds(iMinScanRequestIntervalSecs);
+	if (now <= earliestTime) {
+	  guilogf("cellpos: too early");
+	  return; // too early
+	}
+	guilogf("cellpos: positioning...");
+	iSatPositioner->MakeRequest();
+        break;
+      }
+
+    case bb_dt_netpos_allowed:
+      {
+        gboolean value = GPOINTER_TO_INT(data);
+	guilogf("cellpos: %s network access", value ? "allow" : "disallow");
+	if (value != iAllowAssisted) {
+	  iAllowAssisted = value;
+	  PosModChangeL();
+	}
+        break;
+      }
+
+    default:
+      {
+	assert(0);
+        break;
+      }
+    }
+  
 }
 
 // xxx this could be shared with other satellite sensors
@@ -341,14 +366,14 @@ static void LogSatelliteInfoL(LogDb* aLogDb, const char* aSensorName,
 gboolean CSensor_cellpos::PositionerEventL(GError** error)
 {
   assert_error_unset(error);
-  assert(iPositioner);
+  assert(iSatPositioner);
 
   iLastScanTime.UniversalTime();
 
   // See "lbserrors.h" for LBS-specific return codes for
   // NotifyPositionUpdate requests. Note that somewhat unusually there
   // are some positive values as well.
-  TInt errCode = iPositioner->StatusCode();
+  TInt errCode = iSatPositioner->StatusCode();
 
   if (errCode < 0) {
     // Do not yet quite know what sort of errors might be getting, so
@@ -382,7 +407,7 @@ gboolean CSensor_cellpos::PositionerEventL(GError** error)
 		     "cellpos: positioner error, giving up on positioner");
       // We will not reset state further, lest we be asked to switch
       // back to the same module again.
-      DELETE_Z(iPositioner);
+      DELETE_Z(iSatPositioner);
       break;
 
     case KErrArgument:
@@ -424,7 +449,7 @@ gboolean CSensor_cellpos::PositionerEventL(GError** error)
       // then if we try to request it we get nothing? Well, we are
       // only choosing GPS modules, and GPS is based on satellites, so
       // surely there always is satellite info.
-      const TPositionSatelliteInfo& positionInfo = iPositioner->PositionInfo();
+      const TPositionSatelliteInfo& positionInfo = iSatPositioner->PositionInfo();
 
       LogSatelliteInfoL(iLogDb, "cellpos", positionInfo);
       

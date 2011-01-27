@@ -65,11 +65,12 @@ NONSHARABLE_CLASS(CSensor_cellpos) :
 
   // Used for positioning when a suitable positioning module is
   // available. When nothing suitable is available, this is NULL.
-  CPositioner_gps* iPositioner; // owned
+  CPositioner_gps* iSatPositioner; // owned
 
   CRetryAo* iRetryAo; // owned
 
   bb::RHandle iCellChangeHandle;
+  bb::RHandle iNetposChangeHandle;
 
   TTime iLastScanTime;
 
@@ -80,6 +81,8 @@ NONSHARABLE_CLASS(CSensor_cellpos) :
   TState iState;
 
   TPositionModuleId iModuleId; // current one, or KPositionNullModuleId
+
+  TBool iAllowAssisted;
 
   TInt iMinScanRequestIntervalSecs; // config param
   TInt iSatelliteQueryTimeoutSecs; // config param

@@ -100,7 +100,12 @@ static void uploads_allowed_changed(kr_Controller* self)
 
 static void netpos_allowed_update_board(gboolean value)
 {
-  log_db_log_status(ac_global_LogDb, NULL, "CHANGE: network positioning allowed = %s", boolstr_yes(value));
+  log_db_log_status(ac_global_LogDb, NULL, 
+		    "CHANGE: network positioning allowed = %s", 
+		    boolstr_yes(value));
+  bb_Blackboard* bb = ac_global_Blackboard;
+  bb_Board* bd = bb_Blackboard_board(bb);
+  bd->netpos_allowed = value; // mirrored here
   bb_Blackboard_notify(ac_global_Blackboard, bb_dt_netpos_allowed,
 		       GINT_TO_POINTER(value), 0);
 }

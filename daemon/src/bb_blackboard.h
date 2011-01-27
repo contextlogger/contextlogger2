@@ -28,6 +28,7 @@ extern "C" {
   typedef struct {
     gboolean flightmode;
     gboolean uploads_allowed;
+    gboolean netpos_allowed;
   } bb_Board;
 
   bb_Board* bb_Blackboard_board(bb_Blackboard* self);

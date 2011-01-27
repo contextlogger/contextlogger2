@@ -64,7 +64,7 @@ void CPosModuleStatAo::PosModChange()
 // module. Returns KPositionNullModuleId if nothing suitable is found.
 // xxx We may later have this function take some parameter(s) to
 // indicate what kind of a module is "best".
-TPositionModuleId CPosModuleStatAo::ChooseBestPositionerL()
+TPositionModuleId CPosModuleStatAo::ChooseBestPositionerL(TInt aModifiers)
 {
   TUint numModules;
   User::LeaveIfError(iPositionServer.GetNumModules(numModules));
@@ -118,10 +118,17 @@ TPositionModuleId CPosModuleStatAo::ChooseBestPositionerL()
 	  // Avoid the BT device search dialog.
 	  continue;
 	*/
-	score += 0x100;
+	if (aModifiers & KAllowExternal)
+	  score += 0x100;
+	else
+	  continue;
       }
-      if (moduleInfo.TechnologyType() == TPositionModuleInfo::ETechnologyAssisted)
-	score += 0x10;
+      if (moduleInfo.TechnologyType() == TPositionModuleInfo::ETechnologyAssisted) {
+	if (aModifiers & KAllowAssisted)
+	  score += 0x10;
+	else
+	  continue;
+      }
 
       // Given the choice between 'Wi-Fi/Network' and 'Network based'
       // we would like to favor the former. But they both have the
@@ -152,7 +159,7 @@ TPositionModuleId CPosModuleStatAo::ChooseBestPositionerL()
       moduleInfo.GetModuleName(moduleName);
       gchar* nameString = ConvToUtf8CStringL(moduleName);
       dblogg("chose positioning module '%s'", nameString);
-      guilogf("gps: using module '%s'", nameString);
+      guilogf("gps: chose module '%s'", nameString);
       g_free(nameString);
     }
 

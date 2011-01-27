@@ -29,7 +29,11 @@ NONSHARABLE_CLASS(CPosModuleStatAo) :
   // All requests are single-shot, and never made automatically.
   void MakeRequest();
 
-  TPositionModuleId ChooseBestPositionerL();
+  enum { // modifier flags
+    KAllowAssisted = 1,
+    KAllowExternal = 2
+  };
+  TPositionModuleId ChooseBestPositionerL(TInt aModifiers);
 
   RPositionServer& PositionServer()
   {

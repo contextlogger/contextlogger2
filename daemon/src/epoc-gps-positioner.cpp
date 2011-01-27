@@ -35,7 +35,6 @@ void CPositioner_gps::ConstructL()
   User::LeaveIfError(iPositioner.SetUpdateOptions(iUpdateOptions));
 
   dblogg("gps scan interval set to %d secs", iUpdateIntervalSecs);
-  guilogf("gps: interval %d secs", iUpdateIntervalSecs);
 }
 
 CPositioner_gps::~CPositioner_gps()
