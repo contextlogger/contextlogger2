@@ -53,6 +53,8 @@ As an optimization, we might (before trying to get a fresh satellite position fi
 // interval, and indeed anything else does not make much sense.
 #define POSITIONER_SCAN_INTERVAL_SECS (0)
 
+#define POSITIONER_MAX_AGE_SECS (60)
+
 // -------------------------------------------------------------------
 
 CSensor_cellpos* CSensor_cellpos::NewL(ac_AppContext* aAppContext)
@@ -121,9 +123,10 @@ void CSensor_cellpos::CreateSpecifiedPositionerL(TPositionModuleId bestId)
 
   RPositionServer& server = iModuleAo->PositionServer();
   iSatPositioner = CPositioner_gps::NewL(server, *this, 
-				      bestId, 
-				      POSITIONER_SCAN_INTERVAL_SECS,
-				      iSatelliteQueryTimeoutSecs);
+					 bestId, 
+					 POSITIONER_SCAN_INTERVAL_SECS,
+					 iSatelliteQueryTimeoutSecs,
+					 POSITIONER_MAX_AGE_SECS);
 }
 
 void CSensor_cellpos::PosModChangeL()

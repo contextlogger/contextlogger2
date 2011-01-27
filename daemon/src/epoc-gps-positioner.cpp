@@ -12,7 +12,7 @@ _LIT_W(KRequestor, COMPONENT_NAME_W);
 
 CTOR_IMPL_CPositioner_gps;
 
-void CPositioner_gps::ConstructL()
+void CPositioner_gps::ConstructL(TInt aUpdateIntervalSecs, TInt aUpdateTimeoutSecs, TInt aMaxAgeSecs)
 {
   LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(iPositioner, iPositioner.Open(iPositionServer, iModuleId));
   User::LeaveIfError(iPositioner.SetRequestor(CRequestor::ERequestorService,
@@ -21,11 +21,14 @@ void CPositioner_gps::ConstructL()
   
   iUpdateOptions.SetAcceptPartialUpdates(EFalse);
 
-  TInt64 usecs = iUpdateIntervalSecs * 1000000LL;
+  TInt64 usecs = aUpdateIntervalSecs * 1000000LL;
   iUpdateOptions.SetUpdateInterval(TTimeIntervalMicroSeconds(usecs));
 
-  usecs = iUpdateTimeoutSecs * 1000000LL;
+  usecs = aUpdateTimeoutSecs * 1000000LL;
   iUpdateOptions.SetUpdateTimeOut(TTimeIntervalMicroSeconds(usecs));
+
+  usecs = aMaxAgeSecs * 1000000LL;
+  iUpdateOptions.SetMaxUpdateAge(TTimeIntervalMicroSeconds(usecs));
 
   /*
     If you set this to a non-zero value, expect error completions for
@@ -34,7 +37,8 @@ void CPositioner_gps::ConstructL()
   */
   User::LeaveIfError(iPositioner.SetUpdateOptions(iUpdateOptions));
 
-  dblogg("gps scan interval set to %d secs", iUpdateIntervalSecs);
+  dblogg("positioner params interval=%d, timeout=%d, age=%d", 
+	 aUpdateIntervalSecs, aUpdateTimeoutSecs, aMaxAgeSecs);
 }
 
 CPositioner_gps::~CPositioner_gps()

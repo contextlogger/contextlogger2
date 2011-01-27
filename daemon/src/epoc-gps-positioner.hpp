@@ -15,38 +15,41 @@
 #include <glib.h>
 
 /***koog 
-(require codegen/symbian-cxx)
+(require racket/class)
+(require codegen/symbian-ctor)
 
-(ctor-defines/spec
- "CPositioner_gps"
- "RPositionServer& aPositionServer, MObserver_gps& aObserver, TPositionModuleId aModuleId, TInt aUpdateIntervalSecs, TInt aUpdateTimeoutSecs"
- "CActiveRunG(EPriorityStandard), iPositionServer(aPositionServer), iObserver(aObserver), iModuleId(aModuleId), iUpdateIntervalSecs(aUpdateIntervalSecs), iUpdateTimeoutSecs(aUpdateTimeoutSecs)"
- "CActiveScheduler::Add(this);"
- #t)
+(ctor-defines (new 
+  (class ctor%
+    (super-new)
+    (define/override (class-name) "CPositioner_gps")
+    (define/override (args/string) "RPositionServer& aPositionServer, MObserver_gps& aObserver, TPositionModuleId aModuleId, TInt aUpdateIntervalSecs/constructl, TInt aUpdateTimeoutSecs/constructl, TInt aMaxAgeSecs/constructl")
+    (define/override (init-expr) "CActiveRunG(EPriorityStandard), iPositionServer(aPositionServer), iObserver(aObserver), iModuleId(aModuleId)")
+    (define/override (ctor-code) "CActiveScheduler::Add(this);")
+   )))
  ***/
 #define CTOR_DECL_CPositioner_gps  \
-public: static CPositioner_gps* NewLC(RPositionServer& aPositionServer, MObserver_gps& aObserver, TPositionModuleId aModuleId, TInt aUpdateIntervalSecs, TInt aUpdateTimeoutSecs); \
-public: static CPositioner_gps* NewL(RPositionServer& aPositionServer, MObserver_gps& aObserver, TPositionModuleId aModuleId, TInt aUpdateIntervalSecs, TInt aUpdateTimeoutSecs); \
-private: CPositioner_gps(RPositionServer& aPositionServer, MObserver_gps& aObserver, TPositionModuleId aModuleId, TInt aUpdateIntervalSecs, TInt aUpdateTimeoutSecs); \
-private: void ConstructL();
+public: static CPositioner_gps* NewLC(RPositionServer& aPositionServer, MObserver_gps& aObserver, TPositionModuleId aModuleId, TInt aUpdateIntervalSecs, TInt aUpdateTimeoutSecs, TInt aMaxAgeSecs); \
+public: static CPositioner_gps* NewL(RPositionServer& aPositionServer, MObserver_gps& aObserver, TPositionModuleId aModuleId, TInt aUpdateIntervalSecs, TInt aUpdateTimeoutSecs, TInt aMaxAgeSecs); \
+private: CPositioner_gps(RPositionServer& aPositionServer, MObserver_gps& aObserver, TPositionModuleId aModuleId); \
+private: void ConstructL(TInt aUpdateIntervalSecs, TInt aUpdateTimeoutSecs, TInt aMaxAgeSecs);
 
 #define CTOR_IMPL_CPositioner_gps  \
-CPositioner_gps* CPositioner_gps::NewLC(RPositionServer& aPositionServer, MObserver_gps& aObserver, TPositionModuleId aModuleId, TInt aUpdateIntervalSecs, TInt aUpdateTimeoutSecs) \
+CPositioner_gps* CPositioner_gps::NewLC(RPositionServer& aPositionServer, MObserver_gps& aObserver, TPositionModuleId aModuleId, TInt aUpdateIntervalSecs, TInt aUpdateTimeoutSecs, TInt aMaxAgeSecs) \
 { \
-  CPositioner_gps* obj = new (ELeave) CPositioner_gps(aPositionServer, aObserver, aModuleId, aUpdateIntervalSecs, aUpdateTimeoutSecs); \
+  CPositioner_gps* obj = new (ELeave) CPositioner_gps(aPositionServer, aObserver, aModuleId); \
   CleanupStack::PushL(obj); \
-  obj->ConstructL(); \
+  obj->ConstructL(aUpdateIntervalSecs, aUpdateTimeoutSecs, aMaxAgeSecs); \
   return obj; \
 } \
  \
-CPositioner_gps* CPositioner_gps::NewL(RPositionServer& aPositionServer, MObserver_gps& aObserver, TPositionModuleId aModuleId, TInt aUpdateIntervalSecs, TInt aUpdateTimeoutSecs) \
+CPositioner_gps* CPositioner_gps::NewL(RPositionServer& aPositionServer, MObserver_gps& aObserver, TPositionModuleId aModuleId, TInt aUpdateIntervalSecs, TInt aUpdateTimeoutSecs, TInt aMaxAgeSecs) \
 { \
-  CPositioner_gps* obj = CPositioner_gps::NewLC(aPositionServer, aObserver, aModuleId, aUpdateIntervalSecs, aUpdateTimeoutSecs); \
+  CPositioner_gps* obj = CPositioner_gps::NewLC(aPositionServer, aObserver, aModuleId, aUpdateIntervalSecs, aUpdateTimeoutSecs, aMaxAgeSecs); \
   CleanupStack::Pop(obj); \
   return obj; \
 } \
  \
-CPositioner_gps::CPositioner_gps(RPositionServer& aPositionServer, MObserver_gps& aObserver, TPositionModuleId aModuleId, TInt aUpdateIntervalSecs, TInt aUpdateTimeoutSecs) : CActiveRunG(EPriorityStandard), iPositionServer(aPositionServer), iObserver(aObserver), iModuleId(aModuleId), iUpdateIntervalSecs(aUpdateIntervalSecs), iUpdateTimeoutSecs(aUpdateTimeoutSecs) \
+CPositioner_gps::CPositioner_gps(RPositionServer& aPositionServer, MObserver_gps& aObserver, TPositionModuleId aModuleId) : CActiveRunG(EPriorityStandard), iPositionServer(aPositionServer), iObserver(aObserver), iModuleId(aModuleId) \
 {CActiveScheduler::Add(this);}
 /***end***/
 
@@ -91,9 +94,6 @@ NONSHARABLE_CLASS(CPositioner_gps) :
 
   // Supertype of both TPositionCourseInfo and TPositionInfo.
   TPositionSatelliteInfo iPositionInfo;
-
-  TInt iUpdateIntervalSecs;
-  TInt iUpdateTimeoutSecs;
 };
 
 #endif /* __epoc_gps_positioner_hpp__ */
