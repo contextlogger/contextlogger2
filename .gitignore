@@ -11,6 +11,7 @@
 *~
 .depend
 .sake_op
+.svn/
 _darcs/
 build/
 dist/
