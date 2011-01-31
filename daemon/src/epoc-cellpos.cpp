@@ -122,7 +122,7 @@ void CSensor_cellpos::CreateSpecifiedPositionerL(TPositionModuleId bestId)
 					 bestId, 
 					 POSITIONER_SCAN_INTERVAL_SECS,
 					 iSatelliteQueryTimeoutSecs,
-					 POSITIONER_MAX_AGE_SECS);
+					 iDataMaxAgeSecs);
 }
 
 void CSensor_cellpos::PosModChangeL()
@@ -479,11 +479,14 @@ void CSensor_cellpos::Reconfigure(const gchar* name, const gchar* value)
 void CSensor_cellpos::ReadConfig()
 {
   iMinScanRequestIntervalSecs =
-  force_get_ConfigDb_int("sensor.cellpos.frequency", 
-			 MIN_SCAN_REQUEST_INTERVAL_SECS);
+    force_get_ConfigDb_int("sensor.cellpos.frequency", 
+			   MIN_SCAN_REQUEST_INTERVAL_SECS);
   iSatelliteQueryTimeoutSecs = 
-  force_get_ConfigDb_int("sensor.cellpos.timeout", 
-			 SATELLITE_QUERY_TIMEOUT_SECS);
+    force_get_ConfigDb_int("sensor.cellpos.timeout", 
+			   SATELLITE_QUERY_TIMEOUT_SECS);
+  iDataMaxAgeSecs = 
+    force_get_ConfigDb_int("sensor.cellpos.ttl", 
+			   POSITIONER_MAX_AGE_SECS);
 }
 
 /**

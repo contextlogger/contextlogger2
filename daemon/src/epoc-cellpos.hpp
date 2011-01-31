@@ -86,6 +86,7 @@ NONSHARABLE_CLASS(CSensor_cellpos) :
 
   TInt iMinScanRequestIntervalSecs; // config param
   TInt iSatelliteQueryTimeoutSecs; // config param
+  TInt iDataMaxAgeSecs; // config param
 
  private:
   void ReadConfig();
