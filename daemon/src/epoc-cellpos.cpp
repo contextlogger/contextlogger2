@@ -392,6 +392,12 @@ gboolean CSensor_cellpos::PositionerEventL(GError** error)
       guilogf("cellpos: GPS timeout");
       break;
 
+    case KErrServerBusy:
+      // If the server is busy, let us then just wait for the next
+      // cell ID change to avoid burdening it further.
+      guilogf("cellpos: positioner busy");
+      break;
+
       guilogf("cellpos: positioning error");
 
       // Used positioning module became unavailable. (Before we had
@@ -412,6 +418,14 @@ gboolean CSensor_cellpos::PositionerEventL(GError** error)
     case KErrArgument:
     case KErrPositionBufferOverflow:
       er_log_symbian(er_FATAL, errCode, "cellpos: unexpected positioning error");
+      break;
+
+    case KErrBadHandle: // positioning service session dead
+      // We should really recreate session, but why was it close in
+      // the first place, something not right here.
+      er_log_symbian(0, errCode, 
+		     "INACTIVATE: cellpos: position server session died");
+      Stop();
       break;
 
     default:
