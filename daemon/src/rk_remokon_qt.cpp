@@ -143,7 +143,6 @@ _rk_Remokon::_rk_Remokon() :
 {
   this->params.server = ac_STATIC_GET(remokon_host);
   this->params.port = ac_STATIC_GET(remokon_port);
-  this->params.username = ac_STATIC_GET(username);
   this->params.password = ac_STATIC_GET(remokon_password);
   this->params.jid = ac_STATIC_GET(jid);
 #if defined(__SYMBIAN32__)
@@ -151,16 +150,15 @@ _rk_Remokon::_rk_Remokon() :
 #endif /* __SYMBIAN32__ */
 
   this->iHaveConfig = ((this->params.server != NULL) &&
-		       (this->params.username != NULL) &&
 		       (this->params.password != NULL) &&
 		       (this->params.jid != NULL));
 
   this->iAutostartEnabled = (force_get_ConfigDb_bool("remokon.autostart", TRUE));
 
   if (this->iHaveConfig) {
-    logg("Jabber config: server %s:%d, username '%s', jid '%s', auto %d",
+    logg("Jabber config: server %s:%d, jid '%s', auto %d",
 	 this->params.server, this->params.port,
-	 this->params.username, this->params.jid,
+	 this->params.jid,
 	 this->iAutostartEnabled);
   }
 
