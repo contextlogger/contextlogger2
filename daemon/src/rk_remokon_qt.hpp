@@ -6,7 +6,6 @@
 #include "QXmppClient.h"
 
 #include <QObject>
-#include <QTimer>
 
 // We must use a QObject derived remote control state object so as to
 // allow us to implement slots for observing Qt signals.
@@ -48,12 +47,6 @@ class _rk_Remokon :
   // Remokon automatically at startup.
   bool iAutostartEnabled;
 
-  // Number of consecutive failed connection attempts.
-  int iNumFailures;
-
-  // A retry timer.
-  QTimer iTimer; //xxx we may only need reconnectionManager() in client object
-
   // Here we have only one Lua instance per session, making for a
   // proper REPL. We might consider providing a way to reset the VM.
   lua_State* L;
@@ -64,10 +57,11 @@ class _rk_Remokon :
 
   ~_rk_Remokon();
 
-  void send(const QString& toJid, const QString& msgText);
+  void start();
 
-private slots:
-  void handleTimeout();
+  void stop();
+
+  void send(const QString& toJid, const QString& msgText);
 
 };
 

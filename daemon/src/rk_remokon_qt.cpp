@@ -10,25 +10,6 @@
 #include <stdlib.h>
 
 #if 0
-static void handleTimerError(rk_Remokon* self, GError* timerError)
-{
-  logt("timer error in Remokon");
-  gx_dblog_fatal_error_free(ac_global_LogDb, timerError);
-}
-
-static void setRetryTimer(rk_Remokon* self)
-{
-  (self->iNumFailures)++;
-
-  int secs = 2 * 60 * self->iNumFailures + (rand() % 60);
-  logg("retrying Jabber connection in %d secs", secs);
-
-  GError* localError = NULL;
-  if (!ut_Timer_set_after(self->iTimer, secs, &localError)) {
-    handleTimerError(self, localError);
-  }
-}
-
 static void stopSession(rk_Remokon* self)
 {
   if (self->iSession) rk_JabberSession_stop(self->iSession);
@@ -40,18 +21,6 @@ static void startSessionOrRetry(rk_Remokon* self)
   if (!rk_JabberSession_start(self->iSession, &localError)) {
     gx_txtlog_error_free(localError);
     setRetryTimer(self);
-  }
-}
-
-// ut_Timer callback
-static void cb_timerExpired(void* userdata, GError* timerError)
-{
-  rk_Remokon* self = (rk_Remokon*)userdata;
-  if (timerError) {
-    handleTimerError(self, timerError);
-  } else {
-    logt("retrying Jabber connection establishment");
-    startSessionOrRetry(self);
   }
 }
 
@@ -194,10 +163,6 @@ _rk_Remokon::_rk_Remokon() :
 	 this->params.username, this->params.jid,
 	 this->iAutostartEnabled);
   }
-
-  // Use isActive(), stop(), and start(msec).
-  iTimer.setSingleShot(true);
-  connect(&iTimer, SIGNAL(timeout()), this, SLOT(handleTimeout()));
 }
 
 _rk_Remokon::~_rk_Remokon()
@@ -209,11 +174,6 @@ _rk_Remokon::~_rk_Remokon()
 void _rk_Remokon::send(const QString& toJid, const QString& msgText)
 {
   //xxx
-}
-
-void _rk_Remokon::handleTimeout()
-{
-  //xxx retry now
 }
 
 // --------------------------------------------------
@@ -284,7 +244,6 @@ extern "C"
 void rk_Remokon_stop(rk_Remokon* self)
 {
   /*
-  if (self->iTimer) ut_Timer_cancel(self->iTimer);
   stopSession(self);
   */
   //xxx
@@ -316,8 +275,7 @@ extern "C"
 gboolean rk_Remokon_is_started(rk_Remokon* self)
 {
   /*  xxx how to deal with reconnection manager
-  return (rk_JabberSession_is_started(self->iSession) ||
-	  ut_Timer_is_active(self->iTimer));
+  return (rk_JabberSession_is_started(self->iSession));
   */
   return FALSE; //xxx
 }
