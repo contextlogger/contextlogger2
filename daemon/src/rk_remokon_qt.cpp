@@ -5,6 +5,8 @@
 #include "cf_query.h" // get_ConfigDb_int
 #include "er_errors.h"
 
+#include "QXmppLogger.h"
+
 #include <stdlib.h>
 
 #if 0
@@ -30,7 +32,6 @@ static void setRetryTimer(rk_Remokon* self)
 static void stopSession(rk_Remokon* self)
 {
   if (self->iSession) rk_JabberSession_stop(self->iSession);
-  self->iIsConnected = FALSE;
 }
 
 static void startSessionOrRetry(rk_Remokon* self)
@@ -59,7 +60,6 @@ static int cb_sessionEstablished(void* userdata)
 {
   rk_Remokon* self = (rk_Remokon*)userdata;
   self->iNumFailures = 0;
-  self->iIsConnected = TRUE;
   logt("Jabber connection established");
   return rk_PROCEED;
 }
@@ -170,7 +170,7 @@ static lua_State* new_my_lua()
 }
 
 _rk_Remokon::_rk_Remokon() :
-  iSession(NULL), L(new_my_lua())
+  L(new_my_lua())
 {
   this->params.server = ac_STATIC_GET(remokon_host);
   this->params.port = ac_STATIC_GET(remokon_port);
@@ -198,15 +198,10 @@ _rk_Remokon::_rk_Remokon() :
   // Use isActive(), stop(), and start(msec).
   iTimer.setSingleShot(true);
   connect(&iTimer, SIGNAL(timeout()), this, SLOT(handleTimeout()));
-
-  /*
-  this->iSession = rk_JabberSession_new(&this->params, error);
-  */ //xxx
 }
 
 _rk_Remokon::~_rk_Remokon()
 {
-  delete iSession;
   if (L) 
     lua_close(L);
 }
@@ -238,6 +233,10 @@ void _rk_Remokon::handleTimeout()
 extern "C"
 rk_Remokon* rk_Remokon_new(GError** error)
 {
+#if !defined(__SYMBIAN32__) && !defined(NDEBUG)
+  QXmppLogger::getLogger()->setLoggingType(QXmppLogger::StdoutLogging);
+#endif
+
   rk_Remokon* self = NULL;
   GTRAP(NULL, self = q_check_ptr(new rk_Remokon));
   return self;
@@ -301,7 +300,7 @@ gboolean rk_Remokon_reconfigure(rk_Remokon* self,
     self->iAutostartEnabled = force_lua_eval_bool(value, TRUE);
   }
 
-#if 0 && defined(__SYMBIAN32__) ///xxx
+#if defined(__SYMBIAN32__)
   else if (strcmp(key, "iap") == 0) {
     // It should be safe to just set this value. A change won't
     // take effect before a reconnect, but this is okay, a Remokon
@@ -316,7 +315,7 @@ gboolean rk_Remokon_reconfigure(rk_Remokon* self,
 extern "C"
 gboolean rk_Remokon_is_started(rk_Remokon* self)
 {
-  /*
+  /*  xxx how to deal with reconnection manager
   return (rk_JabberSession_is_started(self->iSession) ||
 	  ut_Timer_is_active(self->iTimer));
   */
@@ -326,7 +325,7 @@ gboolean rk_Remokon_is_started(rk_Remokon* self)
 extern "C"
 gboolean rk_Remokon_is_connected(rk_Remokon* self)
 {
-  return self->iIsConnected;
+  return self && self->iSession.isConnected();
 }
 
 extern "C"

@@ -17,11 +17,6 @@ class _rk_Remokon :
 
   private:
 
-  // We should always have a Jabber session object after having been
-  // initialized. The object creation itself requires nothing but
-  // memory. Getting the connection is harder.
-  QXmppClient* iSession;
-
   // These come mostly from the configuration file. There will be no
   // default values, and hence Remokon will be automatically disabled
   // when no configuration setting is available. We require that
@@ -39,6 +34,11 @@ class _rk_Remokon :
   
   public:
 
+  // We should always have a Jabber session object after having been
+  // initialized. The object creation itself requires nothing but
+  // memory. Getting the connection is harder.
+  QXmppClient iSession;
+
   // This indicates whether we have at least some kind of a value for
   // all the required configuration parameters. Leaving any of these
   // out is a simple way to disable the remote control facility.
@@ -48,17 +48,11 @@ class _rk_Remokon :
   // Remokon automatically at startup.
   bool iAutostartEnabled;
 
-  // We use this flag to keep track of whether "iSession" has a
-  // connection. It does not itself keep track of that, as it is too
-  // low-level for such things. It is us who must decide whether to
-  // request a disconnect on a write error, say.
-  bool iIsConnected;
-
   // Number of consecutive failed connection attempts.
   int iNumFailures;
 
   // A retry timer.
-  QTimer iTimer;
+  QTimer iTimer; //xxx we may only need reconnectionManager() in client object
 
   // Here we have only one Lua instance per session, making for a
   // proper REPL. We might consider providing a way to reset the VM.
