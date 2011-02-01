@@ -30,10 +30,13 @@ SOURCES += error_list.c gx_maybe_string.c gxerror.c logging-time.c platform_erro
 SOURCES += assertions_cxx.cpp logging.cpp utilities_cxx.cpp
 SOURCES += moment_parser.c time_utils.c
 FEATURE_REMOKON {
+  include(../../qxmpp/qxmpp.pri)
+  INCLUDEPATH += $$QXMPP_INCLUDE_DIR
+  LIBS += $$QXMPP_LIBS
+  PRE_TARGETDEPS += $$QXMPP_LIBRARY_FILE
+
   SOURCES += rk_remokon_qt.cpp
   HEADERS += rk_remokon_qt.hpp
-  INCLUDEPATH += ../../qxmpp/src
-  # xxx how to link to static library?
 }
 WITH_QT {
   FEATURE_UPLOADER {

@@ -4,51 +4,10 @@
 #include "ac_app_context.h"
 #include "cf_query.h" // get_ConfigDb_int
 #include "er_errors.h"
-#include "lua_cl2.h"
-#include "ut_timer.h"
 
 #include <stdlib.h>
 
-struct _rk_Remokon {
-  // These come mostly from the configuration file. There will be no
-  // default values, and hence Remokon will be automatically disabled
-  // when no configuration setting is available. We require that
-  // "server", "password", "username", and "jid" are all non-NULL. The
-  // dynamically settable "iap_id" will be given some unlikely to work
-  // default value.
-  rk_JabberParams params;
-
-  // This indicates whether we have at least some kind of a value for
-  // all the required configuration parameters. Leaving any of these
-  // out is a simple way to disable the remote control facility.
-  gboolean have_config;
-
-  // This is just a hint for the controller as to whether to start
-  // Remokon automatically at startup.
-  gboolean autostart_enabled;
-
-  // We should always have a Jabber session object after having been
-  // initialized. The object creation itself requires nothing but
-  // memory. Getting the connection is harder.
-  rk_JabberSession* session;
-
-  // We use this flag to keep track of whether "session" has a
-  // connection. It does not itself keep track of that, as it is too
-  // low-level for such things. It is us who must decide whether to
-  // request a disconnect on a write error, say.
-  gboolean is_connected;
-
-  // Number of consecutive failed connection attempts.
-  int num_failures;
-
-  // A retry timer.
-  ut_Timer* timer;
-
-  // Here we have only one Lua instance per session, making for a
-  // proper REPL. We might consider providing a way to reset the VM.
-  lua_State* L;
-};
-
+#if 0
 static void handleTimerError(rk_Remokon* self, GError* timerError)
 {
   logt("timer error in Remokon");
@@ -195,6 +154,78 @@ static int cb_gotMsg(void* userdata, const char* fromJid, const char* luaStr)
   if (pop) lua_pop(L, pop);
   return rk_PROCEED;
 }
+#endif
+
+// --------------------------------------------------
+// _rk_Remokon
+// --------------------------------------------------
+
+_rk_Remokon::_rk_Remokon() :
+  L(NULL)
+{
+#if 0
+  this->params.userdata = this;
+
+  this->params.observer.sessionEstablished = cb_sessionEstablished;
+  this->params.observer.gotEof = cb_gotEof;
+  this->params.observer.severeError = cb_severeError;
+  this->params.observer.fatalError = cb_fatalError;
+  this->params.observer.gotMsg = cb_gotMsg;
+  // not defining this->params.observer.messageSent as have no flow control
+
+  this->params.server = ac_STATIC_GET(remokon_host);
+  this->params.port = ac_STATIC_GET(remokon_port);
+  this->params.username = ac_STATIC_GET(username);
+  this->params.password = ac_STATIC_GET(remokon_password);
+  this->params.jid = ac_STATIC_GET(jid);
+#if defined(__SYMBIAN32__)
+  this->params.iap_id = get_config_iap_id();
+#endif /* __SYMBIAN32__ */
+
+  this->iHaveConfig = ((this->params.server != NULL) &&
+		       (this->params.username != NULL) &&
+		       (this->params.password != NULL) &&
+		       (this->params.jid != NULL));
+
+  this->autostart_enabled = (force_get_ConfigDb_bool("remokon.autostart", TRUE));
+
+  if (this->iHaveConfig) {
+    logg("Jabber config: server %s:%d, username '%s', jid '%s', auto %d",
+	 this->params.server, this->params.port,
+	 this->params.username, this->params.jid,
+	 this->autostart_enabled);
+  }
+#endif
+
+  this->L = cl_lua_new_libs();
+  if (!this->L) {
+    throw std::bad_alloc();
+  }
+
+  /*
+  this->session = rk_JabberSession_new(&this->params, error);
+  if (!this->session) {
+    rk_Remokon_destroy(this);
+    return NULL;
+  }
+
+  this->timer = ut_Timer_new(this, cb_timerExpired, error);
+  if (!this->timer) {
+    rk_Remokon_destroy(this);
+    return NULL;
+  }
+  */ //xxx
+}
+
+_rk_Remokon::~_rk_Remokon()
+{
+  /*
+    ut_Timer_destroy(self->timer);
+    rk_JabberSession_destroy(self->session);
+  */ //xxx
+  if (L) 
+    lua_close(L);
+}
 
 // --------------------------------------------------
 // public API
@@ -203,60 +234,12 @@ static int cb_gotMsg(void* userdata, const char* fromJid, const char* luaStr)
 extern "C"
 rk_Remokon* rk_Remokon_new(GError** error)
 {
-  rk_Remokon* self = g_try_new0(rk_Remokon, 1);
-  if (G_UNLIKELY(!self)) {
-    if (error) *error = gx_error_no_memory;
-    return NULL;
-  }
-
-  self->params.userdata = self;
-
-  self->params.observer.sessionEstablished = cb_sessionEstablished;
-  self->params.observer.gotEof = cb_gotEof;
-  self->params.observer.severeError = cb_severeError;
-  self->params.observer.fatalError = cb_fatalError;
-  self->params.observer.gotMsg = cb_gotMsg;
-  // not defining self->params.observer.messageSent as have no flow control
-
-  self->params.server = ac_STATIC_GET(remokon_host);
-  self->params.port = ac_STATIC_GET(remokon_port);
-  self->params.username = ac_STATIC_GET(username);
-  self->params.password = ac_STATIC_GET(remokon_password);
-  self->params.jid = ac_STATIC_GET(jid);
-#if defined(__SYMBIAN32__)
-  self->params.iap_id = get_config_iap_id();
-#endif /* __SYMBIAN32__ */
-
-  self->have_config = ((self->params.server != NULL) &&
-		       (self->params.username != NULL) &&
-		       (self->params.password != NULL) &&
-		       (self->params.jid != NULL));
-
-  self->autostart_enabled = (force_get_ConfigDb_bool("remokon.autostart", TRUE));
-
-  if (self->have_config) {
-    logg("Jabber config: server %s:%d, username '%s', jid '%s', auto %d",
-	 self->params.server, self->params.port,
-	 self->params.username, self->params.jid,
-	 self->autostart_enabled);
-  }
-
-  self->L = cl_lua_new_libs();
-  if (!self->L) {
-    rk_Remokon_destroy(self);
-    if (error) *error = gx_error_no_memory;
-    return NULL;
-  }
-
-  self->session = rk_JabberSession_new(&self->params, error);
-  if (!self->session) {
-    rk_Remokon_destroy(self);
-    return NULL;
-  }
-
-  self->timer = ut_Timer_new(self, cb_timerExpired, error);
-  if (!self->timer) {
-    rk_Remokon_destroy(self);
+  rk_Remokon* self = NULL;
+  try {
+    self = q_check_ptr(new rk_Remokon);
+  } catch (const std::exception &ex) {
+    if (error)
+      *error = gx_error_new(domain_qt, -1, "Remokon init failure: %s", ex.what());
     return NULL;
   }
 
@@ -267,29 +250,23 @@ rk_Remokon* rk_Remokon_new(GError** error)
 extern "C"
 void rk_Remokon_destroy(rk_Remokon* self)
 {
-  if (self) {
-    rk_Remokon_stop(self);
-    ut_Timer_destroy(self->timer);
-    rk_JabberSession_destroy(self->session);
-    if (self->L) lua_close(self->L);
-    // No params to free, all owned by config object.
-    g_free(self);
-  }
+  delete self;
 }
 
 extern "C"
 gboolean rk_Remokon_is_autostart_enabled(rk_Remokon* self)
 {
   // Former value is constant, the latter may vary.
-  return (self->have_config && self->autostart_enabled);
+  return (self->iHaveConfig && self->autostart_enabled);
 }
 
 // Does nothing if already started.
 extern "C"
 gboolean rk_Remokon_start(rk_Remokon* self, GError** error)
 {
+  /*
   if (!rk_Remokon_is_started(self)) {
-    if (!self->have_config) {
+    if (!self->iHaveConfig) {
       // No point in retrying.
       if (error)
 	*error = gx_error_new(domain_cl2app, code_no_configuration,
@@ -301,6 +278,7 @@ gboolean rk_Remokon_start(rk_Remokon* self, GError** error)
 
     startSessionOrRetry(self);
   }
+  */ //xxx
   return TRUE;
 }
 
@@ -309,8 +287,11 @@ gboolean rk_Remokon_start(rk_Remokon* self, GError** error)
 extern "C"
 void rk_Remokon_stop(rk_Remokon* self)
 {
+  /*
   if (self->timer) ut_Timer_cancel(self->timer);
   stopSession(self);
+  */
+  //xxx
 }
 
 extern "C"
@@ -323,7 +304,7 @@ gboolean rk_Remokon_reconfigure(rk_Remokon* self,
     self->autostart_enabled = force_lua_eval_bool(value, TRUE);
   }
 
-#if defined(__SYMBIAN32__)
+#if 0 && defined(__SYMBIAN32__) ///xxx
   else if (strcmp(key, "iap") == 0) {
     // It should be safe to just set this value. A change won't
     // take effect before a reconnect, but this is okay, a Remokon
@@ -338,8 +319,11 @@ gboolean rk_Remokon_reconfigure(rk_Remokon* self,
 extern "C"
 gboolean rk_Remokon_is_started(rk_Remokon* self)
 {
+  /*
   return (rk_JabberSession_is_started(self->session) ||
 	  ut_Timer_is_active(self->timer));
+  */
+  return FALSE; //xxx
 }
   
 extern "C"
@@ -356,11 +340,13 @@ gboolean rk_Remokon_send(rk_Remokon* self,
 {
   if (!rk_Remokon_is_connected(self)) {
     if (error)
-      *error = gx_error_new(domain_cl2app, code_not_connected, "no Jabber connection");
+      *error = gx_error_new(domain_cl2app, code_not_connected, 
+			    "no Jabber connection");
     return FALSE;
   }
 
-  return rk_JabberSession_send(self->session, toJid, msgText, error);
+  //return rk_JabberSession_send(self->session, toJid, msgText, error);
+  return FALSE; //xxx
 }
 
 /**
