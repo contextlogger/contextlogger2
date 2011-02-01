@@ -16,27 +16,27 @@ static void handleTimerError(rk_Remokon* self, GError* timerError)
 
 static void setRetryTimer(rk_Remokon* self)
 {
-  (self->num_failures)++;
+  (self->iNumFailures)++;
 
-  int secs = 2 * 60 * self->num_failures + (rand() % 60);
+  int secs = 2 * 60 * self->iNumFailures + (rand() % 60);
   logg("retrying Jabber connection in %d secs", secs);
 
   GError* localError = NULL;
-  if (!ut_Timer_set_after(self->timer, secs, &localError)) {
+  if (!ut_Timer_set_after(self->iTimer, secs, &localError)) {
     handleTimerError(self, localError);
   }
 }
 
 static void stopSession(rk_Remokon* self)
 {
-  if (self->session) rk_JabberSession_stop(self->session);
-  self->is_connected = FALSE;
+  if (self->iSession) rk_JabberSession_stop(self->iSession);
+  self->iIsConnected = FALSE;
 }
 
 static void startSessionOrRetry(rk_Remokon* self)
 {
   GError* localError = NULL;
-  if (!rk_JabberSession_start(self->session, &localError)) {
+  if (!rk_JabberSession_start(self->iSession, &localError)) {
     gx_txtlog_error_free(localError);
     setRetryTimer(self);
   }
@@ -58,8 +58,8 @@ static void cb_timerExpired(void* userdata, GError* timerError)
 static int cb_sessionEstablished(void* userdata)
 {
   rk_Remokon* self = (rk_Remokon*)userdata;
-  self->num_failures = 0;
-  self->is_connected = TRUE;
+  self->iNumFailures = 0;
+  self->iIsConnected = TRUE;
   logt("Jabber connection established");
   return rk_PROCEED;
 }
@@ -141,7 +141,7 @@ static int cb_gotMsg(void* userdata, const char* fromJid, const char* luaStr)
   {
     assert(replyText); 
     GError* localError = NULL;
-    if (!rk_JabberSession_send(self->session,
+    if (!rk_JabberSession_send(self->iSession,
 			       fromJid,
 			       replyText,
 			       &localError)) {
@@ -187,13 +187,13 @@ _rk_Remokon::_rk_Remokon() :
 		       (this->params.password != NULL) &&
 		       (this->params.jid != NULL));
 
-  this->autostart_enabled = (force_get_ConfigDb_bool("remokon.autostart", TRUE));
+  this->iAutostartEnabled = (force_get_ConfigDb_bool("remokon.autostart", TRUE));
 
   if (this->iHaveConfig) {
     logg("Jabber config: server %s:%d, username '%s', jid '%s', auto %d",
 	 this->params.server, this->params.port,
 	 this->params.username, this->params.jid,
-	 this->autostart_enabled);
+	 this->iAutostartEnabled);
   }
 #endif
 
@@ -203,14 +203,14 @@ _rk_Remokon::_rk_Remokon() :
   }
 
   /*
-  this->session = rk_JabberSession_new(&this->params, error);
-  if (!this->session) {
+  this->iSession = rk_JabberSession_new(&this->params, error);
+  if (!this->iSession) {
     rk_Remokon_destroy(this);
     return NULL;
   }
 
-  this->timer = ut_Timer_new(this, cb_timerExpired, error);
-  if (!this->timer) {
+  this->iTimer = ut_Timer_new(this, cb_timerExpired, error);
+  if (!this->iTimer) {
     rk_Remokon_destroy(this);
     return NULL;
   }
@@ -220,29 +220,37 @@ _rk_Remokon::_rk_Remokon() :
 _rk_Remokon::~_rk_Remokon()
 {
   /*
-    ut_Timer_destroy(self->timer);
-    rk_JabberSession_destroy(self->session);
+    ut_Timer_destroy(self->iTimer);
+    rk_JabberSession_destroy(self->iSession);
   */ //xxx
   if (L) 
     lua_close(L);
+}
+
+void _rk_Remokon::send(const QString& toJid, const QString& msgText)
+{
+  //xxx
 }
 
 // --------------------------------------------------
 // public API
 // --------------------------------------------------
 
+#define GTRAP(_ret, _stm) {					\
+    try {							\
+      _stm ;							\
+    } catch (const std::exception &ex) {			\
+      if (error)						\
+	*error = gx_error_new(domain_qt, -1, ex.what());	\
+      return _ret;						\
+    }								\
+  }
+
 extern "C"
 rk_Remokon* rk_Remokon_new(GError** error)
 {
   rk_Remokon* self = NULL;
-  try {
-    self = q_check_ptr(new rk_Remokon);
-  } catch (const std::exception &ex) {
-    if (error)
-      *error = gx_error_new(domain_qt, -1, "Remokon init failure: %s", ex.what());
-    return NULL;
-  }
-
+  GTRAP(NULL, self = q_check_ptr(new rk_Remokon));
   return self;
 }
 
@@ -257,7 +265,7 @@ extern "C"
 gboolean rk_Remokon_is_autostart_enabled(rk_Remokon* self)
 {
   // Former value is constant, the latter may vary.
-  return (self->iHaveConfig && self->autostart_enabled);
+  return (self->iHaveConfig && self->iAutostartEnabled);
 }
 
 // Does nothing if already started.
@@ -274,7 +282,7 @@ gboolean rk_Remokon_start(rk_Remokon* self, GError** error)
       return FALSE;
     }
 
-    self->num_failures = 0;
+    self->iNumFailures = 0;
 
     startSessionOrRetry(self);
   }
@@ -288,7 +296,7 @@ extern "C"
 void rk_Remokon_stop(rk_Remokon* self)
 {
   /*
-  if (self->timer) ut_Timer_cancel(self->timer);
+  if (self->iTimer) ut_Timer_cancel(self->iTimer);
   stopSession(self);
   */
   //xxx
@@ -301,7 +309,7 @@ gboolean rk_Remokon_reconfigure(rk_Remokon* self,
 				GError** error)
 {
   if (strcmp(key, "remokon.autostart")) {
-    self->autostart_enabled = force_lua_eval_bool(value, TRUE);
+    self->iAutostartEnabled = force_lua_eval_bool(value, TRUE);
   }
 
 #if 0 && defined(__SYMBIAN32__) ///xxx
@@ -320,8 +328,8 @@ extern "C"
 gboolean rk_Remokon_is_started(rk_Remokon* self)
 {
   /*
-  return (rk_JabberSession_is_started(self->session) ||
-	  ut_Timer_is_active(self->timer));
+  return (rk_JabberSession_is_started(self->iSession) ||
+	  ut_Timer_is_active(self->iTimer));
   */
   return FALSE; //xxx
 }
@@ -329,7 +337,7 @@ gboolean rk_Remokon_is_started(rk_Remokon* self)
 extern "C"
 gboolean rk_Remokon_is_connected(rk_Remokon* self)
 {
-  return self->is_connected;
+  return self->iIsConnected;
 }
 
 extern "C"
@@ -345,8 +353,9 @@ gboolean rk_Remokon_send(rk_Remokon* self,
     return FALSE;
   }
 
-  //return rk_JabberSession_send(self->session, toJid, msgText, error);
-  return FALSE; //xxx
+  GTRAP(FALSE, self->send(QString(toJid), QString(msgText)));
+
+  return TRUE;
 }
 
 /**
