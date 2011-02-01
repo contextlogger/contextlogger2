@@ -139,7 +139,7 @@ static lua_State* new_my_lua()
 }
 
 _rk_Remokon::_rk_Remokon() :
-  L(new_my_lua())
+  iIsActive(false), L(new_my_lua())
 {
   this->params.server = ac_STATIC_GET(remokon_host);
   this->params.port = ac_STATIC_GET(remokon_port);
@@ -171,6 +171,22 @@ _rk_Remokon::~_rk_Remokon()
     lua_close(L);
 }
 
+void _rk_Remokon::start()
+{
+  /*
+    void connectToServer(const QXmppConfiguration&,
+                         const QXmppPresence& initialPresence = 
+                         QXmppPresence());
+  */ //xxx
+  iIsActive = true;
+}
+
+void _rk_Remokon::stop()
+{
+  iSession.disconnectFromServer();
+  iIsActive = false;
+}
+
 void _rk_Remokon::send(const QString& toJid, const QString& msgText)
 {
   //xxx
@@ -180,12 +196,21 @@ void _rk_Remokon::send(const QString& toJid, const QString& msgText)
 // public API
 // --------------------------------------------------
 
+#define TRAPFATAL(_stm) {					\
+    try {							\
+      _stm ;							\
+    } catch (const std::exception &ex) {			\
+      er_log_none(er_FATAL, "remokon: %s", ex.what());		\
+    }								\
+  }
+
 #define GTRAP(_ret, _stm) {					\
     try {							\
       _stm ;							\
     } catch (const std::exception &ex) {			\
       if (error)						\
-	*error = gx_error_new(domain_qt, -1, ex.what());	\
+	*error = gx_error_new(domain_qt, -1,			\
+			      "remokon: %s", ex.what());	\
       return _ret;						\
     }								\
   }
@@ -220,21 +245,17 @@ gboolean rk_Remokon_is_autostart_enabled(rk_Remokon* self)
 extern "C"
 gboolean rk_Remokon_start(rk_Remokon* self, GError** error)
 {
-  /*
   if (!rk_Remokon_is_started(self)) {
     if (!self->iHaveConfig) {
-      // No point in retrying.
+      // No point in trying to start without proper configuration.
       if (error)
 	*error = gx_error_new(domain_cl2app, code_no_configuration,
 			     "some Jabber config missing");
       return FALSE;
     }
 
-    self->iNumFailures = 0;
-
-    startSessionOrRetry(self);
+    GTRAP(FALSE, self->start());
   }
-  */ //xxx
   return TRUE;
 }
 
@@ -243,10 +264,7 @@ gboolean rk_Remokon_start(rk_Remokon* self, GError** error)
 extern "C"
 void rk_Remokon_stop(rk_Remokon* self)
 {
-  /*
-  stopSession(self);
-  */
-  //xxx
+  TRAPFATAL(self->stop());
 }
 
 extern "C"
@@ -274,10 +292,7 @@ gboolean rk_Remokon_reconfigure(rk_Remokon* self,
 extern "C"
 gboolean rk_Remokon_is_started(rk_Remokon* self)
 {
-  /*  xxx how to deal with reconnection manager
-  return (rk_JabberSession_is_started(self->iSession));
-  */
-  return FALSE; //xxx
+  return self && self->iIsActive;
 }
   
 extern "C"

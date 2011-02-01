@@ -38,6 +38,11 @@ class _rk_Remokon :
   // memory. Getting the connection is harder.
   QXmppClient iSession;
 
+  // Indicates whether iSession has been asked to connect, but not
+  // disconnect. If so, it should be connected or actively trying to
+  // connect.
+  bool iIsActive;
+
   // This indicates whether we have at least some kind of a value for
   // all the required configuration parameters. Leaving any of these
   // out is a simple way to disable the remote control facility.
