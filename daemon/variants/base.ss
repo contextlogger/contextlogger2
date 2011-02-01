@@ -174,9 +174,6 @@ project must implement.
         (and (eq? (platform) 'linux)
              (with-qt.attr))))
 
-  (define/public (upload-with-curl.attr)
-    #f)
-
   (define/public (upload-with-qt.attr)
     (eq? (platform) 'linux))
 
