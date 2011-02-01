@@ -171,6 +171,8 @@ _rk_Remokon::_rk_Remokon() :
   iXmppConfiguration.setPort(params.port);
   iXmppConfiguration.setJid(params.jid);
   iXmppConfiguration.setPassword(params.password);
+
+  //xxx specify desired security policy
 }
 
 _rk_Remokon::~_rk_Remokon()
