@@ -160,19 +160,18 @@ static int cb_gotMsg(void* userdata, const char* fromJid, const char* luaStr)
 // _rk_Remokon
 // --------------------------------------------------
 
-_rk_Remokon::_rk_Remokon() :
-  L(NULL)
+static lua_State* new_my_lua()
 {
-#if 0
-  this->params.userdata = this;
+  lua_State* L = cl_lua_new_libs();
+  if (!L) {
+    throw std::bad_alloc();
+  }
+  return L;
+}
 
-  this->params.observer.sessionEstablished = cb_sessionEstablished;
-  this->params.observer.gotEof = cb_gotEof;
-  this->params.observer.severeError = cb_severeError;
-  this->params.observer.fatalError = cb_fatalError;
-  this->params.observer.gotMsg = cb_gotMsg;
-  // not defining this->params.observer.messageSent as have no flow control
-
+_rk_Remokon::_rk_Remokon() :
+  iSession(NULL), L(new_my_lua())
+{
   this->params.server = ac_STATIC_GET(remokon_host);
   this->params.port = ac_STATIC_GET(remokon_port);
   this->params.username = ac_STATIC_GET(username);
@@ -195,34 +194,19 @@ _rk_Remokon::_rk_Remokon() :
 	 this->params.username, this->params.jid,
 	 this->iAutostartEnabled);
   }
-#endif
 
-  this->L = cl_lua_new_libs();
-  if (!this->L) {
-    throw std::bad_alloc();
-  }
+  // Use isActive(), stop(), and start(msec).
+  iTimer.setSingleShot(true);
+  connect(&iTimer, SIGNAL(timeout()), this, SLOT(handleTimeout()));
 
   /*
   this->iSession = rk_JabberSession_new(&this->params, error);
-  if (!this->iSession) {
-    rk_Remokon_destroy(this);
-    return NULL;
-  }
-
-  this->iTimer = ut_Timer_new(this, cb_timerExpired, error);
-  if (!this->iTimer) {
-    rk_Remokon_destroy(this);
-    return NULL;
-  }
   */ //xxx
 }
 
 _rk_Remokon::~_rk_Remokon()
 {
-  /*
-    ut_Timer_destroy(self->iTimer);
-    rk_JabberSession_destroy(self->iSession);
-  */ //xxx
+  delete iSession;
   if (L) 
     lua_close(L);
 }
@@ -230,6 +214,11 @@ _rk_Remokon::~_rk_Remokon()
 void _rk_Remokon::send(const QString& toJid, const QString& msgText)
 {
   //xxx
+}
+
+void _rk_Remokon::handleTimeout()
+{
+  //xxx retry now
 }
 
 // --------------------------------------------------

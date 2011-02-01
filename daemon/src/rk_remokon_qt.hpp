@@ -20,7 +20,7 @@ class _rk_Remokon :
   // We should always have a Jabber session object after having been
   // initialized. The object creation itself requires nothing but
   // memory. Getting the connection is harder.
-  QXmppClient* iSession; // xxx
+  QXmppClient* iSession;
 
   // These come mostly from the configuration file. There will be no
   // default values, and hence Remokon will be automatically disabled
@@ -28,9 +28,15 @@ class _rk_Remokon :
   // "server", "password", "username", and "jid" are all non-NULL. The
   // dynamically settable "iap_id" will be given some unlikely to work
   // default value.
+  struct {
+    const char* server;
+    int port;
+    const char* username;
+    const char* password;
+    const char* jid;
+    int iap_id;
+  } params;
   
-  // xxx
-
   public:
 
   // This indicates whether we have at least some kind of a value for
@@ -65,6 +71,9 @@ class _rk_Remokon :
   ~_rk_Remokon();
 
   void send(const QString& toJid, const QString& msgText);
+
+private slots:
+  void handleTimeout();
 
 };
 
