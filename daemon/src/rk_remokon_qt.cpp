@@ -1,8 +1,5 @@
-#include "rk_remokon_private.h"
-
-#if __FEATURE_REMOKON__
-
-#include "rk_jabber_session.h"
+#include "rk_remokon.h"
+#include "rk_remokon_qt.hpp"
 
 #include "ac_app_context.h"
 #include "cf_query.h" // get_ConfigDb_int
@@ -199,6 +196,11 @@ static int cb_gotMsg(void* userdata, const char* fromJid, const char* luaStr)
   return rk_PROCEED;
 }
 
+// --------------------------------------------------
+// public API
+// --------------------------------------------------
+
+extern "C"
 rk_Remokon* rk_Remokon_new(GError** error)
 {
   rk_Remokon* self = g_try_new0(rk_Remokon, 1);
@@ -262,6 +264,7 @@ rk_Remokon* rk_Remokon_new(GError** error)
 }
 
 // Supports only partially initialized objects.
+extern "C"
 void rk_Remokon_destroy(rk_Remokon* self)
 {
   if (self) {
@@ -274,6 +277,7 @@ void rk_Remokon_destroy(rk_Remokon* self)
   }
 }
 
+extern "C"
 gboolean rk_Remokon_is_autostart_enabled(rk_Remokon* self)
 {
   // Former value is constant, the latter may vary.
@@ -281,6 +285,7 @@ gboolean rk_Remokon_is_autostart_enabled(rk_Remokon* self)
 }
 
 // Does nothing if already started.
+extern "C"
 gboolean rk_Remokon_start(rk_Remokon* self, GError** error)
 {
   if (!rk_Remokon_is_started(self)) {
@@ -301,12 +306,14 @@ gboolean rk_Remokon_start(rk_Remokon* self, GError** error)
 
 // Supports only partially initialized objects.
 // Does nothing if already stopped.
+extern "C"
 void rk_Remokon_stop(rk_Remokon* self)
 {
   if (self->timer) ut_Timer_cancel(self->timer);
   stopSession(self);
 }
 
+extern "C"
 gboolean rk_Remokon_reconfigure(rk_Remokon* self,
 				const gchar* key,
 				const gchar* value,
@@ -328,17 +335,20 @@ gboolean rk_Remokon_reconfigure(rk_Remokon* self,
   return TRUE;
 }
 
+extern "C"
 gboolean rk_Remokon_is_started(rk_Remokon* self)
 {
   return (rk_JabberSession_is_started(self->session) ||
 	  ut_Timer_is_active(self->timer));
 }
   
+extern "C"
 gboolean rk_Remokon_is_connected(rk_Remokon* self)
 {
   return self->is_connected;
 }
 
+extern "C"
 gboolean rk_Remokon_send(rk_Remokon* self,
 			 const char* toJid,
 			 const char* msgText,
@@ -353,14 +363,10 @@ gboolean rk_Remokon_send(rk_Remokon* self,
   return rk_JabberSession_send(self->session, toJid, msgText, error);
 }
 
-#endif /* __FEATURE_REMOKON__ */
-
 /**
 
-rk_remokon.c
-
-Copyright 2009 Helsinki Institute for Information Technology (HIIT)
-and the authors. All rights reserved.
+Copyright 2009-2011 Helsinki Institute for Information Technology
+(HIIT) and the authors. All rights reserved.
 
 Authors: Tero Hasu <tero.hasu@hut.fi>
 

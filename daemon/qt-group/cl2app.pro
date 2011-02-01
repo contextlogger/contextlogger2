@@ -30,10 +30,10 @@ SOURCES += error_list.c gx_maybe_string.c gxerror.c logging-time.c platform_erro
 SOURCES += assertions_cxx.cpp logging.cpp utilities_cxx.cpp
 SOURCES += moment_parser.c time_utils.c
 FEATURE_REMOKON {
-  SOURCES += rk_remokon.c rk_jabber_session.c
-  INCLUDEPATH += ../../iksemel/include
-  DEPENDPATH += ../../iksemel/src
-  SOURCES += base64.c dom.c filter.c iks.c ikss_stream.c ikst_transport_libev.c ikstack.c jabber.c md5.c sax.c sha.c utility.c
+  SOURCES += rk_remokon_qt.cpp
+  HEADERS += rk_remokon_qt.hpp
+  INCLUDEPATH += ../../qxmpp/src
+  # xxx how to link to static library?
 }
 WITH_QT {
   FEATURE_UPLOADER {

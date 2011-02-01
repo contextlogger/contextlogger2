@@ -5,7 +5,7 @@ VARIANT_NAME := s60_30_dev
 CC := gcc
 
 SRC_PATH := src
-APP_C_FILES := cf_query.c client-run.c config_db.c db_creation.c er_errors.c kr_controller.c libluasqlite3.c ld_create.c ld_log_db.c ld_logging.c main_posix.c rk_jabber_session.c rk_remokon.c sa_sensor_list_log_db.c sa_sensor_mark.c sa_sensor_timer.c up_shared.c ut_timer_libev.c utils_cl2.c
+APP_C_FILES := cf_query.c client-run.c config_db.c db_creation.c er_errors.c kr_controller.c libluasqlite3.c ld_create.c ld_log_db.c ld_logging.c main_posix.c sa_sensor_list_log_db.c sa_sensor_mark.c sa_sensor_timer.c up_shared.c ut_timer_libev.c utils_cl2.c
 APP_CXX_FILES := ac_app_context.cpp bb_blackboard.cpp cf_rcfile.cpp lua_bindings.cpp lua_cl2.cpp sa_array.cpp
 APP_QT_HEADERS := $(and $(USE_QT_SENSORS),sa_qt_sensors.hpp) $(and $(LIGHT_ENABLED),sa_sensor_light_qt.hpp) $(and $(PROXIMITY_ENABLED),sa_sensor_proximity_qt.hpp) $(and $(WITH_TAP_SENSORS),sa_sensor_tap_qt.hpp) iodeviceseq_qt.hpp up_uploader_qt_private.hpp ut_abs_timer_qt_epoc.hpp ut_abs_timer_qt_pure.hpp window_demo_qt.hpp
 
@@ -18,19 +18,13 @@ SHARED_QT_HEADERS := QsKineticScroller.hpp
 TIMESPEC_PATH := ../time-spec
 TIMESPEC_C_FILES := moment_parser.c time_utils.c
 
-ALL_RAGEL_FILES := src/rk_jabber_session.rl
+ALL_RAGEL_FILES :=
 RAGEL_C_FILES := $(patsubst %.rl, %.c, $(ALL_RAGEL_FILES))
 RAGEL_GV_FILES := $(patsubst %.rl, %.gv, $(ALL_RAGEL_FILES))
 RAGEL_PNG_FILES := $(patsubst %.rl, %.png, $(ALL_RAGEL_FILES))
 RAGEL_GEN_FILES := $(RAGEL_C_FILES) $(RAGEL_GV_FILES) $(RAGEL_PNG_FILES)
 
-IKSEMEL_INC_PATH := ../iksemel/include
-IKSEMEL_SRC_PATH := ../iksemel/src
-IKSEMEL_C_FILES := base64.c dom.c filter.c iks.c ikss_stream.c ikst_transport_libev.c ikstack.c jabber.c md5.c sax.c sha.c utility.c
-FULL_IKSEMEL_C_FILES := $(patsubst %, $(IKSEMEL_SRC_PATH)/%, $(IKSEMEL_C_FILES))
-IKSEMEL_DEP_FLAGS := -I$(IKSEMEL_INC_PATH) -I$(IKSEMEL_SRC_PATH)
-
-C_FILES := $(patsubst %, $(SRC_PATH)/%, $(APP_C_FILES)) $(patsubst %, $(SHARED_DIR)/%, $(SHARED_C_FILES)) $(patsubst %, $(TIMESPEC_PATH)/%, $(TIMESPEC_C_FILES)) $(FULL_IKSEMEL_C_FILES)
+C_FILES := $(patsubst %, $(SRC_PATH)/%, $(APP_C_FILES)) $(patsubst %, $(SHARED_DIR)/%, $(SHARED_C_FILES)) $(patsubst %, $(TIMESPEC_PATH)/%, $(TIMESPEC_C_FILES))
 CXX_FILES := $(patsubst %, $(SRC_PATH)/%, $(APP_CXX_FILES)) $(patsubst %, $(SHARED_DIR)/%, $(SHARED_CXX_FILES))
 
 APP_MOC_BASENAMES := $(patsubst %.hpp,moc_%.cpp,$(APP_QT_HEADERS))
@@ -60,7 +54,7 @@ ALL_C_FILES := $(C_FILES) $(LUA_C_FILES)
 ALL_CXX_FILES := $(CXX_FILES)
 ALL_OBJ_FILES := $(patsubst %.c, %.o, $(ALL_C_FILES)) $(patsubst %.cpp, %.o, $(ALL_CXX_FILES))
 
-DEP_FLAGS := -I$(SRC_PATH) -I$(SHARED_PATH) -I$(TIMESPEC_PATH) $(LUA_CFLAGS) $(KEYEVENTS_CFLAGS) $(IKSEMEL_DEP_FLAGS) -I../epocxplat/src
+DEP_FLAGS := -I$(SRC_PATH) -I$(SHARED_PATH) -I$(TIMESPEC_PATH) $(LUA_CFLAGS) $(KEYEVENTS_CFLAGS) -I../epocxplat/src
 COMMON_FLAGS := $(DEP_FLAGS) -fexceptions
 GNOME_FLAGS := `pkg-config --cflags gobject-2.0` -DG_DISABLE_DEPRECATED=1
 FEATURES := 
@@ -145,9 +139,6 @@ $(SHARED_MOC_FILES) : $(SHARED_DIR)/moc_%.cpp : $(SHARED_DIR)/%.hpp
 
 %.c %.h %-private.h : %.gob
 	gob2 $(GOB_FLAGS) $<
-
-src/rk_jabber_session.c : src/rk_jabber_session.rl
-	ragel -C -o $@ $<
 
 %.gv : %.rl
 	ragel -V -o $@ $<
