@@ -163,6 +163,16 @@ _rk_Remokon::_rk_Remokon() :
 	 this->params.username, this->params.jid,
 	 this->iAutostartEnabled);
   }
+
+  iXmppPresence.setType(QXmppPresence::Available);
+  QXmppPresence::Status& stat = iXmppPresence.status();
+  stat.setType(QXmppPresence::Status::Chat);
+  stat.setStatusText(QString("Logging away."));
+
+  iXmppConfiguration.setHost(params.server);
+  iXmppConfiguration.setPort(params.port);
+  iXmppConfiguration.setJid(params.jid);
+  iXmppConfiguration.setPassword(params.password);
 }
 
 _rk_Remokon::~_rk_Remokon()
@@ -173,11 +183,7 @@ _rk_Remokon::~_rk_Remokon()
 
 void _rk_Remokon::start()
 {
-  /*
-    void connectToServer(const QXmppConfiguration&,
-                         const QXmppPresence& initialPresence = 
-                         QXmppPresence());
-  */ //xxx
+  iSession.connectToServer(iXmppConfiguration, iXmppPresence);
   iIsActive = true;
 }
 

@@ -30,6 +30,10 @@ class _rk_Remokon :
     const char* jid;
     int iap_id;
   } params;
+
+  // Not sure if these must persist during session, but just in case.
+  QXmppPresence iXmppPresence;
+  QXmppConfiguration iXmppConfiguration;
   
   public:
 
