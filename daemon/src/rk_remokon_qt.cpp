@@ -9,122 +9,6 @@
 
 #include <stdlib.h>
 
-#if 0
-static void stopSession(rk_Remokon* self)
-{
-  if (self->iSession) rk_JabberSession_stop(self->iSession);
-}
-
-static void startSessionOrRetry(rk_Remokon* self)
-{
-  GError* localError = NULL;
-  if (!rk_JabberSession_start(self->iSession, &localError)) {
-    gx_txtlog_error_free(localError);
-    setRetryTimer(self);
-  }
-}
-
-// rk_JabberObserver
-static int cb_sessionEstablished(void* userdata)
-{
-  rk_Remokon* self = (rk_Remokon*)userdata;
-  self->iNumFailures = 0;
-  logt("Jabber connection established");
-  return rk_PROCEED;
-}
-
-// rk_JabberObserver
-static int cb_gotEof(void* userdata)
-{
-  rk_Remokon* self = (rk_Remokon*)userdata;
-  logt("Jabber server closed connection");
-  stopSession(self);
-  setRetryTimer(self);
-  return rk_HALT;
-}
-
-// rk_JabberObserver
-static int cb_severeError(void* userdata, const char* msg)
-{
-  rk_Remokon* self = (rk_Remokon*)userdata;
-  logg("Jabber error: %s", msg);
-  stopSession(self);
-  setRetryTimer(self);
-  return rk_HALT;
-}
-
-// rk_JabberObserver
-static int cb_fatalError(void* userdata, const char* msg)
-{
-  er_log_none(er_FATAL, "Jabber error: %s", msg);
-  return rk_HALT;
-}
-
-// rk_JabberObserver
-static int cb_gotMsg(void* userdata, const char* fromJid, const char* luaStr)
-{
-  rk_Remokon* self = (rk_Remokon*)userdata;
-  lua_State* L = self->L;
-
-  logg("remote message from %s: %s", fromJid, luaStr);
-
-  const gchar* replyText = NULL;
-  int level = lua_gettop(L);
-  int pop = 0;
-
-  int res = (luaL_loadstring(L, luaStr) || lua_pcall(L, 0, LUA_MULTRET, 0));
-  if (res != 0) {
-    pop = 1; // expecting error message only
-    assert(pop == (lua_gettop(L) - level));
-    assert(lua_isstring(L, -1));
-    replyText = lua_tostring(L, -1);
-    if (!replyText) replyText = "Error: out of memory";
-    goto reply;
-  }
-
-  // Now we may have any number of values, and not all of them
-  // necessarily strings.
-  // 
-  // Might be nice to get any values printed to string output and
-  // concatenated, upto certain max length. Lua does have a "print"
-  // function, but seems to use printf directly, so probably would
-  // require a bit of work to have it use some safe sprintf instead.
-  // Some macro magic in print.c could work.
-  pop = lua_gettop(L) - level;
-  logg("nresults is %d", pop);
-  if (pop > 0) {
-    if (pop > 1) {
-      replyText = "<multiple results>";
-    } else {
-      // Stored within Lua state at least until the corresponding value is popped.
-      replyText = lua_tostring(L, -1);
-      if (!replyText) replyText = "<unconvertible expression>";
-    }
-    goto reply;
-  }
-
-  // Evaluated to nothing.
-  replyText = "OK";
-
- reply:
-  {
-    assert(replyText); 
-    GError* localError = NULL;
-    if (!rk_JabberSession_send(self->iSession,
-			       fromJid,
-			       replyText,
-			       &localError)) {
-      gx_txtlog_error_free(localError);
-      if (pop) lua_pop(L, pop);
-      cb_severeError(self, "failed to send Jabber reply");
-      return rk_HALT;
-    }
-  }
-  if (pop) lua_pop(L, pop);
-  return rk_PROCEED;
-}
-#endif
-
 // --------------------------------------------------
 // _rk_Remokon
 // --------------------------------------------------
@@ -173,6 +57,13 @@ _rk_Remokon::_rk_Remokon() :
   iXmppConfiguration.setPassword(params.password);
 
   //xxx specify desired security policy
+
+  // Note that "connect" produces a boolean return value if you want
+  // to check.
+  connect(&iSession, SIGNAL(error(QXmppClient::Error)),
+	  this, SLOT(gotJabberError(QXmppClient::Error)));
+  connect(&iSession, SIGNAL(messageReceived(const QXmppMessage&)),
+	  this, SLOT(gotJabberMessage(const QXmppMessage&)));
 }
 
 _rk_Remokon::~_rk_Remokon()
@@ -195,7 +86,91 @@ void _rk_Remokon::stop()
 
 void _rk_Remokon::send(const QString& toJid, const QString& msgText)
 {
-  //xxx
+  iSession.sendMessage(toJid, msgText);
+}
+
+// Not sure yet if we need to handle any of these errors. The client
+// object is supposed to itself do some retrying. For now we just log.
+void _rk_Remokon::gotJabberError(QXmppClient::Error anError)
+{
+  switch (anError)
+    {
+    case QXmppClient::SocketError:
+      {
+	er_log_none(0, "remokon: %d (%s)", anError, "QXmppClient::SocketError");
+        break;
+      }
+    case QXmppClient::KeepAliveError:
+      {
+	er_log_none(0, "remokon: %d (%s)", anError, "QXmppClient::KeepAliveError");
+        break;
+      }
+    case QXmppClient::XmppStreamError:
+      {
+	er_log_none(0, "remokon: %d (%s)", anError, "QXmppClient::XmppStreamError");
+        break;
+      }
+    default:
+      {
+	er_log_none(0, "remokon: %d (unknown QXmpp error)", anError);
+        break;
+      }
+    }
+}
+
+#define TOCSTR(exp) ((exp).toUtf8().data())
+
+void _rk_Remokon::gotJabberMessage(const QXmppMessage& msg)
+{
+  if (msg.body().isEmpty())
+    return;
+
+  const char* fromJid = TOCSTR(msg.from());
+  const char* luaStr = TOCSTR(msg.body());
+  logg("remote message from %s: %s", fromJid, luaStr);
+
+  const gchar* replyText = NULL;
+  int level = lua_gettop(L);
+  int pop = 0;
+
+  int res = (luaL_loadstring(L, luaStr) || lua_pcall(L, 0, LUA_MULTRET, 0));
+  if (res != 0) {
+    pop = 1; // expecting error message only
+    assert(pop == (lua_gettop(L) - level));
+    assert(lua_isstring(L, -1));
+    replyText = lua_tostring(L, -1);
+    if (!replyText) replyText = "Error: out of memory";
+    goto reply;
+  }
+
+  // Now we may have any number of values, and not all of them
+  // necessarily strings.
+  // 
+  // Might be nice to get any values printed to string output and
+  // concatenated, upto certain max length. Lua does have a "print"
+  // function, but seems to use printf directly, so probably would
+  // require a bit of work to have it use some safe sprintf instead.
+  // Some macro magic in print.c could work.
+  pop = lua_gettop(L) - level;
+  logg("nresults is %d", pop);
+  if (pop > 0) {
+    if (pop > 1) {
+      replyText = "<multiple results>";
+    } else {
+      // Stored within Lua state at least until the corresponding value is popped.
+      replyText = lua_tostring(L, -1);
+      if (!replyText) replyText = "<unconvertible expression>";
+    }
+    goto reply;
+  }
+
+  // Evaluated to nothing.
+  replyText = "OK";
+
+ reply:
+  assert(replyText); 
+  send(msg.from(), QString(replyText));
+  if (pop) lua_pop(L, pop); //xxx must be sure to do this even in exception scenarios
 }
 
 // --------------------------------------------------

@@ -4,6 +4,7 @@
 #include "lua_cl2.h"
 
 #include "QXmppClient.h"
+#include "QXmppMessage.h"
 
 #include <QObject>
 
@@ -70,6 +71,12 @@ class _rk_Remokon :
   void stop();
 
   void send(const QString& toJid, const QString& msgText);
+
+  private slots:
+
+  void gotJabberError(QXmppClient::Error anError);
+
+  void gotJabberMessage(const QXmppMessage& aMessage);
 
 };
 
