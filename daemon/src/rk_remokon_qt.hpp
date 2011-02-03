@@ -18,6 +18,12 @@ class _rk_Remokon :
 
   private:
 
+  // Not sure if these must persist during session, but just in case.
+  QXmppPresence iXmppPresence;
+  QXmppConfiguration iXmppConfiguration;
+  
+  public:
+
   // These come mostly from the configuration file. There will be no
   // default values, and hence Remokon will be automatically disabled
   // when no configuration setting is available. We require that
@@ -31,12 +37,6 @@ class _rk_Remokon :
     const char* jid;
     int iap_id;
   } params;
-
-  // Not sure if these must persist during session, but just in case.
-  QXmppPresence iXmppPresence;
-  QXmppConfiguration iXmppConfiguration;
-  
-  public:
 
   // We should always have a Jabber session object after having been
   // initialized. The object creation itself requires nothing but

@@ -28,18 +28,10 @@ systeminclude \epoc32\include\stdapis\glib-2.0
 systeminclude \epoc32\include\stdapis\stlport
 <% end %>
 
-<% if $UPLOAD_WITH_CURL
-   curl_dir = ($pamp_curl ? "libcurl-pamp" : "libcurl-std") %>
-  <% if $pamp_curl and not $curl_as_source %>
-systeminclude     \epoc32\include\curl-7.16
-  <% else %>
-systeminclude ..\..\..\<%= curl_dir %>\include
-  <% end %>
-<% end %>
-
 <% if $WITH_QT %>
 <% qt_inc_list = %w{include/QtCore include/QtNetwork include mkspecs/common/symbian/stl-off mkspecs/common/symbian}
    qt_inc_list.push('include/QtGui') if $WITH_QT_GUI
+   qt_inc_list.push('include/QtXml') if $WITH_QT_XML
    for inc in qt_inc_list %>
 systeminclude		../../../../../symbian-gp/qt-latest/<%= inc %>
 <% end %>
@@ -61,16 +53,7 @@ userinclude ..\..\..\sqlite3h\src\sqlite3
 <% end %>
 userinclude ..\..\..\epocxplat\src
 userinclude ..\..\..\filter-http\inc
-
-<% if $UPLOAD_WITH_CURL %>
-  <% if $pamp_curl %>
-    <% if $curl_as_source %>
-userinclude ..\..\..\<%= curl_dir %>\include\curl
-    <% end %>
-  <% else %>
-userinclude ..\..\..\<%= curl_dir %>\include\curl // weird that this is required even when not building from source
-  <% end %>
-<% end %>
+userinclude ..\..\..\qxmpp\src
 
 <% if $FEATURE_UPLOADER %>
 userinclude ..\..\..\time-spec
@@ -87,18 +70,12 @@ userinclude ..\..\..\keyevents\inc
 staticlibrary sqlite3h.lib
 <% end %>
 
-<% if $UPLOAD_WITH_CURL %>
-  <% unless $curl_as_source %>
-    <% if $pamp_curl %>
-staticlibrary abiv2_libcurl-7_16.lib
-    <% else %>
-staticlibrary libcurl.lib    // built by us
-    <% end %>
-  <% end %>
-<% end %>
-
 <% if $LUA_AS_STATIC_LIB %>
 staticlibrary luastatic.lib  // built by us
+<% end %>
+
+<% if $FEATURE_REMOKON %>
+staticlibrary qxmpp.lib
 <% end %>
 
 // With DLLs, note that if there are symbol conflicts, it's first
@@ -179,11 +156,9 @@ library libpthread.lib // Open C
 library libstdcpp.lib  // Open C++
 <% end %>
 
-<% if $UPLOAD_WITH_CURL %>
-library libz.lib       // Open C, for Curl (be careful, there are two zlib.h files in the Symbian SDK, and both on the include path in our case)
-library libssl.lib     // Open C, for Curl (maybe needed later)
-library libcrypto.lib  // Open C, for Curl (maybe needed later)
-<% end %>
+//library libz.lib       // Open C
+//library libssl.lib     // Open C
+//library libcrypto.lib  // Open C
 
 <% if $HAVE_SQLITE3 %>
 library sqlite3.lib // Qt
@@ -204,6 +179,9 @@ LIBRARY		QtCore.lib
 LIBRARY		QtNetwork.lib
 <% if $WITH_QT_GUI %>
 LIBRARY		QtGui.lib
+<% end %>
+<% if $WITH_QT_XML %>
+LIBRARY		QtXml.lib
 <% end %>
 <% end %>
 
@@ -287,8 +265,7 @@ source main_epoc_qt.cpp
 source main_demo_epoc_qt.cpp window_demo_qt.cpp moc_window_demo_qt.cpp
 <% end %>
 <% if $FEATURE_REMOKON %>
-source rk_jabber_session.c
-source rk_remokon.c
+source rk_remokon_qt.cpp moc_rk_remokon_qt.cpp
 <% end %>
 source sa_array.cpp 
 <% if $USE_QT_SENSORS %>
@@ -332,9 +309,7 @@ source utils_cl2.c
 source utils_cl2_cxx.cpp
 
 <% if $FEATURE_UPLOADER %>
-<% if $UPLOAD_WITH_CURL %>
-source up_uploader_curl.c
-<% elsif $UPLOAD_WITH_QT %>
+<% if $UPLOAD_WITH_QT %>
 source iodeviceseq_qt.cpp moc_iodeviceseq_qt.cpp
 source up_uploader_qt.cpp moc_up_uploader_qt_private.cpp
 source ut_abs_timer_qt_epoc.cpp moc_ut_abs_timer_qt_epoc.cpp
@@ -365,25 +340,6 @@ source utilities_cxx.cpp
 sourcepath ..\..\..\time-spec
 source moment_parser.c
 source time_utils.c
-<% end %>
-
-<% if $FEATURE_REMOKON %>
-userinclude ..\..\..\iksemel\include
-userinclude ..\..\..\iksemel\src
-sourcepath ..\..\..\iksemel\src
-source base64.c
-source dom.c
-source filter.c
-source iks.c
-source ikss_stream.c
-source ikst_transport_epoc.cpp
-source ikstack.c
-source jabber.c
-source md5.c
-source sax.c
-source sha.c
-source socketaos.cpp
-source utility.c
 <% end %>
 
 <% if $LUA_FROM_SOURCE %>
@@ -489,98 +445,6 @@ source opcodes.c
 source parse.c
 <% end %>
 
-<% if $UPLOAD_WITH_CURL %>
-  <% if $curl_as_source %>
-// It seems that abld does not like source filename clashes (even for .c files in different directories), so we better make sure that we despite having all these files name each one uniquely.
-sourcepath ..\..\..\<%= curl_dir %>\lib
-SOURCE base64.c
-SOURCE connect.c
-SOURCE content_encoding.c
-SOURCE cookie.c
-<% unless $pamp_curl %>
-SOURCE curl_addrinfo.c
-SOURCE curl_sspi.c
-<% end %>
-SOURCE dict.c
-SOURCE easy.c
-SOURCE escape.c
-//SOURCE file.c
-SOURCE formdata.c
-SOURCE ftp.c
-SOURCE getenv.c
-SOURCE getinfo.c
-//SOURCE gtls.c
-SOURCE hash_curl.c
-//SOURCE hostares.c
-SOURCE hostasyn.c
-SOURCE hostip.c
-SOURCE hostip4.c
-SOURCE hostip6.c
-SOURCE hostsyn.c
-SOURCE hostthre.c
-SOURCE http.c
-SOURCE http_chunks.c
-SOURCE http_digest.c
-SOURCE http_negotiate.c
-SOURCE http_ntlm.c
-SOURCE if2ip.c
-SOURCE inet_ntop.c
-SOURCE inet_pton.c
-//SOURCE krb4.c
-//SOURCE krb5.c
-SOURCE ldap.c
-SOURCE llist.c
-SOURCE md5.c
-//SOURCE memdebug.c
-SOURCE mprintf.c
-SOURCE multi.c
-SOURCE netrc.c
-//SOURCE nss.c
-SOURCE parsedate.c
-SOURCE progress.c
-//SOURCE qssl.c
-<% unless $pamp_curl %>
-SOURCE rawstr.c
-<% end %>
-SOURCE security.c
-SOURCE select_curl.c
-SOURCE sendf.c
-SOURCE share.c
-<% unless $pamp_curl %>
-SOURCE slist.c
-<% end %>
-SOURCE socks.c
-<% unless $pamp_curl %>
-SOURCE socks_gssapi.c
-SOURCE socks_sspi.c
-<% end %>
-SOURCE speedcheck.c
-SOURCE splay.c
-//SOURCE ssh.c
-SOURCE sslgen.c
-//SOURCE ssluse.c
-SOURCE strdup.c
-SOURCE strequal.c
-SOURCE strerror.c
-SOURCE strtok.c
-SOURCE strtoofft.c
-SOURCE telnet.c
-SOURCE tftp.c
-SOURCE timeval.c
-SOURCE transfer.c
-SOURCE url.c
-SOURCE version.c
-
-#define ENABLE_ZLIB
-
-MACRO       BUILDING_LIBCURL
-
-#ifdef ENABLE_ZLIB
-MACRO       HAVE_LIBZ
-#endif
-  <% end %>
-<% end %>
-
 <% if $WITH_QT %>
 // See Qt src/s60main to see what this library contains.
 // Looks like it essentially just sets up cleanup stack and then calls 'main'.
@@ -648,6 +512,10 @@ MACRO		QT_NETWORK_LIB
 
 <% if $WITH_QT_GUI %>
 MACRO		QT_GUI_LIB
+<% end %>
+
+<% if $WITH_QT_XML %>
+MACRO		QT_XML_LIB
 <% end %>
 
 <% unless $DO_LOGGING %>

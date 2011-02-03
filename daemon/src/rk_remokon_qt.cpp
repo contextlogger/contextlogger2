@@ -56,7 +56,16 @@ _rk_Remokon::_rk_Remokon() :
   iXmppConfiguration.setJid(params.jid);
   iXmppConfiguration.setPassword(params.password);
 
-  //xxx specify desired security policy
+  // Desired security policy. We are strict on Symbian, since there we
+  // assume the required certificate must have been globally
+  // installed. For testing on the desktop we do not require that, nor
+  // do we know if QXmpp allows for custom CA configuration.
+#if defined(__SYMBIAN32__)
+  iXmppConfiguration.setIgnoreSslErrors(false);
+  iXmppConfiguration.setUseSASLAuthentication(true);
+  iXmppConfiguration.setStreamSecurityMode(QXmppConfiguration::TLSRequired);
+  iXmppConfiguration.setSASLAuthMechanism(QXmppConfiguration::SASLDigestMD5);
+#endif /* __SYMBIAN32__ */
 
   // Note that "connect" produces a boolean return value if you want
   // to check.

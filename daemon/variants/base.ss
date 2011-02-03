@@ -98,6 +98,9 @@ project must implement.
   (define/public (with-qt-gui.attr)
     (and (with-qt.attr) (is-application.attr)))
 
+  (define/public (with-qt-xml.attr)
+    (and (with-qt.attr) (send this feature-remokon.attr)))
+
   (define/public (with-qt-mobility.attr)
     (and (with-qt.attr) (is-symbian.attr)))
 

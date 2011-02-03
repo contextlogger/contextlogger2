@@ -21,8 +21,6 @@ For testing remote control on Linux.
     (define/override (with-qt.attr) #t)
     (define/override (have-sqlite3.attr) #t)
 
-    ;; Qt builds do not presently even support this, must implement
-    ;; based on Qt, not libev.
     (define/override (feature-remokon.attr) #t)
     
     (define/override (feature-uploader.attr) #f)
