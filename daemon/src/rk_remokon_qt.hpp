@@ -3,6 +3,7 @@
 
 #include "lua_cl2.h"
 
+// http://code.google.com/p/qxmpp/
 #include "QXmppClient.h"
 #include "QXmppMessage.h"
 

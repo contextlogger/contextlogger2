@@ -118,6 +118,22 @@ void _rk_Remokon::gotJabberError(QXmppClient::Error anError)
     }
 }
 
+class LuaStack
+{
+private:
+  lua_State* L;
+public:
+  int pop;
+public:
+  LuaStack(lua_State* aL) : L(aL), pop(0) {}
+  ~LuaStack() { 
+    if (pop) {
+      lua_pop(L, pop);
+      //logg("remokon Lua stack: popped %d", pop);
+    }
+  }
+};
+
 #define TOCSTR(exp) ((exp).toUtf8().data())
 
 void _rk_Remokon::gotJabberMessage(const QXmppMessage& msg)
@@ -129,9 +145,12 @@ void _rk_Remokon::gotJabberMessage(const QXmppMessage& msg)
   const char* luaStr = TOCSTR(msg.body());
   logg("remote message from %s: %s", fromJid, luaStr);
 
+  // If set, points to a literal or something within Lua state.
   const gchar* replyText = NULL;
+
+  LuaStack stack(L);
   int level = lua_gettop(L);
-  int pop = 0;
+  int& pop = stack.pop;
 
   int res = (luaL_loadstring(L, luaStr) || lua_pcall(L, 0, LUA_MULTRET, 0));
   if (res != 0) {
@@ -170,7 +189,6 @@ void _rk_Remokon::gotJabberMessage(const QXmppMessage& msg)
  reply:
   assert(replyText); 
   send(msg.from(), QString(replyText));
-  if (pop) lua_pop(L, pop); //xxx must be sure to do this even in exception scenarios
 }
 
 // --------------------------------------------------
