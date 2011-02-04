@@ -25,6 +25,13 @@ extern "C" {
   // Breaks any existing connection. Does nothing if already stopped.
   void rk_Remokon_stop(rk_Remokon* self);
 
+  // Runs remokon for the specified amount of time, and after that
+  // stops it. The timer is reset whenever there are actual requests
+  // coming in.
+  gboolean rk_Remokon_start_timed(rk_Remokon* self,
+				  int secs,
+				  GError** error);
+
   // Modifies the runtime configuration. Any existing connection is
   // not broken. (Use this for instance when the IAP parameter changes.)
   gboolean rk_Remokon_reconfigure(rk_Remokon* object,

@@ -10,6 +10,29 @@
 #include <stdlib.h>
 
 // --------------------------------------------------
+// utilities
+// --------------------------------------------------
+
+#define TRAPFATAL(_stm) {					\
+    try {							\
+      _stm ;							\
+    } catch (const std::exception &ex) {			\
+      er_log_none(er_FATAL, "remokon: %s", ex.what());		\
+    }								\
+  }
+
+#define GTRAP(_ret, _stm) {					\
+    try {							\
+      _stm ;							\
+    } catch (const std::exception &ex) {			\
+      if (error)						\
+	*error = gx_error_new(domain_qt, -1,			\
+			      "remokon: %s", ex.what());	\
+      return _ret;						\
+    }								\
+  }
+
+// --------------------------------------------------
 // _rk_Remokon
 // --------------------------------------------------
 
@@ -77,6 +100,10 @@ _rk_Remokon::_rk_Remokon() :
 	  this, SLOT(gotJabberError(QXmppClient::Error)));
   connect(&iSession, SIGNAL(messageReceived(const QXmppMessage&)),
 	  this, SLOT(gotJabberMessage(const QXmppMessage&)));
+
+  iRunTimer.setSingleShot(true);
+  connect(&iRunTimer, SIGNAL(timeout()),
+	  this, SLOT(runTimeout()));
 }
 
 _rk_Remokon::~_rk_Remokon()
@@ -98,6 +125,39 @@ void _rk_Remokon::stop()
     iSession.disconnectFromServer();
     iIsActive = false;
   }
+}
+
+static int SecsToMsecs(int secs)
+{
+  long long ms64 = (long long)(secs) * 1000LL;
+  if (ms64 > 0x7fffffffLL) ms64 = 0x7fffffffLL;
+  return (int)ms64;
+}
+
+void _rk_Remokon::resetRunTimer()
+{
+  // It is okay to call "start" even when "isActive".
+  iRunTimer.start(SecsToMsecs(iRunForSecs));
+}
+
+// If already running (in timed mode or otherwise), will be put into
+// timed mode, with the specified time period. This also resets any
+// existing countdown timer.
+void _rk_Remokon::startTimed(int secs)
+{
+  if (secs <= 0)
+    return;
+  iRunForSecs = secs;
+  resetRunTimer();
+  if (!iIsActive)
+    start();
+}
+
+void _rk_Remokon::runTimeout()
+{
+  log_db_log_status(ac_global_LogDb, NULL, 
+		    "remokon: stopping after %d secs", iRunForSecs);
+  TRAPFATAL(stop());
 }
 
 void _rk_Remokon::send(const QString& toJid, const QString& msgText)
@@ -211,25 +271,6 @@ void _rk_Remokon::gotJabberMessage(const QXmppMessage& msg)
 // public API
 // --------------------------------------------------
 
-#define TRAPFATAL(_stm) {					\
-    try {							\
-      _stm ;							\
-    } catch (const std::exception &ex) {			\
-      er_log_none(er_FATAL, "remokon: %s", ex.what());		\
-    }								\
-  }
-
-#define GTRAP(_ret, _stm) {					\
-    try {							\
-      _stm ;							\
-    } catch (const std::exception &ex) {			\
-      if (error)						\
-	*error = gx_error_new(domain_qt, -1,			\
-			      "remokon: %s", ex.what());	\
-      return _ret;						\
-    }								\
-  }
-
 extern "C"
 rk_Remokon* rk_Remokon_new(GError** error)
 {
@@ -280,6 +321,15 @@ extern "C"
 void rk_Remokon_stop(rk_Remokon* self)
 {
   TRAPFATAL(self->stop());
+}
+
+extern "C"
+gboolean rk_Remokon_start_timed(rk_Remokon* self,
+				int secs,
+				GError** error)
+{
+  GTRAP(FALSE, self->startTimed(secs));
+  return TRUE;
 }
 
 extern "C"

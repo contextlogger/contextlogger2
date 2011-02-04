@@ -8,6 +8,7 @@
 #include "QXmppMessage.h"
 
 #include <QObject>
+#include <QTimer>
 
 // We must use a QObject derived remote control state object so as to
 // allow us to implement slots for observing Qt signals.
@@ -22,6 +23,9 @@ class _rk_Remokon :
   QXmppPresence iXmppPresence;
   QXmppConfiguration iXmppConfiguration;
   
+  int iRunForSecs;
+  QTimer iRunTimer;
+
   public:
 
   // These come mostly from the configuration file. There will be no
@@ -71,13 +75,21 @@ class _rk_Remokon :
 
   void stop();
 
+  void startTimed(int secs);
+
   void send(const QString& toJid, const QString& msgText);
+
+  private:
+
+  void resetRunTimer();
 
   private slots:
 
   void gotJabberError(QXmppClient::Error anError);
 
   void gotJabberMessage(const QXmppMessage& aMessage);
+
+  void runTimeout();
 
 };
 
