@@ -84,7 +84,8 @@ MainWindow::MainWindow(QWidget *parent)
   uploadAction->setStatusTip(tr("Take log snapshot and upload now"));
   connect(uploadAction, SIGNAL(triggered()), this, SLOT(uploadNow()));
 
-  QMenu* actionMenu = menuBar()->addMenu(tr("&Action"));
+  QMenuBar* actionMenu = menuBar();
+  //QMenu* actionMenu = menuBar()->addMenu(tr("&Action"));
   actionMenu->addAction(uploadAction);
   actionMenu->addSeparator();
   actionMenu->addAction(quitAction);

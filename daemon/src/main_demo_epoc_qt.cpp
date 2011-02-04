@@ -150,6 +150,15 @@ static TInt QtMainE(int argc, char *argv[], char *envp[])
     goto mofail;
   }
 
+  // Get rid of the "Actions" menu item.
+  {
+    QWidgetList widgets = QApplication::allWidgets();
+    QWidget* wdg = 0;
+    foreach(wdg, widgets) {
+      wdg->setContextMenuPolicy(Qt::NoContextMenu);
+    }
+  }
+
   guilog(__APP_NAME__);
   guilogf("variant %s", __VARIANT_NAME__);
   guilogf("version %s", __VERSION_STRING__);

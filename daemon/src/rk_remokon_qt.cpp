@@ -60,7 +60,7 @@ _rk_Remokon::_rk_Remokon() :
 		       (this->params.password != NULL) &&
 		       (this->params.jid != NULL));
 
-  this->iAutostartEnabled = (force_get_ConfigDb_bool("remokon.autostart", TRUE));
+  this->iAutostartEnabled = (force_get_ConfigDb_bool("remokon.autostart", FALSE));
 
   if (this->iHaveConfig) {
     logg("Jabber config: server %s:%d, jid '%s', auto %d",

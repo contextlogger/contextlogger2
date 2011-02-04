@@ -446,6 +446,7 @@ gboolean kr_Controller_start(kr_Controller* self, GError** error)
 #endif
 #if __FEATURE_REMOKON__
   if (rk_Remokon_is_autostart_enabled(self->remokon))
+    logt("controller: auto-starting remokon");
     if (!rk_Remokon_start(self->remokon, error))
       return FALSE;
 #endif
