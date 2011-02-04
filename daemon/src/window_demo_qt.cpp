@@ -89,8 +89,11 @@ MainWindow::MainWindow(QWidget *parent)
   remokonAction->setStatusTip(tr("Allow remote control for a while"));
   connect(remokonAction, SIGNAL(triggered()), this, SLOT(remokonNow()));
 
+#if defined(__SYMBIAN32__)
   QMenuBar* actionMenu = menuBar();
-  //QMenu* actionMenu = menuBar()->addMenu(tr("&Action"));
+#else
+  QMenu* actionMenu = menuBar()->addMenu(tr("&Action"));
+#endif /* __SYMBIAN32__ */
   actionMenu->addAction(uploadAction);
   actionMenu->addAction(remokonAction);
   actionMenu->addSeparator();

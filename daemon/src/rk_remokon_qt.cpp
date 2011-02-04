@@ -116,8 +116,10 @@ _rk_Remokon::~_rk_Remokon()
 void _rk_Remokon::start()
 {
   logh();
-  iSession.connectToServer(iXmppConfiguration, iXmppPresence);
-  iIsActive = true;
+  if (!iIsActive) {
+    iSession.connectToServer(iXmppConfiguration, iXmppPresence);
+    iIsActive = true;
+  }
 }
 
 void _rk_Remokon::stop()
