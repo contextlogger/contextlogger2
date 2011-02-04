@@ -49,7 +49,11 @@ _rk_Remokon::_rk_Remokon() :
   iXmppPresence.setType(QXmppPresence::Available);
   QXmppPresence::Status& stat = iXmppPresence.status();
   stat.setType(QXmppPresence::Status::Chat);
-  stat.setStatusText(QString("Logging away."));
+#if defined(__SYMBIAN32__)
+  stat.setStatusText(QString("Logging away on Symbian."));
+#else
+  stat.setStatusText(QString("Logging away on a PC."));
+#endif /* __SYMBIAN32__ */
 
   iXmppConfiguration.setHost(params.server);
   iXmppConfiguration.setPort(params.port);
@@ -77,6 +81,7 @@ _rk_Remokon::_rk_Remokon() :
 
 _rk_Remokon::~_rk_Remokon()
 {
+  stop();
   if (L) 
     lua_close(L);
 }
@@ -89,8 +94,10 @@ void _rk_Remokon::start()
 
 void _rk_Remokon::stop()
 {
-  iSession.disconnectFromServer();
-  iIsActive = false;
+  if (iIsActive) {
+    iSession.disconnectFromServer();
+    iIsActive = false;
+  }
 }
 
 void _rk_Remokon::send(const QString& toJid, const QString& msgText)
