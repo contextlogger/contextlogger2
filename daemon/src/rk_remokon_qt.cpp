@@ -169,6 +169,8 @@ void _rk_Remokon::send(const QString& toJid, const QString& msgText)
   iSession.sendMessage(toJid, msgText);
 }
 
+#define TOCSTR(exp) ((exp).toUtf8().data())
+
 // Not sure yet if we need to handle any of these errors. The client
 // object is supposed to itself do some retrying. For now we just log.
 void _rk_Remokon::gotJabberError(QXmppClient::Error anError)
@@ -177,17 +179,24 @@ void _rk_Remokon::gotJabberError(QXmppClient::Error anError)
     {
     case QXmppClient::SocketError:
       {
-	er_log_none(0, "remokon: %d (%s)", anError, "QXmppClient::SocketError");
+        // Unfortunately we cannot use errorString() on the socket
+        // since the API does not give us a handle to the socket.
+	QAbstractSocket::SocketError error = iSession.socketError();
+	er_log_none(0, "remokon: %d (%s) %d (%s)", 
+		    anError, "QXmppClient::SocketError", error);
         break;
       }
     case QXmppClient::KeepAliveError:
       {
-	er_log_none(0, "remokon: %d (%s)", anError, "QXmppClient::KeepAliveError");
+	er_log_none(0, "remokon: %d (%s)", 
+		    anError, "QXmppClient::KeepAliveError");
         break;
       }
     case QXmppClient::XmppStreamError:
       {
-	er_log_none(0, "remokon: %d (%s)", anError, "QXmppClient::XmppStreamError");
+	QXmppStanza::Error::Condition error = iSession.xmppStreamError();
+	er_log_none(0, "remokon: %d (%s) %d", 
+		    anError, "QXmppClient::XmppStreamError", error);
         break;
       }
     default:
@@ -213,8 +222,6 @@ public:
     }
   }
 };
-
-#define TOCSTR(exp) ((exp).toUtf8().data())
 
 void _rk_Remokon::gotJabberMessage(const QXmppMessage& msg)
 {
