@@ -32,12 +32,6 @@ We do not know of any public (or private) Symbian API that could be used to dire
 
 As this plugin automatically and intrusively hooks up with all ``RHTTPSession`` objects, it requires rather high Symbian platform security capabilities, and hence its use may not always be an option.
 
-h2. iksemel/
-
-A port of the [Iksemel http://code.google.com/p/iksemel/] XML and Jabber/XMPP library for Symbian. This not quite your plain port, but rather it excludes some APIs and includes some new ones.
-
-Most notably, there is a new ``stream`` API for asynchronous streaming, with which connects, reads, and writes, are all driven asynchronously. This preserves developer sanity by allowing for single-threaded programming without a danger of blocking the whole application when the network layer blocks. There are two implementations of the API, one implemented in Symbian C++, and one based on POSIX and libev.
-
 h2. keyevents/
 
 The keyevents libraries (client side and server side), from [Jaiku http://code.google.com/p/jaikuengine-mobile-client/].
@@ -69,6 +63,12 @@ Build scripts for building a SIS file containing multiple components. This is in
 h2. py-cl2-cli-lib/
 
 A Python for S60 wrapper for the cxx-cl2-cli-lib library.
+
+h2. qxmpp/
+
+The [QXmpp http://code.google.com/p/qxmpp/] Jabber/XMPP library for Symbian. Builds both for Symbian and Linux. This library is used in implementing the remote control facility of the logger.
+
+Minor customizations have been made, and these are documented in the README-CL2 file.
 
 h2. shared/
 

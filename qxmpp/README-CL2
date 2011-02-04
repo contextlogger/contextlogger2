@@ -1,0 +1,16 @@
+DISCOVERED ISSUES AND FIXES FOR CONTEXTLOGGER2
+
+- PROBLEM: On Symbian, QXmpp appears to attempt to make an internet
+  connection somewhere already before we request a connection to the
+  Jabber server. Or at least require an access point, possibly asking
+  for one interactively. This is not acceptable in the ContextLogger2
+  daemon.
+
+  FIX: This appears to happen as upon QXmppClient initialization a lot
+  of subobjects are instantiated, and one of these, namely
+  QXmppTransferManager, has a QTcpServer in its property. This likely
+  requires an internet interface to listen to, hence the IAP
+  requirement. As CL2 doesn't actually require transfer functionality,
+  we addressed this issue simply by not instantiating
+  QXmppTransferManager at all.
+
