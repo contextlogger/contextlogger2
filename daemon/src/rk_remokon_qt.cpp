@@ -182,7 +182,7 @@ void _rk_Remokon::gotJabberError(QXmppClient::Error anError)
         // Unfortunately we cannot use errorString() on the socket
         // since the API does not give us a handle to the socket.
 	QAbstractSocket::SocketError error = iSession.socketError();
-	er_log_none(0, "remokon: %d (%s) %d (%s)", 
+	er_log_none(0, "remokon: %d (%s) %d", 
 		    anError, "QXmppClient::SocketError", error);
         break;
       }
