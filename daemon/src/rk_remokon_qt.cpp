@@ -115,6 +115,7 @@ _rk_Remokon::~_rk_Remokon()
 
 void _rk_Remokon::start()
 {
+  logh();
   iSession.connectToServer(iXmppConfiguration, iXmppPresence);
   iIsActive = true;
 }
@@ -145,6 +146,7 @@ void _rk_Remokon::resetRunTimer()
 // existing countdown timer.
 void _rk_Remokon::startTimed(int secs)
 {
+  logh();
   if (secs <= 0)
     return;
   iRunForSecs = secs;
@@ -216,6 +218,8 @@ void _rk_Remokon::gotJabberMessage(const QXmppMessage& msg)
 {
   if (msg.body().isEmpty())
     return;
+
+  resetRunTimer();
 
   const char* fromJid = TOCSTR(msg.from());
   const char* luaStr = TOCSTR(msg.body());

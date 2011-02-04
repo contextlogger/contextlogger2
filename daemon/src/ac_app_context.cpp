@@ -184,6 +184,16 @@ EXTERN_C up_Uploader* ac_get_Uploader(ac_AppContext* self)
 #endif
 }
 
+EXTERN_C rk_Remokon* ac_get_Remokon(ac_AppContext* self)
+{
+#if __FEATURE_REMOKON__
+  if (!self || !(self->kr)) return NULL;
+  return self->kr->remokon;
+#else
+  return NULL;
+#endif
+}
+
 EXTERN_C const char* ac_get_logdb_file(ac_AppContext* self)
 {
   return self->logdb_file;

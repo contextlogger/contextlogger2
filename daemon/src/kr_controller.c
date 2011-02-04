@@ -441,14 +441,17 @@ gboolean kr_Controller_start(kr_Controller* self, GError** error)
   (void)error;
   sa_Array_start(self->scanner);
 #if __FEATURE_LOCALSERVER__
-  if (!LocalServer_start(self->localServer, error))
+  if (!LocalServer_start(self->localServer, error)) {
     return FALSE;
+  }
 #endif
 #if __FEATURE_REMOKON__
-  if (rk_Remokon_is_autostart_enabled(self->remokon))
+  if (rk_Remokon_is_autostart_enabled(self->remokon)) {
     logt("controller: auto-starting remokon");
-    if (!rk_Remokon_start(self->remokon, error))
+    if (!rk_Remokon_start(self->remokon, error)) {
       return FALSE;
+    }
+  }
 #endif
   return TRUE;
 }

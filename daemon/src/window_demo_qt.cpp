@@ -2,6 +2,7 @@
 #include "guilog.h"
 
 #include "application_config.h"
+#include "rk_remokon.h"
 #include "up_uploader.h"
 
 #include "common/QsKineticScroller.hpp"
@@ -84,9 +85,14 @@ MainWindow::MainWindow(QWidget *parent)
   uploadAction->setStatusTip(tr("Take log snapshot and upload now"));
   connect(uploadAction, SIGNAL(triggered()), this, SLOT(uploadNow()));
 
+  QAction* remokonAction = new QAction(tr("&Enable remote control"), this);
+  remokonAction->setStatusTip(tr("Allow remote control for a while"));
+  connect(remokonAction, SIGNAL(triggered()), this, SLOT(remokonNow()));
+
   QMenuBar* actionMenu = menuBar();
   //QMenu* actionMenu = menuBar()->addMenu(tr("&Action"));
   actionMenu->addAction(uploadAction);
+  actionMenu->addAction(remokonAction);
   actionMenu->addSeparator();
   actionMenu->addAction(quitAction);
 }
@@ -109,6 +115,17 @@ void MainWindow::uploadNow()
   up_Uploader* uploader = ac_global_Uploader;
   GError* localError = NULL;
   if (!up_Uploader_upload_now(uploader, &localError)) {
+    showFreeGerror(localError);
+  }
+#endif
+}
+
+void MainWindow::remokonNow()
+{
+#if __FEATURE_REMOKON__
+  rk_Remokon* remokon = ac_global_Remokon;
+  GError* localError = NULL;
+  if (!rk_Remokon_start_timed(remokon, 5 * 60, &localError)) {
     showFreeGerror(localError);
   }
 #endif

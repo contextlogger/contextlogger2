@@ -23,6 +23,7 @@ class MainWindow : public QMainWindow
 
  private slots:
   void uploadNow();
+  void remokonNow();
 };
 
 #endif /* __window_demo_qt_hpp__ */

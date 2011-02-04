@@ -5,6 +5,8 @@
 
 #if __FEATURE_REMOKON__
 
+#include "ac_app_context.h"
+
 #include <glib.h>
 
 #ifdef __cplusplus
@@ -57,6 +59,9 @@ extern "C" {
 			   const char* toJid,
 			   const char* msgText,
 			   GError** error);
+
+  rk_Remokon* ac_get_Remokon(ac_AppContext* self);
+#define ac_global_Remokon ac_get_Remokon(ac_get_global_AppContext())
 
 #ifdef __cplusplus
 } /* extern "C" */
