@@ -339,7 +339,7 @@ gboolean rk_Remokon_reconfigure(rk_Remokon* self,
 				GError** error)
 {
   if (strcmp(key, "remokon.autostart")) {
-    self->iAutostartEnabled = force_lua_eval_bool(value, TRUE);
+    self->iAutostartEnabled = force_lua_eval_bool(value, FALSE);
   }
 
 #if defined(__SYMBIAN32__)
