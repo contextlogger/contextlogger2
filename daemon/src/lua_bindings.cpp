@@ -277,6 +277,23 @@ static int f_remokon_start(lua_State* L)
   return 0;
 }
 
+/***koog (lua-func remokon_timed) ***/
+static int f_remokon_timed(lua_State* L)
+/***end***/
+{
+#if __FEATURE_REMOKON__
+  int secs = luaL_checkint(L, 1);
+  kr_Controller* kr = ac_global_Controller;
+  GError* localError = NULL;
+  if (!rk_Remokon_start_timed(kr->remokon, secs, &localError)) {
+    return lua_raise_gerror(L, localError);
+  }
+#else
+  lua_error_unsupported(L);
+#endif
+  return 0;
+}
+
 /***koog (lua-func remokon_stop) ***/
 static int f_remokon_stop(lua_State* L)
 /***end***/
@@ -320,6 +337,7 @@ static const luaL_Reg function_table[] = {
   {"are_uploads_allowed", f_are_uploads_allowed},
   {"log_message", f_log_message},
   {"remokon_stop", f_remokon_stop},
+  {"remokon_timed", f_remokon_timed},
   {"remokon_start", f_remokon_start},
   {"get_upload_time", f_get_upload_time},
   {"upload_now", f_upload_now},
