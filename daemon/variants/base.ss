@@ -219,6 +219,7 @@ project must implement.
 (define* SELF-CAPS-32 (symbol-sort (cons 'Location SELF-CAPS-30)))
 (define* DEV-CAPS (symbol-sort (append SELF-CAPS-32 '(PowerMgmt ProtServ ReadDeviceData SurroundingsDD SwEvent TrustedUI WriteDeviceData))))
 (define* PUBLID-CAPS (symbol-sort (append DEV-CAPS '(CommDD DiskAdmin NetworkControl MultimediaDD))))
+(define* MANUFACTURER-CAPS (symbol-sort (append PUBLID-CAPS '(AllFiles DRM TCB))))
 
 (define-variant* symbian-variant% project-variant%
   (super-new)
