@@ -26,7 +26,6 @@
 
 #include <QObject>
 #include <QAbstractSocket>
-#include <QVariant>
 
 #include "QXmppConfiguration.h"
 #include "QXmppLogger.h"
@@ -44,7 +43,6 @@ class QXmppStream;
 class QXmppDiscoveryIq;
 class QXmppReconnectionManager;
 class QXmppRosterManager;
-class QXmppTransferManager;
 class QXmppVCardManager;
 class QXmppVersionManager;
 
@@ -59,11 +57,23 @@ class QXmppVersionManager;
 ///
 /// This class will provide the handle/reference to QXmppRosterManager (roster management),
 /// QXmppVCardManager (vCard manager), QXmppReconnectionManager (reconnection
-/// mechanism) and QXmppTransferManager (file transfers).
+/// mechanism) and QXmppVersionManager (software version information).
 ///
 /// By default, a reconnection mechanism exists, which makes sure of reconnecting
 /// to the server on disconnections due to an error. User can have a custom
 /// reconnection mechanism as well.
+///
+/// Not all the managers or extensions have been enabled by default. One can
+/// enable/disable the managers using the funtions addExtension() and
+/// removeExtension(). findExtension() can be used to find reference/pointer to
+/// particular instansiated and enabled manager.
+///
+/// List of managers enabled by default:
+/// - QXmppRosterManager
+/// - QXmppVCardManager
+/// - QXmppVersionManager
+/// - QXmppDiscoveryManager
+/// - QXmppEntityTimeManager
 ///
 /// \ingroup Core
 
@@ -133,7 +143,6 @@ public:
     QXmppStanza::Error::Condition xmppStreamError();
 
     QXmppRosterManager& rosterManager();
-    QXmppTransferManager& transferManager();
     QXmppVCardManager& vCardManager();
     QXmppVersionManager& versionManager();
 
