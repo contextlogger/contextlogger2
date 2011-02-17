@@ -3,8 +3,6 @@
 
 #include "application_config.h"
 
-#if __FEATURE_REMOKON__
-
 #include "ac_app_context.h"
 
 #include <glib.h>
@@ -66,8 +64,6 @@ extern "C" {
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
-
-#endif /* __FEATURE_REMOKON__ */
 
 #endif /* __rk_remokon_h__ */
 
