@@ -329,6 +329,26 @@ QList<QXmppSrvRecord> QXmppSrvInfo::records() const
     return d->records;
 }
 
+#if defined(Q_OS_SYMBIAN)
+NONSHARABLE_CLASS(RSocketServCleanup)
+{
+ private:
+  RSocketServ& i;
+ public:
+  RSocketServCleanup(RSocketServ& a) : i(a) {}
+  ~RSocketServCleanup() { i.Close(); }
+};
+
+NONSHARABLE_CLASS(RHostResolverCleanup)
+{
+ private:
+  RHostResolver& i;
+ public:
+  RHostResolverCleanup(RHostResolver& a) : i(a) {}
+  ~RHostResolverCleanup() { i.Close(); }
+};
+#endif
+
 /// Perform a DNS lookup for an SRV entry.
 ///
 /// Returns a QXmppSrvInfo object containing the found records.
@@ -383,11 +403,17 @@ QXmppSrvInfo QXmppSrvInfo::fromName(const QString &dname)
     local_dns_record_list_free(records, DnsFreeRecordList);
 
 #elif defined(Q_OS_SYMBIAN)
-    RHostResolver dnsResolver;
     RSocketServ dnsSocket;
+    TInt err = dnsSocket.Connect();
+    if (err) {
+        result.d->error = QXmppSrvInfo::UnknownError;
+        result.d->errorString = QLatin1String("RSocketServ::Connect failed");
+        return result;
+    }
+    RSocketServCleanup dnsSocketCleanup(dnsSocket);
 
     // Initialise resolver.
-    TInt err = dnsSocket.Connect();
+    RHostResolver dnsResolver;
     err = dnsResolver.Open(dnsSocket, KAfInet, KProtocolInetUdp);
     if (err != KErrNone)
     {
@@ -395,6 +421,7 @@ QXmppSrvInfo QXmppSrvInfo::fromName(const QString &dname)
         result.d->errorString = QLatin1String("RHostResolver::Open failed");
         return result;
     }
+    RHostResolverCleanup dnsResolverCleanup(dnsResolver);
 
     // Perform DNS query.
     TDnsQueryBuf dnsQuery;

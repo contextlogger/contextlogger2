@@ -16,3 +16,12 @@ DISCOVERED ISSUES AND FIXES FOR CONTEXTLOGGER2
 
   UPDATE: A later upstream update (for version 0.2.92) has fixed this
   issue by not instantiating QXmppTransferManager by default.
+
+- PROBLEM: In the Symbian implementation, in QXmppSrvInfo.cpp, every
+  DNS query opens up a new socket server session and also creates a
+  new RHostResolver object, without cleaning up resources. This
+  appears to eventually (soon) result in DNS queries permanently
+  failing, despite the retry mechanism.
+
+  FIX: We edited the code to do RAII to ensure both R objects are
+  closed after having been initialized.
