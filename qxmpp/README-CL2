@@ -14,5 +14,5 @@ DISCOVERED ISSUES AND FIXES FOR CONTEXTLOGGER2
   we addressed this issue simply by not instantiating
   QXmppTransferManager at all.
 
-  UPDATE: A later upstream update has fixed this issue by not
-  instantiating QXmppTransferManager by default.
+  UPDATE: A later upstream update (for version 0.2.92) has fixed this
+  issue by not instantiating QXmppTransferManager by default.
