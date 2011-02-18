@@ -132,6 +132,12 @@ project must implement.
   ;; No uploads by default. (A Lua expression.)
   (define/public (upload-url.attr) "nil")
 
+  ;; No remote control by default. (A Lua expression.)
+  (define/public (remokon-host.attr) "nil")
+
+  ;; No remote control by default. (A Lua expression.)
+  (define/public (remokon-jid.attr) "nil")
+
   ;; No sensible IAP by default. (A Lua expression.)
   (define/public (iap-id-expr.attr) "-1")
   

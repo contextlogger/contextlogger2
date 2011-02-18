@@ -69,6 +69,12 @@ struct _cf_RcFile {
 "end\n" \
 "if upload_url == nil then\n" \
    "upload_url = UPLOAD_URL_DEFAULT\n" \
+"end\n" \
+"if remokon_host == nil then\n" \
+   "remokon_host = REMOKON_HOST_DEFAULT\n" \
+"end\n" \
+"if jid == nil then\n" \
+   "jid = JID_DEFAULT\n" \
 "end\n"
 /***end***/
 
@@ -84,6 +90,8 @@ static void ValidateAdjustConfig(lua_State *L)
   const char* s = 
     "IAP_DEFAULT = " __IAP_ID_EXPR__ ";\n"
     "UPLOAD_URL_DEFAULT = " __UPLOAD_URL__ ";\n"
+    "REMOKON_HOST_DEFAULT = " __REMOKON_HOST__ ";\n"
+    "JID_DEFAULT = " __REMOKON_JID__ ";\n"
     CF_VALIDATE_IN_LUA;
   EVALUATE(s);
 }

@@ -35,4 +35,10 @@ end
 if upload_url == nil then
    upload_url = UPLOAD_URL_DEFAULT
 end
+if remokon_host == nil then
+   remokon_host = REMOKON_HOST_DEFAULT
+end
+if jid == nil then
+   jid = JID_DEFAULT
+end
 

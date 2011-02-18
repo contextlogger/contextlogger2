@@ -67,6 +67,11 @@ _rk_Remokon::_rk_Remokon() :
 	 this->params.server, this->params.port,
 	 this->params.jid,
 	 this->iAutostartEnabled);
+
+    iXmppConfiguration.setHost(params.server);
+    iXmppConfiguration.setPort(params.port);
+    iXmppConfiguration.setJid(params.jid);
+    iXmppConfiguration.setPassword(params.password);
   }
 
   iXmppPresence.setType(QXmppPresence::Available);
@@ -77,11 +82,6 @@ _rk_Remokon::_rk_Remokon() :
 #else
   stat.setStatusText(QString("Logging away on a PC."));
 #endif /* __SYMBIAN32__ */
-
-  iXmppConfiguration.setHost(params.server);
-  iXmppConfiguration.setPort(params.port);
-  iXmppConfiguration.setJid(params.jid);
-  iXmppConfiguration.setPassword(params.password);
 
   // Desired security policy. We are strict on Symbian, since there we
   // assume the required certificate must have been globally
@@ -312,19 +312,22 @@ gboolean rk_Remokon_is_autostart_enabled(rk_Remokon* self)
   return (self->iHaveConfig && self->iAutostartEnabled);
 }
 
+#define no_config_error \
+  gx_error_new(domain_cl2app, code_no_configuration, \
+	       "some Jabber config missing")
+
 // Does nothing if already started.
 extern "C"
 gboolean rk_Remokon_start(rk_Remokon* self, GError** error)
 {
-  if (!rk_Remokon_is_started(self)) {
-    if (!self->iHaveConfig) {
-      // No point in trying to start without proper configuration.
-      if (error)
-	*error = gx_error_new(domain_cl2app, code_no_configuration,
-			     "some Jabber config missing");
-      return FALSE;
-    }
+  if (!self->iHaveConfig) {
+    // No point in trying to start without proper configuration.
+    if (error)
+      *error = no_config_error;
+    return FALSE;
+  }
 
+  if (!rk_Remokon_is_started(self)) {
     GTRAP(FALSE, self->start());
   }
   return TRUE;
@@ -343,6 +346,13 @@ gboolean rk_Remokon_start_timed(rk_Remokon* self,
 				int secs,
 				GError** error)
 {
+  if (!self->iHaveConfig) {
+    // No point in trying to start without proper configuration.
+    if (error)
+      *error = no_config_error;
+    return FALSE;
+  }
+
   GTRAP(FALSE, self->startTimed(secs));
   return TRUE;
 }

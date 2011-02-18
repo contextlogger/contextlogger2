@@ -43,6 +43,7 @@ else
 DIST_COPY := cp $(BUILT_SIS) $(DIST_HOME)/$(BASENAME)-$(VERSION)-s60_30_py1_$(DIST_CERT).$(DIST_EXT)
 endif
 
+# For CA cert installation support, create this file.
 CA_FILE := cl2-ca-cert.der
 CERT_FILES := $(wildcard $(CA_FILE))
 ifeq ($(CERT_FILES),)
