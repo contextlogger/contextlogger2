@@ -101,6 +101,20 @@ endif ;; package not installed
 <% end %>
 
 ;;
+;; HTTP filter plugin.
+;;
+<% if $HAVE_CL2WEBFILTER
+   sisxfile = '../filter-http/packages/cl2webfilter_3rd_udeb_publisher_devx.sisx'
+   uid = lookup_uid sisxfile
+   uid_s = ("0x%08x" % uid)
+   sisfile = copy_with_sis_ext sisxfile
+%>
+if not package(<%= uid_s %>)
+@<%= sisfile.inspect %>, (<%= uid_s %>)
+endif ;; package not installed
+<% end %>
+
+;;
 ;; C++ client library.
 ;;
 <% sisxfile = '../cxx-cl2-cli-lib/build/s60_30_%s/cl2cli.sisx' % $CERT_NAME

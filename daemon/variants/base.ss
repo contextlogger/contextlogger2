@@ -68,7 +68,7 @@ project must implement.
 
   (define/public (major-version.attr) 0)
   
-  (define/public (minor-version.attr) 16)
+  (define/public (minor-version.attr) 17)
   
   (define/public (version100.attr)
     (+ (* (major-version.attr) 100) (minor-version.attr)))
@@ -432,6 +432,9 @@ project must implement.
     (and (send this with-qt-mobility.attr)
          (have-caps? '(ReadDeviceData))))
 
+  (define/override (music-enabled.attr)
+    (send this have-mpxplaybackutility.attr))
+  
   (define/override (proximity-enabled.attr)
     (and (send this with-qt-mobility.attr)
          (have-caps? '(ReadDeviceData))))
@@ -459,7 +462,8 @@ project must implement.
          (have-caps? '(WriteDeviceData))))
     
   (define/override (weburl-enabled.attr)
-    (and (send this have-epocxplat.attr)
+    (and (not (httpurl-enabled.attr))
+         (send this have-epocxplat.attr)
          (or
           (send this have-ahleclient-lib.attr)
           (send this have-ahle2client-lib.attr))
@@ -470,8 +474,12 @@ project must implement.
 (define-variant* symbian/all-variant% symbian/all-event-variant%
   (super-new)
 
+  (define/override (cellpos-enabled.attr)
+    (and (send this can-get-cell-id)
+         (send this have-caps? '(Location))))
+
   (define/override (gps-enabled.attr)
-    (send this have-caps? '(Location)))
+    (not (cellpos-enabled.attr)))
 
   (define/override (btprox-enabled.attr)
     #t))
