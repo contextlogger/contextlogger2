@@ -2,6 +2,7 @@
 
 #include "ac_app_context.h"
 #include "application_config.h"
+#include "cf_rcfile.h"
 #include "kr_controller_private.h"
 #include "lua_cl2.h"
 #include "sa_sensor_list_integration.h"
@@ -126,6 +127,15 @@ static int f_iap_id_by_name(lua_State* L)
   }
   return 1;
 #endif /* __SYMBIAN32__ */
+}
+
+/***koog (lua-func get_username) ***/
+static int f_get_username(lua_State* L)
+/***end***/
+{
+  const char* name = cf_RcFile_get_username(ac_global_RcFile);
+  lua_pushstring(L, name);
+  return 1;
 }
 
 /***koog (lua-func config_get) ***/
@@ -348,6 +358,7 @@ static const luaL_Reg function_table[] = {
   {"all_sensor_names", f_all_sensor_names},
   {"config_set", f_config_set},
   {"config_get", f_config_get},
+  {"get_username", f_get_username},
   {"iap_id_by_name", f_iap_id_by_name},
   {"is_ascii_ident", f_is_ascii_ident},
   {"log", f_log},
