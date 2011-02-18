@@ -328,16 +328,13 @@ void CUploader::SetSnapshotTimerL()
   logt("next snapshot time computed");
   log_time(snaptime);
 
-  // We must specify time interval in milliseconds. For long time
-  // intervals we might get an overflow. Another reason to use an
-  // absolute timer where possible.
   QDateTime atTime;
   atTime.setTime_t(snaptime);
   atTime = atTime.toUTC();
 #if __DO_LOGGING__
   int diffTime = snaptime - now;
-  logg("snapshot %d msecs from now", diffTime);
-  //qDebug() << "snapshot time at" << atTime;
+  logg("snapshot %d secs from now", diffTime);
+  qxDebug() << "snapshot time at" << atTime << " UTC";
 #endif
   iSnapshotTimerAo.start(atTime);
 }

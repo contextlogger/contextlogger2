@@ -3,6 +3,7 @@
 #include "er_errors.h"
 
 #include "common/assertions.h"
+#include "common/epoc-time.h"
 
 #include <limits.h>
 
@@ -28,7 +29,10 @@ bool QAbsTimer::isActive() const
 
 void QAbsTimer::start(const QDateTime& aExpTime) 
 {
-  iAtTime = aExpTime.toUTC().toMSecsSinceEpoch();
+  // We have no direct conversion utility, so convert via POSIX time.
+  // Lose accuracy, though, no fractions of a second preserved.
+  time_t unixTime = aExpTime.toUTC().toTime_t();
+  UnixTimeToUtcEpocTime(iAtTime, unixTime);
   iTimerAo->AtUTC(iAtTime);
 }
 
