@@ -73,13 +73,15 @@ int QXmppReconnectionManager::getNextReconnectingInTime()
 {
     int reconnectingIn;
     if(m_reconnectionTries < 5)
-        reconnectingIn = 10;
-    else if(m_reconnectionTries < 10)
         reconnectingIn = 20;
-    else if(m_reconnectionTries < 15)
+    else if(m_reconnectionTries < 10)
         reconnectingIn = 40;
+    else if(m_reconnectionTries < 15)
+        reconnectingIn = 80;
+    else if(m_reconnectionTries < 20)
+        reconnectingIn = 120;
     else
-        reconnectingIn = 60;
+        reconnectingIn = m_reconnectionTries * 6;
 
     return reconnectingIn;
 }
