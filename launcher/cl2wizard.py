@@ -402,6 +402,11 @@ end """)
         if username is None:
             return
         username = username.encode("utf-8")
+
+        remokon_password = appuifw.query(u"XMPP pw:", "text", u"")
+        if remokon_password is None:
+            return
+        remokon_password = remokon_password.encode("utf-8")
         
         db_drive = appuifw.query(u"Log drive:", "text", u"e")
         if db_drive is None:
@@ -418,12 +423,13 @@ end """)
         
 	text = """
         username = "%s"
+        remokon_password = "%s"
         iap = %s
         mcc = %s
         operator_name = %s
         database_dir = "%s"
         database_disk_threshold = %d
-	""" % (username, iap_expr, mcc,
+	""" % (username, remokon_password, iap_expr, mcc,
                operator, dbdir, database_disk_threshold)
 	make_file(config_file, str(text))
         appuifw.note(u"Config file written", "info")
