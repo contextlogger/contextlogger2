@@ -169,8 +169,6 @@ void _rk_Remokon::send(const QString& toJid, const QString& msgText)
   iSession.sendMessage(toJid, msgText);
 }
 
-#define TOCSTR(exp) ((exp).toUtf8().data())
-
 // Not sure yet if we need to handle any of these errors. The client
 // object is supposed to itself do some retrying. For now we just log.
 void _rk_Remokon::gotJabberError(QXmppClient::Error anError)
@@ -223,6 +221,8 @@ public:
   }
 };
 
+#define TOCSTR(exp) ((exp).toUtf8().data())
+
 void _rk_Remokon::gotJabberMessage(const QXmppMessage& msg)
 {
   if (msg.body().isEmpty())
@@ -230,9 +230,11 @@ void _rk_Remokon::gotJabberMessage(const QXmppMessage& msg)
 
   resetRunTimer();
 
-  const char* fromJid = TOCSTR(msg.from());
-  const char* luaStr = TOCSTR(msg.body());
-  logg("remote message from %s: %s", fromJid, luaStr);
+  QByteArray luaStrBa = msg.body().toUtf8();
+  const char* luaStr = luaStrBa.data();
+  logg("remote message from '%s': '%s'", 
+       TOCSTR(msg.from()), 
+       luaStr);
 
   // If set, points to a literal or something within Lua state.
   const gchar* replyText = NULL;
