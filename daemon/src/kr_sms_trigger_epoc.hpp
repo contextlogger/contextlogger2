@@ -10,14 +10,6 @@
 #include <gsmumsg.h>
 #include <smsuaddr.h>
 
-NONSHARABLE_CLASS(MSmsTrigger)
-{
- public:
-  virtual void SmsTriggerReceivedL(TInt aSecs) = 0;
-  virtual void SmsTriggerErrorL(TInt errCode) = 0;
-  virtual void SmsTriggerLeave(TInt errCode) = 0;
-};
-
 /***koog 
 (require racket/class)
 (require codegen/symbian-ctor)
@@ -26,34 +18,34 @@ NONSHARABLE_CLASS(MSmsTrigger)
   (class ctor%
     (super-new)
     (define/override (class-name) "CSmsTrigger")
-    (define/override (args/string) "ac_AppContext* aAppContext, MSmsTrigger& aObserver")
-    (define/override (init-expr) "CActive(EPriorityStandard), iAppContext(aAppContext), iObserver(aObserver), iFs(ac_Fs(aAppContext))")
+    (define/override (args/string) "ac_AppContext* aAppContext")
+    (define/override (init-expr) "CActive(EPriorityStandard), iAppContext(aAppContext), iFs(ac_Fs(aAppContext))")
     (define/override (ctor-code) "CActiveScheduler::Add(this);")
    )))
  ***/
 #define CTOR_DECL_CSmsTrigger  \
-public: static CSmsTrigger* NewLC(ac_AppContext* aAppContext, MSmsTrigger& aObserver); \
-public: static CSmsTrigger* NewL(ac_AppContext* aAppContext, MSmsTrigger& aObserver); \
-private: CSmsTrigger(ac_AppContext* aAppContext, MSmsTrigger& aObserver); \
+public: static CSmsTrigger* NewLC(ac_AppContext* aAppContext); \
+public: static CSmsTrigger* NewL(ac_AppContext* aAppContext); \
+private: CSmsTrigger(ac_AppContext* aAppContext); \
 private: void ConstructL();
 
 #define CTOR_IMPL_CSmsTrigger  \
-CSmsTrigger* CSmsTrigger::NewLC(ac_AppContext* aAppContext, MSmsTrigger& aObserver) \
+CSmsTrigger* CSmsTrigger::NewLC(ac_AppContext* aAppContext) \
 { \
-  CSmsTrigger* obj = new (ELeave) CSmsTrigger(aAppContext, aObserver); \
+  CSmsTrigger* obj = new (ELeave) CSmsTrigger(aAppContext); \
   CleanupStack::PushL(obj); \
   obj->ConstructL(); \
   return obj; \
 } \
  \
-CSmsTrigger* CSmsTrigger::NewL(ac_AppContext* aAppContext, MSmsTrigger& aObserver) \
+CSmsTrigger* CSmsTrigger::NewL(ac_AppContext* aAppContext) \
 { \
-  CSmsTrigger* obj = CSmsTrigger::NewLC(aAppContext, aObserver); \
+  CSmsTrigger* obj = CSmsTrigger::NewLC(aAppContext); \
   CleanupStack::Pop(obj); \
   return obj; \
 } \
  \
-CSmsTrigger::CSmsTrigger(ac_AppContext* aAppContext, MSmsTrigger& aObserver) : CActive(EPriorityStandard), iAppContext(aAppContext), iObserver(aObserver), iFs(ac_Fs(aAppContext)) \
+CSmsTrigger::CSmsTrigger(ac_AppContext* aAppContext) : CActive(EPriorityStandard), iAppContext(aAppContext), iFs(ac_Fs(aAppContext)) \
 {CActiveScheduler::Add(this);}
 /***end***/
 
@@ -67,7 +59,6 @@ NONSHARABLE_CLASS(CSmsTrigger) :
 
  private:
   ac_AppContext* iAppContext;
-  MSmsTrigger& iObserver;
   RFs& iFs;
   DEF_SESSION(RSocketServ, iSocketServ);
   DEF_SESSION(RSocket, iSocket);

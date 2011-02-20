@@ -81,11 +81,11 @@ void CSmsTrigger::DoCancel()
   iSocket.CancelIoctl();
 }
 
+// Leave or other error in RunL. This inactivates this AO as we do not
+// make further requests.
 TInt CSmsTrigger::RunError(TInt errCode)
 {
-  TRAPD(leaveCode, iObserver.SmsTriggerErrorL(errCode));
-  if (leaveCode)
-    iObserver.SmsTriggerLeave(leaveCode);
+  er_log_symbian(0, errCode, "INACTIVATE: error in SMS trigger handling");
   return 0;
 }
 
