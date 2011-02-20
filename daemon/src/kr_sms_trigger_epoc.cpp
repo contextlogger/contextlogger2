@@ -50,6 +50,7 @@ void CSmsTrigger::RunL()
   // see enum TSmsPDUType
   CSmsMessage* message = CSmsMessage::NewL(iFs, CSmsPDU::ESmsDeliver, 
 					   smsBuffer);
+  CleanupStack::Pop(); // smsBuffer, ownership taken by 'message'
   CleanupStack::PushL(message);
   {
     RSmsSocketReadStream readStream(iSocket);
@@ -58,14 +59,22 @@ void CSmsTrigger::RunL()
     CleanupStack::PopAndDestroy(); // readStream
   }
   TInt bufLen = smsBuffer->Length(); // number of characters
-  RBuf des;
-  des.CreateL(bufLen);
-  des.CleanupClosePushL();
-  smsBuffer->Extract(des, 0, bufLen);
+  RBuf des16;
+  des16.CreateL(bufLen);
+  des16.CleanupClosePushL();
+  smsBuffer->Extract(des16, 0, bufLen);
 
-  logg("control message: '%S'", &des);
+#if __DO_LOGGING__
+  {
+    HBufC8* des8 = ConvToUtf8ZL(des16);
+    CleanupStack::PushL(des8);
+    const char* str = (const char*)(des8->Ptr());
+    logg("control message: '%s' (len %d)", str, bufLen);
+    CleanupStack::PopAndDestroy(); // des8
+  }
+#endif
 
-  CleanupStack::PopAndDestroy(3); // des, message, smsBuffer
+  CleanupStack::PopAndDestroy(2); // des16, message
 
   // Report success.
   {

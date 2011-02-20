@@ -601,10 +601,13 @@ struct _kr_PlatAo {
   CRegistrationObserver* iRegistrationObserver;
   CNetworkObserver* iNetworkObserver;
   CSignalObserver* iSignalObserver;
+  CSmsTrigger* iSmsTrigger;
 };
 
 extern "C" kr_PlatAo* kr_PlatAo_new(GError** error)
 {
+  ac_AppContext* ac = ac_get_global_AppContext();
+
   kr_PlatAo* self = g_try_new0(kr_PlatAo, 1);
   if (G_UNLIKELY(!self)) {
     if (error) *error = gx_error_no_memory;
@@ -653,12 +656,25 @@ extern "C" kr_PlatAo* kr_PlatAo_new(GError** error)
     return NULL;
   }
 
+#if __FEATURE_REMOKON__
+  TRAP(errCode, self->iSmsTrigger = CSmsTrigger::NewL(ac));
+  if (G_UNLIKELY(errCode)) {
+    kr_PlatAo_destroy(self);
+    if (error)
+      *error = gx_error_new(domain_symbian, errCode, 
+			    "SMS trigger observer creation failure: %s (%d)", 
+			    plat_error_strerror(errCode), errCode);
+    return NULL;
+  }
+#endif
+
   return self;
 }
 
 extern "C" void kr_PlatAo_destroy(kr_PlatAo* self)
 {
   if (self) {
+    delete self->iSmsTrigger;
     delete self->iSignalObserver;
     delete self->iNetworkObserver;
     delete self->iRegistrationObserver;
