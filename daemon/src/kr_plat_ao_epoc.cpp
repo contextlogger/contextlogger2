@@ -4,6 +4,7 @@
 #include "bb_blackboard.h"
 #include "er_errors.h"
 #include "kr_diskspace.h"
+#include "kr_sms_trigger_epoc.hpp"
 #include "sa_sensor_list_log_db.h"
 #include "ut_diskspace_epoc.hpp"
 #include "ut_telephony_epoc.h"

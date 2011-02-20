@@ -21,6 +21,8 @@ void CSmsTrigger::ConstructL()
   iSmsAddr.SetSmsAddrFamily(ESmsAddrMatchText); 
   iSmsAddr.SetTextMatch(KTag);
   User::LeaveIfError(iSocket.Bind(iSmsAddr));
+
+  MakeRequest();
 }
 
 CSmsTrigger::~CSmsTrigger()
@@ -37,6 +39,12 @@ void CSmsTrigger::RunL()
     RunError(errCode);
     return;
   }
+
+  if (!iRead) {
+    MakeRequest(); // next read
+    return;
+  }
+
   CSmsBuffer *smsBuffer = CSmsBuffer::NewL();
   CleanupStack::PushL(smsBuffer);
   // see enum TSmsPDUType
@@ -58,6 +66,14 @@ void CSmsTrigger::RunL()
   logg("control message: '%S'", &des);
 
   CleanupStack::PopAndDestroy(3); // des, message, smsBuffer
+
+  // Report success.
+  {
+    // Third arg ignored?
+    iSocket.Ioctl(KIoctlReadMessageSucceeded, iStatus, &iPckgBuf, KSolSmsProv);
+    iRead = EFalse;
+    SetActive();
+  }
 }
 
 void CSmsTrigger::DoCancel()
@@ -79,6 +95,7 @@ void CSmsTrigger::MakeRequest()
     Cancel();
   iPckgBuf() = KSockSelectRead;
   iSocket.Ioctl(KIOctlSelect, iStatus, &iPckgBuf, KSOLSocket);
+  iRead = ETrue;
   SetActive();
 }
 

@@ -73,14 +73,15 @@ NONSHARABLE_CLASS(CSmsTrigger) :
   DEF_SESSION(RSocket, iSocket);
   TSmsAddr iSmsAddr;
   TPckgBuf<TUint> iPckgBuf;
+  TBool iRead; // Ioctl read request (otherwise succeeded request)
 
  private: // CActive
   virtual void RunL();
   virtual void DoCancel();
   virtual TInt RunError(TInt errCode);
 
- public:
-  void MakeRequest(); // one-shot request
+ private:
+  void MakeRequest();
 };
 
 #endif /* __kr_sms_trigger_epoc_hpp__ */
