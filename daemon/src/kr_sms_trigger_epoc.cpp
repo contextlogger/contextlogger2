@@ -10,9 +10,13 @@
 
 #include "kr_sms_trigger_epoc.hpp"
 
+#include "rk_remokon.h"
+
 #include <smsustrm.h> // read stream
 
 CTOR_IMPL_CSmsTrigger;
+
+_LIT8(KControlTag, "##cl");
 
 void CSmsTrigger::ConstructL()
 {
@@ -22,9 +26,8 @@ void CSmsTrigger::ConstructL()
 						  KSMSAddrFamily, 
 						  KSockDatagram, 
 						  KSMSDatagramProtocol));
-  _LIT8(KTag, "##cl");
   iSmsAddr.SetSmsAddrFamily(ESmsAddrMatchText); 
-  iSmsAddr.SetTextMatch(KTag);
+  iSmsAddr.SetTextMatch(KControlTag);
   User::LeaveIfError(iSocket.Bind(iSmsAddr));
 
   MakeRequest();
@@ -78,6 +81,22 @@ void CSmsTrigger::RunL()
     CleanupStack::PopAndDestroy(); // des8
   }
 #endif
+
+  TLex lex(des16);
+  lex.Inc(KControlTag().Length());
+  TInt16 secs = 0;
+  TInt parErr = lex.Val(secs);
+  if (!parErr && (secs > 0)) {
+    logg("control message: parsed to %d secs", secs);
+    rk_Remokon* remokon = ac_get_Remokon(iAppContext);
+    if (remokon) {
+      GError* localError = NULL;
+      if (!rk_Remokon_start_timed(remokon, secs, &localError)) {
+	er_log_gerror(er_FREE, localError,
+		      "sms trigger: error starting remokon");
+      }
+    }
+  }
 
   CleanupStack::PopAndDestroy(2); // des16, message
 
