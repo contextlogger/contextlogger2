@@ -1,4 +1,9 @@
 /*
+ !concept {:name => "Catching SMS control messages",
+   :desc => "Quietly observing and processing SMS control messages on Symbian."}
+*/
+
+/*
   References:
   http://wiki.forum.nokia.com/index.php/SMS_Utilities_API
 */

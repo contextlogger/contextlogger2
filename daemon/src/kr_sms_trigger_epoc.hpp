@@ -1,3 +1,7 @@
+/*
+ !concept {:name => "Catching SMS control messages"}
+*/
+
 #ifndef __kr_sms_trigger_epoc_hpp__
 #define __kr_sms_trigger_epoc_hpp__
 
