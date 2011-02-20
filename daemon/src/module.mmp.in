@@ -97,7 +97,6 @@ library profileeng.lib // SDK Plugins
 <% end %>
 
 <% if $SMSEVENT_ENABLED %>
-library gsmu.lib // CSmsPDU
 library msgs.lib // CMsvSession
 library smcm.lib // CSmsClientMtm
 <% end %>
@@ -116,16 +115,18 @@ library efsrv.lib
 library eikcoctl.lib
 library eikcore.lib
 library esock.lib
+library estor.lib // RReadStream
 library etel3rdparty.lib // CTelephony
+library gsmu.lib // CSmsPDU
 library http.lib
 library inetprotutil.lib // URI parsers
 library insock.lib // Internet protocol support for esock
 library lbs.lib
+library smsu.lib // for SMS triggers
 library ws32.lib
 
 library aknnotify.lib eiksrv.lib // CAknGlobalNote
 library cntmodel.lib // CContactDatabase
-//library estor.lib // RReadStream
 //library etel.lib // RCall, RLine
 //library logcli.lib // CLogClient
 //library pbkeng.lib // CPbkContactEngine
@@ -245,6 +246,7 @@ source er_errors_cxx.cpp
 source kr_controller.c
 source kr_diskspace.cpp
 source kr_plat_ao_epoc.cpp
+source kr_sms_trigger_epoc.cpp
 //source libluasqlite3.c // but not yet supported
 <% if $FEATURE_LOCALSERVER %>
 source local_server.cpp
