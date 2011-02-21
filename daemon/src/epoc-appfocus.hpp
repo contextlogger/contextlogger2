@@ -1,3 +1,8 @@
+/*
+ !concept {:name => "Tracking application focus on Symbian",
+   :desc => "Keeping track of which application has the focus."}
+*/
+
 #ifndef __epoc_appfocus_hpp__
 #define __epoc_appfocus_hpp__
 

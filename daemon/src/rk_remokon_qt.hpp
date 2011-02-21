@@ -1,3 +1,8 @@
+/*
+ !concept {:name => "QXmpp and Lua based remote control mechanism",
+   :desc => "Accepting remote commands via XMPP and executing them using a Lua runtime."}
+*/
+
 #ifndef __rk_remokon_qt_hpp__
 #define __rk_remokon_qt_hpp__
 

@@ -1,3 +1,7 @@
+/*
+ !concept {:name => "QIODevice input device composing sub-QIODevices"}
+*/
+
 #include "iodeviceseq_qt.hpp"
 
 #include "common/assertions.h"

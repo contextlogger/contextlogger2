@@ -3,6 +3,10 @@
 #ifdef __EPOC32__
 #ifdef __cplusplus
 
+/*
+ !concept {:name => "Double byte string / UTF-8 conversion utilities"}
+*/
+
 #include <utf.h> // CnvUtfConverter
 
 // The caller must free the returned buffer. The buffer is guaranteed

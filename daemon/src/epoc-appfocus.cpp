@@ -1,3 +1,7 @@
+/*
+ !concept {:name => "Tracking application focus on Symbian"}
+*/
+
 #include "epoc-appfocus.hpp"
 
 #if __APPFOCUS_ENABLED__

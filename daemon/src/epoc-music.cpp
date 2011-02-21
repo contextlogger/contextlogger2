@@ -1,3 +1,7 @@
+/*
+ !concept {:name => "Tracking music playback on Symbian"}
+*/
+
 /** 
 
   Music artist and track logging

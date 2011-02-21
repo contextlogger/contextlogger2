@@ -1,3 +1,7 @@
+/*
+ !concept {:name => "Timer-based retries on Symbian"}
+*/
+
 #include "ut_retry_epoc.hpp"
 
 #include "er_errors.h"

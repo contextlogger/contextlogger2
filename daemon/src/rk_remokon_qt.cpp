@@ -1,3 +1,7 @@
+/*
+ !concept {:name => "QXmpp and Lua based remote control mechanism"}
+*/
+
 #include "rk_remokon.h"
 #include "rk_remokon_qt.hpp"
 

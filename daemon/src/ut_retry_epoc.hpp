@@ -1,3 +1,8 @@
+/*
+ !concept {:name => "Timer-based retries on Symbian",
+   :desc => "An API that encapsulates logic for repeating failed operations after increasing (and semi-randomized) time intervals."}
+*/
+
 #ifndef __ut_retry_epoc_hpp__
 #define __ut_retry_epoc_hpp__
 

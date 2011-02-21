@@ -48,6 +48,11 @@ G_END_DECLS
 #ifdef __EPOC32__
 #ifdef __cplusplus
 
+/*
+ !concept {:name => "Double byte string / UTF-8 conversion utilities",
+   :desc => "A number of different utility functions for conveniently converting between UTF-8 and the native UTF-16 encoding on Symbian."}
+*/
+
 #include <e32std.h>
 
 HBufC8* ConvToUtf8ZL(const TDesC& name16);

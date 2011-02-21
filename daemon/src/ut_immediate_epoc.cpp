@@ -1,3 +1,7 @@
+/*
+ !concept {:name => "A generic AO that completes immediately"}
+*/
+
 #include "ut_immediate_epoc.hpp"
 #include "ut_immediate.h"
 

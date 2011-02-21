@@ -1,3 +1,8 @@
+/*
+ !concept {:name => "QIODevice input device composing sub-QIODevices",
+   :desc => "An abstraction for reading sequentially from multiple QIODevices."}
+*/
+
 #ifndef __iodeviceseq_qt_hpp__
 #define __iodeviceseq_qt_hpp__
 

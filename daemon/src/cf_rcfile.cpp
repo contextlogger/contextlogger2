@@ -1,3 +1,7 @@
+/*
+ !concept {:name => "Lua based config files"}
+*/
+
 #include "cf_rcfile.h"
 
 #if __FEATURE_RCFILE__

@@ -15,7 +15,7 @@
 // abort(), even if there is an out of memory error, or exhaustion of
 // file handles, or whatever.
 //
-// !concept {:name => "Portable logging"}
+// !concept {:name => "Portable logging", :desc => "Logging to a file on Symbian, and to console elsewhere."}
 
 #ifndef __LOGGING_C_H__
 #define __LOGGING_C_H__

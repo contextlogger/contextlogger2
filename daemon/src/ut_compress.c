@@ -1,4 +1,8 @@
 /*
+ !concept {:name => "Simple file compression"}
+*/
+
+/*
   To decompress, use
     ./zpipe -d < compressed-file > plain-file
 

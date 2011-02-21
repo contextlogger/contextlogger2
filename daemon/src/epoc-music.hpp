@@ -1,3 +1,8 @@
+/*
+ !concept {:name => "Tracking music playback on Symbian",
+   :desc => "Receiving events from the Music player on Symbian."}
+*/
+
 #ifndef __epoc_music_hpp__
 #define __epoc_music_hpp__
 

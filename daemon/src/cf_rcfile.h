@@ -1,3 +1,8 @@
+/*
+ !concept {:name => "Lua based config files",
+   :desc => "Implementing a Lua language based configuration file, using a Lua runtime instance for in-memory storage."}
+*/
+
 #ifndef __cf_rcfile_h__
 #define __cf_rcfile_h__
 

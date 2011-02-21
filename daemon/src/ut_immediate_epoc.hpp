@@ -1,3 +1,8 @@
+/*
+ !concept {:name => "A generic AO that completes immediately",
+   :desc => "A Symbian active object (AO) that does nothing but gives the event loop a chance to run before invoking its callback."}
+*/
+
 #ifndef __ut_immediate_epoc_hpp__
 #define __ut_immediate_epoc_hpp__
 
