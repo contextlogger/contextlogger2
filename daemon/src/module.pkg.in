@@ -25,7 +25,8 @@
 "epoc32/data/z/resource/apps/cl2app_aif.mif"		-"!:\resource\apps\cl2app_aif.mif"
 <% end %>
 
-"..\..\src\backup_registration.xml"						-"!:\private\<%= build.uid.hex_string %>\backup_registration.xml"
+;; Note that on old phones [backup/restore does not work for DevCert signed apps http://wiki.forum.nokia.com/index.php/KIS000544_-_Backup_and_restore_fails_for_applications_using_a_developer_certificate].
+"..\..\src\backup_registration.xml" - "!:\private\<%= build.uid.hex_string %>\backup_registration.xml"
 <% elsif build.v8_down? %>
 ;; xxx note that these paths are urel build dependent
 "epoc32/release/armi/urel/cl2app.aif" - "!:\system\apps\cl2app\cl2app.aif"

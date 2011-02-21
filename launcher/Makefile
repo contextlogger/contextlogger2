@@ -4,6 +4,7 @@ DEVICE := default
 BASENAME := cl2launcher
 SHORTCAPTION := CL2Launch,CL2Launch
 LONGCAPTION := CL2 Launcher,CL2 Launcher
+UID := e8460007
 
 VERSION := 0.51
 
@@ -29,7 +30,7 @@ endif
 
 DIST_NAME := $(BASENAME)-$(VERSION)-s60_30_py1_$(DIST_CERT).$(DIST_EXT)
 
-APPOPT := --uid=0xe8460007 --heapsize=4k,4M --appname=$(BASENAME) --version=$(VERSION) --lang=EN,FI --icon=icon.svgz "--shortcaption=$(SHORTCAPTION)" "--caption=$(LONGCAPTION)" "--vendor=HIIT,HIIT" --encoding=utf8,ascii $(SIGNSPEC) --verbose --extrasdir=extras
+APPOPT := --uid=0x$(UID) --heapsize=4k,4M --appname=$(BASENAME) --version=$(VERSION) --lang=EN,FI --icon=icon.svgz "--shortcaption=$(SHORTCAPTION)" "--caption=$(LONGCAPTION)" "--vendor=HIIT,HIIT" --encoding=utf8,ascii $(SIGNSPEC) --verbose --extrasdir=extras
 
 ifeq ($(CERT),unsigned)
 MOVE :=
@@ -54,13 +55,16 @@ endif
 
 default : sis
 
+# Note that ensymble does not automatically include the backup XML file for the app, and so we must add it.
 sis :
 	-rm -r myfiles
 	mkdir -p myfiles/extras/python
 	mkdir -p myfiles/extras/data/cl2
+	mkdir -p myfiles/extras/private/$(UID)
 	cp default.py myfiles/
 	cp $(BASENAME).py myfiles/extras/python/
 	cp cl2wizard.py myfiles/extras/python/
+	cp backup_registration.xml myfiles/extras/private/$(UID)/
 	$(CERT_COPY)
 	$(ENSYMBLE) py2sis $(APPOPT) myfiles $(BASENAME)_$(CERT).sis
 	$(MOVE)

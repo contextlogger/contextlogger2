@@ -1,0 +1,9 @@
+<?xml version="1.0" standalone="yes"?>
+<backup_registration>
+  <system_backup/>
+  <restore requires_reboot = "no"/>
+  <public_backup>
+   <include_file name="\python\cl2launcher.py" />
+   <include_file name="\python\cl2wizard.py" />
+  </public_backup>
+</backup_registration>
