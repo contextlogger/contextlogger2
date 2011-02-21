@@ -27,11 +27,6 @@
 
 // Alternatively, licensed under LGPL.
 
-/*
-  !concept {:name => "Asynchronous message pipe with Libev.",
-            :desc => "Implementing a Symbianish AO API with Libev."}
-*/
-
 #include "ikst_transport.h"
 
 #include <ev.h>

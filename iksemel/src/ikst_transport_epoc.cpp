@@ -48,10 +48,6 @@
 #define SESSION_CLOSE_IF_OPEN(x) { if (IS_SESSION_OPEN(x)) { x.Close(); SET_SESSION_CLOSED(x); } }
 #define LEAVE_IF_ERROR_OR_SET_SESSION_OPEN(x,act) { User::LeaveIfError(act); x##IsOpen = ETrue; }
 
-/*
-  !concept {:name => "Minimal logging.",
-            :desc => "Quick and dirty configurable logging."}
-*/
 #if INTERNAL_LOGGING
 // This really assumes Open C console to do something meaningful.
 #include <stdio.h>
