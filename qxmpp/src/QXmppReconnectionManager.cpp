@@ -65,7 +65,7 @@ void QXmppReconnectionManager::error(QXmppClient::Error error)
     else if (m_client && error == QXmppClient::KeepAliveError)
     {
         // if we got a keepalive error, reconnect in one second
-        m_timer.start(1000);
+        m_timer.start(2000);
     }
 }
 
@@ -90,6 +90,7 @@ void QXmppReconnectionManager::reconnect()
 {
     if(m_client)
     {
+        m_reconnectionTries++;
         emit reconnectingNow();
         m_client->connectToServer(m_client->configuration(), m_client->clientPresence());
     }
