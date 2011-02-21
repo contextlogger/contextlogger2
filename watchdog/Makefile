@@ -1,19 +1,22 @@
-# This Makefile is unfortunately very much specific to a particular non-standard
-# build environment, but it should be easy enough to build this software without
-# this makefile.
+# This Makefile is unfortunately very much specific to a particular
+# non-standard build environment, but it should be easy enough to
+# build this software without this makefile.
 #
-# The "build" directory contains the usual bld.inf and .mmp and .pkg files.
-# Before invoking the standard Symbian build tools on those, you'll just have
-# to first compile the .rss file to produce the autostart.rsc file, which
-# then goes into the SIS file. And note that you'll have to sign with proper
-# permissions for boot-time starting to work.
+# The "build" directory contains the usual bld.inf and .mmp and .pkg
+# files. Before invoking the standard Symbian build tools on those,
+# you'll just have to first compile the .rss file to produce the
+# autostart.rsc file, which then goes into the SIS file. And note that
+# you'll have to sign with proper permissions for boot-time starting
+# to work.
 #
 # Building has been tested to work with the S60 3rd Edition MR SDK.
 
-BASENAME := cl2watchdog
 KIT := s60_30
-SDKHOME := $(GNUPOCDEVENV)/kits/$(KIT)
 CERT := dev
+REL := udeb
+
+BASENAME := cl2watchdog
+SDKHOME := $(GNUPOCDEVENV)/kits/$(KIT)
 VERSION := 0.53
 
 PLT_ENV := PLTCOLLECTS=`pwd`/../tools/schemelib:
@@ -27,7 +30,13 @@ else
 SIS_EXT := sisx
 endif
 
-BUILT_SIS := build/$(KIT)_udeb_$(CERT)/$(BASENAME).$(SIS_EXT)
+ifeq ($(REL),udeb)
+DEBUG := true
+endif
+
+BUILT_SIS := build/$(KIT)_$(REL)_$(CERT)/$(BASENAME).sisx
+LONG_SIS := build/$(KIT)_$(REL)_$(CERT)/$(BASENAME)-$(VERSION)-$(KIT)_$(REL)_$(CERT).sisx
+RELEASED_SIS := build/$(KIT)_$(REL)_$(CERT)/$(BASENAME).$(SIS_EXT)
 
 default : symbian
 
@@ -36,15 +45,15 @@ default : symbian
 	echo '$$VERSION = "'$(VERSION)'"' >> $@
 
 symbian : .info.rb codegen
-	$(SAKE) kits=s60_30 udeb=true logging=true cert=$(CERT)
+	$(SAKE) kits=$(KIT) rel=$(REL) $(and $(DEBUG), logging=true) cert=$(CERT)
 
 symbian_all : autostart.rsc symbian
 
 autostart.rsc : autostart.rss
-	in-gnupoc-env s60_30 perl -S epocrc.pl -m045,046,047 -I $(SDKHOME)/epoc32/include -I $(SDKHOME)/epoc32/include/variant -DLANGUAGE_SC -u autostart.rss -o
+	in-gnupoc-env $(KIT) perl -S epocrc.pl -m045,046,047 -I $(SDKHOME)/epoc32/include -I $(SDKHOME)/epoc32/include/variant -DLANGUAGE_SC -u autostart.rss -o
 
 epocrc_options :
-	in-gnupoc-env s60_30 perl -S epocrc.pl   # shows options
+	in-gnupoc-env $(KIT) perl -S epocrc.pl   # shows options
 
 codegen : src/process_handle_observer.h src/timer_observer.h src/watchdog.h
 
@@ -68,7 +77,7 @@ srcdist :
 
 bindist : symbian
 	mkdir -p $(BINDIST_HOME)
-	cp $(BUILT_SIS) $(BINDIST_HOME)/$(BASENAME)-$(VERSION)-$(KIT)_$(CERT).$(SIS_EXT)
+	cp $(RELEASED_SIS) $(BINDIST_HOME)/$(BASENAME)-$(VERSION)-$(KIT)_$(CERT).$(SIS_EXT)
 
 release : srcdist
 	$(MAKE) bindist CERT=dev

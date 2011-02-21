@@ -62,10 +62,8 @@ $builds = $kits.map do |kit|
   build = Sake::ProjBuild.new(:project => $proj,
                               :devkit => kit)
   build.abld_platform = (build.v9? ? "gcce" : "armi")
-  build.abld_build = ($sake_op[:udeb] ? "udeb" : "urel")
-  if $sake_op[:udeb]
-    build.handle = (build.handle + "_udeb")
-  end
+  build.abld_build = ($sake_op[:rel] || raise)
+  build.handle = (build.handle + "_" + build.abld_build)
   build
 end
 

@@ -102,7 +102,7 @@ class GUI:
               (u"Stop WD", self.stop_wd_daemon),
               (u"Kill WD", self.kill_wd_daemon),
 
-              (u"WD autostart enabled?", self.is_wd_enabled),
+              (u"WD autostart?", self.is_wd_enabled),
               (u"Disable WD autostart", self.disable_wd),
               (u"Enable WD autostart", self.enable_wd))),
 
