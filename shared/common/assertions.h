@@ -15,7 +15,11 @@
 
 #ifdef __EPOC32__
 
-#if !defined(NDEBUG)
+#if defined(NDEBUG)
+
+#define assert(e) ((void)0)
+
+#else
 
 //#undef assert
 
