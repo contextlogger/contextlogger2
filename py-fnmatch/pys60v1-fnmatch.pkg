@@ -1,0 +1,39 @@
+#{"fnmatch for PyS60v1"}, (0xe8460010), 0, 1, 0
+
+
+;; In S60 3rd ed SDKs, vendor name(s) are required.
+;; Apparently both unique and localized versions.
+
+;Localised Vendor name
+%{"HIIT"}
+
+;Unique Vendor name
+:"HIIT"
+
+
+;; Platform dependency.
+;; http://wiki.forum.nokia.com/index.php/S60_Platform_and_device_identification_codes
+
+[0x101f7961], 0, 0, 0, {"Series60ProductID"} ;; s60_30
+;;[0x102032be], 0, 0, 0, {"Series60ProductID"} ;; s60_31
+;;[0x102752ae], 0, 0, 0, {"Series60ProductID"} ;; s60_32
+[0x1028315f], 0, 0, 0, {"Series60ProductID"} ;; s60_50
+;; Product ID unknown ;; s60_51 (Symbian^2)
+[0x20029a73], 0, 0, 0, {"Series60ProductID"} ;; s60_52 (Symbian^3)
+
+
+;; If we want compressed, but might lead to conflicts with other PyS60 versions, as not binary compatible.
+;;"glob-2.2.3.pyc" - "c:\resource\glob.pyc"
+;;"fnmatch-2.2.3.pyc" - "c:\resource\fnmatch.pyc"
+
+;; The PyS60 modules do not appear to be installed precompiled, we are doing the same here.
+"glob.py" - "c:\resource\glob.py"
+"fnmatch.py" - "c:\resource\fnmatch.py"
+
+
+;; Copyright 2010 Helsinki Institute for Information Technology (HIIT)
+;; and the authors. All rights reserved.
+;; 
+;; Authors: Tero Hasu <tero.hasu@hut.fi>
+;; 
+;; For license, see legal.txt.
