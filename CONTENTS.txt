@@ -64,6 +64,12 @@ h2. py-cl2-cli-lib/
 
 A Python for S60 wrapper for the cxx-cl2-cli-lib library.
 
+h2. py-fnmatch/
+
+A makefile for packaging the ``glob`` and ``fnmatch`` Python modules as a SIS file.
+
+The ``glob`` and ``fnmatch`` modules are commonly required by Python scripts, yet these modules are not included in PyS60 1.4.5. You may use a SIS file to install them separately as required, or embed the SIS as part of your application installation package.
+
 h2. qxmpp/
 
 The [QXmpp http://code.google.com/p/qxmpp/] Jabber/XMPP library for Symbian. Builds both for Symbian and Linux. This library is used in implementing the remote control facility of the logger.
