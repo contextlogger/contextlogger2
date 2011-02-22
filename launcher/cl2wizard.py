@@ -390,11 +390,11 @@ end """)
             mcc = str(mcc)
         
         #operator = appuifw.query(u"Home operator:", "text", iap_name_u)
-        operator = appuifw.query(u"Home operator:", "text", u"Elisa")
-        if operator is None:
-            operator = "nil"
-        else:
-            operator = '"' + operator.encode("utf-8") + '"'
+        #operator = appuifw.query(u"Home operator:", "text", u"Elisa")
+        #if operator is None:
+        #    operator = "nil"
+        #else:
+        #    operator = '"' + operator.encode("utf-8") + '"'
         
         import sysinfo
         username = appuifw.query(u"Username:", "text", unicode(sysinfo.imei()))
@@ -405,8 +405,9 @@ end """)
 
         remokon_password = appuifw.query(u"XMPP pw:", "text", u"")
         if remokon_password is None:
-            return
-        remokon_password = remokon_password.encode("utf-8")
+            remokon_password = "nil"
+        else:
+            remokon_password = '"' + remokon_password.encode("utf-8") + '"'
         
         db_drive = appuifw.query(u"Log drive:", "text", u"e")
         if db_drive is None:
@@ -423,14 +424,14 @@ end """)
         
 	text = """
         username = "%s"
-        remokon_password = "%s"
+        remokon_password = %s
         iap = %s
         mcc = %s
-        operator_name = %s
+        operator_name = nil
         database_dir = "%s"
         database_disk_threshold = %d
 	""" % (username, remokon_password, iap_expr, mcc,
-               operator, dbdir, database_disk_threshold)
+               dbdir, database_disk_threshold)
 	make_file(config_file, str(text))
         appuifw.note(u"Config file written", "info")
 

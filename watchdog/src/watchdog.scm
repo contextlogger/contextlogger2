@@ -209,9 +209,12 @@ SOFTWARE.
                        (call 'UpdateAppStartTime)
                        (call 'ObserveProcess)
                        (call-on 'iProcess 'Resume))
+                     #;
                      (case 'KErrNotFound
                        ;; Do not know, there might be other causes for
-                       ;; this error code.
+                       ;; this error code. But it is not good to exit
+                       ;; as a temporary situation (such as Mass Media
+                       ;; mode) might cause this.
                        (call 'ExitWatchdog
                              (list 'errCode
                                    (cstr "daemon binary not found"))))
