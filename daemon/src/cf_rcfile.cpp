@@ -64,7 +64,7 @@ struct _cf_RcFile {
 "validate('remokon_password', 'string', is_non_empty_string)\n" \
 "validate('jid', 'string', is_non_empty_string)\n" \
 "validate('iap', 'number', nil)\n" \
-"validate('database_dir_string', 'string', is_non_empty_string)\n" \
+"validate('database_dir', 'string', is_non_empty_string)\n" \
 "validate('database_disk_threshold', 'number', nil)\n" \
 "validate('mcc', 'number', nil)\n" \
 "validate('operator_name', 'string', is_non_empty_string)\n" \

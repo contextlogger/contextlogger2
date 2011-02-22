@@ -106,6 +106,9 @@ void CDiskObserver::DiskSpaceNotify(TInt aDrive, TInt errCode)
       if (errCode == KErrDiskFull) {
 	er_fatal_disk_low;
       } else {
+        // A typical cause for getting here is attaching an USB cable,
+        // resulting in KErrNotReady (-18). Hence this visible message
+        // is somewhat appropriate.
 	er_fatal_disk_not_ready;
       }
     }
