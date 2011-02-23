@@ -15,8 +15,6 @@ VERSION := 0.51
 ENSYMBLE := ../tools/ensymble-0.29/ensymble.py
 SIGNSPEC := `../tools/bin/symbian-config-ensymble-cert -eE -c $(CERT)`
 
-DIST_HOME := ../download
-
 ifeq ($(CERT),unsigned)
 DIST_EXT := sis
 DIST_CERT := dev
@@ -28,8 +26,6 @@ DIST_CERT := $(CERT)
 BUILT_SIS := $(BASENAME)_$(CERT).sisx
 endif
 
-DIST_NAME := $(BASENAME)-$(VERSION)-s60_30_py1_$(DIST_CERT).$(DIST_EXT)
-
 APPOPT := --uid=0x$(UID) --heapsize=4k,4M --appname=$(BASENAME) --version=$(VERSION) --lang=EN,FI --icon=icon.svgz "--shortcaption=$(SHORTCAPTION)" "--caption=$(LONGCAPTION)" "--vendor=HIIT,HIIT" --encoding=utf8,ascii $(SIGNSPEC) --verbose --extrasdir=extras
 
 ifeq ($(CERT),unsigned)
@@ -37,6 +33,9 @@ MOVE :=
 else
 MOVE := mv $(BASENAME)_$(CERT).sis $(BUILT_SIS)
 endif
+
+DIST_NAME := $(BASENAME)-$(VERSION)-s60_30_py1_$(DIST_CERT).$(DIST_EXT)
+DIST_HOME := ../download
 
 ifeq ($(CERT),dev)
 DIST_COPY :=
@@ -90,6 +89,6 @@ push :
 	obex -d $(DEVICE) $(BASENAME)_$(CERT).sisx
 
 install :
-	putfile -d $(DEVICE) --dir e:/auto_install $(BASENAME)_$(CERT).sisx
+	putfile --mkdir -d $(DEVICE) --dir e:/auto_install $(BASENAME)_$(CERT).sisx
 
 all : sis update install
