@@ -246,7 +246,9 @@ source er_errors_cxx.cpp
 source kr_controller.c
 source kr_diskspace.cpp
 source kr_plat_ao_epoc.cpp
+<% if $FEATURE_REMOKON %>
 source kr_sms_trigger_epoc.cpp
+<% end %>
 //source libluasqlite3.c // but not yet supported
 <% if $FEATURE_LOCALSERVER %>
 source local_server.cpp
@@ -290,7 +292,7 @@ source symbian_auto_ptr.cpp
 source timer_generic_epoc.cpp
 <% end %>
 <% if $FEATURE_COMPRESS_LOGS %>
-source ut_compress.c
+source ut_compress_cryptopp_gzip.cpp
 <% end %>
 source ut_diskspace_epoc.cpp
 source ut_immediate_epoc.cpp
@@ -337,6 +339,12 @@ source QsKineticScroller.cpp moc_QsKineticScroller.cpp
 <% end %>
 source utilities.c
 source utilities_cxx.cpp
+
+<% if $FEATURE_COMPRESS_LOGS %>
+// These fail to build unless you remove the -I- from makdeps.pm, as relative user include paths are used.
+sourcepath ..\..\..\shared\cryptopp561
+source algparam.cpp crc.cpp cryptlib.cpp files.cpp filters.cpp gzip.cpp misc.cpp mqueue.cpp queue.cpp zdeflate.cpp
+<% end %>
 
 <% if $FEATURE_UPLOADER %>
 sourcepath ..\..\..\time-spec

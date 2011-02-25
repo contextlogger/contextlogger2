@@ -677,7 +677,9 @@ extern "C" kr_PlatAo* kr_PlatAo_new(GError** error)
 extern "C" void kr_PlatAo_destroy(kr_PlatAo* self)
 {
   if (self) {
+#if __FEATURE_REMOKON__
     delete self->iSmsTrigger;
+#endif
     delete self->iSignalObserver;
     delete self->iNetworkObserver;
     delete self->iRegistrationObserver;

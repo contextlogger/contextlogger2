@@ -193,7 +193,7 @@ project must implement.
     #f)
 
   (define/public (feature-compress-logs.attr)
-    #f)
+    #t)
 
   (define/public (quit-on-low-battery.attr)
     #t)
