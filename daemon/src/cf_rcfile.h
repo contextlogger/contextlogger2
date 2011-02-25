@@ -36,13 +36,16 @@ extern "C" {
 
   int cf_RcFile_vm_id(cf_RcFile* self);
 
-  // Note that you must strdup any strings that must be longer lived.
   int cf_RcFile_get_int_or(cf_RcFile* self, const char* name, int dval);
+  gboolean cf_RcFile_get_bool_or(cf_RcFile* self, const char* name, gboolean dval);
+
+  // Note that you must strdup any strings that must be longer lived.
   const char* cf_RcFile_get_str_or(cf_RcFile* self, const char* name, const char* dval);
   const char* cf_RcFile_get_str_maybe(cf_RcFile* self, const char* name);
 
   // The configuration parameter value getters must be consistently
   // named, as we have macros assuming so.
+#define cf_RcFile_get_compress_logs(_self) cf_RcFile_get_bool_or(_self, "compress_logs", FALSE)
 #define cf_RcFile_get_username(_self) cf_RcFile_get_str_or(_self, "username", __USERNAME__)
 #define cf_RcFile_get_upload_url(_self) cf_RcFile_get_str_maybe(_self, "upload_url")
 #define cf_RcFile_get_remokon_host(_self) cf_RcFile_get_str_maybe(_self, "remokon_host")

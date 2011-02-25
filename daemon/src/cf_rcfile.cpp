@@ -57,17 +57,18 @@ struct _cf_RcFile {
       "end\n" \
    "end\n" \
 "end\n" \
-"validate('username', 'string', cl2.is_ascii_ident)\n" \
-"validate('upload_url', 'string', is_non_empty_string)\n" \
-"validate('remokon_host', 'string', is_non_empty_string)\n" \
-"validate('remokon_port', 'number', nil)\n" \
-"validate('remokon_password', 'string', is_non_empty_string)\n" \
-"validate('jid', 'string', is_non_empty_string)\n" \
-"validate('iap', 'number', nil)\n" \
+"validate('compress_logs', 'boolean', nil)\n" \
 "validate('database_dir', 'string', is_non_empty_string)\n" \
 "validate('database_disk_threshold', 'number', nil)\n" \
+"validate('iap', 'number', nil)\n" \
+"validate('jid', 'string', is_non_empty_string)\n" \
 "validate('mcc', 'number', nil)\n" \
 "validate('operator_name', 'string', is_non_empty_string)\n" \
+"validate('remokon_host', 'string', is_non_empty_string)\n" \
+"validate('remokon_password', 'string', is_non_empty_string)\n" \
+"validate('remokon_port', 'number', nil)\n" \
+"validate('upload_url', 'string', is_non_empty_string)\n" \
+"validate('username', 'string', cl2.is_ascii_ident)\n" \
 "if iap == nil then\n" \
    "iap = IAP_DEFAULT\n" \
 "end\n" \
@@ -235,6 +236,19 @@ extern "C" int cf_RcFile_get_int_or(cf_RcFile* self, const char* name, int dval)
     return dval;
   }
   return lua_tointeger(self->L, -1);
+}
+
+extern "C" gboolean cf_RcFile_get_bool_or(cf_RcFile* self, const char* name, gboolean dval)
+{
+  try {
+    get_value(self->L, name);
+  } catch(const Fail& e) {
+    return dval;
+  }
+  if (!lua_isboolean(self->L, -1)) {
+    return dval;
+  }
+  return lua_toboolean(self->L, -1);
 }
 
 // Note that unless you want to strdup the returned value, and if you want to keep it around for a while, then you better make sure (in your config file) that you are returning a pointer to a global Lua string.

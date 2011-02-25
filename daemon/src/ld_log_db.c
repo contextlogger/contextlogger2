@@ -207,9 +207,11 @@ log_db_take_snapshot (LogDb * self, gchar * pathname,
   }
 
 #if __FEATURE_COMPRESS_LOGS__
-  logt("compressing logfile");
-  if (!compress_file(pathname, error)) {
-    return FALSE;
+  if (ac_STATIC_GET(compress_logs)) {
+    logt("compressing logfile");
+    if (!compress_file(pathname, error)) {
+      return FALSE;
+    }
   }
 #endif
 

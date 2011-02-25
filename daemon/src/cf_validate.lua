@@ -17,17 +17,18 @@ function validate (n, rt, chk)
    end
 end
 
-validate('username', 'string', cl2.is_ascii_ident)
-validate('upload_url', 'string', is_non_empty_string)
-validate('remokon_host', 'string', is_non_empty_string)
-validate('remokon_port', 'number', nil)
-validate('remokon_password', 'string', is_non_empty_string)
-validate('jid', 'string', is_non_empty_string)
-validate('iap', 'number', nil)
+validate('compress_logs', 'boolean', nil)
 validate('database_dir', 'string', is_non_empty_string)
 validate('database_disk_threshold', 'number', nil)
+validate('iap', 'number', nil)
+validate('jid', 'string', is_non_empty_string)
 validate('mcc', 'number', nil)
 validate('operator_name', 'string', is_non_empty_string)
+validate('remokon_host', 'string', is_non_empty_string)
+validate('remokon_password', 'string', is_non_empty_string)
+validate('remokon_port', 'number', nil)
+validate('upload_url', 'string', is_non_empty_string)
+validate('username', 'string', cl2.is_ascii_ident)
 
 if iap == nil then
    iap = IAP_DEFAULT
