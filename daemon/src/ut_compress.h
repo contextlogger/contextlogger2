@@ -1,8 +1,3 @@
-/*
- !concept {:name => "Simple file compression",
-   :desc => "Straightforward file compression based on (raw) zlib."}
-*/
-
 #ifndef __ut_compress_h__
 #define __ut_compress_h__
 

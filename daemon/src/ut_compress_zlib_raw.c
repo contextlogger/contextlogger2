@@ -1,5 +1,6 @@
 /*
- !concept {:name => "Simple file compression"}
+ !concept {:name => "Simple file compression",
+   :desc => "Straightforward file compression based on (raw) zlib."}
 */
 
 /*
