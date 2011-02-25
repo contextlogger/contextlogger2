@@ -10,6 +10,10 @@
   See these documents file format details.
     http://en.wikipedia.org/wiki/Gzip#File_format
     http://tools.ietf.org/html/rfc1952
+
+  If we do not end up requiring the other features of Crypto++
+  we might consider using just zlib, see for example
+  http://stackoverflow.com/questions/4988236/how-to-i-compress-a-tarball-with-gzip
  */
 
 #include "ut_compress.h"
