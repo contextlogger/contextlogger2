@@ -405,11 +405,33 @@ void CUploader::postingSslErrors(const QList<QSslError> & errors)
 #endif
   // We do want security, and hence do not make any exceptions here. A
   // self-signed CA is only okay if we have a locally registered copy.
-#if 0
-  if ((errors.length() == 1) &&
-      (errors.first() == QSslError::SelfSignedCertificateInChain))
-    iPostSession->iNetworkReply.ignoreSslErrors();
-#endif
+  // For now we only do a bug workaround here. Essentially, we want
+  // all CA certificates to be accepted as such, and accept no errors
+  // regarding any of them. Even this workaround only works if the
+  // server can give us the CA cert, as only then will the comparison
+  // succeed.
+#if !defined(__SYMBIAN32__) && (QT_VERSION <= 0x040701)
+  {
+    QList<QSslCertificate> caList = iSslConfiguration.caCertificates();
+    int trueErrors = 0;
+    //qxDebug() << "ca" << caList.last();
+    foreach (const QSslError& err, errors) {
+      const QSslCertificate& cert = err.certificate();
+      //qxDebug() << "cert" << cert;
+      //qxDebug() << "equal" << (caList.last() == cert);
+      if (!caList.contains(cert)) {
+	trueErrors++;
+      } else {
+	qxDebug() << "cert is a CA cert, ignoring errors regarding it:" << 
+	  cert;
+      }
+    }
+    if (!trueErrors) {
+      logt("ignoring all SSL errors");
+      iPostSession->iNetworkReply->ignoreSslErrors();
+    }
+  }
+#endif /* __SYMBIAN32__ */
 }
 
 void CUploader::postingFinished()
