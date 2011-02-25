@@ -173,14 +173,26 @@ CUploader::CUploader(ac_AppContext* aAppContext) :
     QList<QSslCertificate> caList = iSslConfiguration.caCertificates();
     QList<QSslCertificate> myList = QSslCertificate::fromPath("etc/ca-certs/*.crt", QSsl::Pem, QRegExp::Wildcard);
     caList.append(myList);
-#if 0
-    foreach (const QSslCertificate& cert, caList) {
-      qDebug() << cert.issuerInfo(QSslCertificate::Organization);
+#if 1
+    foreach (const QSslCertificate& cert, myList) {
+      qxDebug() << cert.issuerInfo(QSslCertificate::Organization);
     }
 #endif
+#if 1
+    // This should make server authentication succeed, but it does not, due to Qt bug http://bugreports.qt.nokia.com/browse/QTBUG-13684. See ./src/network/ssl/qsslerror.cpp. It is wrong to say that our "root CA certificate is not trusted for this purpose" as it is a CA certificate that we have specified as such.
     iSslConfiguration.setCaCertificates(caList);
     iNetworkRequest.setSslConfiguration(iSslConfiguration);
-#endif /* __SYMBIAN32__ */
+#else
+    // So let us try this global setting instead. Of course we do not want to do this more than once as it is a global setting. But no, this does not work either.
+    QList<QSslCertificate> curList = QSslSocket::defaultCaCertificates();
+    foreach (const QSslCertificate& cert, myList) {
+      if (!curList.contains(cert)) {
+	qxDebug() << "globally adding CA" << cert.issuerInfo(QSslCertificate::Organization);
+	QSslSocket::addDefaultCaCertificates(myList);
+      }
+    }
+#endif
+#endif /* not __SYMBIAN32__ */
   }
 
   RefreshIap(false);
@@ -188,7 +200,7 @@ CUploader::CUploader(ac_AppContext* aAppContext) :
   logg("uploader using IAP %d", iIapId);
 #endif /* __SYMBIAN32__ */
 
-  qxDebug() << "testing qxDebug";
+  //qxDebug() << "testing qxDebug";
 #if defined(__SYMBIAN32__)
   // Beware of naming clashes, as both Mobility and Qt Network have these classes. 
   // Requires Qt 4.7, unless using the Mobility version.
@@ -385,9 +397,10 @@ bool CUploader::PosterAoIsActive()
 
 void CUploader::postingSslErrors(const QList<QSslError> & errors)
 {
-#if 0
+#if 1
   foreach (const QSslError& err, errors) {
-    qDebug() << err.errorString() << (int)err.error();
+    const QSslCertificate& cert = err.certificate();
+    qxDebug() << err.errorString() << (int)err.error() << cert.issuerInfo(QSslCertificate::Organization);
   }
 #endif
   // We do want security, and hence do not make any exceptions here. A
@@ -499,7 +512,7 @@ PostSession::PostSession() :
 
 PostSession::~PostSession()
 {
-  logh();
+  //logh();
   if (iNetworkReply) {
     iNetworkReply->abort();
     DELETE_Z(iNetworkReply);

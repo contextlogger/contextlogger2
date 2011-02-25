@@ -53,6 +53,11 @@ WITH_QT {
     }
   }
 }
+FEATURE_COMPRESS_LOGS {
+  SOURCES += ut_compress_cryptopp_gzip.cpp
+  DEPENDPATH += ../../shared/cryptopp561
+  SOURCES += algparam.cpp crc.cpp cryptlib.cpp files.cpp filters.cpp gzip.cpp misc.cpp mqueue.cpp queue.cpp zdeflate.cpp
+}
 DEFINES += G_DISABLE_DEPRECATED
 !LUA_FROM_SOURCE {
   INCLUDEPATH += /usr/include/lua5.1
@@ -233,9 +238,9 @@ symbian {
     }
   }
   SOURCES += symbian_auto_ptr.cpp
-  FEATURE_COMPRESS_LOGS {
-    SOURCES += ut_compress.c
-  }
+  # FEATURE_COMPRESS_LOGS {
+  #   SOURCES += ut_compress_zlib_raw.c
+  # }
   SOURCES += ut_diskspace_epoc.cpp
   SOURCES += ut_retry_epoc.cpp
   SMSEVENT_ENABLED {
