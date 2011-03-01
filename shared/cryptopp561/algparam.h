@@ -319,7 +319,7 @@ public:
 
 	void MoveInto(void *buffer) const
 	{
-		AlgorithmParametersTemplate<T>* p = new(buffer) AlgorithmParametersTemplate<T>(*this);
+	  /*AlgorithmParametersTemplate<T>* p = */ new(buffer) AlgorithmParametersTemplate<T>(*this);
 	}
 
 protected:
@@ -334,15 +334,6 @@ class CRYPTOPP_DLL AlgorithmParameters : public NameValuePairs
 {
 public:
 	AlgorithmParameters();
-
-#ifdef __BORLANDC__
-	template <class T>
-	AlgorithmParameters(const char *name, const T &value, bool throwIfNotUsed=true)
-		: m_next(new AlgorithmParametersTemplate<T>(name, value, throwIfNotUsed))
-		, m_defaultThrowIfNotUsed(throwIfNotUsed)
-	{
-	}
-#endif
 
 	AlgorithmParameters(const AlgorithmParameters &x);
 
