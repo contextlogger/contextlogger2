@@ -68,7 +68,7 @@ project must implement.
 
   (define/public (major-version.attr) 0)
   
-  (define/public (minor-version.attr) 17)
+  (define/public (minor-version.attr) 18)
   
   (define/public (version100.attr)
     (+ (* (major-version.attr) 100) (minor-version.attr)))

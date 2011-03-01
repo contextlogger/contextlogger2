@@ -23,8 +23,8 @@ EPOCHEAPSIZE	0x020000 0x800000
 systeminclude \epoc32\include
 systeminclude \epoc32\include\stdapis
 systeminclude \epoc32\include\stdapis\glib-2.0
-<% if $WITH_QT %>
-// Qt headers do refer to STL headers.
+<% if true %>
+// Qt headers do refer to STL headers. Crypto++ also.
 systeminclude \epoc32\include\stdapis\stlport
 <% end %>
 
@@ -153,7 +153,7 @@ library libm.lib       // required for Lua
 library libglib.lib    // Open C
 library libgobject.lib // Open C
 library libpthread.lib // Open C
-<% if $WITH_QT %>
+<% if true %>
 library libstdcpp.lib  // Open C++
 <% end %>
 
