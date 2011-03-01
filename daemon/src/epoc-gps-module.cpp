@@ -62,8 +62,8 @@ void CPosModuleStatAo::PosModChange()
 
 // Returns the module ID of the best (and good enough) available
 // module. Returns KPositionNullModuleId if nothing suitable is found.
-// xxx We may later have this function take some parameter(s) to
-// indicate what kind of a module is "best".
+// The 'aModifiers' parameter(s) indicates what kind of a module is
+// "best".
 TPositionModuleId CPosModuleStatAo::ChooseBestPositionerL(TInt aModifiers)
 {
   TUint numModules;

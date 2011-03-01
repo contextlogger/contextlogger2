@@ -81,7 +81,7 @@ void CSensor_gps::StartL()
 
     iModuleId = KPositionNullModuleId;
 
-    TPositionModuleId bestId = iModuleAo->ChooseBestPositionerL();
+    TPositionModuleId bestId = iModuleAo->ChooseBestPositionerL(CPosModuleStatAo::KAllowAssisted | CPosModuleStatAo::KAllowExternal);
 
     if (bestId != KPositionNullModuleId) {
       TRAPD(errCode, CreateSpecifiedPositionerL(bestId));
@@ -105,13 +105,15 @@ void CSensor_gps::CreateSpecifiedPositionerL(TPositionModuleId bestId)
 
   RPositionServer& server = iModuleAo->PositionServer();
   iPositioner = CPositioner_gps::NewL(server, *this, 
-				      bestId, iPositionUpdateIntervalSecs, 0);
+				      bestId, iPositionUpdateIntervalSecs, 
+				      0 /* timeout */, 
+				      0 /* mag age */);
   iPositioner->MakeRequest();
 }
 
 void CSensor_gps::PosModChangeL()
 {
-  TPositionModuleId bestId = iModuleAo->ChooseBestPositionerL();
+  TPositionModuleId bestId = iModuleAo->ChooseBestPositionerL(CPosModuleStatAo::KAllowAssisted | CPosModuleStatAo::KAllowExternal);
   if (bestId != iModuleId) {
     iRetryAo->Cancel();
     iRetryAo->ResetFailures();
@@ -352,7 +354,7 @@ gboolean CSensor_gps::PositionerEventL(GError** error)
 	guilogf("gps: lat %lg, lon %lg, alt %g, vacc %g m, hacc %g m", lat, lon, alt, vacc, hacc);
 	if (!Math::IsNaN(lat) &&
 	    !Math::IsNaN(lon)) {
-	  if (!log_db_log_gps(iLogDb, lat, lon, alt, vacc, hacc, couString, satString, error)) {
+	  if (!log_db_log_position(iLogDb, lat, lon, alt, vacc, hacc, couString, satString, error)) {
 	    return FALSE;
 	  }
 	} else {
