@@ -44,7 +44,7 @@
 ;; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ;;
 
-#{"<%= build.name %>"}, (<%= build.uid.chex_string %>), <%= build.major_version %>, <%= build.minor_version %>, 0
+#{"<%= build.name %> for CL2"}, (<%= build.uid.chex_string %>), <%= build.major_version %>, <%= build.minor_version %>, 0
 
 <% if build.v9? %>
 ;; In S60 3rd ed SDKs, vendor name(s) are required.
@@ -60,6 +60,7 @@
 ;; Platform dependency.
 [0x101F7961], 0, 0, 0, {"Series603rdProductID"}
 [0x1028315F], 0, 0, 0, {"Series605thProductID"}
+[0x20022E6D], 0, 0, 0, {"Symbian3ProductID"}
 
 <% c_binname = $cb["keyevents_client"].binary_file.basename 
    s_binname = $cb["keyevents_server"].binary_file.basename 

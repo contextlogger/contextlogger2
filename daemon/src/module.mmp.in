@@ -171,7 +171,7 @@ library sqlite3.lib
 <% end %>
 
 <% if $KEYPRESS_ENABLED and $HAVE_ANIM %>
-library keyevents_client_2000af44.lib
+library keyevents_client_e8460012.lib
 <% end %>
 
 <% if $WITH_QT %>

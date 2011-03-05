@@ -32,19 +32,20 @@
 
 require 'sake3/component'
 
-# We are using the same UIDs and binary names as Jaiku. As we have
-# made no changes, this should mean that if Jaiku is installed, there
-# is no need to install this.
+# We have made no changes (other than build related), but we
+# nonetheless use different binary names and UIDs to avoid conflicts
+# with Jaiku installations.
 #
-# Does the server UID to be from the protected range, say?
-$project_uid_v9 = $server_uid_v9 = 0x2000af43
-$client_uid_v9 = 0x2000af44
+# It does not look like the plugin UID must be from the protected
+# range or anything.
+$project_uid_v9 = $server_uid_v9 = 0xe8460011
+$client_uid_v9 = 0xe8460012
 
 $basename = "keyevents"
 
 $proj = Sake::Project.new(:basename => $basename,
                           :name => $basename,
-                          :version => [0, 1],
+                          :version => [0, 2],
                           :uid => Sake::Uid.v9($project_uid_v9), # UID for .pkg
                           :vendor => "HIIT")
 
