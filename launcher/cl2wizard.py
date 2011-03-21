@@ -119,6 +119,19 @@ def format_time(tm):
         fmt = "%Y-%m-%d %H:%M:%S UTC"
     return time.strftime(fmt, tm)
 
+def choose_string(gui_text, strings):
+    index = appuifw.popup_menu(strings, gui_text)
+    if index is not None:
+        return strings[index]
+    return None
+
+# The first string is the default.
+def choose_string_d(gui_text, strings):
+    index = appuifw.popup_menu(strings, gui_text)
+    if index is not None:
+        return strings[index]
+    return strings[0]
+
 class GUI:
     def __init__(self):
         self.lock = e32.Ao_lock()
@@ -421,6 +434,10 @@ end """)
         if ldt is None:
             return
         database_disk_threshold = ldt * 1e6
+
+        compress_logs = choose_string_d(u"Compress logs?", [u"true", u"false"])
+
+        log_sms_body = choose_string_d(u"Log SMS text?", [u"true", u"false"])
         
 	text = """
         username = "%s"
@@ -430,8 +447,11 @@ end """)
         operator_name = nil
         database_dir = "%s"
         database_disk_threshold = %d
+        compress_logs = %s
+        log_sms_body = %s
 	""" % (username, remokon_password, iap_expr, mcc,
-               dbdir, database_disk_threshold)
+               dbdir, database_disk_threshold,
+               compress_logs, log_sms_body)
 	make_file(config_file, str(text))
         appuifw.note(u"Config file written", "info")
 

@@ -41,32 +41,36 @@ s60_32_self32 :
 	cd ../launcher && $(MAKE) CERT=self32 sis
 	cd ../epocxplat && $(MAKE) CERT=self32 cl2
 
-s60_30_dev_sub :
-	cd ../daemon && $(MAKE)
-	cd ../cxx-cl2-cli-lib && $(SAKE) cert=dev kits=s60_30
-	cd ../py-cl2-cli-lib && $(SAKE) cert=dev kits=s60_30
+keyevents :
 	cd ../keyevents && $(SAKE) cert=dev kits=s60_30
+
+cli-lib :
+	cd ../cxx-cl2-cli-lib && $(SAKE) cert=dev kits=s60_30
+
+s60_30_dev_sub : cli-lib keyevents
+	cd ../py-cl2-cli-lib && $(SAKE) cert=dev kits=s60_30
 	cd ../watchdog && $(MAKE)
 	cd ../epocxplat && $(MAKE) cl2 CERT=dev
 	cd ../filter-http && $(MAKE) all
-
-s60_31_dev_sub :
 	cd ../daemon && $(MAKE)
-	cd ../cxx-cl2-cli-lib && $(SAKE) cert=dev kits=s60_30
+
+s60_31_dev_sub : cli-lib keyevents
+	cd ../cxx-cl2-cli-lib && $(SAKE) cert=dev kits=s60_31
 	cd ../py-cl2-cli-lib && $(SAKE) cert=dev kits=s60_30
-	cd ../keyevents && $(SAKE) cert=dev kits=s60_30
+	cd ../keyevents && $(SAKE) cert=dev kits=s60_31
 	cd ../watchdog && $(MAKE)
 	cd ../epocxplat && $(MAKE) CERT=dev cl2
 	cd ../filter-http && $(MAKE) all
-
-s60_50_dev_sub :
 	cd ../daemon && $(MAKE)
-	cd ../cxx-cl2-cli-lib && $(SAKE) cert=dev kits=s60_30
+
+s60_50_dev_sub : cli-lib keyevents
+	cd ../cxx-cl2-cli-lib && $(SAKE) cert=dev kits=s60_50
 	cd ../py-cl2-cli-lib && $(SAKE) cert=dev kits=s60_30
-	cd ../keyevents && $(SAKE) cert=dev kits=s60_30
-	cd ../watchdog && $(MAKE)
+	cd ../keyevents && $(SAKE) cert=dev kits=s60_50
 	cd ../epocxplat && $(MAKE) CERT=dev cl2
 	cd ../filter-http && $(MAKE) all
+	cd ../watchdog && $(MAKE)
+	cd ../daemon && $(MAKE)
 
 s60_30_dev : s60_30_dev_sub
 	cd ../launcher && $(MAKE) CERT=dev sis
