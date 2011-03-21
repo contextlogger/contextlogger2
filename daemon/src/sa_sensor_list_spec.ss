@@ -398,18 +398,20 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     
     (sensor (name smsevent)
             (cpp-condition "__SMSEVENT_ENABLED__")
-            (sql-schema "create table smsevent_scan (unixtime INTEGER not null, evtype TEXT not null, number TEXT, contact_name TEXT);")
-            (sql-statements "insert into smsevent_scan (unixtime, evtype, number, contact_name) values (?, ?, ?, ?);")
+            (sql-schema "create table smsevent_scan (unixtime INTEGER not null, evtype TEXT not null, number TEXT, contact_name TEXT, body TEXT);")
+            (sql-statements "insert into smsevent_scan (unixtime, evtype, number, contact_name, body) values (?, ?, ?, ?, ?);")
             (log-insert-api
              (args
               ,(arg (type (ptr-to (cconst 'char))) (name 'aEvType))
               ,(arg (type (ptr-to (cconst 'char))) (name 'aNumber))
               ,(arg (type (ptr-to (cconst 'char))) (name 'aContactName))
+              ,(arg (type (ptr-to (cconst 'char))) (name 'aBodyText))
               )
              (bindings 
               (binding (index 2) (type text) (value "aEvType, strlen(aEvType)") (dispose static))
               (binding (index 3) (type text) (value "aNumber, strlen(aNumber)") (dispose static))
               (binding (index 4) (type text?) (value "aContactName, strlen(aContactName)") (dispose static))
+              (binding (index 5) (type text?) (value "aBodyText, strlen(aBodyText)") (dispose static))
               )
             ))
     

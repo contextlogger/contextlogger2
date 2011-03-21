@@ -58,7 +58,43 @@ void CSensor_smsevent::Disactivate()
   DELETE_Z(iSmsEventNotifier);
 }
 
-void CSensor_smsevent::LogEvent(const char* evType, const TDesC& aTelNoDes)
+// Caller must free non-NULL result.
+static gchar* GetBodyL(CRichText& richText)
+{
+  if (richText.HasMarkupData())
+    return NULL; // unexpected
+
+  TInt bodyLen = richText.DocumentLength();
+  HBufC* hbuf16 = HBufC::NewLC(bodyLen);
+  TPtr bodyDes(hbuf16->Des());
+  richText.Extract(bodyDes);
+  gchar* bodyStr = ConvToUtf8CString(bodyDes);
+  CleanupStack::PopAndDestroy(); // hbuf16
+
+  if (G_UNLIKELY(!bodyStr)) {
+    er_fatal_oom;
+    return NULL;;
+  }
+
+  //guilogf("smsevent: body '%s'", bodyStr);
+  
+  return bodyStr;
+  //g_free(bodyStr);
+}
+
+static gchar* GetBody(CRichText& richText)
+{
+  gchar* result = NULL;
+  TRAPD(error, result = GetBodyL(richText));
+  if (error) {
+    er_log_symbian(0, error, "smsevent: failure getting body content");
+  }
+  return result;
+}
+
+void CSensor_smsevent::LogEvent(const char* evType, 
+				const TDesC& aTelNoDes,
+				CRichText& aBody)
 {
   //logg("sms event type: '%s'", evType);
 
@@ -82,47 +118,22 @@ void CSensor_smsevent::LogEvent(const char* evType, const TDesC& aTelNoDes)
     logt("could not get sms remote party phone number");
   }
 
+  gchar* bodyText = GetBody(aBody);
+
   LogDb* logDb = GetLogDb();
   GError* localError = NULL;
-  gboolean ok = log_db_log_smsevent(logDb, evType, telNo, contactName, &localError);
-  guilogf("smsevent: %s '%s' name='%s'",
-	  evType, telNo, contactName ? contactName : "(N/A)");
+  gboolean ok = log_db_log_smsevent(logDb, evType, telNo, contactName, bodyText, &localError);
+  guilogf("smsevent: %s '%s' name='%s' body='%s'",
+	  evType, telNo, 
+	  contactName ? contactName : "(N/A)",
+	  bodyText ? bodyText : "");
   g_free(telNo);
   g_free(contactName);
+  g_free(bodyText);
 
   if (G_UNLIKELY(!ok)) {
     gx_txtlog_fatal_error_free(localError);
     return;
-  }
-}
-
-static void LogBodyL(CRichText& richText)
-{
-  if (richText.HasMarkupData())
-    return; // unexpected
-
-  TInt bodyLen = richText.DocumentLength();
-  HBufC* hbuf16 = HBufC::NewLC(bodyLen);
-  TPtr bodyDes(hbuf16->Des());
-  richText.Extract(bodyDes);
-  gchar* bodyStr = ConvToUtf8CString(bodyDes);
-  CleanupStack::PopAndDestroy(); // hbuf16
-
-  if (G_UNLIKELY(!bodyStr)) {
-    er_fatal_oom;
-    return;
-  }
-
-  guilogf("smsevent: body '%s'", bodyStr);
-  
-  g_free(bodyStr);
-}
-
-static void LogBody(CRichText& richText)
-{
-  TRAPD(error, LogBodyL(richText));
-  if (error) {
-    er_log_symbian(er_FATAL, error, "smsevent: failure getting body content");
   }
 }
 
@@ -132,8 +143,7 @@ void CSensor_smsevent::handle_reception(const TMsvId& entry_id,
 					CRichText& body)
 {
   //logt("smsevent receive");
-  LogEvent("recv", senderDes);
-  LogBody(body);
+  LogEvent("recv", senderDes, body);
 }
 
 void CSensor_smsevent::handle_sending(const TMsvId& entry_id,
@@ -141,8 +151,7 @@ void CSensor_smsevent::handle_sending(const TMsvId& entry_id,
 				      CRichText& body)
 {
   //logt("smsevent send");
-  LogEvent("send", senderDes);
-  LogBody(body);
+  LogEvent("send", senderDes, body);
 }
 
 void CSensor_smsevent::handle_error(TInt errCode)

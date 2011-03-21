@@ -82,7 +82,7 @@ NONSHARABLE_CLASS(CSensor_smsevent) :
 
   void Disactivate();
 
-  void LogEvent(const char* evType, const TDesC& aTelNo);
+  void LogEvent(const char* evType, const TDesC& aTelNo, CRichText& aBody);
 
  private:
 
