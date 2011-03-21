@@ -118,7 +118,10 @@ void CSensor_smsevent::LogEvent(const char* evType,
     logt("could not get sms remote party phone number");
   }
 
-  gchar* bodyText = GetBody(aBody);
+  gchar* bodyText = NULL;
+  if (ac_STATIC_GET(log_sms_body)) {
+    bodyText = GetBody(aBody);
+  }
 
   LogDb* logDb = GetLogDb();
   GError* localError = NULL;
