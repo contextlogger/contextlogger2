@@ -52,20 +52,22 @@
 #include <msvapi.h>
 #include <mtclreg.h>
 
+#include <txtrich.h>
+
 #include <f32file.h>
 
 NONSHARABLE_CLASS(i_handle_received_sms)
 {
  public:
   virtual void handle_reception(const TMsvId& entry_id, const TMsvId& folder_id, 
-				const TDesC& sender, const TDesC& body) = 0; 
+				const TDesC& sender, CRichText& body) = 0; 
   virtual void handle_reception(const TMsvId& entry_id, const TMsvId& folder_id, 
 				TUid aMtmUid, CBaseMtm* aMtm);
 
   virtual void handle_error(TInt aError) = 0;
   virtual void handle_close() = 0;
   virtual void handle_sending(const TMsvId& entry_id, 
-			      const TDesC& sender, const TDesC& body) = 0;
+			      const TDesC& sender, CRichText& body) = 0;
   virtual void handle_sending(const TMsvId& entry_id, 
 			      TUid aMtmUid, CBaseMtm* aMtm);
 };

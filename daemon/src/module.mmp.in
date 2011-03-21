@@ -117,6 +117,7 @@ library eikcore.lib
 library esock.lib
 library estor.lib // RReadStream
 library etel3rdparty.lib // CTelephony
+library etext.lib // CRichText
 library gsmu.lib // CSmsPDU
 library http.lib
 library inetprotutil.lib // URI parsers

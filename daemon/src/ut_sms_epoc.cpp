@@ -83,7 +83,12 @@ void i_handle_received_sms::handle_reception(const TMsvId& entry_id,
   if (aMtmUid == KUidMsgTypeSMS) {
     CSmsClientMtm* smsMtm = STATIC_CAST(CSmsClientMtm*, aMtm);
     handle_reception(entry_id, folder_id, 
-		     smsMtm->SmsHeader().FromAddress(), smsMtm->Body().Read(0));
+		     smsMtm->SmsHeader().FromAddress(), 
+		     // Body returns a value of type CRichText&. The
+		     // value is empty for non-message contexts. The 0
+		     // argument to Read is the starting position, and
+		     // this only returns the first message fragment.
+		     smsMtm->Body());
   }
 }
 
@@ -93,7 +98,8 @@ void i_handle_received_sms::handle_sending(const TMsvId& entry_id,
   if (aMtmUid == KUidMsgTypeSMS) {
     CSmsClientMtm* smsMtm = STATIC_CAST(CSmsClientMtm*, aMtm);
     handle_sending(entry_id,
-		   smsMtm->SmsHeader().FromAddress(), smsMtm->Body().Read(0));
+		   smsMtm->SmsHeader().FromAddress(), 
+		   smsMtm->Body());
   }
 }
 

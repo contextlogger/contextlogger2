@@ -68,7 +68,7 @@ void CSensor_smsevent::LogEvent(const char* evType, const TDesC& aTelNoDes)
   if (aTelNoDes.Length() > 0) {
     telNo = ConvToUtf8CString(aTelNoDes);
     if (G_UNLIKELY(!telNo)) {
-      ex_txtlog_fatal_error(KErrNoMemory);
+      er_fatal_oom;
       return;
     }
     //logg("sms remote party number is '%s'", telNo);
@@ -96,21 +96,53 @@ void CSensor_smsevent::LogEvent(const char* evType, const TDesC& aTelNoDes)
   }
 }
 
+static void LogBodyL(CRichText& richText)
+{
+  if (richText.HasMarkupData())
+    return; // unexpected
+
+  TInt bodyLen = richText.DocumentLength();
+  HBufC* hbuf16 = HBufC::NewLC(bodyLen);
+  TPtr bodyDes(hbuf16->Des());
+  richText.Extract(bodyDes);
+  gchar* bodyStr = ConvToUtf8CString(bodyDes);
+  CleanupStack::PopAndDestroy(); // hbuf16
+
+  if (G_UNLIKELY(!bodyStr)) {
+    er_fatal_oom;
+    return;
+  }
+
+  guilogf("smsevent: body '%s'", bodyStr);
+  
+  g_free(bodyStr);
+}
+
+static void LogBody(CRichText& richText)
+{
+  TRAPD(error, LogBodyL(richText));
+  if (error) {
+    er_log_symbian(er_FATAL, error, "smsevent: failure getting body content");
+  }
+}
+
 void CSensor_smsevent::handle_reception(const TMsvId& entry_id,
 					const TMsvId& folder_id,
 					const TDesC& senderDes,
-					const TDesC& body)
+					CRichText& body)
 {
   //logt("smsevent receive");
   LogEvent("recv", senderDes);
+  LogBody(body);
 }
 
 void CSensor_smsevent::handle_sending(const TMsvId& entry_id,
 				      const TDesC& senderDes,
-				      const TDesC& body)
+				      CRichText& body)
 {
   //logt("smsevent send");
   LogEvent("send", senderDes);
+  LogBody(body);
 }
 
 void CSensor_smsevent::handle_error(TInt errCode)

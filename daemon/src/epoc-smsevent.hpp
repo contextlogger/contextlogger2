@@ -70,9 +70,9 @@ NONSHARABLE_CLASS(CSensor_smsevent) :
 
  private: // i_handle_received_sms
   virtual void handle_reception(const TMsvId& entry_id, const TMsvId& folder_id, 
-				const TDesC& sender, const TDesC& body); 
+				const TDesC& sender, CRichText& body); 
   virtual void handle_sending(const TMsvId& entry_id, 
-			      const TDesC& sender, const TDesC& body);
+			      const TDesC& sender, CRichText& body);
   virtual void handle_error(TInt aError);
   virtual void handle_close();
   
