@@ -107,6 +107,7 @@ class GUI:
               (u"Enable WD autostart", self.enable_wd))),
 
 	    (u"Upload now", self.upload_now),
+	    (u"Remokon now", self.remokon_now),
 
             (u"Sensors",
              ((u"Select sensor", self.select_sensor),
@@ -305,6 +306,9 @@ end """)
 
     def upload_now(self):
         self.daemon_exec_ok(""" cl2.upload_now(); return "ok" """, u"Upload requested", u"Failed to request upload")
+
+    def remokon_now(self):
+        self.daemon_exec_ok(""" cl2.remokon_timed(5 * 60); return "ok" """, u"Remokon requested", u"Failed to request remokon")
 
     def operate_sensor(self):
 	if self.current_sensor is None:
