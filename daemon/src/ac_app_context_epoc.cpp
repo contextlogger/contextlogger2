@@ -131,7 +131,10 @@ void CBatteryObserver::HandleBattery(TInt aError,
     }
 
 #if __QUIT_ON_LOW_BATTERY__
-    if (level < 20) 
+    // If no external power and battery low.
+    if ((aData.iStatus != CTelephony::EBatteryConnectedButExternallyPowered) &&
+	(aData.iStatus != CTelephony::ENoBatteryConnected) &&
+	(aData.iChargeLevel < 20))
       {
 	er_log_none(0, "battery running low (at %d%%): exiting", level);
 	if (logDb) {
