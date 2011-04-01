@@ -223,12 +223,15 @@ module Sake::Tasks
   end
 
   def def_makefile_tasks op = {}
-    def_bld_inf_tasks op
-    def_mmp_tasks op
-    def_sconfig_tasks op
+    def_bld_inf_tasks(op)
+    def_mmp_tasks(op)
+    def_sconfig_tasks(op) unless $sake_op[:no_sconfig]
+
+    deps = [:bld_inf, :mmp]
+    deps.push(:sconfig) unless $sake_op[:no_sconfig]
 
     desc "Produces makefiles for all supported build environments."
-    task :makefiles => [:bld_inf, :mmp, :sconfig]
+    task :makefiles => deps
   end
 
   def check_build_env
@@ -332,8 +335,10 @@ EOF
 
     case $build_env
     when :cygwin, :gnupoc
+      deps = [:bld_inf, :mmp]
+      deps.push(:sconfig) unless $sake_op[:no_sconfig]
       desc "Builds binaries for each targeted device."
-      task :bin => [:bld_inf, :mmp, :sconfig] do
+      task :bin => deps do
         for build in builds
           blddir = build.to_proj_rel(build.build_dir).to_s
           mkdir_p(blddir)
@@ -444,6 +449,9 @@ EOF
           end
         end
         ln(build.to_proj_rel(build.short_sis_file).to_s,
+           build.to_proj_rel(build.medium_sis_file).to_s,
+           :force => true)
+        ln(build.to_proj_rel(build.short_sis_file).to_s,
            build.to_proj_rel(build.long_sis_file).to_s,
            :force => true)
 
@@ -463,6 +471,9 @@ EOF
             end
             sh(*command)
           end
+          ln(build.to_proj_rel(build.short_sisx_file).to_s,
+             build.to_proj_rel(build.medium_sisx_file).to_s,
+             :force => true)
           ln(build.to_proj_rel(build.short_sisx_file).to_s,
              build.to_proj_rel(build.long_sisx_file).to_s,
              :force => true)

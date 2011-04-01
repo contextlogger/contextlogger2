@@ -390,7 +390,9 @@ EOF
                 cmd = "abld build -v #{aplat} #{abuild}"
                 sh_check_build_errors cmd
 
-                #p ['VERSION', build.devkit.native_target.version]
+                # Horrible kludge, but better than not being able to
+                # link agains static libraries at all, as is the case
+                # with the Symbian^3 0.9 kit otherwise.
                 if build.devkit.native_target.version >= [5,2]
                   for built_file in built_files
                     bf = built_file

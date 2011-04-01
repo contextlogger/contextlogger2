@@ -441,6 +441,12 @@ class Sake::ProjBuild
     generated_file(project.sis_basename + ".sis")
   end
 
+  def medium_sis_file
+    longname = "%s-%s.sis" % [project.sis_basename,
+      basename]
+    generated_file longname
+  end
+
   def long_sis_file
     longname = "%s-%s-%s.sis" % [project.sis_basename,
       project.version_string,
@@ -450,6 +456,10 @@ class Sake::ProjBuild
 
   def short_sisx_file
     Pathname.new(short_sis_file.to_s + "x")
+  end
+
+  def medium_sisx_file
+    Pathname.new(medium_sis_file.to_s + "x")
   end
 
   def long_sisx_file
