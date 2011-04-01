@@ -43,7 +43,7 @@ void guilog(const QString& s)
 
 void guilog(const char* s)
 {
-  guilog(QString(s));
+  guilog(QString::fromUtf8(s));
 }
 
 extern "C" void guilogf(const char* fmt, ...)

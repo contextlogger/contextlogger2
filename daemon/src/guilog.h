@@ -9,6 +9,7 @@
 extern "C" {
 #endif
 
+  // Give any strings as UTF-8.
   void guilogf(const char* fmt, ...);
 
 #ifdef __cplusplus
