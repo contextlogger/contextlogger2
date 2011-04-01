@@ -93,9 +93,11 @@ def shallow_rmtree(dn):
 
 def make_logs_dir():
     makedirs(logs_dir)
+    appuifw.note(u"Logs dir created", "info")
 
 def delete_logs_dir():
     shallow_rmtree(logs_dir)
+    appuifw.note(u"Logs dir deleted", "info")
 
 def print_iap_list():
     ap_list = socket.access_points()
