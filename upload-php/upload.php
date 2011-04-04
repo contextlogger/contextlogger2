@@ -17,6 +17,15 @@ function dbgPrint($obj,$f) {
   }
 }
 
+function statusWrite($text) {
+  global $dateStr;
+  $sf = fopen("../../data/cl2/status.txt", "w");
+  fwrite($sf, "LAST UPLOAD STATUS\n");
+  fwrite($sf, "Time: " . $dateStr . "\n");
+  fwrite($sf, "Status: " . $text . "\n");
+  fclose($sf);
+}
+
 if ( isset($_FILES) &&
      isset($_FILES["logdata"]) &&
      isset($_FILES["logdata"]["tmp_name"]) &&
@@ -40,21 +49,25 @@ if ( isset($_FILES) &&
         or die("mv");
 
       dbgPrint("Raw log file stored successfully in " . $logFullPath, $f);
+      statusWrite("success: file stored as " . $logFileName);
     }
     else {
       header("Status: 400 Bad request",true,400);
       dbgPrint("ERROR: could not identify username from logName=".$logName.". Matches were:\n".print_r($matches,true),$f);      
+      statusWrite("error: could not identify user");
     }
   }
   else {
     header("Status: 400 Bad request",true,400);
     dbgPrint("ERROR in upload, error code=".$_FILES["logdata"]["error"].
              "\n\$_FILES=".print_r($_FILES,true),$f);
+    statusWrite("bad request");
   }
 }
 else {
   header("Status: 400 Bad request",true,400);
   dbgPrint("ERROR in \$_FILES. \$_SERVER=".print_r($_SERVER,true).", \$_FILES=".print_r($_SERVER,true),$f);
+  statusWrite("bad request");
 }
 
 dbgPrint("Closing the log file",$f);
