@@ -29,10 +29,10 @@ clean :
 	-rm $(PKGFILE) $(SISFILE) $(SISXFILE)
 
 $(SISXFILE) :
-	ruby do-sis-signing.rb --kit $(KIT_NAME) --makesis --signsis --cert $(CERT_NAME) -o $@ -i $(PKGFILE)
+	ruby ../tools/bin/do-sis-signing.rb --kit $(KIT_NAME) --makesis --signsis --cert $(CERT_NAME) -o $@ -i $(PKGFILE)
 
 $(SISFILE) :
-	ruby do-sis-signing.rb --kit $(KIT_NAME) --makesis -o $@ -i $(PKGFILE)
+	ruby ../tools/bin/do-sis-signing.rb --kit $(KIT_NAME) --makesis -o $@ -i $(PKGFILE)
 
 #
 # Copyright 2009 Helsinki Institute for Information Technology (HIIT)
