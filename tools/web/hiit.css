@@ -1,0 +1,57 @@
+/* HIIT branding.
+   HIIT colors and styles taken from
+@import "http://www.hiit.fi/sites/all/themes/hiit/simple.css";
+   but no fixed width (in pixels) specifications.
+   Pixel densities vary, after all. */
+
+body {
+font-family: Verdana, Helvetica, sans-serif;
+color: #4d4d4d;
+vertical-align: top;
+}
+
+h1 {
+font-weight: bold;
+font-variant: small-caps;
+color: #333333;
+}
+
+h2, h3, h4, h5, h6 {
+font-weight: bold;
+font-variant: small-caps;
+color: #333333;
+}
+
+a:link, a:visited {
+color: #009900;
+}
+
+a:hover, a:active {
+color: #33cc33;
+}
+
+hr {
+border: 0;
+color: #808080;
+background-color: #808080;
+}
+
+/* custom but HIIT inspired navi bar */
+
+.navi {
+    float: right;
+    border: 0px;
+}
+
+.navi th {
+    font-weight: bold;
+    font-variant: small-caps;
+    border-bottom: solid 1px #333333;
+    padding: 0.2em;
+}
+
+/*
+.navi td:hover {
+    border: 1px solid #808080;
+}
+*/
