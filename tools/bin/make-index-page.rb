@@ -4,7 +4,7 @@ dirname = File.basename(path)
 indexfile = File.join(path, "index.html")
 filelist = nil
 Dir::chdir(path) do
-  filelist = Dir.glob('*')
+  filelist = Dir.glob('*').sort
 end
 filelist.delete("index.html")
 p filelist

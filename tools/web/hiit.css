@@ -31,9 +31,11 @@ color: #33cc33;
 }
 
 hr {
-border: 0;
-color: #808080;
-background-color: #808080;
+    height: 1px;
+    border: 0;
+    color: #808080;
+    background-color: #808080;
+    clear: both;
 }
 
 /* custom but HIIT inspired navi bar */
