@@ -19,12 +19,15 @@ doxyfile-*
 local.mk
 moc_*.cpp
 *-api/
+*-build-desktop/
 .svn/
 _darcs/
 api/
 build/
 contextlogger.github.com/
 dist/
+fnmatch-python/
+github/
 koog/
 local/
 miso/
@@ -34,4 +37,5 @@ pyinbox/
 pynewfile/
 pyswinst/
 retired/
+software/
 wiki/
