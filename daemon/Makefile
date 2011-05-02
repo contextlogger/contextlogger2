@@ -184,7 +184,7 @@ apidoc :
 	doxygen src/doxyfile-int
 
 rm-apidoc :
-	-rm -r private-cxx-api
+	-rm -r ../api/*
 
 # Some of the Ubuntu packages required for building.
 ubuntu-dev :
