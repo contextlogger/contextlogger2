@@ -218,7 +218,7 @@ if option<%= optix[:launcher] %> = 1
 
 ;; Python for S60.
 
-<% srcdir = '../libs-s60/pys60-1.4.5'
+<% srcdir = '../software/pys60-1.4.5'
    srcfiles = ['PythonForS60_1_4_5_3rdEd.sis',
                'PythonScriptShell_1_4_5_3rdEd_unsigned_testrange.sisx' # DevCert signed
                #'PythonScriptShell_1_4_5_3rdEd.SIS' # Nokia signed
@@ -263,7 +263,7 @@ endif
 ;; Since we are embedding without building Miso here, do make sure that a sensible
 ;; version has been built (and in a DevCert case) appropriately signed as well.
 <% misover = '2.00'
-   srcdir = '../libs-s60/miso-%s' % misover
+   srcdir = '../software/miso-%s' % misover
    old_ext = $SIGNED ? "sisx" : "sis"
    kit = (($CERT_NAME == "self32") ? "s60_32" : "s60_30")
    cert_name = case $CERT_NAME when "self30", "self32" then "self" else $CERT_NAME end
@@ -323,7 +323,7 @@ endif ;; launcher install requested
 ;; The stub file should indicate whether Open C is built in
 ;; or not.
 ;;
-<% srcdir = '../libs-s60/openc-1.6'
+<% srcdir = '../software/openc-1.6'
    srcfiles = %w{
 openc_glib_s60_1_6_ss.sis  pips_s60_1_6_ss.sis    stdioserver_s60_1_6_ss.sis
 openc_ssl_s60_1_6_ss.sis   stdcpp_s60_1_6_ss.sis
@@ -364,7 +364,7 @@ endif
 ;;
 <% if false %>
 
-<% srcfile = "../libs-s60/euserhl-1.2/euserhl.sis"
+<% srcfile = "../software/euserhl-1.2/euserhl.sis"
    uid = lookup_uid srcfile
    uid_s = ("0x%08x" % uid) %>
 
@@ -393,7 +393,7 @@ endif
 if option<%= optix[:errrd] %> = 1
 if not package(<%= uid_s %>)
 
-<% srcfile = "../libs-s60/errrd-file/errrd-file-self.sisx"
+<% srcfile = "../software/errrd-file/errrd-file-self.sisx"
    uid = lookup_uid srcfile
    uid_s = ("0x%08x" % uid) %>
 

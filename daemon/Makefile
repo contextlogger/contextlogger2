@@ -124,6 +124,7 @@ GOB_FLAGS := --always-private-header --output-dir $(SRC_PATH)
 
 .PHONY : moc rm-moc remoc
 
+# When running this rule, ensure that you have a compatible version of "moc" on the PATH. The Qt major version matching for the "moc" may well be enough.
 moc : $(MOC_FILES)
 
 rm-moc :

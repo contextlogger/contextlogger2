@@ -195,7 +195,8 @@ pkg :
 	mkdir -p $(SIS_DIR)
 	ruby -e '$(PKG_EXPORTS) require "erb"; puts(ERB.new(File.read("$(PKGIN_FILE)")).result(binding()))' > $(SIS_DIR)/$(PKG_FILE)
 
-SISTOOL := ../../megasis/do-sis-signing.rb -k $(KIT)
+PWD := $(shell pwd)
+SISTOOL := $(PWD)/../tools/bin/do-sis-signing.rb -k $(KIT)
 
 sis : $(if $(SIGN),signed-sis,unsigned-sis)
 
