@@ -10,9 +10,15 @@
 // http://doc.qt.nokia.com/qtmobility-1.1.0/qproximitysensor.html
 
 Sensor_proximity::Sensor_proximity(ac_AppContext* aAppContext) :
-  ClQtEventSensorBase(QProximitySensor::type, aAppContext)
+  ClQtEventSensorBase(QProximitySensor::type, aAppContext),
+  iNumProximityData(0)
 {
   run();
+}
+
+Sensor_proximity::~Sensor_proximity()
+{
+  logAndClear();
 }
 
 const char* Sensor_proximity::Name() const
@@ -26,7 +32,61 @@ void Sensor_proximity::handleReadingChanged()
   if (data) {
     bool isClose = data->close();
     guilogf("proximity: %s", isClose ? "close" : "far");
-    log_db_log_proximity(GetLogDb(), isClose, NULL);
+    //log_db_log_proximity(GetLogDb(), isClose, NULL);
+    record(isClose);
+  }
+}
+
+void Sensor_proximity::record(bool value)
+{
+  time_t now = time(NULL); 
+  if (now == -1)
+    return; // error getting time
+
+  TProximityData& rec = iProximityData[iNumProximityData];
+  rec.t = now;
+  rec.v = value;
+  iNumProximityData++;
+
+  if (iNumProximityData == MAX_NUM_ProximityData)
+    logAndClear();
+}
+
+void Sensor_proximity::makeString()
+{
+  iString.clear();
+  time_t base = iProximityData[0].t;
+  iString.append("{base: ");
+  iString.append(QByteArray::number(base));
+  iString.append(", events: [");
+  int i = 0;
+  while (i < iNumProximityData) {
+    TProximityData& rec = iProximityData[i];
+    if (i != 0)
+      iString.append(", ");
+    iString.append("[");
+    iString.append(QByteArray::number(rec.t - base));
+    iString.append(", ");
+    iString.append(rec.v ? "true" : "false");
+    iString.append("]");
+    i++;
+  }
+  iString.append("]}");
+  iNumProximityData = 0;
+}
+
+void Sensor_proximity::logAndClear()
+{
+  if (iNumProximityData > 0) {
+    // xxx er_errors could use a variant for logging C++ exceptions
+    try {
+      makeString();
+    } catch (const std::exception &ex) {
+      er_log_none(er_FATAL, "proximity sensor: %s", ex.what());
+      return;
+    }
+    const char* data = iString.constData();
+    log_db_log_proximityset(GetLogDb(), data, NULL);
   }
 }
 

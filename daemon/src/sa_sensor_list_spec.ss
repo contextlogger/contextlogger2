@@ -168,6 +168,16 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
              (args ,(arg (type 'gboolean) (name 'isClose)))
              (bindings
               (binding (index 2) (type int) (value "isClose")))))
+
+    ;; An alternative data representation for "proximity", with multiple events per log entry, as JSON.
+    (sensor (name proximityset) (inactive #t)
+            (cpp-condition "__PROXIMITY_ENABLED__")
+            (sql-schema "create table proximityset_scan (unixtime INTEGER, json TEXT);")
+            (sql-statements "insert into proximityset_scan (unixtime, json) values (?, ?);")
+            (log-insert-api
+             (args ,(arg (type (ptr-to (cconst 'char))) (name 'json)))
+             (bindings
+              (binding (index 2) (type text) (value "json, strlen(json)") (dispose static)))))
     
     (sensor (name music)
             (cpp-condition "__MUSIC_ENABLED__"))

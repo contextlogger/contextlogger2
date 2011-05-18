@@ -4,7 +4,14 @@
 #include "ac_app_context.h"
 #include "sa_qt_sensors.hpp"
 
+#include <time.h> // time_t
+
 QTM_USE_NAMESPACE
+
+struct TProximityData {
+  time_t t;
+  bool v;
+};
 
 class Sensor_proximity :
   public ClQtEventSensorBase
@@ -13,12 +20,23 @@ class Sensor_proximity :
 
  public:
   Sensor_proximity(ac_AppContext* aAppContext);
+  ~Sensor_proximity();
 
  private:
   virtual const char* Name() const;
 
  private:
   virtual void handleReadingChanged();
+
+ private:
+  void record(bool value);
+  void logAndClear();
+  void makeString(); // may throw
+
+#define MAX_NUM_ProximityData 100
+  int iNumProximityData;
+  TProximityData iProximityData[MAX_NUM_ProximityData];
+  QByteArray iString;
 };
 
 #endif /* __sa_sensor_proximity_qt_hpp__ */

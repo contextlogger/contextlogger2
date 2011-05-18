@@ -56,7 +56,8 @@ ALL_OBJ_FILES := $(patsubst %.c, %.o, $(ALL_C_FILES)) $(patsubst %.cpp, %.o, $(A
 
 DEP_FLAGS := -I$(SRC_PATH) -I$(SHARED_PATH) -I$(TIMESPEC_PATH) $(LUA_CFLAGS) $(KEYEVENTS_CFLAGS) -I../epocxplat/src
 COMMON_FLAGS := $(DEP_FLAGS) -fexceptions
-GNOME_FLAGS := `pkg-config --cflags gobject-2.0` -DG_DISABLE_DEPRECATED=1
+# "moc" is confused by "-pthread", which some versions of pkg-config generate; "moc" will make that a path prefix for #include files, which breaks builds
+GNOME_FLAGS := `pkg-config --cflags-only-I gobject-2.0` -DG_DISABLE_DEPRECATED=1
 FEATURES := 
 WARNINGS := -Wall -Wmissing-declarations -Wsign-compare -Werror
 CFLAGS := $(WARNINGS) $(COMMON_FLAGS) $(GNOME_FLAGS) $(FEATURES)
@@ -129,8 +130,6 @@ moc : $(MOC_FILES)
 
 rm-moc :
 	-rm $(MOC_FILES)
-
-remoc : rm-moc moc
 
 $(APP_MOC_FILES) : $(SRC_PATH)/moc_%.cpp : $(SRC_PATH)/%.hpp
 	moc $(MOC_FLAGS) $< -o $@
