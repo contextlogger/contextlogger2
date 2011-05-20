@@ -1,5 +1,3 @@
-// generated code -- do not edit
-
 #include "timer_observer.h"
 
 CTimerAo *CTimerAo::NewLC(MTimerObserver &aInterface, TInt aPriority)
@@ -19,6 +17,7 @@ CTimerAo *CTimerAo::NewL(MTimerObserver &aInterface, TInt aPriority)
 
 CTimerAo::CTimerAo(MTimerObserver &aInterface, TInt aPriority) : CTimer(aPriority), iInterface(aInterface)
 {
+  // Apparently the superclass constructor does not do this.
   CActiveScheduler::Add(this);
 }
 

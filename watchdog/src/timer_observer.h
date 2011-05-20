@@ -1,7 +1,5 @@
 // -*- c++ -*-
 
-// generated code -- do not edit
-
 #ifndef __TIMER_OBSERVER_H__
 #define __TIMER_OBSERVER_H__
 
@@ -32,6 +30,12 @@ private:
   CTimerAo(MTimerObserver &aInterface, TInt aPriority);
 
   virtual void RunL();
+
+  // Must implement RunError if HandleTimerEvent may leave. As
+  // per the current naming, we do not allow that. We could
+  // have another variant of this class allowing for it, I
+  // guess, and letting a RunError handler also be defined in
+  // the interface.
 
   MTimerObserver &iInterface;
 };
