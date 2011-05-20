@@ -1,5 +1,3 @@
-// generated code -- do not edit
-
 #include "process_handle_observer.h"
 
 CProcessHandleObserver *CProcessHandleObserver::NewLC(MProcessHandleObserver &aInterface, TInt aPriority, RProcess &aProcess)
@@ -24,11 +22,13 @@ CProcessHandleObserver::CProcessHandleObserver(MProcessHandleObserver &aInterfac
 
 void CProcessHandleObserver::ConstructL()
 {
+  // okay so would not actually need this method or two-phase, some overhead here
 }
 
 CProcessHandleObserver::~CProcessHandleObserver()
 {
   Cancel();
+  // did not open iProcess so shall not Close
 }
 
 void CProcessHandleObserver::MakeRequest()

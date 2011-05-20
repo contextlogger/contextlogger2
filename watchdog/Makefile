@@ -17,7 +17,7 @@ REL := udeb
 
 BASENAME := cl2watchdog
 SDKHOME := $(GNUPOCDEVENV)/kits/$(KIT)
-VERSION := 0.53
+VERSION := 0.54
 
 PLT_ENV := PLTCOLLECTS=`pwd`/../tools/schemelib:
 SAKE := ../tools/bin/sake --trace
@@ -44,7 +44,7 @@ default : symbian
 	echo '$$BASENAME = "'$(BASENAME)'"' > $@
 	echo '$$VERSION = "'$(VERSION)'"' >> $@
 
-symbian : .info.rb codegen
+symbian : .info.rb
 	$(SAKE) kits=$(KIT) rel=$(REL) $(and $(DEBUG), logging=true) cert=$(CERT)
 
 symbian_all : autostart.rsc symbian
@@ -54,8 +54,6 @@ autostart.rsc : autostart.rss
 
 epocrc_options :
 	in-gnupoc-env $(KIT) perl -S epocrc.pl   # shows options
-
-codegen : src/process_handle_observer.h
 
 %.h %.cpp : %.scm
 	$(PLT_ENV) $<

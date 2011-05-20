@@ -1,11 +1,12 @@
 // -*- c++ -*-
 
-// generated code -- do not edit
-
 #ifndef __PROCESS_HANDLE_OBSERVER_H__
 #define __PROCESS_HANDLE_OBSERVER_H__
 
 #include <e32base.h>
+
+// An active object and a callback interface for observing a process to
+// find out when it dies.
 
 /** A callback interface for CProcessHandleObserver.
  */
@@ -44,6 +45,12 @@ private:
   void DoCancel();
 
   virtual void RunL();
+
+  // Must implement RunError if HandleProcessHandleEvent may leave. As
+  // per the current naming, we do not allow that. We could
+  // have another variant of this class allowing for it, I
+  // guess, and letting a RunError handler also be defined in
+  // the interface.
 
   MProcessHandleObserver &iInterface;
 
