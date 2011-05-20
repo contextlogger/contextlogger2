@@ -55,7 +55,7 @@ autostart.rsc : autostart.rss
 epocrc_options :
 	in-gnupoc-env $(KIT) perl -S epocrc.pl   # shows options
 
-codegen : src/process_handle_observer.h src/timer_observer.h src/watchdog.h
+codegen : src/process_handle_observer.h src/timer_observer.h
 
 %.h %.cpp : %.scm
 	$(PLT_ENV) $<
