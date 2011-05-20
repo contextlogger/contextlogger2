@@ -56,6 +56,8 @@ sqlite3 $1 "select datetime(unixtime, 'unixepoch'), value, name from profile_sca
 
 echo PROXIMITY
 sqlite3 $1 "select datetime(unixtime, 'unixepoch'), close from proximity_scan;"
+echo PROXIMITY "(JSON)"
+sqlite3 $1 "select datetime(unixtime, 'unixepoch'), json from proximityset_scan;"
 
 echo SMS EVENT
 sqlite3 $1 "select datetime(unixtime, 'unixepoch'), evtype, number, contact_name, body from smsevent_scan;"

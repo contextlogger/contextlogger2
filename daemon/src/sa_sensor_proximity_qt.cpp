@@ -52,6 +52,7 @@ void Sensor_proximity::record(bool value)
     logAndClear();
 }
 
+// note that this modifies state
 void Sensor_proximity::makeString()
 {
   iString.clear();
@@ -59,8 +60,7 @@ void Sensor_proximity::makeString()
   iString.append("{base: ");
   iString.append(QByteArray::number(base));
   iString.append(", events: [");
-  int i = 0;
-  while (i < iNumProximityData) {
+  for (int i = 0; i < iNumProximityData; i++) {
     TProximityData& rec = iProximityData[i];
     if (i != 0)
       iString.append(", ");
@@ -69,7 +69,6 @@ void Sensor_proximity::makeString()
     iString.append(", ");
     iString.append(rec.v ? "true" : "false");
     iString.append("]");
-    i++;
   }
   iString.append("]}");
   iNumProximityData = 0;
