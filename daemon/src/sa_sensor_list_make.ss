@@ -74,6 +74,7 @@
     (capture-output
      (thunk
       (display-nl "static const char create_tables_sql[] =")
+      (write-nl "begin transaction;")
       (for-each
        (lambda (sensor)
          ;; During database initialization, we do output code for
@@ -91,6 +92,7 @@
                    (display-nl "#endif"))
                  (write-schema)))))
        (get-sensor-list))
+      (write-nl "commit;")
       (display "\"\";"))))
 
   (define prepared-statements-def
