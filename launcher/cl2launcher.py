@@ -277,7 +277,7 @@ do
   return string.format("Params: [IAP: %s] [BT interval: %s] [GPS interval: %s] [upload time: %s]", get("iap"), get("sensor.btprox.interval"), get("sensor.gps.interval"), get("uploader.time_expr"))
 end """)
         print "State: [uploads allowed: %s]" % self.daemon_query(""" if cl2.are_uploads_allowed() then return "yes" else return "no" end """)
-        print self.daemon_query(""" do local lst = cl2.all_sensor_names(); local function get (n) if cl2.is_sensor_supported(n) then if cl2.is_sensor_running(n) then return "active" else return "inactive" end else return "unsupported" end end; local function map (f, lst) local nlst = {}; for i,v in ipairs(lst) do nlst[i] = f(v); end; return nlst; end; local function kjoin (lst) local s = ""; local first = true; local add = function (x) s = (s .. x) end; for i,x in ipairs(lst) do if first then first = false else add(" ") end; add(x); end; return s; end; local function g (n) return string.format("[%s: %s]", n, get(n)); end; return ("Sensors: " .. kjoin(map(g, lst))); end """)
+        print self.daemon_query(""" do local lst = cl2.all_sensor_names(); local function get (n) if cl2.is_sensor_supported(n) then if cl2.is_sensor_running(n) then return "a" else return "i" end else return "u" end end; local function map (f, lst) local nlst = {}; for i,v in ipairs(lst) do nlst[i] = f(v); end; return nlst; end; local function kjoin (lst) local s = ""; local first = true; local add = function (x) s = (s .. x) end; for i,x in ipairs(lst) do if first then first = false else add(" ") end; add(x); end; return s; end; local function g (n) return string.format("[%s: %s]", n, get(n)); end; return ("Sensors: " .. kjoin(map(g, lst))); end """)
         print ""
 
     def select_sensor(self):
