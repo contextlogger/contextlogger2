@@ -32,10 +32,11 @@
     ((datum) (begin (display datum) (newline)))
     ((datum out) (begin (display datum out) (newline out)))))
 
-(define-syntax* thunk
-  (syntax-rules ()
-    ((_ body ...)
-     (lambda () body ...))))
+;; Now in "scheme" language.
+;; (define-syntax* thunk
+;;   (syntax-rules ()
+;;     ((_ body ...)
+;;      (lambda () body ...))))
 
 (define* (constant x)
   (thunk x))
