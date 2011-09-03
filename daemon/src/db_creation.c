@@ -27,9 +27,17 @@ gboolean create_database(const char* db_dir,
   if (errCode) {
     if (error)
       *error = gx_error_new(domain_cl2app, code_database_open, "error opening database '%s': %s (%d)", db_file, sqlite_get_error_string(db), errCode);
+    if (db) {
+      // Even if only partially initialized, must free.
+      sqlite3_close(db);
+      db = NULL;
+    }
     goto fail;
   }
   //logg("database opened %d", errCode);
+
+  // xxx check if tables exist, with sqlite3_exec, probably, no, we must prepare and then step to find out if get any SQLITE_ROW return value (we can write a generic function that finds out if any rows are returned, and include said function in sqlite_cl2 files)
+  // xxx select name from sqlite_master where type='table' and name='status_log';
 
   logt(sql);
   errCode = sqlite3_exec(db, sql, NULL, NULL, NULL);
