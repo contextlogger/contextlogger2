@@ -26,4 +26,4 @@
 <% end %>
 
 ;; For autostart to work, the UID must be of protected development range.
-"epoc32\data\autostart_08460006.rsc" - "c:\private\101f875a\import\[08460006].rsc"
+"epoc32\data\autostart_20058c71.rsc" - "c:\private\101f875a\import\[20058c71].rsc"

@@ -14,7 +14,8 @@ end
 
 load(".info.rb")
 
-$uid_v9 = 0x08460006
+$uid_v9 = 0x08460006 # old
+$uid_v9 = 0x20058c71 # new
 $basename = ($BASENAME || raise)
 $version = $VERSION.split(".").map {|x| x.to_i}
 
