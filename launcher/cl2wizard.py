@@ -48,7 +48,7 @@ try:
 except ImportError:
     have_cl2 = False
 
-wd_pattern = u"*[08460006]*"
+wd_pattern = u"*[20058c71]*"
 cl2_pattern = u"*[e8460002]*"
 magic_file = u"c:\\data\\cl2\\disable_autostart.txt"
 data_dir = "c:\\data\\cl2"
