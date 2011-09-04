@@ -312,6 +312,8 @@ for entry in entries %>
 
 endif ;; launcher install requested
 
+<% if false # this is not the latest version, probably
+ %>
 ;;
 ;; Open C.
 ;;
@@ -352,6 +354,7 @@ endif
 <% end %>
 
 endif
+<% end %>
 
 ;;
 ;; EUserHL.
