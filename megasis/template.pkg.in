@@ -28,10 +28,16 @@
        opts.push("Install watchdog"); optix[:watchdog] = opts.size
      end
    end
-   opts.push("Install launcher"); optix[:launcher] = opts.size
-   opts.push("Install ErrRd file"); optix[:errrd] = opts.size
+   if $LAUNCHER_IN_MEGASIS
+     opts.push("Install launcher"); optix[:launcher] = opts.size
+   end
+   if $ERRRD_IN_MEGASIS
+     opts.push("Install ErrRd file"); optix[:errrd] = opts.size
+   end
 %>
+<% unless opts.empty? %>
 !(<%= opt_join(opts) %>)
+<% end %>
 
 ;;
 ;; Daemon.
@@ -214,6 +220,7 @@ endif ;; watchdog option chosen
 ;; PythonScriptShell_1_4_5_3rdEd.SIS: 0x2000b1a5
 ;; PythonScriptShell_1_4_5_3rdEd_unsigned_testrange.SIS: 0xe000b1a5
 ;;
+<% if $LAUNCHER_IN_MEGASIS %>
 if option<%= optix[:launcher] %> = 1
 
 ;; Python for S60.
@@ -311,6 +318,7 @@ for entry in entries %>
 <% end %>
 
 endif ;; launcher install requested
+<% end %>
 
 <% if false # this is not the latest version, probably
  %>
@@ -383,6 +391,7 @@ endif
 
 <% end %>
 
+<% if $ERRRD_IN_MEGASIS %>
 ;;
 ;; ErrRd file. (OPTIONAL)
 ;;
@@ -416,3 +425,4 @@ for entry in entries %>
 
 endif
 endif
+<% end %>

@@ -85,6 +85,7 @@ s60_50_dev : s60_50_dev_sub
 	cd ../launcher && $(MAKE) CERT=dev sis
 
 hpe : s60_50_dev
+hpe_user : hpe
 
 #
 # Copyright 2009 Helsinki Institute for Information Technology (HIIT)

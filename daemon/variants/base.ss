@@ -138,7 +138,8 @@ project must implement.
   ;; No remote control by default. (A Lua expression.)
   (define/public (remokon-jid.attr) "nil")
 
-  ;; No sensible IAP by default. (A Lua expression.)
+  ;; No sensible IAP by default. (A Lua expression.) For more recent
+  ;; Symbian devices "Internet" probably would be a sensible default.
   (define/public (iap-id-expr.attr) "-1")
   
   ;; --------------------------------------------------
@@ -266,20 +267,6 @@ project must implement.
            (string->number (second m))
            (error "cannot determine kit version" s))))
 
-  ;; This is intended for megasis builds only, and can be used to
-  ;; specify the way the SIS and PKG files are to be named.
-  (define/public (dist-variant-name.attr)
-    (send this variant-name.attr))
-
-  ;; This may affect some of the deployment options. Private trial
-  ;; releases may be packaged and deployed differently than public
-  ;; releases.
-  (define/public (is-trial.attr) #f)
-
-  ;; This may affect configurations, as demos are somewhat different
-  ;; in nature.
-  (define/public (is-demo.attr) #f)
-  
   (define/override (have-signal.attr)
     (> (kit-vernum.attr) 50))
 
@@ -333,6 +320,33 @@ project must implement.
     ;; Having a DevCert is not quite the same thing as having DevCert
     ;; caps, so override this as necessary.
     (have-devcert-caps.attr))
+  
+  ;; --------------------------------------------------
+  ;; distribution
+  ;; --------------------------------------------------
+
+  ;; In some cases one might want the launcher not to be included.
+  ;; That also means that Python (which is quite large) need not be
+  ;; installed.
+  (define/public (launcher-in-megasis.attr)
+    #t)
+  
+  (define/public (errrd-in-megasis.attr)
+    #t)
+  
+  ;; This is intended for megasis builds only, and can be used to
+  ;; specify the way the SIS and PKG files are to be named.
+  (define/public (dist-variant-name.attr)
+    (send this variant-name.attr))
+
+  ;; This may affect some of the deployment options. Private trial
+  ;; releases may be packaged and deployed differently than public
+  ;; releases.
+  (define/public (is-trial.attr) #f)
+
+  ;; This may affect configurations, as demos are somewhat different
+  ;; in nature.
+  (define/public (is-demo.attr) #f)
   
   ;; --------------------------------------------------
   ;; supportable components
