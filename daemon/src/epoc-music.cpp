@@ -135,7 +135,8 @@ void CSensor_music::HandlePlaybackMessage(CMPXMessage* aMessage, TInt errCode)
 
   TMPXMessageId msgId(*aMessage->Value<TMPXMessageId>(KMPXMessageGeneralId));
   //guilogf("music: message ID %d", msgId);
-  if (msgId != KMPXMessageGeneral) {
+  // The left side ID is unsigned, whereas the right side one is signed. This typically causes a compiler warning. This is probably a bug in the API. Provided the values are ints, we can cast to signed one to unsigned; the cast preserves the bit pattern, and this is what the compiler does anyway to resolve the mismatch, as per the language spec.
+  if (msgId != (unsigned)KMPXMessageGeneral) {
     return;
   } else {
      eventId = aMessage->ValueTObjectL<TInt>(KMPXMessageGeneralEvent);

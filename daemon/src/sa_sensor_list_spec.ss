@@ -28,13 +28,13 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     
     ;; status
     (sensor (name status) (inactive #t) (essential #t)
-            (sql-schema "create table status_log (unixtime INTEGER, message TEXT);")
+            (sql-schema "create table if not exists status_log (unixtime INTEGER, message TEXT);")
             (sql-statements "insert into status_log (unixtime, message) values (?, ?);"))
 
     ;; mark
     (sensor (name mark)
             (cpp-condition "__MARK_ENABLED__")
-            (sql-schema "create table mark_log (unixtime INTEGER, message TEXT);")
+            (sql-schema "create table if not exists mark_log (unixtime INTEGER, message TEXT);")
             (sql-statements "insert into mark_log (unixtime, message) values (?, ?);")
             (log-insert-api
              (args ,(arg (type (ptr-to (cconst 'char))) (name 'msgText)))
@@ -49,7 +49,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     ;; initiated by another application, via a Lua binding.
     (sensor (name appmessage) (inactive #t)
             (cpp-condition "__APPMESSAGE_ENABLED__")
-            (sql-schema "create table appmessage_log (unixtime INTEGER, message TEXT);")
+            (sql-schema "create table if not exists appmessage_log (unixtime INTEGER, message TEXT);")
             (sql-statements "insert into appmessage_log (unixtime, message) values (?, ?);")
             (log-insert-api
              (args ,(arg (type (ptr-to (cconst 'char))) (name 'msgText)))
@@ -60,7 +60,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     ;; timer
     (sensor (name timer)
             (cpp-condition "__TIMER_ENABLED__")
-            (sql-schema "create table timer_scan (unixtime INTEGER);")
+            (sql-schema "create table if not exists timer_scan (unixtime INTEGER);")
             (sql-statements "insert into timer_scan (unixtime) values (?);")
             (log-insert-api (args) (bindings)))
     
@@ -69,7 +69,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     ;; Symbian-specific app context code observes (and logs) this.
     (sensor (name flightmode) (inactive #t)
             (cpp-condition "defined(__EPOC32__)")
-            (sql-schema "create table flightmode_scan (unixtime INTEGER, value INTEGER);")
+            (sql-schema "create table if not exists flightmode_scan (unixtime INTEGER, value INTEGER);")
             (sql-statements "insert into flightmode_scan (unixtime, value) values (?, ?);")
             (log-insert-api
              (args ,(arg (type 'gboolean) (name 'value)))
@@ -79,7 +79,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     ;; battery
     (sensor (name battery) (inactive #t)
             (cpp-condition "defined(__EPOC32__)")
-            (sql-schema "create table battery_scan (unixtime INTEGER, status INTEGER, level INTEGER);")
+            (sql-schema "create table if not exists battery_scan (unixtime INTEGER, status INTEGER, level INTEGER);")
             (sql-statements "insert into battery_scan (unixtime, status, level) values (?, ?, ?);")
             (log-insert-api
              (args
@@ -94,7 +94,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     ;; registration
     (sensor (name registration) (inactive #t)
             (cpp-condition "defined(__EPOC32__)")
-            (sql-schema "create table registration_scan (unixtime INTEGER, status INTEGER);")
+            (sql-schema "create table if not exists registration_scan (unixtime INTEGER, status INTEGER);")
             (sql-statements "insert into registration_scan (unixtime, status) values (?, ?);")
             (log-insert-api
              (args
@@ -107,7 +107,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     ;; signal
     (sensor (name signal) (inactive #t)
             (cpp-condition "defined(__EPOC32__)")
-            (sql-schema "create table signal_scan (unixtime INTEGER, dbm INTEGER, bars INTEGER);")
+            (sql-schema "create table if not exists signal_scan (unixtime INTEGER, dbm INTEGER, bars INTEGER);")
             (sql-statements "insert into signal_scan (unixtime, dbm, bars) values (?, ?, ?);")
             (log-insert-api
              (args
@@ -122,7 +122,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     ;; operator
     (sensor (name operator) (inactive #t)
             (cpp-condition "defined(__EPOC32__)")
-            (sql-schema "create table operator_scan (unixtime INTEGER, name TEXT);")
+            (sql-schema "create table if not exists operator_scan (unixtime INTEGER, name TEXT);")
             (sql-statements "insert into operator_scan (unixtime, name) values (?, ?);")
             (log-insert-api
              (args ,(arg (type (ptr-to (cconst 'char))) (name 'operatorName)))
@@ -133,7 +133,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     (sensor (name light)
             (cpp-condition "__LIGHT_ENABLED__")
             ;; enum LightLevel { Undefined, Dark, Twilight, Light, Bright, Sunny }
-            (sql-schema "create table light_scan (unixtime INTEGER, level INTEGER);")
+            (sql-schema "create table if not exists light_scan (unixtime INTEGER, level INTEGER);")
             (sql-statements "insert into light_scan (unixtime, level) values (?, ?);")
             (log-insert-api
              (args ,(arg (type 'int) (name 'level)))
@@ -143,7 +143,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     ;; tap sensor (based on Qt Mobility)
     (sensor (name tap) (inactive #t)
             (cpp-condition "__WITH_TAP_SENSORS__")
-            (sql-schema "create table tap_scan (unixtime INTEGER, direction INTEGER, is_dbl INTEGER);")
+            (sql-schema "create table if not exists tap_scan (unixtime INTEGER, direction INTEGER, is_dbl INTEGER);")
             (sql-statements "insert into tap_scan (unixtime, direction, is_dbl) values (?, ?, ?);")
             (log-insert-api
              (args ,(arg (type 'int) (name 'direction))
@@ -162,7 +162,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     ;; proximity sensor (based on Qt Mobility)
     (sensor (name proximity)
             (cpp-condition "__PROXIMITY_ENABLED__")
-            (sql-schema "create table proximity_scan (unixtime INTEGER, close INTEGER);")
+            (sql-schema "create table if not exists proximity_scan (unixtime INTEGER, close INTEGER);")
             (sql-statements "insert into proximity_scan (unixtime, close) values (?, ?);")
             (log-insert-api
              (args ,(arg (type 'gboolean) (name 'isClose)))
@@ -172,7 +172,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     ;; An alternative data representation for "proximity", with multiple events per log entry, as JSON.
     (sensor (name proximityset) (inactive #t)
             (cpp-condition "__PROXIMITY_ENABLED__")
-            (sql-schema "create table proximityset_scan (unixtime INTEGER, json TEXT);")
+            (sql-schema "create table if not exists proximityset_scan (unixtime INTEGER, json TEXT);")
             (sql-statements "insert into proximityset_scan (unixtime, json) values (?, ?);")
             (log-insert-api
              (args ,(arg (type (ptr-to (cconst 'char))) (name 'json)))
@@ -184,7 +184,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
 
     (sensor (name musicplayer) (inactive #t)
             (cpp-condition "__MUSIC_ENABLED__")
-            (sql-schema "create table musicplayer_scan (unixtime INTEGER, event INTEGER, detail TEXT);")
+            (sql-schema "create table if not exists musicplayer_scan (unixtime INTEGER, event INTEGER, detail TEXT);")
             (sql-statements "insert into musicplayer_scan (unixtime, event, detail) values (?, ?, ?);")
             (log-insert-api
              (args
@@ -198,7 +198,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
             
     (sensor (name musictrack) (inactive #t)
             (cpp-condition "__MUSIC_ENABLED__")
-            (sql-schema "create table musictrack_scan (unixtime INTEGER, url TEXT, title TEXT, artist TEXT, album TEXT);")
+            (sql-schema "create table if not exists musictrack_scan (unixtime INTEGER, url TEXT, title TEXT, artist TEXT, album TEXT);")
             (sql-statements "insert into musictrack_scan (unixtime, url, title, artist, album) values (?, ?, ?, ?, ?);")
             (log-insert-api
              (args
@@ -217,7 +217,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     ;; httpurl
     (sensor (name httpurl)
             (cpp-condition "__HTTPURL_ENABLED__")
-            (sql-schema "create table httpurl_scan (unixtime INTEGER, url TEXT);")
+            (sql-schema "create table if not exists httpurl_scan (unixtime INTEGER, url TEXT);")
             (sql-statements "insert into httpurl_scan (unixtime, url) values (?, ?);")
             (log-insert-api
              (args
@@ -230,7 +230,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     ;; weburl
     (sensor (name weburl)
             (cpp-condition "__WEBURL_ENABLED__")
-            (sql-schema "create table weburl_scan (unixtime INTEGER, name TEXT, url TEXT);")
+            (sql-schema "create table if not exists weburl_scan (unixtime INTEGER, name TEXT, url TEXT);")
             (sql-statements "insert into weburl_scan (unixtime, name, url) values (?, ?, ?);")
             (log-insert-api
              (args
@@ -245,7 +245,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     ;; profile (needs a variant targeting new extended plugin)
     (sensor (name profile)
             (cpp-condition "__PROFILE_ENABLED__")
-            (sql-schema "create table profile_scan (unixtime INTEGER, value INTEGER, name TEXT);")
+            (sql-schema "create table if not exists profile_scan (unixtime INTEGER, value INTEGER, name TEXT);")
             (sql-statements "insert into profile_scan (unixtime, value, name) values (?, ?, ?);")
             (log-insert-api
              (args ,(arg (type 'int) (name 'profileId))
@@ -260,7 +260,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     ;; cellid
     (sensor (name cellid)
             (cpp-condition "__CELLID_ENABLED__")
-            (sql-schema "create table cellid_scan (unixtime INTEGER, country_code TEXT, network_code TEXT, area_code INTEGER, cell_id INTEGER);")
+            (sql-schema "create table if not exists cellid_scan (unixtime INTEGER, country_code TEXT, network_code TEXT, area_code INTEGER, cell_id INTEGER);")
             (sql-statements "insert into cellid_scan (unixtime, country_code, network_code, area_code, cell_id) values (?, ?, ?, ?, ?);")
             (log-insert-api
              (args
@@ -282,8 +282,8 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     ;; btprox
     (sensor (name btprox)
             (cpp-condition "__BTPROX_ENABLED__")
-            (sql-schema "create table btprox_scan (unixtime INTEGER, scan_id INTEGER not null primary key AUTOINCREMENT);"
-                        "create table btprox_item (scan_id INTEGER not null, address TEXT not null, name TEXT not null);")
+            (sql-schema "create table if not exists btprox_scan (unixtime INTEGER, scan_id INTEGER not null primary key AUTOINCREMENT);"
+                        "create table if not exists btprox_item (scan_id INTEGER not null, address TEXT not null, name TEXT not null);")
             (sql-statements (Scan "insert into btprox_scan (unixtime) values (?);")
                             (Item "insert into btprox_item (scan_id, address, name) values (?, ?, ?);"))
             ;;(scanner-object
@@ -293,7 +293,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     ;; position
     (sensor (name position) (inactive #t)
             (cpp-condition "__POSITION_ENABLED__")
-            (sql-schema "create table position_scan (unixtime INTEGER, latitude REAL, longitude REAL, altitude REAL, vertical_accuracy REAL, horizontal_accuracy REAL, course TEXT, satellites TEXT);")
+            (sql-schema "create table if not exists position_scan (unixtime INTEGER, latitude REAL, longitude REAL, altitude REAL, vertical_accuracy REAL, horizontal_accuracy REAL, course TEXT, satellites TEXT);")
             (sql-statements "insert into position_scan (unixtime, latitude, longitude, altitude, vertical_accuracy, horizontal_accuracy, course, satellites) values (?, ?, ?, ?, ?, ?, ?, ?);")
             (log-insert-api
              (args
@@ -327,7 +327,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     ;; appfocus
     (sensor (name appfocus)
             (cpp-condition "__APPFOCUS_ENABLED__")
-            (sql-schema "create table appfocus_scan (unixtime INTEGER, uid INTEGER, caption TEXT);")
+            (sql-schema "create table if not exists appfocus_scan (unixtime INTEGER, uid INTEGER, caption TEXT);")
             (sql-statements "insert into appfocus_scan (unixtime, uid, caption) values (?, ?, ?);")
             (log-insert-api
              (args
@@ -345,7 +345,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     ;; keypress (needs a variant implemented in terms of Anim DLL)
     (sensor (name keypress)
             (cpp-condition "__KEYPRESS_ENABLED__")
-            (sql-schema "create table keypress_scan (unixtime INTEGER, presstimes TEXT);")
+            (sql-schema "create table if not exists keypress_scan (unixtime INTEGER, presstimes TEXT);")
             (sql-statements "insert into keypress_scan (unixtime, presstimes) values (?, ?);")
             (log-insert-api
              (args
@@ -363,7 +363,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     ;; The value "1" indicates activity.
     (sensor (name inactivity)
             (cpp-condition "__INACTIVITY_ENABLED__")
-            (sql-schema "create table inactivity_scan (unixtime INTEGER, value INTEGER);")
+            (sql-schema "create table if not exists inactivity_scan (unixtime INTEGER, value INTEGER);")
             (sql-statements "insert into inactivity_scan (unixtime, value) values (?, ?);")
             (log-insert-api
              (args ,(arg (type 'gboolean) (name 'value)))
@@ -374,7 +374,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     ;; Symbian Standby screen indicators.
     (sensor (name indicator)
             (cpp-condition "__INDICATOR_ENABLED__")
-            (sql-schema "create table indicator_scan (unixtime INTEGER, value INTEGER, caps INTEGER);")
+            (sql-schema "create table if not exists indicator_scan (unixtime INTEGER, value INTEGER, caps INTEGER);")
             (sql-statements "insert into indicator_scan (unixtime, value, caps) values (?, ?, ?);")
             (log-insert-api
              (args ,(arg (type 'guint32) (name 'value))
@@ -388,7 +388,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     
     (sensor (name callstatus)
             (cpp-condition "__CALLSTATUS_ENABLED__")
-            (sql-schema "create table callstatus_scan (unixtime INTEGER not null, value INTEGER not null, number TEXT, contact_name TEXT, starttime INTEGER, osterm INTEGER, netterm INTEGER);")
+            (sql-schema "create table if not exists callstatus_scan (unixtime INTEGER not null, value INTEGER not null, number TEXT, contact_name TEXT, starttime INTEGER, osterm INTEGER, netterm INTEGER);")
             (sql-statements "insert into callstatus_scan (unixtime, value, number, contact_name, starttime, osterm, netterm) values (?, ?, ?, ?, ?, ?, ?);")
             (log-insert-api
              (args
@@ -408,7 +408,7 @@ exec mzscheme --name "$0" --eval "(require scheme (lib \"usual-4.ss\" \"common\"
     
     (sensor (name smsevent)
             (cpp-condition "__SMSEVENT_ENABLED__")
-            (sql-schema "create table smsevent_scan (unixtime INTEGER not null, evtype TEXT not null, number TEXT, contact_name TEXT, body TEXT);")
+            (sql-schema "create table if not exists smsevent_scan (unixtime INTEGER not null, evtype TEXT not null, number TEXT, contact_name TEXT, body TEXT);")
             (sql-statements "insert into smsevent_scan (unixtime, evtype, number, contact_name, body) values (?, ?, ?, ?, ?);")
             (log-insert-api
              (args

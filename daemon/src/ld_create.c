@@ -33,12 +33,16 @@ gboolean ensure_log_db_created(GError** error)
   g_unlink(LOGDB_FILE); // no GLib OOM on POSIX
 #endif
   
+#if 0
    // g_file_test: no GLib OOM on POSIX
   if (!g_file_test(LOGDB_FILE, G_FILE_TEST_EXISTS)) {
     return create_log_db(error);
   }
-
   return TRUE;
+#else
+  // Always create. This leads to easier upgrades when the database scheme has changed, but is less efficient, and requires the use of "create table if not exists" instead of just "create table".
+  return create_log_db(error);
+#endif
 }
 
 /**
