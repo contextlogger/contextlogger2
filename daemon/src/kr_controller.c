@@ -75,11 +75,9 @@ static gboolean current_iap_is_cellular()
 
 static void log_uploads_allowed(kr_Controller* self)
 {
-  //logg("uploads allowed: %d", self->are_uploads_allowed);
-  LogDb* logDb = ac_global_LogDb;
   // http://en.wikipedia.org/wiki/Signal_strength says
   // "decibels above a reference level of one milliwatt (dBm)"
-  log_db_log_status(logDb, NULL, "CHANGE: uploads allowed = %s (modem IAP %s, MCC %d at %d dBm)", boolstr_yes(self->are_uploads_allowed), boolstr_yes(self->is_cellular_ap), self->current_mcc, self->current_signal_strength);
+  dblogg("CHANGE: uploads allowed = %s (modem IAP %s, MCC %d at %d dBm)", boolstr_yes(self->are_uploads_allowed), boolstr_yes(self->is_cellular_ap), self->current_mcc, self->current_signal_strength);
 }
 
 static void uploads_allowed_update_board(gboolean value)
