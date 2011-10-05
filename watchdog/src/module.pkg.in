@@ -11,6 +11,7 @@
 ;; Platform dependency. Supports <%= build.target.handle %>.
 [0x101F7961], 0, 0, 0, {"Series603rdProductID"}
 [0x1028315F], 0, 0, 0, {"Series605thProductID"}
+[0x20022E6D], 0, 0, 0, {"Symbian3ProductID"}
 
 <% exename = $exeb[build].binary_file.basename %>
 <% dllname = $exeb[build].bin_basename + ".dll" %>
